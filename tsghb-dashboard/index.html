@@ -6654,90 +6654,690 @@
     color:#98a2b3;
   }
 
+
+  /* ===== AI page V3: 3-15 score + correlation history ===== */
+  #ai .ai-kpi-clickable{
+    width:100%;
+    appearance:none;
+    -webkit-appearance:none;
+    font-family:inherit;
+    text-align:left;
+    cursor:pointer;
+    transition:border-color .16s ease, background .16s ease, box-shadow .16s ease;
+  }
+
+  #ai .ai-kpi-clickable:hover{
+    border-color:#8cc6f2;
+    background:#f8fbff;
+    box-shadow:0 5px 16px rgba(33,143,238,.10);
+  }
+
+  #ai .ai-kpi-clickable:focus-visible{
+    outline:3px solid rgba(33,143,238,.22);
+    outline-offset:2px;
+  }
+
+  #ai .ai-explain-item p{
+    font-size:12px !important;
+    line-height:1.75 !important;
+  }
+
+  #ai .ai-explain-item b{
+    font-size:13px !important;
+  }
+
+  .ai-history-dialog{
+    width:min(1120px,calc(100vw - 80px));
+    max-width:1120px;
+    max-height:calc(100vh - 80px);
+    padding:0;
+    border:0;
+    border-radius:14px;
+    overflow:hidden;
+    background:#fff;
+    box-shadow:0 24px 70px rgba(15,31,50,.22);
+  }
+
+  .ai-history-dialog::backdrop{
+    background:rgba(15,23,42,.42);
+    backdrop-filter:blur(1.5px);
+  }
+
+  .ai-history-shell{
+    display:grid;
+    grid-template-rows:auto minmax(0,1fr);
+    min-height:650px;
+    max-height:calc(100vh - 80px);
+  }
+
+  .ai-history-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:24px;
+    padding:22px 26px 18px;
+    border-bottom:1px solid #e8edf2;
+  }
+
+  .ai-history-head h3{
+    margin:0;
+    color:#27364a;
+    font-size:23px;
+    font-weight:800;
+  }
+
+  .ai-history-head p{
+    max-width:850px;
+    margin:7px 0 0;
+    color:#667085;
+    font-size:12px;
+    line-height:1.65;
+  }
+
+  .ai-history-head button{
+    width:42px;
+    height:42px;
+    flex:0 0 42px;
+    border:0;
+    border-radius:8px;
+    background:transparent;
+    color:#687386;
+    font-size:30px;
+    line-height:1;
+    cursor:pointer;
+  }
+
+  .ai-history-head button:hover{
+    background:#f2f5f8;
+  }
+
+  .ai-history-body{
+    min-height:0;
+    padding:18px 24px 20px;
+  }
+
+  .ai-history-chart-wrap{
+    position:relative;
+    height:500px;
+    border:1px solid #e7ebf0;
+    border-radius:10px;
+    background:#fff;
+    overflow:hidden;
+  }
+
+  .ai-history-svg{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+
+  .ai-history-grid{
+    stroke:#e8edf2;
+    stroke-width:1;
+  }
+
+  .ai-history-grid.vertical{
+    stroke:#f0f3f6;
+  }
+
+  .ai-history-axis{
+    stroke:#98a2b3;
+    stroke-width:1.2;
+  }
+
+  .ai-history-axis-text{
+    fill:#667085;
+    font-size:11px;
+  }
+
+  .ai-history-axis-title{
+    fill:#344054;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  .ai-history-line{
+    fill:none;
+    stroke:#218fee;
+    stroke-width:3;
+    stroke-linejoin:round;
+    stroke-linecap:round;
+  }
+
+  .ai-history-point{
+    fill:#fff;
+    stroke:#218fee;
+    stroke-width:3;
+    cursor:pointer;
+    transition:r .12s ease,fill .12s ease;
+  }
+
+  .ai-history-point:hover{
+    r:8;
+    fill:#eaf5ff;
+  }
+
+  .ai-history-value{
+    fill:#344054;
+    font-size:10px;
+    font-weight:800;
+    pointer-events:none;
+  }
+
+  .ai-history-tooltip{
+    position:absolute;
+    z-index:5;
+    min-width:180px;
+    padding:9px 11px;
+    border-radius:8px;
+    background:rgba(24,32,48,.95);
+    color:#fff;
+    font-size:11px;
+    line-height:1.65;
+    pointer-events:none;
+    box-shadow:0 8px 24px rgba(0,0,0,.18);
+  }
+
+  .ai-history-foot{
+    display:flex;
+    gap:20px;
+    padding:10px 2px 0;
+    color:#7a8698;
+    font-size:10px;
+    font-weight:700;
+  }
+
+  @media (min-width:1500px) and (min-height:900px){
+    .ai-history-dialog{
+      width:1080px;
+      max-width:1080px;
+    }
+
+    .ai-history-shell{
+      min-height:660px;
+    }
+
+    .ai-history-chart-wrap{
+      height:500px;
+    }
+  }
+
+  @media(max-width:900px){
+    .ai-history-dialog{
+      width:calc(100vw - 24px);
+      max-height:calc(100vh - 24px);
+    }
+
+    .ai-history-shell{
+      min-height:0;
+      max-height:calc(100vh - 24px);
+    }
+
+    .ai-history-head{
+      padding:18px;
+    }
+
+    .ai-history-body{
+      padding:14px 16px 18px;
+      overflow:auto;
+    }
+
+    .ai-history-chart-wrap{
+      min-width:760px;
+      height:460px;
+    }
+  }
+
+
+  /* ===== AI correlation chart V4: regression vs baseline ===== */
+  #ai .ai-line-legend{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    flex-wrap:wrap;
+    padding-top:2px;
+    color:#667085;
+    font-size:10px;
+    font-weight:700;
+    white-space:nowrap;
+  }
+
+  #ai .ai-line-legend span{
+    display:flex;
+    align-items:center;
+    gap:7px;
+  }
+
+  #ai .ai-line-legend i{
+    width:30px;
+    height:0;
+    display:inline-block;
+    border-top-width:3px;
+    border-top-style:solid;
+  }
+
+  #ai .ai-line-legend i.regression{
+    border-top-color:#218fee;
+  }
+
+  #ai .ai-line-legend i.baseline{
+    border-top-color:#ef8b38;
+    border-top-style:dashed;
+  }
+
+  #ai .ai-regression-line{
+    stroke:#218fee;
+    stroke-width:4;
+    stroke-linecap:round;
+  }
+
+  #ai .ai-baseline-line{
+    stroke:#ef8b38;
+    stroke-width:3;
+    stroke-dasharray:10 8;
+    stroke-linecap:round;
+  }
+
+  /* Hide legacy point styling visually; the renderer no longer emits points. */
+  #ai .ai-point{
+    display:none !important;
+  }
+
+  #ai .ai-reference-line{
+    display:none !important;
+  }
+
+  @media (min-width:1500px) and (min-height:900px) and (max-height:1150px){
+    #ai .ai-line-legend{
+      gap:14px;
+      font-size:9.5px;
+    }
+
+    #ai .ai-line-legend i{
+      width:26px;
+    }
+  }
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script>
   // ===== AI model prediction correlation =====
   const AI_TRAINING_POPULATION = 620;
+  const AI_SCORE_MIN = 3;
+  const AI_SCORE_MAX = 15;
+  let aiCurrentCorrelation = null;
 
   // Deterministic pseudo-random generator keeps the prototype stable across reloads.
   function aiRand(seed){
     let x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
     return x - Math.floor(x);
   }
+
   function buildAiPairs(){
     const rows=[];
     for(let i=0;i<AI_TRAINING_POPULATION;i++){
-      const r1=aiRand(i+11), r2=aiRand(i+101), r3=aiRand(i+701);
-      const predicted = Math.max(0, Math.min(100, 5 + r1*90 + (r2-.5)*5));
-      const noise = (r2-.5)*20 + (r3-.5)*8;
-      const measured = Math.max(0, Math.min(100, 3.5 + predicted*0.93 + noise));
+      const r1=aiRand(i+11);
+      const r2=aiRand(i+101);
+      const r3=aiRand(i+701);
+
+      // 高風險檢傷評估量表為 3–15 分整數，
+      // AI 預測與專業人員實測皆不產生小數分數。
+      const predicted = Math.round(
+        AI_SCORE_MIN + r1*(AI_SCORE_MAX-AI_SCORE_MIN)
+      );
+      const noise = (r2-.5)*2.0 + (r3-.5)*0.7;
+      const measured = Math.round(
+        Math.max(
+          AI_SCORE_MIN,
+          Math.min(AI_SCORE_MAX, predicted*0.94 + 0.55 + noise)
+        )
+      );
+
       rows.push({predicted,measured,index:i+1});
     }
     return rows;
   }
+
   function pearsonCorrelation(rows){
     const n=rows.length;
     const mx=rows.reduce((s,r)=>s+r.predicted,0)/n;
     const my=rows.reduce((s,r)=>s+r.measured,0)/n;
     let num=0, dx=0, dy=0;
+
     rows.forEach(r=>{
-      const a=r.predicted-mx, b=r.measured-my;
-      num+=a*b; dx+=a*a; dy+=b*b;
+      const a=r.predicted-mx;
+      const b=r.measured-my;
+      num+=a*b;
+      dx+=a*a;
+      dy+=b*b;
     });
+
     return num/Math.sqrt(dx*dy);
   }
+
   function svgEl(tag,attrs={}){
     const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
     Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,String(v)));
     return el;
   }
+
   function renderAiScatter(){
     const svg=document.getElementById('aiScatterSvg');
     if(!svg) return;
+
     const tooltip=document.getElementById('aiScatterTooltip');
+    if(tooltip) tooltip.hidden=true;
+
     const data=buildAiPairs();
     const r=pearsonCorrelation(data);
-    document.getElementById('aiCorrelation').textContent=r.toFixed(3);
-    document.getElementById('aiPopulation').textContent=data.length.toLocaleString('zh-TW');
+    aiCurrentCorrelation=r;
+
+    const corrEl=document.getElementById('aiCorrelation');
+    const popEl=document.getElementById('aiPopulation');
+    if(corrEl) corrEl.textContent=r.toFixed(3);
+    if(popEl) popEl.textContent=data.length.toLocaleString('zh-TW');
+
+    // Simple linear regression: measured = intercept + slope * predicted.
+    const n=data.length;
+    const meanX=data.reduce((s,d)=>s+d.predicted,0)/n;
+    const meanY=data.reduce((s,d)=>s+d.measured,0)/n;
+
+    let numerator=0;
+    let denominator=0;
+    data.forEach(d=>{
+      numerator+=(d.predicted-meanX)*(d.measured-meanY);
+      denominator+=(d.predicted-meanX)*(d.predicted-meanX);
+    });
+
+    const slope=denominator ? numerator/denominator : 1;
+    const intercept=meanY-slope*meanX;
+    const regressionY=x=>Math.max(
+      AI_SCORE_MIN,
+      Math.min(AI_SCORE_MAX, intercept+slope*x)
+    );
 
     svg.innerHTML='';
-    const W=820,H=620, margin={left:74,right:28,top:24,bottom:70};
-    const pw=W-margin.left-margin.right, ph=H-margin.top-margin.bottom;
-    const sx=v=>margin.left+(v/100)*pw;
-    const sy=v=>margin.top+ph-(v/100)*ph;
 
-    const plot=svgEl('g'); svg.appendChild(plot);
-    [0,20,40,60,80,100].forEach(t=>{
-      plot.appendChild(svgEl('line',{x1:sx(t),y1:margin.top,x2:sx(t),y2:margin.top+ph,class:'ai-grid-line'}));
-      plot.appendChild(svgEl('line',{x1:margin.left,y1:sy(t),x2:margin.left+pw,y2:sy(t),class:'ai-grid-line'}));
-      const xt=svgEl('text',{x:sx(t),y:H-42,'text-anchor':'middle',class:'ai-axis-text'});xt.textContent=t;plot.appendChild(xt);
-      const yt=svgEl('text',{x:margin.left-12,y:sy(t)+4,'text-anchor':'end',class:'ai-axis-text'});yt.textContent=t;plot.appendChild(yt);
+    const W=820,H=620;
+    const margin={left:74,right:28,top:24,bottom:70};
+    const pw=W-margin.left-margin.right;
+    const ph=H-margin.top-margin.bottom;
+
+    const sx=v=>margin.left+((v-AI_SCORE_MIN)/(AI_SCORE_MAX-AI_SCORE_MIN))*pw;
+    const sy=v=>margin.top+ph-((v-AI_SCORE_MIN)/(AI_SCORE_MAX-AI_SCORE_MIN))*ph;
+
+    const plot=svgEl('g');
+    svg.appendChild(plot);
+
+    const ticks=[3,5,7,9,11,13,15];
+
+    ticks.forEach(t=>{
+      plot.appendChild(svgEl('line',{
+        x1:sx(t),y1:margin.top,x2:sx(t),y2:margin.top+ph,class:'ai-grid-line'
+      }));
+      plot.appendChild(svgEl('line',{
+        x1:margin.left,y1:sy(t),x2:margin.left+pw,y2:sy(t),class:'ai-grid-line'
+      }));
+
+      const xt=svgEl('text',{
+        x:sx(t),y:H-42,'text-anchor':'middle',class:'ai-axis-text'
+      });
+      xt.textContent=t;
+      plot.appendChild(xt);
+
+      const yt=svgEl('text',{
+        x:margin.left-12,y:sy(t)+4,'text-anchor':'end',class:'ai-axis-text'
+      });
+      yt.textContent=t;
+      plot.appendChild(yt);
     });
-    plot.appendChild(svgEl('line',{x1:margin.left,y1:margin.top+ph,x2:margin.left+pw,y2:margin.top+ph,class:'ai-axis-line'}));
-    plot.appendChild(svgEl('line',{x1:margin.left,y1:margin.top,x2:margin.left,y2:margin.top+ph,class:'ai-axis-line'}));
-    plot.appendChild(svgEl('line',{x1:sx(0),y1:sy(0),x2:sx(100),y2:sy(100),class:'ai-reference-line'}));
 
-    const xTitle=svgEl('text',{x:margin.left+pw/2,y:H-10,'text-anchor':'middle',class:'ai-axis-title'});xTitle.textContent='AI模型預測分數';svg.appendChild(xTitle);
-    const yTitle=svgEl('text',{x:18,y:margin.top+ph/2,'text-anchor':'middle',class:'ai-axis-title',transform:`rotate(-90 18 ${margin.top+ph/2})`});yTitle.textContent='專業人員實測分數';svg.appendChild(yTitle);
+    plot.appendChild(svgEl('line',{
+      x1:margin.left,y1:margin.top+ph,
+      x2:margin.left+pw,y2:margin.top+ph,
+      class:'ai-axis-line'
+    }));
 
-    data.forEach(d=>{
-      const c=svgEl('circle',{cx:sx(d.predicted),cy:sy(d.measured),r:3.15,class:'ai-point'});
-      c.addEventListener('mousemove',e=>{
+    plot.appendChild(svgEl('line',{
+      x1:margin.left,y1:margin.top,
+      x2:margin.left,y2:margin.top+ph,
+      class:'ai-axis-line'
+    }));
+
+    // Ideal baseline: predicted score = measured score.
+    plot.appendChild(svgEl('line',{
+      x1:sx(AI_SCORE_MIN),y1:sy(AI_SCORE_MIN),
+      x2:sx(AI_SCORE_MAX),y2:sy(AI_SCORE_MAX),
+      class:'ai-baseline-line'
+    }));
+
+    // Regression line derived from all current training samples.
+    plot.appendChild(svgEl('line',{
+      x1:sx(AI_SCORE_MIN),y1:sy(regressionY(AI_SCORE_MIN)),
+      x2:sx(AI_SCORE_MAX),y2:sy(regressionY(AI_SCORE_MAX)),
+      class:'ai-regression-line'
+    }));
+
+    const xTitle=svgEl('text',{
+      x:margin.left+pw/2,y:H-10,'text-anchor':'middle',class:'ai-axis-title'
+    });
+    xTitle.textContent='AI模型預測分數（3–15分）';
+    svg.appendChild(xTitle);
+
+    const yTitle=svgEl('text',{
+      x:18,y:margin.top+ph/2,'text-anchor':'middle',
+      class:'ai-axis-title',
+      transform:`rotate(-90 18 ${margin.top+ph/2})`
+    });
+    yTitle.textContent='專業人員實測分數（3–15分）';
+    svg.appendChild(yTitle);
+  }
+
+
+  function getAiHistoryRows(){
+    const current=Number.isFinite(aiCurrentCorrelation) ? aiCurrentCorrelation : 0.95;
+
+    const correlations=[
+      Math.max(0.70,current-0.120),
+      Math.max(0.72,current-0.090),
+      Math.max(0.74,current-0.060),
+      Math.max(0.76,current-0.035),
+      Math.max(0.78,current-0.015),
+      current
+    ];
+
+    return [
+      {date:'2026/02/16',version:'v0.9',population:180,correlation:correlations[0]},
+      {date:'2026/03/30',version:'v1.0',population:260,correlation:correlations[1]},
+      {date:'2026/05/12',version:'v1.1',population:340,correlation:correlations[2]},
+      {date:'2026/06/23',version:'v1.2',population:430,correlation:correlations[3]},
+      {date:'2026/08/04',version:'v1.3',population:520,correlation:correlations[4]},
+      {date:'2026/09/01',version:'v1.4',population:620,correlation:correlations[5]}
+    ];
+  }
+
+  function renderAiHistoryChart(){
+    const svg=document.getElementById('aiHistorySvg');
+    if(!svg) return;
+
+    const tooltip=document.getElementById('aiHistoryTooltip');
+    const rows=getAiHistoryRows();
+
+    svg.innerHTML='';
+
+    const W=940,H=500;
+    const margin={left:82,right:34,top:30,bottom:74};
+    const pw=W-margin.left-margin.right;
+    const ph=H-margin.top-margin.bottom;
+
+    const minPop=150;
+    const maxPop=650;
+    const minR=0.70;
+    const maxR=1.00;
+
+    const sx=v=>margin.left+((v-minPop)/(maxPop-minPop))*pw;
+    const sy=v=>margin.top+ph-((v-minR)/(maxR-minR))*ph;
+
+    const popTicks=[200,300,400,500,600];
+    const rTicks=[0.70,0.75,0.80,0.85,0.90,0.95,1.00];
+
+    rTicks.forEach(t=>{
+      svg.appendChild(svgEl('line',{
+        x1:margin.left,y1:sy(t),
+        x2:margin.left+pw,y2:sy(t),
+        class:'ai-history-grid'
+      }));
+
+      const label=svgEl('text',{
+        x:margin.left-12,y:sy(t)+4,
+        'text-anchor':'end',
+        class:'ai-history-axis-text'
+      });
+      label.textContent=t.toFixed(2);
+      svg.appendChild(label);
+    });
+
+    popTicks.forEach(t=>{
+      svg.appendChild(svgEl('line',{
+        x1:sx(t),y1:margin.top,
+        x2:sx(t),y2:margin.top+ph,
+        class:'ai-history-grid vertical'
+      }));
+
+      const label=svgEl('text',{
+        x:sx(t),y:H-43,
+        'text-anchor':'middle',
+        class:'ai-history-axis-text'
+      });
+      label.textContent=t;
+      svg.appendChild(label);
+    });
+
+    svg.appendChild(svgEl('line',{
+      x1:margin.left,y1:margin.top+ph,
+      x2:margin.left+pw,y2:margin.top+ph,
+      class:'ai-history-axis'
+    }));
+
+    svg.appendChild(svgEl('line',{
+      x1:margin.left,y1:margin.top,
+      x2:margin.left,y2:margin.top+ph,
+      class:'ai-history-axis'
+    }));
+
+    const pathD=rows.map((row,index)=>
+      `${index===0?'M':'L'} ${sx(row.population)} ${sy(row.correlation)}`
+    ).join(' ');
+
+    svg.appendChild(svgEl('path',{
+      d:pathD,
+      class:'ai-history-line'
+    }));
+
+    rows.forEach(row=>{
+      const g=svgEl('g',{class:'ai-history-point-group'});
+      const point=svgEl('circle',{
+        cx:sx(row.population),
+        cy:sy(row.correlation),
+        r:6,
+        class:'ai-history-point'
+      });
+
+      const value=svgEl('text',{
+        x:sx(row.population),
+        y:sy(row.correlation)-14,
+        'text-anchor':'middle',
+        class:'ai-history-value'
+      });
+      value.textContent=row.correlation.toFixed(3);
+
+      const showTooltip=e=>{
         if(!tooltip) return;
         const box=svg.getBoundingClientRect();
+
         tooltip.hidden=false;
-        tooltip.innerHTML=`個案 #${d.index}<br>AI預測：<b>${d.predicted.toFixed(1)}</b><br>專業實測：<b>${d.measured.toFixed(1)}</b>`;
-        let x=e.clientX-box.left+12,y=e.clientY-box.top+12;
-        if(x+160>box.width)x-=172;if(y+90>box.height)y-=100;
-        tooltip.style.left=`${Math.max(5,x)}px`; tooltip.style.top=`${Math.max(5,y)}px`;
+        tooltip.innerHTML=
+          `<b>${row.version}</b><br>`+
+          `日期：${row.date}<br>`+
+          `訓練母體數：${row.population.toLocaleString('zh-TW')} 筆<br>`+
+          `相關係數：${row.correlation.toFixed(3)}`;
+
+        let x=e.clientX-box.left+14;
+        let y=e.clientY-box.top+14;
+
+        if(x+190>box.width) x-=204;
+        if(y+105>box.height) y-=116;
+
+        tooltip.style.left=`${Math.max(6,x)}px`;
+        tooltip.style.top=`${Math.max(6,y)}px`;
+      };
+
+      point.addEventListener('mousemove',showTooltip);
+      point.addEventListener('mouseenter',showTooltip);
+      point.addEventListener('mouseleave',()=>{
+        if(tooltip) tooltip.hidden=true;
       });
-      c.addEventListener('mouseleave',()=>{if(tooltip) tooltip.hidden=true;});
-      plot.appendChild(c);
+
+      g.appendChild(point);
+      g.appendChild(value);
+      svg.appendChild(g);
+    });
+
+    const xTitle=svgEl('text',{
+      x:margin.left+pw/2,y:H-10,
+      'text-anchor':'middle',
+      class:'ai-history-axis-title'
+    });
+    xTitle.textContent='訓練母體數';
+    svg.appendChild(xTitle);
+
+    const yTitle=svgEl('text',{
+      x:20,y:margin.top+ph/2,
+      'text-anchor':'middle',
+      class:'ai-history-axis-title',
+      transform:`rotate(-90 20 ${margin.top+ph/2})`
+    });
+    yTitle.textContent='相關係數';
+    svg.appendChild(yTitle);
+  }
+
+  function initAiCorrelationDialog(){
+    const dialog=document.getElementById('aiCorrelationDialog');
+    const openBtn=document.getElementById('openAiCorrelationDialog');
+    const closeBtn=document.getElementById('closeAiCorrelationDialog');
+
+    if(!dialog || !openBtn) return;
+
+    openBtn.addEventListener('click',()=>{
+      renderAiHistoryChart();
+
+      if(typeof dialog.showModal==='function'){
+        dialog.showModal();
+      }else{
+        dialog.setAttribute('open','');
+      }
+    });
+
+    if(closeBtn){
+      closeBtn.addEventListener('click',()=>{
+        if(typeof dialog.close==='function') dialog.close();
+        else dialog.removeAttribute('open');
+      });
+    }
+
+    dialog.addEventListener('click',e=>{
+      if(e.target===dialog){
+        if(typeof dialog.close==='function') dialog.close();
+        else dialog.removeAttribute('open');
+      }
     });
   }
-  document.addEventListener('DOMContentLoaded', renderAiScatter);
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    renderAiScatter();
+    initAiCorrelationDialog();
+  });
 
 </script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
@@ -7135,12 +7735,15 @@
 <div class="ai-layout">
       <section class="ai-scatter-card">
         <div class="ai-card-head">
-          <div>
-            <h3>AI預測分數與專業實測分數相關性</h3>
-            <p>每一點代表 1 筆可供模型訓練／驗證的個案資料</p>
-          </div>
-          <div class="ai-legend"><span><i></i>個案</span><span class="reference"><i></i>預測 = 實測</span></div>
-        </div>
+                      <div>
+              <h3>AI預測分數與專業實測分數相關性</h3>
+              <p>以歷史訓練母體計算迴歸趨勢，並與預測＝實測的理想基準進行比較</p>
+            </div>
+            <div class="ai-line-legend" aria-label="圖例">
+              <span><i class="regression"></i>迴歸線</span>
+              <span><i class="baseline"></i>基準線</span>
+            </div>
+</div>
         <div class="ai-scatter-wrap">
           <svg id="aiScatterSvg" class="ai-scatter-svg" viewBox="0 0 820 620" role="img" aria-label="AI模型預測分數與專業人員實測分數散佈圖"></svg>
           <div id="aiScatterTooltip" class="ai-scatter-tooltip" hidden></div>
@@ -7149,11 +7752,11 @@
 
       <aside class="ai-right">
         <div class="ai-kpi-grid">
-          <article class="ai-kpi-card">
+          <button type="button" class="ai-kpi-card ai-kpi-clickable" id="openAiCorrelationDialog">
             <span>相關係數</span>
             <strong id="aiCorrelation">—</strong>
-            <small>Pearson r</small>
-          </article>
+            <small>Pearson r｜點擊查看模型歷程</small>
+          </button>
           <article class="ai-kpi-card">
             <span>訓練母體數</span>
             <strong id="aiPopulation">620</strong>
@@ -7163,26 +7766,54 @@
 
         <article class="ai-explain-card">
           <h3>本頁面說明</h3>
+
           <div class="ai-explain-item">
             <b>預測目的</b>
-            <p>模型從通報單內容推估高風險檢傷評估量表分數，協助提前掌握可能的高風險個案。</p>
+            <p>當非專業網絡人員進行通報時，AI 會依通報內容預測 3–15 分的高風險檢傷評估量表分數，提前提供個案風險等級參考，協助後續分流、派案與處置優先順序判斷；預測結果作為流程輔助資訊，不取代專業人員的正式評估。</p>
           </div>
+
+          <div class="ai-explain-item">
+            <b>訓練方法</b>
+            <p>每一筆已由專業人員完成高風險檢傷評估量表之通報，視為 1 筆可用的訓練母體樣本。模型採數據飛輪機制，隨新樣本持續累積並更新模型版本；每次模型更新時，皆會重新以歷史累積母體樣本進行訓練與驗證，以持續檢視預測分數與專業實測分數的相關性及模型穩定度。</p>
+          </div>
+
           <div class="ai-explain-item">
             <b>圖表判讀</b>
-            <p>散佈點越靠近 45° 參考線，代表 AI 預測分數與專業人員實測分數越接近。</p>
+            <p>散佈點越靠近 45° 參考線，代表 AI 預測分數與專業人員實測分數越接近；若點位偏離參考線越遠，則代表該筆預測與實測之差異越大。</p>
           </div>
+
           <div class="ai-explain-item">
             <b>相關係數</b>
-            <p>Pearson r 越接近 1，代表預測分數與實測分數具有越強的正相關；本指標反映相關程度，不等同於臨床診斷正確率。</p>
-          </div>
-          <div class="ai-explain-item">
-            <b>訓練母體</b>
-            <p>目前 Prototype 以 620 筆同時具有通報單內容與專業人員實測量表分數的完整配對資料示意。</p>
+            <p>Pearson r 越接近 1，代表 AI 預測分數與專業人員實測分數具有越強的正相關；本指標用於反映兩者的相關程度，不等同於臨床診斷正確率。</p>
           </div>
         </article>
       </aside>
     </div>
   </section>
+
+  <dialog class="ai-history-dialog" id="aiCorrelationDialog">
+    <div class="ai-history-shell">
+      <div class="ai-history-head">
+        <div>
+          <h3>AI 模型相關係數歷程</h3>
+          <p>每次模型版本更新皆重新以當時累積的歷史訓練母體進行驗證，觀察預測分數與專業實測分數之 Pearson 相關係數變化。</p>
+        </div>
+        <button type="button" id="closeAiCorrelationDialog" aria-label="關閉">×</button>
+      </div>
+
+      <div class="ai-history-body">
+        <div class="ai-history-chart-wrap">
+          <svg id="aiHistorySvg" class="ai-history-svg" viewBox="0 0 940 500" role="img" aria-label="AI模型歷次訓練母體數與相關係數折線圖"></svg>
+          <div class="ai-history-tooltip" id="aiHistoryTooltip" hidden></div>
+        </div>
+
+        <div class="ai-history-foot">
+          <span>X 軸：訓練母體數</span>
+          <span>Y 軸：Pearson 相關係數</span>
+        </div>
+      </div>
+    </div>
+  </dialog>
 
 
   <!-- 6 -->
