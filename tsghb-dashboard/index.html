@@ -6181,6 +6181,479 @@
     }
   }
 
+
+  /* ===== Command dashboard: same-period comparison ===== */
+  #command .command-compare-toolbar{
+    height:58px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:18px;
+    margin:0 0 10px;
+    padding:8px 12px;
+    border:1px solid #dfe5ec;
+    border-radius:9px;
+    background:#fff;
+  }
+
+  #command .command-compare-mode{
+    display:flex;
+    gap:6px;
+  }
+
+  #command .command-compare-mode button{
+    height:34px;
+    min-width:94px;
+    padding:0 14px;
+    border:1px solid #cfd8e3;
+    border-radius:6px;
+    background:#fff;
+    color:#667085;
+    font-family:inherit;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+  }
+
+  #command .command-compare-mode button:hover{
+    border-color:#8dc7f2;
+    color:#218fee;
+    background:#f7fbff;
+  }
+
+  #command .command-compare-mode button.active{
+    color:#fff;
+    border-color:#218fee;
+    background:#218fee;
+  }
+
+  #command .command-compare-range{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:2px;
+  }
+
+  #command .command-compare-range strong{
+    color:#344054;
+    font-size:12px;
+  }
+
+  #command .command-compare-range span{
+    color:#8a95a6;
+    font-size:9px;
+  }
+
+  #command .command-compare-grid{
+    display:grid;
+    grid-template-columns:minmax(0,.43fr) minmax(0,.57fr);
+    gap:12px;
+    height:calc(100vh - 210px);
+    min-height:600px;
+    max-height:820px;
+  }
+
+  #command .command-compare-card{
+    min-width:0;
+    min-height:0;
+    border:1px solid #dfe5ec;
+    border-radius:10px;
+    background:#fff;
+    overflow:hidden;
+  }
+
+  #command .command-compare-card-head{
+    height:70px;
+    padding:12px 16px 8px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    border-bottom:1px solid #edf1f4;
+  }
+
+  #command .command-compare-card-head h3{
+    margin:0;
+    color:#27364a;
+    font-size:17px;
+    font-weight:800;
+  }
+
+  #command .command-compare-card-head p{
+    margin:5px 0 0;
+    color:#8893a4;
+    font-size:10px;
+  }
+
+  #command .command-compare-unit{
+    color:#8a95a6;
+    font-size:10px;
+    padding-top:4px;
+  }
+
+  /* Total notification count chart */
+  #command .command-compare-total-chart{
+    height:calc(100% - 70px);
+    display:grid;
+    grid-template-columns:42px minmax(0,1fr);
+    padding:18px 16px 26px 10px;
+  }
+
+  #command .compare-yaxis{
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    align-items:flex-end;
+    padding:0 7px 54px 0;
+    color:#8994a5;
+    font-size:9px;
+  }
+
+  #command .compare-total-plot{
+    position:relative;
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-around;
+    gap:24px;
+    padding:0 22px 54px;
+    border-left:1px solid #e3e8ee;
+    border-bottom:1px solid #e3e8ee;
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent calc(33.333% - 1px),
+        #eef1f4 calc(33.333% - 1px),
+        #eef1f4 33.333%
+      );
+  }
+
+  #command .compare-total-col{
+    position:relative;
+    width:min(92px,24%);
+    height:100%;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+  }
+
+  #command .compare-total-bar{
+    position:relative;
+    width:62px;
+    min-height:4px;
+    border-radius:5px 5px 0 0;
+    background:#2b91e5;
+    transition:height .28s ease;
+  }
+
+  #command .compare-total-col.current .compare-total-bar{
+    background:#6672cd;
+  }
+
+  #command .compare-total-value{
+    position:absolute;
+    left:50%;
+    bottom:calc(var(--compare-height) + 8px);
+    transform:translateX(-50%);
+    color:#344054;
+    font-size:13px;
+    font-weight:800;
+    white-space:nowrap;
+  }
+
+  #command .compare-total-year{
+    position:absolute;
+    left:50%;
+    bottom:-28px;
+    transform:translateX(-50%);
+    color:#344054;
+    font-size:12px;
+    font-weight:800;
+    white-space:nowrap;
+  }
+
+  #command .compare-total-roc{
+    position:absolute;
+    left:50%;
+    bottom:-44px;
+    transform:translateX(-50%);
+    color:#8a95a6;
+    font-size:9px;
+    white-space:nowrap;
+  }
+
+  /* Risk distribution */
+  #command .compare-risk-legend{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    padding-top:3px;
+    color:#667085;
+    font-size:9px;
+    font-weight:700;
+  }
+
+  #command .compare-risk-legend span{
+    display:flex;
+    align-items:center;
+    gap:5px;
+  }
+
+  #command .compare-risk-legend i{
+    width:9px;
+    height:9px;
+    border-radius:2px;
+    display:inline-block;
+  }
+
+  #command .compare-risk-legend .low{background:#218fee}
+  #command .compare-risk-legend .medium{background:#ee9a3a}
+  #command .compare-risk-legend .high{background:#df554b}
+
+  #command .compare-risk-body{
+    height:calc(100% - 70px);
+    display:grid;
+    grid-template-rows:repeat(3,minmax(0,1fr));
+    gap:0;
+    padding:12px 18px 18px;
+  }
+
+  #command .compare-risk-row{
+    display:grid;
+    grid-template-columns:86px minmax(0,1fr) 58px;
+    align-items:center;
+    gap:12px;
+    min-height:0;
+    border-bottom:1px solid #f0f2f5;
+  }
+
+  #command .compare-risk-row:last-child{
+    border-bottom:0;
+  }
+
+  #command .compare-risk-year{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+
+  #command .compare-risk-year strong{
+    color:#344054;
+    font-size:14px;
+  }
+
+  #command .compare-risk-year span{
+    color:#8a95a6;
+    font-size:9px;
+  }
+
+  #command .compare-risk-stack{
+    height:52px;
+    display:flex;
+    overflow:hidden;
+    border-radius:7px;
+    background:#f2f4f7;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.02);
+  }
+
+  #command .compare-risk-seg{
+    min-width:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+    font-size:10px;
+    font-weight:800;
+    white-space:nowrap;
+    transition:width .28s ease;
+  }
+
+  #command .compare-risk-seg.low{background:#218fee}
+  #command .compare-risk-seg.medium{background:#ee9a3a}
+  #command .compare-risk-seg.high{background:#df554b}
+
+  #command .compare-risk-total{
+    text-align:right;
+    color:#667085;
+  }
+
+  #command .compare-risk-total strong{
+    display:block;
+    color:#344054;
+    font-size:16px;
+  }
+
+  #command .compare-risk-total span{
+    font-size:9px;
+  }
+
+  @media (min-width:1500px) and (min-height:900px) and (max-height:1150px){
+    #command .command-compare-toolbar{
+      height:54px;
+      margin-bottom:8px;
+      padding:6px 10px;
+    }
+
+    #command .command-compare-mode button{
+      height:32px;
+      font-size:11px;
+    }
+
+    #command .command-compare-grid{
+      height:calc(100vh - 193px);
+      min-height:0;
+      max-height:none;
+      gap:10px;
+    }
+
+    #command .command-compare-card-head{
+      height:62px;
+      padding:10px 14px 7px;
+    }
+
+    #command .command-compare-card-head h3{
+      font-size:16px;
+    }
+
+    #command .command-compare-total-chart,
+    #command .compare-risk-body{
+      height:calc(100% - 62px);
+    }
+
+    #command .command-compare-total-chart{
+      padding-top:14px;
+    }
+
+    #command .compare-risk-body{
+      padding:8px 14px 12px;
+    }
+
+    #command .compare-risk-stack{
+      height:46px;
+    }
+  }
+
+  @media(max-width:1000px){
+    #command .command-compare-grid{
+      grid-template-columns:1fr;
+      height:auto;
+      max-height:none;
+    }
+
+    #command .command-compare-card{
+      min-height:430px;
+    }
+  }
+
+
+  /* ===== Command comparison: custom month mode ===== */
+  #command .command-compare-mode-wrap{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+  }
+
+  #command .command-compare-month-select{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    height:34px;
+    padding:0 9px;
+    border:1px solid #d4dce5;
+    border-radius:6px;
+    background:#f9fbfd;
+    color:#667085;
+    font-size:10px;
+    font-weight:700;
+  }
+
+  #command .command-compare-month-select[hidden]{
+    display:none !important;
+  }
+
+  #command .command-compare-month-select select{
+    height:26px;
+    min-width:72px;
+    border:1px solid #cfd8e3;
+    border-radius:5px;
+    background:#fff;
+    color:#344054;
+    font-family:inherit;
+    font-size:11px;
+    font-weight:700;
+    padding:0 6px;
+    cursor:pointer;
+  }
+
+  @media (min-width:1500px) and (min-height:900px) and (max-height:1150px){
+    #command .command-compare-month-select{
+      height:32px;
+      font-size:9.5px;
+    }
+
+    #command .command-compare-month-select select{
+      height:24px;
+      font-size:10.5px;
+    }
+  }
+
+  @media(max-width:900px){
+    #command .command-compare-toolbar{
+      height:auto;
+      align-items:flex-start;
+      flex-direction:column;
+    }
+
+    #command .command-compare-mode-wrap{
+      width:100%;
+      flex-wrap:wrap;
+    }
+
+    #command .command-compare-range{
+      align-items:flex-start;
+    }
+  }
+
+
+  /* ===== Comparison future-month no-data state ===== */
+  #command .compare-total-col.no-data .compare-total-value{
+    bottom:10px !important;
+  }
+
+  #command .compare-total-value.no-data-label{
+    color:#98a2b3 !important;
+    font-size:11px !important;
+    font-weight:700 !important;
+  }
+
+  #command .compare-total-bar.no-data-bar{
+    background:transparent !important;
+  }
+
+  #command .compare-risk-no-data{
+    display:flex !important;
+    align-items:center;
+    justify-content:center;
+    background:
+      repeating-linear-gradient(
+        135deg,
+        #f8fafc,
+        #f8fafc 8px,
+        #f2f4f7 8px,
+        #f2f4f7 16px
+      ) !important;
+    border:1px dashed #d0d5dd;
+    color:#98a2b3;
+    font-size:11px;
+    font-weight:700;
+  }
+
+  #command .compare-risk-row.no-data .compare-risk-total strong{
+    color:#98a2b3;
+  }
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
@@ -6878,6 +7351,7 @@
     <div class="command-view-tabs" id="commandViewTabs" role="tablist" aria-label="指揮儀表板檢視">
       <button type="button" class="command-view-tab active" data-command-view="flow" role="tab" aria-selected="true">指揮板</button>
       <button type="button" class="command-view-tab" data-command-view="closure" role="tab" aria-selected="false">結案率</button>
+      <button type="button" class="command-view-tab" data-command-view="comparison" role="tab" aria-selected="false">同期比較</button>
     </div>
 
     <div class="command-view active" id="commandFlowView" data-command-panel="flow">
@@ -7133,6 +7607,75 @@
           </div>
         </div>
       </article>
+    </div>
+
+    <div class="command-view" id="commandComparisonView" data-command-panel="comparison" hidden>
+      <div class="command-compare-toolbar">
+        <div class="command-compare-mode-wrap">
+          <div class="command-compare-mode" id="commandCompareMode">
+            <button type="button" data-mode="month">同月比較</button>
+            <button type="button" class="active" data-mode="ytd">同期累計</button>
+            <button type="button" data-mode="customMonth">其他月份比較</button>
+          </div>
+
+          <label class="command-compare-month-select" id="commandCompareMonthSelect" hidden>
+            <span>選擇月份</span>
+            <select id="commandCompareMonth">
+              <option value="1">1 月</option>
+              <option value="2">2 月</option>
+              <option value="3">3 月</option>
+              <option value="4">4 月</option>
+              <option value="5">5 月</option>
+              <option value="6">6 月</option>
+              <option value="7">7 月</option>
+              <option value="8">8 月</option>
+              <option value="9" selected>9 月</option>
+              <option value="10">10 月</option>
+              <option value="11">11 月</option>
+              <option value="12">12 月</option>
+            </select>
+          </label>
+        </div>
+        <div class="command-compare-range">
+          <strong id="commandCompareRangeTitle">同期累計｜1/1－9/1</strong>
+          <span>比較近三年相同期間</span>
+        </div>
+      </div>
+
+      <div class="command-compare-grid">
+        <article class="command-compare-card compare-total-card">
+          <div class="command-compare-card-head">
+            <div>
+              <h3>總通報件數</h3>
+              <p id="commandCompareTotalSubtitle">各年度 1/1－9/1 累計通報案件</p>
+            </div>
+            <span class="command-compare-unit">件</span>
+          </div>
+
+          <div class="command-compare-total-chart" id="commandCompareTotalChart">
+            <div class="compare-yaxis">
+              <span>450</span><span>300</span><span>150</span><span>0</span>
+            </div>
+            <div class="compare-total-plot" id="compareTotalPlot"></div>
+          </div>
+        </article>
+
+        <article class="command-compare-card compare-risk-card">
+          <div class="command-compare-card-head">
+            <div>
+              <h3>通報案件風險分佈</h3>
+              <p id="commandCompareRiskSubtitle">各年度同期通報案件之低／中／高風險占比</p>
+            </div>
+            <div class="compare-risk-legend">
+              <span><i class="low"></i>低風險</span>
+              <span><i class="medium"></i>中風險</span>
+              <span><i class="high"></i>高風險</span>
+            </div>
+          </div>
+
+          <div class="compare-risk-body" id="compareRiskBody"></div>
+        </article>
+      </div>
     </div>
   </section>
 </div>
@@ -8499,6 +9042,297 @@ document.addEventListener('DOMContentLoaded', () => {
       redrawFlowAfterSettle(30);
     }
   });
+
+
+  // ===== Command dashboard same-period comparison =====
+  const commandComparisonData = {
+    month:{
+      rangeTitle:'同月比較｜9 月截至 9/1',
+      totalSubtitle:'比較近三年 9/1－9/1 的通報案件數',
+      riskSubtitle:'近三年 9 月截至相同日期之風險分佈',
+      years:[
+        {year:2024,roc:'民國113年',total:4,low:1,medium:2,high:1},
+        {year:2025,roc:'民國114年',total:5,low:2,medium:2,high:1},
+        {year:2026,roc:'民國115年',total:6,low:2,medium:3,high:1}
+      ]
+    },
+    ytd:{
+      rangeTitle:'同期累計｜1/1－9/1',
+      totalSubtitle:'比較近三年 1/1－9/1 累計通報案件',
+      riskSubtitle:'各年度同期累計通報案件之低／中／高風險占比',
+      years:[
+        {year:2024,roc:'民國113年',total:86,low:31,medium:42,high:13},
+        {year:2025,roc:'民國114年',total:136,low:45,medium:67,high:24},
+        {year:2026,roc:'民國115年',total:420,low:140,medium:233,high:47}
+      ]
+    }
+  };
+
+  // Prototype monthly data. Replace with formal source data later.
+  const commandMonthlyComparisonData = {
+    1:[
+      {year:2024,roc:'民國113年',total:8,low:3,medium:4,high:1},
+      {year:2025,roc:'民國114年',total:12,low:4,medium:6,high:2},
+      {year:2026,roc:'民國115年',total:16,low:5,medium:9,high:2}
+    ],
+    2:[
+      {year:2024,roc:'民國113年',total:7,low:2,medium:4,high:1},
+      {year:2025,roc:'民國114年',total:11,low:4,medium:5,high:2},
+      {year:2026,roc:'民國115年',total:18,low:6,medium:10,high:2}
+    ],
+    3:[
+      {year:2024,roc:'民國113年',total:9,low:3,medium:5,high:1},
+      {year:2025,roc:'民國114年',total:14,low:5,medium:7,high:2},
+      {year:2026,roc:'民國115年',total:22,low:7,medium:12,high:3}
+    ],
+    4:[
+      {year:2024,roc:'民國113年',total:10,low:3,medium:5,high:2},
+      {year:2025,roc:'民國114年',total:15,low:5,medium:8,high:2},
+      {year:2026,roc:'民國115年',total:26,low:8,medium:15,high:3}
+    ],
+    5:[
+      {year:2024,roc:'民國113年',total:12,low:4,medium:6,high:2},
+      {year:2025,roc:'民國114年',total:17,low:6,medium:9,high:2},
+      {year:2026,roc:'民國115年',total:31,low:10,medium:17,high:4}
+    ],
+    6:[
+      {year:2024,roc:'民國113年',total:11,low:4,medium:6,high:1},
+      {year:2025,roc:'民國114年',total:18,low:6,medium:10,high:2},
+      {year:2026,roc:'民國115年',total:36,low:12,medium:20,high:4}
+    ],
+    7:[
+      {year:2024,roc:'民國113年',total:13,low:5,medium:7,high:1},
+      {year:2025,roc:'民國114年',total:20,low:7,medium:11,high:2},
+      {year:2026,roc:'民國115年',total:40,low:13,medium:22,high:5}
+    ],
+    8:[
+      {year:2024,roc:'民國113年',total:12,low:4,medium:7,high:1},
+      {year:2025,roc:'民國114年',total:19,low:6,medium:11,high:2},
+      {year:2026,roc:'民國115年',total:38,low:12,medium:21,high:5}
+    ],
+    9:[
+      {year:2024,roc:'民國113年',total:15,low:5,medium:8,high:2},
+      {year:2025,roc:'民國114年',total:22,low:7,medium:12,high:3},
+      {year:2026,roc:'民國115年',total:44,low:14,medium:25,high:5}
+    ],
+    10:[
+      {year:2024,roc:'民國113年',total:14,low:5,medium:7,high:2},
+      {year:2025,roc:'民國114年',total:21,low:7,medium:11,high:3},
+      {year:2026,roc:'民國115年',total:41,low:13,medium:23,high:5}
+    ],
+    11:[
+      {year:2024,roc:'民國113年',total:16,low:5,medium:9,high:2},
+      {year:2025,roc:'民國114年',total:23,low:8,medium:12,high:3},
+      {year:2026,roc:'民國115年',total:45,low:15,medium:25,high:5}
+    ],
+    12:[
+      {year:2024,roc:'民國113年',total:18,low:6,medium:10,high:2},
+      {year:2025,roc:'民國114年',total:25,low:8,medium:14,high:3},
+      {year:2026,roc:'民國115年',total:48,low:16,medium:27,high:5}
+    ]
+  };
+
+  function comparePercent(value,total){
+    return total>0 ? value/total*100 : 0;
+  }
+
+  function renderCommandComparison(mode='ytd',customMonth=9){
+    let data;
+
+    if(mode==='customMonth'){
+      const monthNumber=Number(customMonth)||9;
+      const currentYear=2026;
+      const currentMonth=9;
+      const currentDay=1;
+
+      let years=(commandMonthlyComparisonData[monthNumber] || commandMonthlyComparisonData[9])
+        .map(row=>({...row}));
+
+      // Time-aware prototype rule:
+      // - past months in 2026 = full-month data
+      // - current month = month-to-date
+      // - future months = no data
+      years=years.map(row=>{
+        if(row.year!==currentYear) return row;
+
+        if(monthNumber>currentMonth){
+          return {
+            ...row,
+            total:null,
+            low:null,
+            medium:null,
+            high:null,
+            noData:true
+          };
+        }
+
+        if(monthNumber===currentMonth){
+          return {
+            ...row,
+            total:6,
+            low:2,
+            medium:3,
+            high:1,
+            partial:true
+          };
+        }
+
+        return row;
+      });
+
+      const isCurrentMonth=monthNumber===currentMonth;
+      const isFutureMonth=monthNumber>currentMonth;
+
+      data={
+        rangeTitle:isCurrentMonth
+          ? `其他月份比較｜${monthNumber} 月截至 ${monthNumber}/${currentDay}`
+          : `其他月份比較｜${monthNumber} 月`,
+        totalSubtitle:isCurrentMonth
+          ? `比較 2024、2025 年 ${monthNumber} 月整月，2026 年截至 ${monthNumber}/${currentDay} 的通報案件數`
+          : isFutureMonth
+            ? `比較近三年 ${monthNumber} 月通報案件數；2026 年尚未發生`
+            : `比較近三年 ${monthNumber} 月整月通報案件數`,
+        riskSubtitle:isCurrentMonth
+          ? `2026 年為 ${monthNumber} 月截至 ${monthNumber}/${currentDay} 的風險分佈`
+          : isFutureMonth
+            ? `2026 年 ${monthNumber} 月尚無資料`
+            : `近三年 ${monthNumber} 月通報案件之低／中／高風險占比`,
+        years
+      };
+    }else{
+      data=commandComparisonData[mode] || commandComparisonData.ytd;
+    }
+
+    const rangeTitle=document.getElementById('commandCompareRangeTitle');
+    const totalSubtitle=document.getElementById('commandCompareTotalSubtitle');
+    const riskSubtitle=document.getElementById('commandCompareRiskSubtitle');
+    const totalPlot=document.getElementById('compareTotalPlot');
+    const riskBody=document.getElementById('compareRiskBody');
+
+    if(rangeTitle) rangeTitle.textContent=data.rangeTitle;
+    if(totalSubtitle) totalSubtitle.textContent=data.totalSubtitle;
+    if(riskSubtitle) riskSubtitle.textContent=data.riskSubtitle;
+
+    const maxTotal=Math.max(...data.years.map(row=>Number.isFinite(row.total)?row.total:0),1);
+    const scaleMax=mode==='ytd'
+      ? Math.ceil(maxTotal/50)*50
+      : Math.max(10,Math.ceil(maxTotal/10)*10);
+
+    const yaxis=document.querySelector('#commandComparisonView .compare-yaxis');
+    if(yaxis){
+      yaxis.innerHTML=[
+        scaleMax,
+        Math.round(scaleMax*2/3),
+        Math.round(scaleMax/3),
+        0
+      ].map(v=>`<span>${v}</span>`).join('');
+    }
+
+    if(totalPlot){
+      totalPlot.innerHTML=data.years.map(row=>{
+        if(row.noData || !Number.isFinite(row.total)){
+          return `
+            <div class="compare-total-col no-data ${row.year===2026?'current':''}" style="--compare-height:0%">
+              <span class="compare-total-value no-data-label">尚無資料</span>
+              <div class="compare-total-bar no-data-bar" style="height:0"></div>
+              <span class="compare-total-year">${row.year}</span>
+              <small class="compare-total-roc">${row.roc}</small>
+            </div>`;
+        }
+
+        const height=Math.max(2,row.total/scaleMax*100);
+        return `
+          <div class="compare-total-col ${row.year===2026?'current':''}" style="--compare-height:${height}%">
+            <span class="compare-total-value">${row.total}${row.partial?'*':''}</span>
+            <div class="compare-total-bar" style="height:${height}%"
+                 title="${row.year}：${row.total} 件${row.partial?'（截至目前日期）':''}"></div>
+            <span class="compare-total-year">${row.year}</span>
+            <small class="compare-total-roc">${row.roc}${row.partial?'｜截至目前':''}</small>
+          </div>`;
+      }).join('');
+    }
+
+    if(riskBody){
+      riskBody.innerHTML=data.years.map(row=>{
+        if(row.noData || !Number.isFinite(row.total)){
+          return `
+            <div class="compare-risk-row no-data">
+              <div class="compare-risk-year">
+                <strong>${row.year}</strong>
+                <span>${row.roc}</span>
+              </div>
+              <div class="compare-risk-stack compare-risk-no-data">
+                <span>尚無資料</span>
+              </div>
+              <div class="compare-risk-total">
+                <strong>—</strong>
+                <span>總件數</span>
+              </div>
+            </div>`;
+        }
+
+        const low=comparePercent(row.low,row.total);
+        const medium=comparePercent(row.medium,row.total);
+        const high=comparePercent(row.high,row.total);
+
+        return `
+          <div class="compare-risk-row">
+            <div class="compare-risk-year">
+              <strong>${row.year}</strong>
+              <span>${row.roc}${row.partial?'｜截至目前':''}</span>
+            </div>
+
+            <div class="compare-risk-stack" aria-label="${row.year} 風險分佈">
+              <div class="compare-risk-seg low"
+                   style="width:${low.toFixed(2)}%"
+                   title="低風險：${row.low} 件（${low.toFixed(1)}%）">${low.toFixed(1)}%</div>
+              <div class="compare-risk-seg medium"
+                   style="width:${medium.toFixed(2)}%"
+                   title="中風險：${row.medium} 件（${medium.toFixed(1)}%）">${medium.toFixed(1)}%</div>
+              <div class="compare-risk-seg high"
+                   style="width:${high.toFixed(2)}%"
+                   title="高風險：${row.high} 件（${high.toFixed(1)}%）">${high.toFixed(1)}%</div>
+            </div>
+
+            <div class="compare-risk-total">
+              <strong>${row.total}</strong>
+              <span>總件數</span>
+            </div>
+          </div>`;
+      }).join('');
+    }
+  }
+
+  const commandCompareMode=document.getElementById('commandCompareMode');
+  const commandCompareMonthSelect=document.getElementById('commandCompareMonthSelect');
+  const commandCompareMonth=document.getElementById('commandCompareMonth');
+
+  if(commandCompareMode){
+    commandCompareMode.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        commandCompareMode.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const mode=btn.dataset.mode;
+        if(commandCompareMonthSelect){
+          commandCompareMonthSelect.hidden=mode!=='customMonth';
+        }
+
+        renderCommandComparison(mode,commandCompareMonth?.value || 9);
+      });
+    });
+  }
+
+  if(commandCompareMonth){
+    commandCompareMonth.addEventListener('change',()=>{
+      const activeMode=commandCompareMode?.querySelector('button.active')?.dataset.mode;
+      if(activeMode==='customMonth'){
+        renderCommandComparison('customMonth',commandCompareMonth.value);
+      }
+    });
+  }
+
+  renderCommandComparison('ytd');
 
   const commandViewTabs=document.getElementById('commandViewTabs');
   if(commandViewTabs){
