@@ -10444,6 +10444,117 @@
     }
   }
 
+
+  /* ===== V45 Basic age Y-axis title - CSS only, no DOM changes ===== */
+  #basic .age-chart{
+    display:grid !important;
+    grid-template-columns:26px 42px minmax(0,1fr) !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    height:auto !important;
+    align-items:stretch !important;
+  }
+
+  #basic .age-chart::before{
+    content:"通報人次";
+    grid-column:1;
+    grid-row:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    writing-mode:vertical-rl;
+    transform:none;
+    color:#667085;
+    font-size:11px;
+    font-weight:700;
+    line-height:1;
+    letter-spacing:.03em;
+    white-space:nowrap;
+  }
+
+  #basic .age-chart > .y-axis{
+    grid-column:2 !important;
+    grid-row:1 !important;
+    min-width:0 !important;
+    min-height:0 !important;
+  }
+
+  #basic .age-chart > .bars{
+    grid-column:3 !important;
+    grid-row:1 !important;
+    min-width:0 !important;
+    min-height:0 !important;
+  }
+
+  @media (min-width:1500px) and (min-height:900px){
+    #basic .age-chart{
+      grid-template-columns:28px 42px minmax(0,1fr) !important;
+    }
+
+    #basic .age-chart::before{
+      font-size:12px;
+    }
+  }
+
+
+  /* ===== V47 Basic age chart hover tooltip ===== */
+  #basic .age-chart .bar-col{
+    position:relative !important;
+    cursor:default;
+  }
+
+  #basic .age-chart .vbar{
+    transition:
+      filter .16s ease,
+      transform .16s ease,
+      box-shadow .16s ease !important;
+    transform-origin:bottom center;
+  }
+
+  #basic .age-chart .bar-col:hover .vbar{
+    filter:brightness(.92);
+    transform:translateY(-2px);
+    box-shadow:0 5px 12px rgba(33,143,238,.18);
+  }
+
+  #basic .age-chart .bar-col::after{
+    content:attr(data-tooltip);
+    position:absolute;
+    left:50%;
+    bottom:calc(var(--age-bar-height, 50%) + 12px);
+    transform:translateX(-50%) translateY(4px);
+    z-index:20;
+    min-width:108px;
+    padding:7px 9px;
+    border-radius:7px;
+    background:rgba(31,41,55,.94);
+    color:#fff;
+    font-size:11px;
+    font-weight:700;
+    line-height:1.35;
+    text-align:center;
+    white-space:nowrap;
+    pointer-events:none;
+    opacity:0;
+    visibility:hidden;
+    transition:opacity .14s ease, transform .14s ease, visibility .14s ease;
+    box-shadow:0 6px 18px rgba(0,0,0,.16);
+  }
+
+  #basic .age-chart .bar-col:hover::after{
+    opacity:1;
+    visibility:visible;
+    transform:translateX(-50%) translateY(0);
+  }
+
+  @media (min-width:1500px) and (min-height:900px){
+    #basic .age-chart .bar-col::after{
+      min-width:116px;
+      padding:8px 10px;
+      font-size:12px;
+    }
+  }
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
@@ -13779,6 +13890,27 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
     renderSatisfaction('response');
+  });
+
+
+  // ===== Basic age chart hover tooltip =====
+  document.addEventListener('DOMContentLoaded',()=>{
+    document.querySelectorAll('#basic .age-chart .bar-col').forEach(col=>{
+      const bar=col.querySelector('.vbar');
+      const label=col.querySelector('span');
+      if(!bar || !label) return;
+
+      const title=bar.getAttribute('title') || '';
+      const valueMatch=title.match(/[\d,.]+/);
+      const value=valueMatch ? valueMatch[0] : '';
+      const age=label.textContent.trim();
+
+      col.dataset.tooltip=`${age} 歲｜${value} 人次`;
+      col.style.setProperty('--age-bar-height',bar.style.height || '50%');
+
+      // Native title is no longer needed because the custom tooltip is clearer.
+      bar.removeAttribute('title');
+    });
   });
 
 </script>
