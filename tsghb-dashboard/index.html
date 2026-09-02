@@ -6958,6 +6958,3492 @@
     }
   }
 
+
+  /* ===== Basic page V18: responsive grid spacing, no absolute positioning ===== */
+  #basic{
+    min-height:0;
+  }
+
+  #basic .basic-page{
+    display:grid !important;
+    grid-template-columns:minmax(0,1.58fr) minmax(500px,1fr) !important;
+    grid-template-rows:minmax(0,1fr);
+    gap:24px !important;
+    align-items:stretch !important;
+    margin-top:0 !important;
+    min-height:0;
+  }
+
+  #basic .basic-left{
+    display:grid !important;
+    grid-template-rows:auto minmax(0,1fr);
+    gap:22px;
+    min-height:0;
+    height:auto !important;
+  }
+
+  #basic .basic-kpis{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:16px !important;
+    align-items:stretch;
+    margin:0 !important;
+    padding:10px 2px 6px;
+  }
+
+  #basic .basic-kpi{
+    min-width:0;
+    min-height:128px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:16px;
+    text-align:center;
+  }
+
+  #basic .basic-kpi-label{
+    margin:0 !important;
+    line-height:1.35;
+  }
+
+  #basic .basic-kpi-value{
+    line-height:1;
+  }
+
+  #basic .district-chart-card{
+    margin:0 !important;
+    min-height:0 !important;
+    display:grid !important;
+    grid-template-rows:auto minmax(0,1fr) auto;
+    gap:8px;
+    padding:14px 16px 12px !important;
+  }
+
+  #basic .district-chart-card .district-card-head{
+    margin:0 !important;
+    min-height:28px;
+  }
+
+  #basic .district-bar-chart{
+    display:grid !important;
+    grid-template-columns:40px minmax(0,1fr) !important;
+    min-height:0 !important;
+    height:auto !important;
+  }
+
+  #basic .district-y-axis{
+    min-height:0;
+    height:auto !important;
+    padding:0 7px 28px 0 !important;
+  }
+
+  #basic .district-bars{
+    min-width:0;
+    min-height:0;
+    height:auto !important;
+    gap:clamp(6px,.55vw,11px) !important;
+    padding:0 10px 0 12px !important;
+  }
+
+  #basic .district-bar-col{
+    min-width:0;
+  }
+
+  #basic .district-chart-card > .axis-title{
+    height:auto !important;
+    flex:none !important;
+    margin:0 !important;
+    line-height:1.2 !important;
+  }
+
+  #basic .basic-right{
+    display:grid !important;
+    grid-template-rows:repeat(2,minmax(0,1fr));
+    gap:18px !important;
+    min-height:0;
+    height:auto !important;
+  }
+
+  #basic .basic-chart-card{
+    min-height:0 !important;
+    display:grid;
+    grid-template-rows:auto minmax(0,1fr) auto;
+    gap:8px;
+    padding:12px 14px 10px !important;
+  }
+
+  #basic .basic-chart-card h3{
+    margin:0 !important;
+  }
+
+  #basic .age-chart{
+    min-height:0;
+    height:auto !important;
+    display:grid;
+    grid-template-columns:42px minmax(0,1fr);
+  }
+
+  #basic .age-chart .y-axis{
+    min-height:0;
+    padding:2px 7px 24px 0;
+  }
+
+  #basic .age-chart .bars{
+    min-width:0;
+    min-height:0;
+    gap:clamp(6px,.48vw,10px);
+    padding:0 10px;
+  }
+
+  /* Gender block uses normal grid flow instead of absolute positioning. */
+  #basic .gender-card{
+    overflow:hidden;
+  }
+
+  #basic .gender-layout{
+    min-height:0;
+    height:auto !important;
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 82px !important;
+    gap:16px !important;
+    align-items:center;
+    padding:4px 14px 8px !important;
+  }
+
+  #basic .gender-plot-area{
+    position:static !important;
+    min-width:0;
+    min-height:0;
+    height:auto !important;
+    display:grid !important;
+    grid-template-columns:minmax(104px,1fr) auto minmax(104px,1fr);
+    gap:12px;
+    align-items:center;
+  }
+
+  #basic .gender-side-label{
+    position:static !important;
+    inset:auto !important;
+    top:auto !important;
+    left:auto !important;
+    right:auto !important;
+    transform:none !important;
+    display:flex;
+    align-items:center;
+    min-width:0;
+  }
+
+  #basic .gender-left-label{
+    justify-self:end;
+  }
+
+  #basic .gender-right-label{
+    justify-self:start;
+  }
+
+  #basic .gender-left-label i{
+    margin-left:6px !important;
+  }
+
+  #basic .gender-right-label i{
+    margin-right:6px !important;
+  }
+
+  #basic .screenshot-pie{
+    justify-self:center;
+  }
+
+  #basic .screenshot-legend{
+    justify-self:start;
+    align-self:center;
+  }
+
+  @media (min-width:1500px) and (min-height:900px) and (max-height:1150px){
+    #basic.page.active{
+      padding-top:18px !important;
+    }
+
+    #basic .basic-page{
+      height:calc(100vh - 159px) !important;
+      min-height:0 !important;
+      grid-template-columns:minmax(0,1.58fr) minmax(540px,1fr) !important;
+      gap:26px !important;
+    }
+
+    #basic .basic-left{
+      grid-template-rows:150px minmax(0,1fr);
+      gap:24px;
+    }
+
+    #basic .basic-kpis{
+      gap:18px !important;
+      padding:6px 4px 4px;
+    }
+
+    #basic .basic-kpi{
+      min-height:0;
+      gap:18px;
+    }
+
+    #basic .basic-kpi-label{
+      font-size:17px !important;
+    }
+
+    #basic .basic-kpi-value{
+      font-size:66px !important;
+    }
+
+    #basic .district-chart-card{
+      padding:14px 16px 12px !important;
+    }
+
+    #basic .district-card-head h3,
+    #basic .basic-chart-card h3{
+      font-size:17px !important;
+    }
+
+    #basic .district-bar-col span{
+      font-size:11px !important;
+    }
+
+    #basic .district-bar-col b{
+      font-size:10px !important;
+    }
+
+    #basic .basic-right{
+      gap:18px !important;
+    }
+
+    #basic .basic-chart-card{
+      padding:12px 14px 10px !important;
+    }
+
+    #basic .bar-col span{
+      font-size:10px !important;
+    }
+
+    #basic .gender-layout{
+      grid-template-columns:minmax(0,1fr) 78px !important;
+      gap:14px !important;
+      padding:2px 12px 6px !important;
+    }
+
+    #basic .gender-plot-area{
+      grid-template-columns:minmax(98px,1fr) auto minmax(98px,1fr);
+      gap:10px;
+    }
+
+    #basic .screenshot-pie{
+      width:170px !important;
+      height:170px !important;
+      flex-basis:170px !important;
+    }
+
+    #basic .gender-side-label{
+      font-size:11px !important;
+    }
+
+    #basic .gender-side-label i{
+      width:22px !important;
+    }
+
+    #basic .screenshot-legend{
+      font-size:12px !important;
+    }
+  }
+
+  @media (max-width:1199px){
+    #basic .basic-page{
+      height:auto !important;
+      grid-template-columns:1fr !important;
+      gap:18px !important;
+    }
+
+    #basic .basic-left{
+      grid-template-rows:auto minmax(420px,1fr);
+      gap:18px;
+    }
+
+    #basic .basic-right{
+      grid-template-columns:1fr 1fr !important;
+      grid-template-rows:auto !important;
+      gap:14px !important;
+    }
+  }
+
+  @media (max-width:760px){
+    #basic .basic-kpis{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+
+    #basic .basic-right{
+      grid-template-columns:1fr !important;
+    }
+
+    #basic .gender-layout{
+      grid-template-columns:1fr !important;
+    }
+
+    #basic .gender-plot-area{
+      grid-template-columns:minmax(70px,1fr) auto minmax(70px,1fr);
+    }
+
+    #basic .screenshot-legend{
+      justify-self:center;
+      display:flex;
+      flex-direction:row;
+      align-items:center;
+      gap:12px;
+    }
+  }
+
+
+  /* ==================================================================
+     V33 GLOBAL LAYOUT NORMALIZATION
+     Page-level composition uses Grid/Flex and gap.
+     Absolute positioning is reserved for functional overlays, SVG lines,
+     gauge internals and chart labels only.
+     ================================================================== */
+
+  @media (min-width:1500px) and (min-height:900px) and (max-height:1200px){
+
+    /* ---------- Shared page viewport ---------- */
+    #risk.page.active,
+    #efficiency.page.active,
+    #outcome.page.active,
+    #ai.page.active,
+    #reporter.page.active,
+    #hospital.page.active,
+    #command.page.active{
+      height:calc(100vh - 159px) !important;
+      min-height:0 !important;
+      overflow:hidden !important;
+      padding-top:12px !important;
+      box-sizing:border-box !important;
+    }
+
+    /* ================================================================
+       2. Risk analysis
+       ================================================================ */
+    #risk.page.active{
+      display:grid !important;
+      grid-template-rows:52px minmax(0,1fr) !important;
+      gap:14px !important;
+    }
+
+    #risk .risk-page-head{
+      display:flex !important;
+      align-items:center !important;
+      justify-content:space-between !important;
+      gap:18px !important;
+      min-height:0 !important;
+      margin:0 !important;
+    }
+
+    #risk .risk-page-head > div:first-child{
+      display:flex;
+      align-items:baseline;
+      gap:12px;
+      min-width:0;
+    }
+
+    #risk .risk-page-title{
+      margin:0 !important;
+      font-size:20px !important;
+      line-height:1.2 !important;
+    }
+
+    #risk .risk-page-subtitle{
+      margin:0 !important;
+      font-size:11px !important;
+    }
+
+    #risk .risk-filter{
+      display:flex !important;
+      align-items:center;
+      gap:7px !important;
+      margin:0 !important;
+    }
+
+    #risk .risk-analysis-card{
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-rows:38px minmax(0,1fr) !important;
+      gap:8px !important;
+      margin:0 !important;
+      padding:14px 18px 16px !important;
+      overflow:hidden !important;
+    }
+
+    #risk .risk-legend{
+      display:flex !important;
+      align-items:center !important;
+      justify-content:flex-end !important;
+      gap:18px !important;
+      margin:0 !important;
+      min-height:0;
+    }
+
+    #risk .risk-chart{
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-rows:30px repeat(4,minmax(0,1fr)) !important;
+      gap:12px !important;
+      padding:0 !important;
+    }
+
+    #risk .risk-axis-labels{
+      margin-left:190px !important;
+      min-height:0;
+      display:flex;
+      align-items:end;
+    }
+
+    #risk .risk-row{
+      min-height:0 !important;
+      display:grid !important;
+      grid-template-columns:170px minmax(0,1fr) !important;
+      align-items:center !important;
+      gap:20px !important;
+      margin:0 !important;
+    }
+
+    #risk .risk-row-name{
+      font-size:14px !important;
+      line-height:1.35 !important;
+    }
+
+    #risk .risk-stack{
+      height:clamp(56px,7vh,76px) !important;
+      min-width:0 !important;
+    }
+
+
+    /* ================================================================
+       3. Efficiency
+       ================================================================ */
+    #efficiency.page.active{
+      display:grid !important;
+      grid-template-rows:42px 146px minmax(0,1fr) !important;
+      gap:14px !important;
+    }
+
+    #efficiency .efficiency-type-tabs{
+      display:flex !important;
+      align-items:center !important;
+      gap:7px !important;
+      margin:0 !important;
+      min-height:0;
+    }
+
+    #efficiency .efficiency-type-tab{
+      min-width:106px;
+      height:36px !important;
+    }
+
+    #efficiency .efficiency-kpi-grid{
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+      gap:12px !important;
+      margin:0 !important;
+    }
+
+    #efficiency .efficiency-kpi-card{
+      min-width:0;
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-rows:minmax(34px,auto) minmax(0,1fr) auto;
+      align-items:center;
+      justify-items:center;
+      gap:5px;
+      padding:14px 10px 10px !important;
+    }
+
+    #efficiency .efficiency-kpi-card h3{
+      margin:0 !important;
+      font-size:13px !important;
+      text-align:center;
+      line-height:1.35;
+    }
+
+    #efficiency .efficiency-kpi-card strong{
+      font-size:42px !important;
+      line-height:1 !important;
+    }
+
+    #efficiency .efficiency-gauge-grid{
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+      grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+      gap:12px !important;
+      margin:0 !important;
+    }
+
+    #efficiency .efficiency-gauge-card{
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-rows:38px minmax(0,1fr) !important;
+      gap:4px;
+      align-items:stretch;
+      padding:12px 12px 10px !important;
+      overflow:hidden !important;
+    }
+
+    #efficiency .efficiency-gauge-card h3{
+      min-width:0;
+      margin:0 !important;
+      font-size:12.5px !important;
+      line-height:1.35 !important;
+      text-align:center;
+    }
+
+    #efficiency .efficiency-gauge{
+      width:min(190px,100%) !important;
+      height:100% !important;
+      min-height:0 !important;
+      justify-self:center;
+      align-self:stretch;
+    }
+
+
+    /* ================================================================
+       4. Outcome
+       ================================================================ */
+    #outcome.page.active{
+      display:grid !important;
+      grid-template-rows:42px 32px minmax(0,1fr) !important;
+      gap:10px !important;
+    }
+
+    #outcome .outcome-page-head{
+      min-height:0 !important;
+      height:auto !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:flex-end !important;
+      margin:0 !important;
+    }
+
+    #outcome .outcome-filter{
+      display:flex !important;
+      align-items:center;
+      gap:7px !important;
+      margin:0 !important;
+    }
+
+    #outcome .outcome-legend{
+      min-height:0 !important;
+      height:auto !important;
+      display:flex !important;
+      align-items:center !important;
+      gap:16px !important;
+      margin:0 !important;
+      padding:0 2px !important;
+    }
+
+    #outcome .outcome-legend small{
+      margin-left:auto;
+    }
+
+    #outcome .outcome-grid{
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+      grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+      gap:12px !important;
+      margin:0 !important;
+    }
+
+    #outcome .outcome-card{
+      min-width:0 !important;
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-rows:38px minmax(0,1fr) 42px !important;
+      gap:5px !important;
+      padding:11px 12px 10px !important;
+      overflow:hidden !important;
+    }
+
+    #outcome .outcome-card-head{
+      min-height:0;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+
+    #outcome .outcome-card-head h3{
+      margin:0 !important;
+      font-size:13px !important;
+    }
+
+    #outcome .outcome-donut-btn{
+      min-height:0 !important;
+      height:auto !important;
+      align-self:stretch;
+    }
+
+    #outcome .outcome-donut{
+      width:min(158px,78%) !important;
+      aspect-ratio:1 / 1;
+      height:auto !important;
+      margin:auto !important;
+    }
+
+    #outcome .outcome-breakdown{
+      min-height:0;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:space-between !important;
+      gap:6px !important;
+      margin:0 !important;
+    }
+
+
+    /* ================================================================
+       5. AI
+       ================================================================ */
+    #ai.page.active{
+      display:block !important;
+    }
+
+    #ai .ai-layout{
+      height:100% !important;
+      min-height:0 !important;
+      display:grid !important;
+      grid-template-columns:minmax(0,1.62fr) minmax(420px,.88fr) !important;
+      gap:16px !important;
+      align-items:stretch !important;
+      margin:0 !important;
+    }
+
+    #ai .ai-scatter-card{
+      min-width:0;
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-rows:72px minmax(0,1fr) !important;
+      gap:0;
+      padding:0 !important;
+      overflow:hidden !important;
+    }
+
+    #ai .ai-card-head{
+      min-height:0 !important;
+      height:auto !important;
+      display:flex !important;
+      align-items:flex-start !important;
+      justify-content:space-between !important;
+      gap:16px !important;
+      padding:14px 16px 10px !important;
+      margin:0 !important;
+    }
+
+    #ai .ai-card-head h3{
+      margin:0 !important;
+      font-size:17px !important;
+    }
+
+    #ai .ai-card-head p{
+      margin:5px 0 0 !important;
+      font-size:10px !important;
+      line-height:1.4 !important;
+    }
+
+    #ai .ai-line-legend{
+      flex:0 0 auto;
+      align-self:flex-start;
+    }
+
+    #ai .ai-scatter-wrap{
+      min-width:0;
+      min-height:0 !important;
+      height:auto !important;
+      display:flex !important;
+      align-items:stretch !important;
+      justify-content:stretch !important;
+      padding:0 10px 10px !important;
+    }
+
+    #ai .ai-scatter-svg{
+      width:100% !important;
+      height:100% !important;
+      min-height:0;
+    }
+
+    #ai .ai-right{
+      min-width:0;
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-rows:132px minmax(0,1fr) !important;
+      gap:12px !important;
+    }
+
+    #ai .ai-kpi-grid{
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+      gap:10px !important;
+      margin:0 !important;
+    }
+
+    #ai .ai-kpi-card{
+      min-width:0;
+      min-height:0 !important;
+      height:auto !important;
+      display:flex !important;
+      flex-direction:column;
+      justify-content:center;
+      gap:5px;
+      padding:13px 14px !important;
+    }
+
+    #ai .ai-kpi-card strong{
+      font-size:34px !important;
+      line-height:1 !important;
+    }
+
+    #ai .ai-explain-card{
+      min-width:0;
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-rows:auto repeat(4,minmax(0,auto));
+      align-content:start;
+      gap:0;
+      padding:14px 16px !important;
+      overflow:auto !important;
+    }
+
+    #ai .ai-explain-card h3{
+      margin:0 0 5px !important;
+      font-size:16px !important;
+    }
+
+    #ai .ai-explain-item{
+      padding:9px 0 !important;
+      margin:0 !important;
+    }
+
+    #ai .ai-explain-item b{
+      font-size:12.5px !important;
+    }
+
+    #ai .ai-explain-item p{
+      margin:4px 0 0 !important;
+      font-size:11px !important;
+      line-height:1.58 !important;
+    }
+
+
+    /* ================================================================
+       6. Reporter
+       ================================================================ */
+    #reporter.page.active{
+      display:block !important;
+    }
+
+    #reporter .reporter-page-head{
+      display:none !important;
+    }
+
+    #reporter .reporter-dashboard-layout{
+      height:100% !important;
+      min-height:0 !important;
+      display:grid !important;
+      grid-template-columns:minmax(0,.95fr) minmax(0,1.25fr) !important;
+      grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+      gap:14px !important;
+      margin:0 !important;
+    }
+
+    #reporter .reporter-card{
+      min-width:0;
+      min-height:0 !important;
+      height:auto !important;
+      margin:0 !important;
+      overflow:hidden !important;
+    }
+
+    #reporter .reporter-pie-card{
+      grid-column:1;
+      grid-row:1 / span 2;
+      display:grid !important;
+      grid-template-rows:68px minmax(0,1fr) !important;
+    }
+
+    #reporter .reporter-bar-card{
+      grid-column:2;
+      grid-row:1;
+      display:grid !important;
+      grid-template-rows:62px minmax(0,1fr) !important;
+    }
+
+    #reporter .reporter-satisfaction-card{
+      grid-column:2;
+      grid-row:2;
+      display:grid !important;
+      grid-template-rows:66px minmax(0,1fr) !important;
+    }
+
+    #reporter .reporter-card-head,
+    #reporter .reporter-sat-head{
+      min-height:0 !important;
+      height:auto !important;
+      padding:12px 14px 8px !important;
+      margin:0 !important;
+    }
+
+    #reporter .reporter-card-head h3,
+    #reporter .reporter-sat-head h3{
+      margin:0 !important;
+      font-size:16px !important;
+    }
+
+    #reporter .reporter-card-head p,
+    #reporter .reporter-sat-head p{
+      margin:4px 0 0 !important;
+      font-size:9.5px !important;
+    }
+
+    #reporter .reporter-pie-layout{
+      min-width:0;
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-columns:minmax(0,1fr) 156px !important;
+      gap:14px !important;
+      align-items:center !important;
+      padding:10px 16px 16px !important;
+    }
+
+    #reporter .reporter-pie-wrap{
+      min-width:0;
+      min-height:0 !important;
+      height:100% !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+    }
+
+    #reporter .reporter-pie-svg{
+      width:min(100%,430px) !important;
+      height:auto !important;
+      max-height:100% !important;
+    }
+
+    #reporter .reporter-legend{
+      min-width:0;
+      align-self:center;
+    }
+
+    #reporter .reporter-chart-shell,
+    #reporter .reporter-sat-body{
+      min-width:0;
+      min-height:0 !important;
+      height:auto !important;
+      margin:0 !important;
+    }
+
+    #reporter .reporter-chart-shell{
+      display:grid !important;
+      grid-template-columns:28px minmax(0,1fr) !important;
+      padding:8px 12px 12px 8px !important;
+    }
+
+    #reporter .reporter-bar-chart{
+      min-width:0;
+      min-height:0 !important;
+      height:100% !important;
+    }
+
+    #reporter .reporter-sat-body{
+      padding:6px 14px 14px !important;
+    }
+
+
+    /* ================================================================
+       7. Hospital
+       ================================================================ */
+    #hospital.page.active{
+      display:block !important;
+    }
+
+    #hospital .hospital-split-layout{
+      height:100% !important;
+      min-height:0 !important;
+      display:grid !important;
+      grid-template-columns:minmax(470px,.40fr) minmax(0,.60fr) !important;
+      gap:14px !important;
+      align-items:stretch !important;
+      margin:0 !important;
+    }
+
+    #hospital .hospital-unable-full{
+      min-width:0;
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-rows:70px minmax(0,1fr) 34px !important;
+      overflow:hidden !important;
+    }
+
+    #hospital .hospital-card-head{
+      min-height:0 !important;
+      height:auto !important;
+      padding:9px 12px !important;
+      margin:0 !important;
+    }
+
+    #hospital .hospital-unable-total{
+      flex:0 0 104px !important;
+      width:104px !important;
+      min-width:104px !important;
+      height:52px !important;
+    }
+
+    #hospital .hospital-unable-table-wrap{
+      min-height:0 !important;
+      height:auto !important;
+      overflow:auto !important;
+    }
+
+    #hospital .hospital-unable-table{
+      width:100% !important;
+      table-layout:fixed;
+    }
+
+    #hospital .hospital-unable-table th:first-child,
+    #hospital .hospital-unable-table td:first-child{
+      width:auto;
+    }
+
+    #hospital .hospital-unable-table th:nth-child(2),
+    #hospital .hospital-unable-table td:nth-child(2){
+      width:74px;
+    }
+
+    #hospital .hospital-unable-table th:nth-child(3),
+    #hospital .hospital-unable-table td:nth-child(3){
+      width:88px;
+    }
+
+    #hospital .hospital-his-right{
+      min-width:0;
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-rows:58px minmax(0,1fr) !important;
+      gap:10px !important;
+    }
+
+    #hospital .hospital-his-head{
+      min-height:0 !important;
+      height:auto !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:space-between !important;
+      gap:14px !important;
+      margin:0 !important;
+    }
+
+    #hospital .hospital-his-grid-right{
+      min-width:0;
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+      grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+      gap:12px !important;
+      margin:0 !important;
+    }
+
+    #hospital .hospital-his-card{
+      min-width:0;
+      min-height:0 !important;
+      height:auto !important;
+      display:flex !important;
+      flex-direction:column;
+      justify-content:center;
+      gap:7px;
+      padding:14px 15px !important;
+      overflow:hidden !important;
+    }
+
+    #hospital .hospital-his-label{
+      min-height:0 !important;
+    }
+
+
+    /* ================================================================
+       8. Command dashboard
+       ================================================================ */
+    #command.page.active{
+      display:grid !important;
+      grid-template-rows:42px minmax(0,1fr) !important;
+      gap:10px !important;
+    }
+
+    #command .command-view-tabs{
+      min-height:0 !important;
+      height:auto !important;
+      display:flex !important;
+      align-items:center !important;
+      gap:7px !important;
+      margin:0 !important;
+    }
+
+    #command .command-view{
+      min-width:0;
+      min-height:0 !important;
+      height:auto !important;
+      margin:0 !important;
+      overflow:hidden !important;
+    }
+
+    #command .command-view.active{
+      display:grid !important;
+    }
+
+    #command #commandFlowView.active{
+      grid-template-rows:58px minmax(0,1fr) !important;
+      gap:10px !important;
+    }
+
+    #command .command-filter-card{
+      min-height:0 !important;
+      height:auto !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:space-between !important;
+      gap:14px !important;
+      margin:0 !important;
+      padding:8px 10px !important;
+    }
+
+    #command .command-date-filter,
+    #command .command-quick-filter{
+      display:flex !important;
+      align-items:center !important;
+      gap:7px !important;
+      margin:0 !important;
+    }
+
+    #command .interactive-flow-board{
+      min-width:0;
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-rows:38px minmax(0,1fr) !important;
+      gap:4px !important;
+      margin:0 !important;
+      padding:10px 12px 12px !important;
+      overflow:hidden !important;
+    }
+
+    #command .interactive-flow-caption{
+      min-height:0 !important;
+      display:flex !important;
+      align-items:center !important;
+      gap:10px !important;
+      margin:0 !important;
+    }
+
+    #command .interactive-flow-stage{
+      min-width:0;
+      min-height:0 !important;
+      height:auto !important;
+      margin:0 !important;
+      position:relative !important; /* required for SVG connector overlay */
+    }
+
+    #command #commandClosureView.active{
+      display:block !important;
+      height:100% !important;
+      min-height:0 !important;
+    }
+
+    #command .command-close-tab-card{
+      height:100% !important;
+      min-height:0 !important;
+      display:grid !important;
+      grid-template-rows:58px minmax(0,1fr) !important;
+      padding-bottom:8px !important;
+      margin:0 !important;
+      overflow:hidden !important;
+    }
+
+    #command .command-close-tab-card .command-card-head{
+      min-height:0 !important;
+      height:auto !important;
+      padding:10px 14px 6px !important;
+      margin:0 !important;
+    }
+
+    #command .command-close-tab-card .command-close-chart{
+      min-height:0 !important;
+      height:auto !important;
+      margin:0 !important;
+      padding-bottom:32px !important;
+    }
+
+    #command #commandComparisonView.active{
+      display:grid !important;
+      grid-template-rows:56px minmax(0,1fr) !important;
+      gap:10px !important;
+      height:100% !important;
+    }
+
+    #command .command-compare-toolbar{
+      min-height:0 !important;
+      height:auto !important;
+      margin:0 !important;
+      padding:7px 10px !important;
+    }
+
+    #command .command-compare-grid{
+      min-width:0;
+      min-height:0 !important;
+      height:auto !important;
+      max-height:none !important;
+      display:grid !important;
+      grid-template-columns:minmax(0,.43fr) minmax(0,.57fr) !important;
+      gap:12px !important;
+      margin:0 !important;
+    }
+
+    #command .command-compare-card{
+      min-height:0 !important;
+      height:auto !important;
+      margin:0 !important;
+      overflow:hidden !important;
+    }
+
+    #command .command-compare-card-head{
+      min-height:0 !important;
+      height:66px !important;
+      padding:11px 14px 8px !important;
+    }
+
+    #command .command-compare-total-chart,
+    #command .compare-risk-body{
+      min-height:0 !important;
+      height:calc(100% - 66px) !important;
+    }
+  }
+
+
+  /* ---------- Medium screens: preserve fluid flow ---------- */
+  @media (min-width:1100px) and (max-width:1499px){
+    #risk .risk-row{
+      grid-template-columns:150px minmax(0,1fr) !important;
+    }
+
+    #efficiency .efficiency-gauge-grid{
+      grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    }
+
+    #outcome .outcome-grid{
+      grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    }
+
+    #ai .ai-layout{
+      grid-template-columns:minmax(0,1.45fr) minmax(380px,.9fr) !important;
+    }
+
+    #hospital .hospital-split-layout{
+      grid-template-columns:440px minmax(0,1fr) !important;
+    }
+  }
+
+  /* ---------- Tablet / narrow layout ---------- */
+  @media (max-width:1099px){
+    #risk.page.active,
+    #efficiency.page.active,
+    #outcome.page.active,
+    #ai.page.active,
+    #reporter.page.active,
+    #hospital.page.active,
+    #command.page.active{
+      height:auto !important;
+      min-height:0 !important;
+      overflow:visible !important;
+    }
+
+    #efficiency .efficiency-kpi-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    }
+
+    #efficiency .efficiency-gauge-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    }
+
+    #outcome .outcome-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    }
+
+    #ai .ai-layout,
+    #reporter .reporter-dashboard-layout,
+    #hospital .hospital-split-layout,
+    #command .command-compare-grid{
+      grid-template-columns:1fr !important;
+      height:auto !important;
+    }
+
+    #reporter .reporter-pie-card,
+    #reporter .reporter-bar-card,
+    #reporter .reporter-satisfaction-card{
+      grid-column:auto !important;
+      grid-row:auto !important;
+      min-height:420px !important;
+    }
+
+    #hospital .hospital-his-grid-right{
+      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    }
+
+    #command .command-filter-card,
+    #command .command-compare-toolbar{
+      flex-wrap:wrap !important;
+      height:auto !important;
+    }
+  }
+
+
+  /* ==================================================================
+     V34 READABILITY PASS
+     Enlarge text and charts while preserving the 1920x1080 one-screen
+     layout established in V33.
+     ================================================================== */
+
+  @media (min-width:1500px) and (min-height:900px) and (max-height:1200px){
+
+    /* ---------- Basic ---------- */
+    #basic .basic-kpi-label{
+      font-size:18px !important;
+      font-weight:700 !important;
+    }
+
+    #basic .basic-kpi-value{
+      font-size:68px !important;
+    }
+
+    #basic .district-card-head h3,
+    #basic .basic-chart-card h3{
+      font-size:18px !important;
+    }
+
+    #basic .district-bar-col span,
+    #basic .bar-col span{
+      font-size:12px !important;
+      line-height:1.2 !important;
+    }
+
+    #basic .district-bar-col b{
+      font-size:11px !important;
+    }
+
+    #basic .district-y-axis,
+    #basic .age-chart .y-axis{
+      font-size:11px !important;
+    }
+
+    #basic .axis-title{
+      font-size:11.5px !important;
+      font-weight:700 !important;
+    }
+
+    #basic .gender-side-label{
+      font-size:12.5px !important;
+    }
+
+    #basic .screenshot-legend{
+      font-size:13px !important;
+    }
+
+    #basic .screenshot-pie{
+      width:190px !important;
+      height:190px !important;
+      flex-basis:190px !important;
+    }
+
+
+    /* ---------- Risk ---------- */
+    #risk .risk-page-title{
+      font-size:22px !important;
+    }
+
+    #risk .risk-page-subtitle{
+      font-size:12.5px !important;
+    }
+
+    #risk .risk-filter-btn{
+      min-height:36px !important;
+      padding:0 16px !important;
+      font-size:13px !important;
+    }
+
+    #risk .risk-legend{
+      font-size:12.5px !important;
+    }
+
+    #risk .risk-row{
+      grid-template-columns:188px minmax(0,1fr) !important;
+      gap:22px !important;
+    }
+
+    #risk .risk-axis-labels{
+      margin-left:210px !important;
+      font-size:11.5px !important;
+    }
+
+    #risk .risk-row-name{
+      font-size:16px !important;
+      font-weight:700 !important;
+    }
+
+    #risk .risk-seg{
+      font-size:15px !important;
+      font-weight:800 !important;
+    }
+
+    #risk .risk-stack{
+      height:clamp(66px,7.5vh,84px) !important;
+    }
+
+
+    /* ---------- Efficiency ---------- */
+    #efficiency .efficiency-type-tab{
+      height:38px !important;
+      min-width:116px !important;
+      padding:0 15px !important;
+      font-size:13px !important;
+      font-weight:800 !important;
+    }
+
+    #efficiency .efficiency-kpi-card h3{
+      font-size:14.5px !important;
+    }
+
+    #efficiency .efficiency-kpi-card strong{
+      font-size:48px !important;
+    }
+
+    #efficiency .efficiency-kpi-card span{
+      font-size:13px !important;
+    }
+
+    #efficiency .efficiency-gauge-card h3{
+      font-size:14px !important;
+      line-height:1.4 !important;
+    }
+
+    #efficiency .efficiency-gauge{
+      width:min(230px,100%) !important;
+      min-height:154px !important;
+      max-height:180px !important;
+    }
+
+    #efficiency .efficiency-gauge-arc{
+      top:7px !important;
+      width:210px !important;
+      height:105px !important;
+      left:50% !important;
+      transform:translateX(-50%) !important;
+    }
+
+    #efficiency .efficiency-gauge-arc::before{
+      width:210px !important;
+      height:210px !important;
+    }
+
+    #efficiency .efficiency-gauge-inner{
+      left:31px !important;
+      top:31px !important;
+      width:148px !important;
+      height:148px !important;
+    }
+
+    #efficiency .efficiency-gauge-value{
+      top:71px !important;
+      font-size:27px !important;
+      font-weight:700 !important;
+    }
+
+    #efficiency .efficiency-gauge-scale{
+      top:119px !important;
+      width:210px !important;
+      font-size:11px !important;
+    }
+
+
+    /* ---------- Outcome ---------- */
+    #outcome .outcome-filter-btn{
+      min-height:36px !important;
+      padding:0 16px !important;
+      font-size:13px !important;
+    }
+
+    #outcome .outcome-legend{
+      font-size:12.5px !important;
+    }
+
+    #outcome .outcome-legend small{
+      font-size:11px !important;
+    }
+
+    #outcome .outcome-card{
+      grid-template-rows:42px minmax(0,1fr) 58px !important;
+      padding:12px 14px 10px !important;
+    }
+
+    #outcome .outcome-card-head h3{
+      font-size:15px !important;
+    }
+
+    #outcome .outcome-n{
+      font-size:11.5px !important;
+    }
+
+    #outcome .outcome-donut-btn{
+      padding:3px 2px !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+    }
+
+    #outcome .outcome-donut{
+      width:min(210px,82%) !important;
+      max-width:210px !important;
+      min-width:180px !important;
+      aspect-ratio:1/1 !important;
+    }
+
+    #outcome .outcome-donut::after{
+      inset:40px !important;
+    }
+
+    #outcome .outcome-center{
+      inset:40px !important;
+      min-width:0 !important;
+      min-height:0 !important;
+      padding:0 7px !important;
+      overflow:hidden !important;
+    }
+
+    #outcome .outcome-center strong,
+    #outcome .outcome-avg{
+      display:block !important;
+      width:100% !important;
+      max-width:120px !important;
+      margin:0 auto !important;
+      font-size:28px !important;
+      line-height:1 !important;
+      font-weight:800 !important;
+      letter-spacing:-0.8px !important;
+      text-align:center !important;
+      white-space:nowrap !important;
+      overflow:hidden !important;
+      text-overflow:clip !important;
+    }
+
+    #outcome .outcome-center span{
+      display:block !important;
+      margin-top:6px !important;
+      font-size:11px !important;
+      line-height:1.15 !important;
+      font-weight:700 !important;
+      white-space:nowrap !important;
+    }
+
+    #outcome .outcome-breakdown{
+      display:grid !important;
+      grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+      gap:8px !important;
+      align-items:start !important;
+      padding:0 !important;
+    }
+
+    #outcome .outcome-breakdown div{
+      min-width:0;
+      padding-top:7px !important;
+      text-align:center;
+    }
+
+    #outcome .outcome-breakdown span{
+      font-size:11px !important;
+    }
+
+    #outcome .outcome-breakdown strong{
+      font-size:15px !important;
+    }
+
+
+    /* ---------- AI ---------- */
+    #ai .ai-layout{
+      grid-template-columns:minmax(0,1.68fr) minmax(440px,.82fr) !important;
+    }
+
+    #ai .ai-card-head{
+      grid-template-columns:minmax(0,1fr) auto;
+    }
+
+    #ai .ai-card-head h3{
+      font-size:19px !important;
+    }
+
+    #ai .ai-card-head p{
+      font-size:11.5px !important;
+    }
+
+    #ai .ai-line-legend{
+      font-size:11.5px !important;
+      gap:16px !important;
+    }
+
+    #ai .ai-line-legend i{
+      width:32px !important;
+    }
+
+    #ai .ai-axis-text{
+      font-size:13px !important;
+    }
+
+    #ai .ai-axis-title{
+      font-size:14px !important;
+      font-weight:800 !important;
+    }
+
+    #ai .ai-regression-line{
+      stroke-width:4.5 !important;
+    }
+
+    #ai .ai-baseline-line{
+      stroke-width:3.5 !important;
+    }
+
+    #ai .ai-kpi-card span{
+      font-size:13px !important;
+    }
+
+    #ai .ai-kpi-card strong{
+      font-size:39px !important;
+    }
+
+    #ai .ai-kpi-card small{
+      font-size:11px !important;
+    }
+
+    #ai .ai-explain-card h3{
+      font-size:17px !important;
+    }
+
+    #ai .ai-explain-item b{
+      font-size:13.5px !important;
+    }
+
+    #ai .ai-explain-item p{
+      font-size:12px !important;
+      line-height:1.62 !important;
+    }
+
+
+    /* ---------- Reporter ---------- */
+    #reporter .reporter-dashboard-layout{
+      grid-template-columns:minmax(0,1.02fr) minmax(0,1.18fr) !important;
+    }
+
+    #reporter .reporter-card-head h3,
+    #reporter .reporter-sat-head h3{
+      font-size:18px !important;
+    }
+
+    #reporter .reporter-card-head p,
+    #reporter .reporter-sat-head p{
+      font-size:11px !important;
+    }
+
+    #reporter .reporter-pie-layout{
+      grid-template-columns:minmax(0,1fr) 174px !important;
+    }
+
+    #reporter .reporter-pie-svg{
+      width:min(100%,500px) !important;
+    }
+
+    #reporter .reporter-legend{
+      font-size:12px !important;
+    }
+
+    #reporter .reporter-y-title{
+      font-size:11.5px !important;
+      font-weight:700 !important;
+    }
+
+    #reporter .reporter-y-axis{
+      font-size:11px !important;
+    }
+
+    #reporter .reporter-bar-value{
+      font-size:12px !important;
+      font-weight:800 !important;
+    }
+
+    #reporter .reporter-bar-label{
+      font-size:12px !important;
+      font-weight:700 !important;
+    }
+
+    #reporter .reporter-sat-tab{
+      min-height:34px !important;
+      padding:0 12px !important;
+      font-size:11.5px !important;
+    }
+
+    #reporter .reporter-sat-scale{
+      font-size:11px !important;
+    }
+
+
+    /* ---------- Hospital ---------- */
+    #hospital .hospital-unable-full .hospital-card-head h3,
+    #hospital .hospital-his-right .hospital-his-head h3{
+      font-size:21px !important;
+    }
+
+    #hospital .hospital-unable-total span{
+      font-size:12px !important;
+    }
+
+    #hospital .hospital-unable-total strong{
+      font-size:29px !important;
+    }
+
+    #hospital .hospital-unable-table thead th,
+    #hospital .hospital-unable-table .count-col button{
+      font-size:14px !important;
+    }
+
+    #hospital .hospital-unable-table tbody td,
+    #hospital .hospital-unable-table tbody td:nth-child(2),
+    #hospital .hospital-unable-table tbody td:nth-child(3){
+      font-size:14px !important;
+      line-height:1.4 !important;
+    }
+
+    #hospital .hospital-unable-foot{
+      font-size:11.5px !important;
+    }
+
+    #hospital .hospital-his-info-btn{
+      min-height:38px !important;
+      padding:0 16px !important;
+      font-size:13px !important;
+    }
+
+    #hospital .hospital-his-label{
+      font-size:13.5px !important;
+      line-height:1.45 !important;
+    }
+
+    #hospital .hospital-his-card>strong{
+      font-size:36px !important;
+    }
+
+    #hospital .hospital-his-detail{
+      font-size:11.5px !important;
+    }
+
+    #hospital .hospital-his-trend{
+      font-size:12px !important;
+    }
+
+    #hospital .hospital-his-card small{
+      font-size:10.5px !important;
+      line-height:1.45 !important;
+    }
+
+
+    /* ---------- Command ---------- */
+    #command .command-view-tab{
+      min-height:38px !important;
+      padding:0 18px !important;
+      font-size:13.5px !important;
+      font-weight:800 !important;
+    }
+
+    #command .command-filter-card{
+      font-size:12px !important;
+    }
+
+    #command .command-date-filter label span,
+    #command .command-quick-filter button{
+      font-size:11.5px !important;
+    }
+
+    #command .command-date-filter input{
+      height:34px !important;
+      font-size:12px !important;
+    }
+
+    #command .command-apply-btn{
+      height:34px !important;
+      font-size:12px !important;
+    }
+
+    #command .interactive-flow-caption{
+      font-size:12px !important;
+    }
+
+    #command .interactive-flow-caption small{
+      font-size:10.5px !important;
+    }
+
+    #command .interactive-flow-card{
+      font-size:12px !important;
+    }
+
+    #command .interactive-flow-card strong{
+      font-size:25px !important;
+    }
+
+    #command .command-close-tab-card .command-card-head h3{
+      font-size:18px !important;
+    }
+
+    #command .command-close-col strong{
+      font-size:25px !important;
+    }
+
+    #command .command-close-col b{
+      font-size:12px !important;
+    }
+
+    #command .command-close-col small{
+      font-size:10.5px !important;
+    }
+
+    #command .command-compare-mode button{
+      height:34px !important;
+      font-size:12px !important;
+      min-width:104px !important;
+    }
+
+    #command .command-compare-month-select{
+      font-size:11px !important;
+    }
+
+    #command .command-compare-month-select select{
+      font-size:11.5px !important;
+    }
+
+    #command .command-compare-range strong{
+      font-size:13px !important;
+    }
+
+    #command .command-compare-range span{
+      font-size:10.5px !important;
+    }
+
+    #command .command-compare-card-head h3{
+      font-size:18px !important;
+    }
+
+    #command .command-compare-card-head p{
+      font-size:11px !important;
+    }
+
+    #command .command-compare-unit{
+      font-size:11px !important;
+    }
+
+    #command .compare-yaxis,
+    #command .compare-total-roc,
+    #command .compare-risk-year span,
+    #command .compare-risk-total span{
+      font-size:10.5px !important;
+    }
+
+    #command .compare-total-value{
+      font-size:15px !important;
+    }
+
+    #command .compare-total-year{
+      font-size:13px !important;
+    }
+
+    #command .compare-risk-year strong{
+      font-size:15px !important;
+    }
+
+    #command .compare-risk-stack{
+      height:60px !important;
+    }
+
+    #command .compare-risk-seg{
+      font-size:11px !important;
+    }
+
+    #command .compare-risk-total strong{
+      font-size:18px !important;
+    }
+  }
+
+  /* Slightly smaller but still readable on 1500px-class desktops. */
+  @media (min-width:1200px) and (max-width:1499px){
+    #outcome .outcome-donut{
+      width:min(180px,80%) !important;
+    }
+
+    #outcome .outcome-donut::after,
+    #outcome .outcome-center{
+      inset:35px !important;
+    }
+
+    #outcome .outcome-center strong,
+    #outcome .outcome-avg{
+      font-size:25px !important;
+      max-width:104px !important;
+    }
+
+    #outcome .outcome-center span{
+      font-size:10px !important;
+    }
+  }
+
+
+  /* ===== Efficiency page V6: larger responsive half-circle gauges ===== */
+  #efficiency .efficiency-gauge-card{
+    grid-template-rows:44px minmax(0,1fr) !important;
+    gap:6px !important;
+    padding:12px 14px 10px !important;
+  }
+
+  #efficiency .efficiency-gauge-card h3{
+    margin:0 !important;
+    font-size:15px !important;
+    line-height:1.35 !important;
+    font-weight:800 !important;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+
+  #efficiency .efficiency-gauge{
+    --gauge-size:clamp(220px,13vw,260px);
+    --gauge-half:clamp(110px,6.5vw,130px);
+    --gauge-inner:clamp(154px,9.1vw,182px);
+    --gauge-inset:clamp(33px,1.95vw,39px);
+    --gauge-value-top:clamp(76px,4.6vw,92px);
+    --gauge-scale-top:clamp(128px,7.25vw,148px);
+
+    position:relative !important;
+    width:var(--gauge-size) !important;
+    max-width:100% !important;
+    height:clamp(178px,10vw,205px) !important;
+    min-height:178px !important;
+    max-height:205px !important;
+    margin:0 auto !important;
+    align-self:center !important;
+    justify-self:center !important;
+  }
+
+  #efficiency .efficiency-gauge-arc{
+    top:5px !important;
+    left:50% !important;
+    width:var(--gauge-size) !important;
+    height:var(--gauge-half) !important;
+    transform:translateX(-50%) !important;
+    overflow:hidden !important;
+  }
+
+  #efficiency .efficiency-gauge-arc::before{
+    width:var(--gauge-size) !important;
+    height:var(--gauge-size) !important;
+  }
+
+  #efficiency .efficiency-gauge-inner{
+    left:var(--gauge-inset) !important;
+    top:var(--gauge-inset) !important;
+    width:var(--gauge-inner) !important;
+    height:var(--gauge-inner) !important;
+  }
+
+  #efficiency .efficiency-gauge-value{
+    top:var(--gauge-value-top) !important;
+    left:0 !important;
+    right:0 !important;
+    font-size:clamp(28px,1.65vw,34px) !important;
+    line-height:1 !important;
+    font-weight:700 !important;
+    color:#667085 !important;
+  }
+
+  #efficiency .efficiency-gauge-scale{
+    top:var(--gauge-scale-top) !important;
+    width:var(--gauge-size) !important;
+    font-size:clamp(11px,.68vw,13px) !important;
+    font-weight:600 !important;
+  }
+
+  @media (min-width:1500px) and (min-height:900px) and (max-height:1200px){
+    #efficiency .efficiency-gauge-grid{
+      grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+      grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+      gap:14px !important;
+    }
+
+    #efficiency .efficiency-gauge-card{
+      padding:13px 16px 10px !important;
+    }
+  }
+
+  /* Short desktop viewport: keep the enlarged look but reduce safely. */
+  @media (min-width:1200px) and (max-height:899px){
+    #efficiency .efficiency-gauge{
+      --gauge-size:220px;
+      --gauge-half:110px;
+      --gauge-inner:154px;
+      --gauge-inset:33px;
+      --gauge-value-top:76px;
+      --gauge-scale-top:126px;
+      height:168px !important;
+      min-height:168px !important;
+    }
+
+    #efficiency .efficiency-gauge-value{
+      font-size:28px !important;
+    }
+
+    #efficiency .efficiency-gauge-card h3{
+      font-size:14px !important;
+    }
+  }
+
+
+  /* ==================================================================
+     V36 COMPREHENSIVE FIX PASS
+     Fix outstanding command / hospital / AI / outcome / reporter issues.
+     ================================================================== */
+
+  /* ================================================================
+     COMMAND DASHBOARD - enlarge the whole flow composition
+     ================================================================ */
+  @media (min-width:1500px) and (min-height:900px) and (max-height:1200px){
+    #command #commandFlowView.active{
+      grid-template-rows:66px minmax(0,1fr) !important;
+      gap:12px !important;
+    }
+
+    #command .command-filter-card{
+      min-height:66px !important;
+      padding:10px 14px !important;
+    }
+
+    #command .command-date-filter label span{
+      font-size:13px !important;
+    }
+
+    #command .command-date-filter input{
+      height:38px !important;
+      min-width:155px !important;
+      font-size:13px !important;
+      padding:0 10px !important;
+    }
+
+    #command .command-apply-btn,
+    #command .command-quick-filter button{
+      height:38px !important;
+      min-width:82px !important;
+      font-size:13px !important;
+    }
+
+    #command .interactive-flow-board{
+      grid-template-rows:44px minmax(0,1fr) !important;
+      padding:12px 16px 16px !important;
+    }
+
+    #command .interactive-flow-caption{
+      font-size:13px !important;
+    }
+
+    #command .interactive-flow-caption small{
+      font-size:11.5px !important;
+    }
+
+    #command .interactive-flow-stage{
+      grid-template-columns:230px minmax(860px,980px) !important;
+      gap:88px !important;
+      justify-content:center !important;
+      align-content:start !important;
+      padding:28px 18px 18px !important;
+      overflow:hidden !important;
+    }
+
+    #command .interactive-overall-column{
+      grid-template-rows:116px repeat(4,98px) !important;
+      gap:16px !important;
+    }
+
+    #command .interactive-total-card{
+      width:230px !important;
+      height:116px !important;
+      min-width:230px !important;
+      padding:14px 16px !important;
+    }
+
+    #command .overall-status{
+      width:230px !important;
+      height:98px !important;
+      min-width:230px !important;
+      padding:12px 15px !important;
+    }
+
+    #command .interactive-flow-card > span,
+    #command .interactive-flow-card .card-label{
+      font-size:14px !important;
+      font-weight:700 !important;
+    }
+
+    #command .interactive-flow-card > strong,
+    #command .interactive-total-card > strong,
+    #command .overall-status > strong{
+      font-size:36px !important;
+      line-height:1 !important;
+    }
+
+    #command .interactive-flow-card > small{
+      font-size:11px !important;
+      line-height:1.3 !important;
+    }
+
+    #command .interactive-category-column{
+      grid-template-rows:repeat(4,98px) !important;
+      gap:22px !important;
+    }
+
+    #command .interactive-category-card{
+      min-height:98px !important;
+      padding:12px 15px !important;
+    }
+
+    #command .interactive-detail-group{
+      gap:12px !important;
+    }
+
+    #command .detail-card{
+      width:158px !important;
+      min-width:158px !important;
+      height:98px !important;
+      padding:10px 12px !important;
+    }
+
+    #command .detail-card span{
+      font-size:12.5px !important;
+      font-weight:700 !important;
+    }
+
+    #command .detail-card strong{
+      font-size:28px !important;
+    }
+
+    #command .detail-card small{
+      font-size:10.5px !important;
+    }
+  }
+
+
+  /* ================================================================
+     HOSPITAL - remove large dead space inside HIS cards
+     ================================================================ */
+  #hospital .hospital-his-right{
+    align-content:start !important;
+  }
+
+  #hospital .hospital-his-grid-right{
+    align-self:start !important;
+    grid-auto-rows:auto !important;
+  }
+
+  #hospital .hospital-his-card{
+    justify-content:flex-start !important;
+    align-content:start !important;
+    min-height:0 !important;
+  }
+
+  #hospital .hospital-his-card .hospital-his-label{
+    min-height:0 !important;
+  }
+
+  #hospital .hospital-his-card small{
+    margin-top:8px !important;
+  }
+
+  @media (min-width:1500px) and (min-height:900px) and (max-height:1200px){
+    #hospital .hospital-his-right{
+      grid-template-rows:62px auto !important;
+      gap:12px !important;
+    }
+
+    #hospital .hospital-his-grid-right{
+      grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+      grid-template-rows:repeat(2,220px) !important;
+      gap:14px !important;
+    }
+
+    #hospital .hospital-his-card{
+      height:220px !important;
+      padding:16px 17px !important;
+      gap:9px !important;
+    }
+
+    #hospital .hospital-his-label{
+      font-size:14px !important;
+      line-height:1.5 !important;
+    }
+
+    #hospital .hospital-his-card > strong{
+      font-size:38px !important;
+    }
+
+    #hospital .hospital-his-detail{
+      font-size:12px !important;
+    }
+
+    #hospital .hospital-his-trend{
+      font-size:12.5px !important;
+    }
+
+    #hospital .hospital-his-card small{
+      font-size:11px !important;
+      line-height:1.45 !important;
+    }
+  }
+
+
+  /* ================================================================
+     AI - enlarge "本頁面說明" and all explanation copy
+     ================================================================ */
+  #ai .ai-explain-card{
+    padding:18px 20px !important;
+  }
+
+  #ai .ai-explain-card h3{
+    font-size:21px !important;
+    line-height:1.25 !important;
+    margin:0 0 8px !important;
+  }
+
+  #ai .ai-explain-item{
+    padding:12px 0 !important;
+  }
+
+  #ai .ai-explain-item b{
+    font-size:15px !important;
+    line-height:1.35 !important;
+  }
+
+  #ai .ai-explain-item p{
+    margin:6px 0 0 !important;
+    font-size:13.5px !important;
+    line-height:1.68 !important;
+  }
+
+  @media (min-width:1500px) and (min-height:900px) and (max-height:1200px){
+    #ai .ai-right{
+      grid-template-rows:138px minmax(0,1fr) !important;
+    }
+
+    #ai .ai-explain-card{
+      overflow:auto !important;
+    }
+  }
+
+
+  /* ================================================================
+     OUTCOME - responsive donut sizing; no overflow on shorter viewport
+     ================================================================ */
+  #outcome .outcome-card{
+    min-height:0 !important;
+    overflow:hidden !important;
+  }
+
+  #outcome .outcome-donut-btn{
+    min-height:0 !important;
+    overflow:hidden !important;
+  }
+
+  #outcome .outcome-donut{
+    width:min(100%, var(--outcome-donut-size, 190px)) !important;
+    max-width:var(--outcome-donut-size, 190px) !important;
+    min-width:0 !important;
+    height:auto !important;
+    aspect-ratio:1 / 1 !important;
+  }
+
+  #outcome .outcome-donut::after{
+    inset:20% !important;
+  }
+
+  #outcome .outcome-center{
+    inset:20% !important;
+    padding:0 5px !important;
+  }
+
+  #outcome .outcome-center strong,
+  #outcome .outcome-avg{
+    max-width:100% !important;
+    font-size:clamp(22px,1.7vw,30px) !important;
+    letter-spacing:-0.7px !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+  }
+
+  #outcome .outcome-center span{
+    font-size:clamp(9px,.65vw,11px) !important;
+    white-space:nowrap !important;
+  }
+
+  @media (min-width:1500px) and (min-height:900px){
+    #outcome{
+      --outcome-donut-size:205px;
+    }
+  }
+
+  @media (min-width:1500px) and (min-height:760px) and (max-height:899px){
+    #outcome.page.active{
+      height:calc(100vh - 150px) !important;
+      display:grid !important;
+      grid-template-rows:38px 28px minmax(0,1fr) !important;
+      gap:7px !important;
+      overflow:hidden !important;
+      padding-top:8px !important;
+    }
+
+    #outcome{
+      --outcome-donut-size:145px;
+    }
+
+    #outcome .outcome-grid{
+      min-height:0 !important;
+      height:auto !important;
+      grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+      grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+      gap:9px !important;
+    }
+
+    #outcome .outcome-card{
+      grid-template-rows:34px minmax(0,1fr) 46px !important;
+      padding:8px 10px 7px !important;
+    }
+
+    #outcome .outcome-card-head h3{
+      font-size:13px !important;
+    }
+
+    #outcome .outcome-n{
+      font-size:10px !important;
+    }
+
+    #outcome .outcome-center strong,
+    #outcome .outcome-avg{
+      font-size:23px !important;
+    }
+
+    #outcome .outcome-center span{
+      font-size:9px !important;
+    }
+
+    #outcome .outcome-breakdown{
+      gap:4px !important;
+    }
+
+    #outcome .outcome-breakdown span{
+      font-size:9.5px !important;
+    }
+
+    #outcome .outcome-breakdown strong{
+      font-size:12px !important;
+    }
+  }
+
+  @media (min-width:1500px) and (max-height:759px){
+    #outcome{
+      --outcome-donut-size:118px;
+    }
+
+    #outcome.page.active{
+      height:auto !important;
+      overflow:auto !important;
+    }
+  }
+
+
+  /* ================================================================
+     REPORTER - unify chart plot height, baseline and x-axis spacing
+     ================================================================ */
+  #reporter .reporter-bar-card,
+  #reporter .reporter-satisfaction-card{
+    min-height:0 !important;
+  }
+
+  #reporter .reporter-chart-shell{
+    min-height:0 !important;
+    height:100% !important;
+    grid-template-columns:34px minmax(0,1fr) !important;
+    padding:10px 12px 30px 8px !important;
+  }
+
+  #reporter .reporter-bar-chart{
+    height:100% !important;
+    min-height:0 !important;
+    display:grid !important;
+    grid-template-columns:42px minmax(0,1fr) !important;
+    align-items:stretch !important;
+  }
+
+  #reporter .reporter-y-axis{
+    height:100% !important;
+    min-height:0 !important;
+    padding-bottom:28px !important;
+    display:flex !important;
+    flex-direction:column !important;
+    justify-content:space-between !important;
+  }
+
+  #reporter .reporter-bars-area{
+    height:100% !important;
+    min-height:0 !important;
+    display:flex !important;
+    align-items:flex-end !important;
+    gap:clamp(14px,2.2vw,40px) !important;
+    padding:0 18px 28px !important;
+    border-bottom:1px solid #dfe5ec !important;
+  }
+
+  #reporter .reporter-bar-item,
+  #reporter .reporter-bar-col{
+    height:100% !important;
+    min-height:0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    justify-content:flex-end !important;
+    align-items:center !important;
+  }
+
+  #reporter .reporter-bar{
+    flex:0 0 auto !important;
+    min-height:2px !important;
+  }
+
+  #reporter .reporter-bar-label{
+    bottom:-25px !important;
+    font-size:12px !important;
+  }
+
+  #reporter .reporter-bar-value{
+    font-size:12px !important;
+  }
+
+  #reporter .reporter-sat-body{
+    min-height:0 !important;
+    height:100% !important;
+    padding:8px 14px 30px !important;
+  }
+
+  #reporter .reporter-sat-chart{
+    min-height:0 !important;
+    height:100% !important;
+  }
+
+  #reporter .reporter-sat-chart .reporter-bars-area{
+    height:100% !important;
+    min-height:0 !important;
+    align-items:flex-end !important;
+    padding-bottom:28px !important;
+  }
+
+  @media (min-width:1500px) and (min-height:900px) and (max-height:1200px){
+    #reporter .reporter-dashboard-layout{
+      grid-template-columns:minmax(0,.95fr) minmax(0,1.25fr) !important;
+      grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+      gap:14px !important;
+    }
+
+    #reporter .reporter-bar-card{
+      grid-template-rows:68px minmax(0,1fr) !important;
+    }
+
+    #reporter .reporter-satisfaction-card{
+      grid-template-rows:72px minmax(0,1fr) !important;
+    }
+
+    #reporter .reporter-card-head h3,
+    #reporter .reporter-sat-head h3{
+      font-size:18px !important;
+    }
+
+    #reporter .reporter-y-title{
+      font-size:12px !important;
+    }
+
+    #reporter .reporter-y-axis{
+      font-size:11.5px !important;
+    }
+  }
+
+
+  /* ===== Reporter page V7: equal plot geometry for both bar charts ===== */
+
+  /* Remove the legacy pseudo X-axis title that became an extra grid item. */
+  #reporter .reporter-bar-card .reporter-chart-shell::after,
+  #reporter .reporter-satisfaction-card .reporter-sat-body::after{
+    content:none !important;
+    display:none !important;
+  }
+
+  #reporter .reporter-bar-card,
+  #reporter .reporter-satisfaction-card{
+    grid-template-rows:72px minmax(0,1fr) !important;
+  }
+
+  /* Both chart bodies use the same 24px caption band + same plot region. */
+  #reporter .reporter-chart-shell,
+  #reporter .reporter-sat-body{
+    min-width:0 !important;
+    min-height:0 !important;
+    height:100% !important;
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    grid-template-rows:24px minmax(0,1fr) !important;
+    gap:0 !important;
+    padding:8px 14px 28px !important;
+    overflow:hidden !important;
+  }
+
+  #reporter .reporter-y-title,
+  #reporter .reporter-sat-scale{
+    grid-column:1 !important;
+    grid-row:1 !important;
+    width:auto !important;
+    height:24px !important;
+    min-height:24px !important;
+    margin:0 !important;
+    padding:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-start !important;
+    writing-mode:horizontal-tb !important;
+    transform:none !important;
+    white-space:nowrap !important;
+    color:#667085 !important;
+    font-size:11.5px !important;
+    font-weight:700 !important;
+    line-height:24px !important;
+  }
+
+  #reporter .reporter-bar-chart,
+  #reporter .reporter-sat-chart{
+    grid-column:1 !important;
+    grid-row:2 !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    width:100% !important;
+    height:100% !important;
+    display:grid !important;
+    grid-template-columns:48px minmax(0,1fr) !important;
+    align-items:stretch !important;
+    overflow:visible !important;
+  }
+
+  #reporter .reporter-y-axis{
+    min-height:0 !important;
+    height:100% !important;
+    padding:0 8px 30px 0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:flex-end !important;
+    justify-content:space-between !important;
+    color:#7b8798 !important;
+    font-size:11px !important;
+    line-height:1 !important;
+  }
+
+  #reporter .reporter-bars-area{
+    position:relative !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    height:100% !important;
+    display:flex !important;
+    align-items:flex-end !important;
+    justify-content:space-around !important;
+    gap:clamp(14px,1.6vw,30px) !important;
+    padding:0 18px 30px !important;
+    border-left:1px solid #e4e9ef !important;
+    border-bottom:1px solid #cfd8e3 !important;
+    overflow:visible !important;
+    box-sizing:border-box !important;
+  }
+
+  #reporter .reporter-bar-col{
+    position:relative !important;
+    flex:1 1 0 !important;
+    max-width:76px !important;
+    min-width:38px !important;
+    height:100% !important;
+    min-height:0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+  }
+
+  #reporter .reporter-bar{
+    width:min(48px,72%) !important;
+    max-width:48px !important;
+    min-width:28px !important;
+    flex:0 0 auto !important;
+    border-radius:3px 3px 0 0 !important;
+  }
+
+  #reporter .reporter-bar-value{
+    bottom:calc(var(--bar-height) + 6px) !important;
+    font-size:11.5px !important;
+    font-weight:800 !important;
+    line-height:1 !important;
+  }
+
+  #reporter .reporter-bar-label{
+    bottom:-24px !important;
+    font-size:11.5px !important;
+    font-weight:700 !important;
+    line-height:1 !important;
+  }
+
+  /* Keep the plot geometry identical in both right-hand cards. */
+  #reporter .reporter-sat-body{
+    padding-top:8px !important;
+  }
+
+  #reporter .reporter-sat-chart .reporter-bars-area{
+    height:100% !important;
+    padding-bottom:30px !important;
+  }
+
+  @media (min-width:1500px) and (min-height:900px) and (max-height:1200px){
+    #reporter .reporter-dashboard-layout{
+      grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+    }
+
+    #reporter .reporter-bar-card,
+    #reporter .reporter-satisfaction-card{
+      min-height:0 !important;
+      height:auto !important;
+    }
+
+    #reporter .reporter-card-head,
+    #reporter .reporter-sat-head{
+      height:72px !important;
+      min-height:72px !important;
+      padding:12px 14px 8px !important;
+      box-sizing:border-box !important;
+    }
+
+    #reporter .reporter-chart-shell,
+    #reporter .reporter-sat-body{
+      height:100% !important;
+      min-height:0 !important;
+    }
+  }
+
+
+  /* ==================================================================
+     V38 OUTCOME TRUE RESPONSIVE SCALING
+     Scale donut + typography from each card's actual size.
+     No abrupt fixed-size breakpoint switching.
+     ================================================================== */
+
+  /* Use the card itself as the sizing container. */
+  #outcome .outcome-card{
+    container-type:size !important;
+    container-name:outcome-card !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    overflow:hidden !important;
+    display:grid !important;
+    grid-template-rows:auto minmax(0,1fr) auto !important;
+    gap:clamp(3px,1cqh,8px) !important;
+    padding:
+      clamp(7px,2.4cqh,13px)
+      clamp(8px,2.2cqw,14px)
+      clamp(6px,2cqh,11px) !important;
+  }
+
+  /* Header scales smoothly with card height. */
+  #outcome .outcome-card-head{
+    min-height:0 !important;
+    height:auto !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:8px !important;
+  }
+
+  #outcome .outcome-card-head h3{
+    margin:0 !important;
+    font-size:clamp(12px,4.2cqh,15.5px) !important;
+    line-height:1.2 !important;
+    font-weight:800 !important;
+  }
+
+  #outcome .outcome-n{
+    font-size:clamp(9px,3.2cqh,11.5px) !important;
+    line-height:1 !important;
+    white-space:nowrap !important;
+  }
+
+  /* Center the visualization in the actual free area. */
+  #outcome .outcome-donut-btn{
+    min-width:0 !important;
+    min-height:0 !important;
+    width:100% !important;
+    height:100% !important;
+    padding:0 !important;
+    margin:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    overflow:visible !important;
+  }
+
+  /*
+    Donut size is based on BOTH card width and card height.
+    This means a short 1920x800 viewport shrinks naturally instead
+    of jumping to an arbitrary fixed diameter.
+  */
+  #outcome .outcome-donut{
+    --donut-size:min(58cqw,62cqh,212px);
+    position:relative !important;
+    width:var(--donut-size) !important;
+    height:var(--donut-size) !important;
+    min-width:0 !important;
+    max-width:none !important;
+    aspect-ratio:1 / 1 !important;
+    margin:auto !important;
+    flex:0 0 auto !important;
+  }
+
+  /* Keep ring thickness proportional to donut diameter. */
+  #outcome .outcome-donut::after{
+    inset:20.5% !important;
+  }
+
+  #outcome .outcome-center{
+    inset:20.5% !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    padding:0 5% !important;
+    overflow:hidden !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:center !important;
+  }
+
+  #outcome .outcome-center strong,
+  #outcome .outcome-avg{
+    width:100% !important;
+    max-width:100% !important;
+    margin:0 !important;
+    font-size:clamp(18px,8.4cqh,30px) !important;
+    line-height:.98 !important;
+    font-weight:800 !important;
+    letter-spacing:-0.04em !important;
+    text-align:center !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:clip !important;
+  }
+
+  #outcome .outcome-center span{
+    margin-top:clamp(2px,1.3cqh,6px) !important;
+    font-size:clamp(8px,3.2cqh,11px) !important;
+    line-height:1.05 !important;
+    font-weight:700 !important;
+    white-space:nowrap !important;
+  }
+
+  /* Bottom breakdown scales with available card height as well. */
+  #outcome .outcome-breakdown{
+    min-width:0 !important;
+    min-height:0 !important;
+    width:100% !important;
+    display:grid !important;
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:clamp(3px,1.5cqw,9px) !important;
+    align-items:start !important;
+    padding:0 !important;
+    margin:0 !important;
+  }
+
+  #outcome .outcome-breakdown div{
+    min-width:0 !important;
+    padding-top:clamp(4px,1.8cqh,8px) !important;
+    border-top:1px solid #eee !important;
+    text-align:center !important;
+  }
+
+  #outcome .outcome-breakdown span{
+    font-size:clamp(8px,3cqh,11px) !important;
+    line-height:1.05 !important;
+    white-space:nowrap !important;
+  }
+
+  #outcome .outcome-breakdown strong{
+    margin-top:clamp(1px,.8cqh,3px) !important;
+    font-size:clamp(10px,3.9cqh,15px) !important;
+    line-height:1.05 !important;
+    white-space:nowrap !important;
+  }
+
+  /*
+    Override the previous short-screen fixed sizes.
+    The page keeps a fixed 4x2 grid; only content scales fluidly.
+  */
+  @media (min-width:1200px){
+    #outcome.page.active{
+      height:calc(100vh - 150px) !important;
+      min-height:0 !important;
+      overflow:hidden !important;
+      display:grid !important;
+      grid-template-rows:auto auto minmax(0,1fr) !important;
+      gap:clamp(6px,1vh,10px) !important;
+      padding-top:clamp(7px,1vh,12px) !important;
+    }
+
+    #outcome .outcome-page-head{
+      min-height:34px !important;
+      height:auto !important;
+    }
+
+    #outcome .outcome-legend{
+      min-height:24px !important;
+      height:auto !important;
+    }
+
+    #outcome .outcome-grid{
+      min-width:0 !important;
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+      grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+      gap:clamp(8px,1.1vw,14px) !important;
+      overflow:hidden !important;
+    }
+
+    /* Neutralize previous V36 fixed donut variables. */
+    #outcome{
+      --outcome-donut-size:unset !important;
+    }
+  }
+
+  /* Very short desktop: keep everything visible, still fluid. */
+  @media (min-width:1200px) and (max-height:780px){
+    #outcome.page.active{
+      height:calc(100vh - 142px) !important;
+      gap:5px !important;
+      padding-top:5px !important;
+    }
+
+    #outcome .outcome-page-head{
+      min-height:30px !important;
+    }
+
+    #outcome .outcome-legend{
+      min-height:20px !important;
+      font-size:10px !important;
+    }
+
+    #outcome .outcome-grid{
+      gap:7px !important;
+    }
+  }
+
+
+  /* ==================================================================
+     V39 COMMAND FLOW LAYOUT
+     Stable tabs + enlarged expanded cards + consistent spacing.
+     ================================================================== */
+
+  @media (min-width:1500px) and (min-height:900px) and (max-height:1200px){
+
+    /* Internal tabs: fixed layout, no flex stretching / wrapping. */
+    #command.page.active{
+      grid-template-rows:46px minmax(0,1fr) !important;
+      gap:10px !important;
+    }
+
+    #command .command-view-tabs{
+      display:grid !important;
+      grid-template-columns:120px 120px 140px !important;
+      justify-content:start !important;
+      align-items:stretch !important;
+      gap:8px !important;
+      height:46px !important;
+      min-height:46px !important;
+      margin:0 !important;
+      padding:0 !important;
+      border-bottom:1px solid #dfe5ec !important;
+      overflow:visible !important;
+    }
+
+    #command .command-view-tab{
+      flex:none !important;
+      width:auto !important;
+      min-width:0 !important;
+      height:46px !important;
+      min-height:46px !important;
+      padding:0 16px !important;
+      margin:0 !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      font-size:14px !important;
+      font-weight:800 !important;
+      line-height:1 !important;
+      white-space:nowrap !important;
+      border-radius:7px 7px 0 0 !important;
+      box-sizing:border-box !important;
+    }
+
+    /* Flow view uses the full remaining area. */
+    #command #commandFlowView.active{
+      grid-template-rows:66px minmax(0,1fr) !important;
+      gap:12px !important;
+      min-height:0 !important;
+      overflow:hidden !important;
+    }
+
+    #command .interactive-flow-board{
+      grid-template-rows:44px minmax(0,1fr) !important;
+      min-height:0 !important;
+      overflow:hidden !important;
+    }
+
+    /*
+      Main flow:
+      left overall column + one wide category/detail area.
+      Everything remains centered without absolute page positioning.
+    */
+    #command .interactive-flow-stage{
+      display:grid !important;
+      grid-template-columns:240px minmax(0,1110px) !important;
+      column-gap:96px !important;
+      justify-content:center !important;
+      align-content:start !important;
+      align-items:start !important;
+      min-width:0 !important;
+      min-height:0 !important;
+      width:100% !important;
+      height:100% !important;
+      padding:26px 20px 18px !important;
+      box-sizing:border-box !important;
+      overflow:hidden !important;
+    }
+
+    /* Left-side total + permanent status cards. */
+    #command .interactive-overall-column{
+      width:240px !important;
+      min-width:240px !important;
+      display:grid !important;
+      grid-template-rows:118px repeat(4,96px) !important;
+      gap:16px !important;
+      align-content:start !important;
+    }
+
+    #command .interactive-total-card{
+      width:240px !important;
+      min-width:240px !important;
+      height:118px !important;
+      padding:15px 18px !important;
+    }
+
+    #command .overall-status{
+      width:240px !important;
+      min-width:240px !important;
+      height:96px !important;
+      padding:13px 18px !important;
+    }
+
+    #command .interactive-total-card > span,
+    #command .overall-status > span{
+      font-size:15px !important;
+      font-weight:800 !important;
+    }
+
+    #command .interactive-total-card > strong{
+      font-size:42px !important;
+    }
+
+    #command .overall-status > strong{
+      font-size:36px !important;
+    }
+
+    #command .interactive-total-card > small,
+    #command .overall-status > small{
+      font-size:11.5px !important;
+    }
+
+    /* Right side: 4 equal category rows. */
+    #command .interactive-category-column{
+      width:100% !important;
+      min-width:0 !important;
+      display:grid !important;
+      grid-template-rows:repeat(4,104px) !important;
+      gap:22px !important;
+      align-content:start !important;
+      overflow:visible !important;
+    }
+
+    #command .interactive-category-row{
+      width:100% !important;
+      min-width:0 !important;
+      min-height:104px !important;
+      height:104px !important;
+      display:grid !important;
+      grid-template-columns:200px minmax(0,1fr) !important;
+      column-gap:30px !important;
+      align-items:stretch !important;
+      box-sizing:border-box !important;
+    }
+
+    /* Category trigger cards are enlarged too. */
+    #command .category-trigger{
+      width:200px !important;
+      min-width:200px !important;
+      height:104px !important;
+      min-height:104px !important;
+      padding:12px 16px !important;
+      justify-self:stretch !important;
+    }
+
+    #command .category-trigger > span{
+      font-size:14px !important;
+      font-weight:800 !important;
+    }
+
+    #command .category-trigger > strong{
+      font-size:36px !important;
+      line-height:1 !important;
+    }
+
+    #command .category-trigger > small{
+      font-size:11px !important;
+    }
+
+    /* Expanded 4-card groups share all available width evenly. */
+    #command .interactive-detail-group{
+      width:100% !important;
+      min-width:0 !important;
+      height:104px !important;
+      min-height:104px !important;
+      display:grid !important;
+      grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+      gap:16px !important;
+      justify-content:stretch !important;
+      align-items:stretch !important;
+      box-sizing:border-box !important;
+    }
+
+    #command .detail-card{
+      width:auto !important;
+      min-width:0 !important;
+      max-width:none !important;
+      height:104px !important;
+      min-height:104px !important;
+      padding:12px 14px !important;
+      box-sizing:border-box !important;
+    }
+
+    #command .detail-card > span{
+      font-size:13px !important;
+      line-height:1.25 !important;
+      font-weight:800 !important;
+      white-space:nowrap !important;
+    }
+
+    #command .detail-card > strong{
+      font-size:30px !important;
+      line-height:1 !important;
+    }
+
+    #command .detail-card > small{
+      font-size:11px !important;
+      line-height:1.2 !important;
+    }
+  }
+
+  /* Slightly narrower desktop: preserve the same hierarchy without overflow. */
+  @media (min-width:1200px) and (max-width:1499px){
+    #command .command-view-tabs{
+      display:grid !important;
+      grid-template-columns:110px 110px 130px !important;
+      justify-content:start !important;
+      gap:6px !important;
+    }
+
+    #command .command-view-tab{
+      flex:none !important;
+      min-width:0 !important;
+      white-space:nowrap !important;
+    }
+
+    #command .interactive-flow-stage{
+      grid-template-columns:210px minmax(0,930px) !important;
+      gap:64px !important;
+      justify-content:center !important;
+      padding:20px 12px !important;
+    }
+
+    #command .interactive-overall-column{
+      width:210px !important;
+      min-width:210px !important;
+    }
+
+    #command .interactive-total-card,
+    #command .overall-status{
+      width:210px !important;
+      min-width:210px !important;
+    }
+
+    #command .interactive-category-row{
+      grid-template-columns:180px minmax(0,1fr) !important;
+      gap:24px !important;
+    }
+
+    #command .category-trigger{
+      width:180px !important;
+      min-width:180px !important;
+    }
+
+    #command .interactive-detail-group{
+      gap:12px !important;
+    }
+  }
+
+
+  /* ==================================================================
+     V41 COMMAND TRUE RESPONSIVE FLOW
+     The whole command flow scales from the actual available stage size.
+     Cards, typography and spacing resize together.
+     ================================================================== */
+
+  #command .interactive-flow-stage{
+    container-type:size !important;
+    container-name:command-flow-stage !important;
+  }
+
+  @media (min-width:1200px){
+
+    #command.page.active{
+      min-height:0 !important;
+      overflow:hidden !important;
+    }
+
+    #command #commandFlowView.active{
+      min-height:0 !important;
+      overflow:hidden !important;
+    }
+
+    #command .interactive-flow-board{
+      min-height:0 !important;
+      overflow:hidden !important;
+    }
+
+    #command .interactive-flow-stage{
+      /* Fluid horizontal composition */
+      grid-template-columns:
+        clamp(185px,17cqw,240px)
+        minmax(0,1fr) !important;
+      column-gap:clamp(48px,6.2cqw,96px) !important;
+
+      width:100% !important;
+      height:100% !important;
+      min-width:0 !important;
+      min-height:0 !important;
+
+      padding:
+        clamp(10px,2.3cqh,26px)
+        clamp(10px,1.5cqw,20px)
+        clamp(8px,1.5cqh,18px) !important;
+
+      justify-content:stretch !important;
+      align-content:stretch !important;
+      align-items:stretch !important;
+      overflow:hidden !important;
+      box-sizing:border-box !important;
+    }
+
+    /* --------------------------------------------------------------
+       Left column: total + 4 permanent status cards
+       -------------------------------------------------------------- */
+    #command .interactive-overall-column{
+      width:100% !important;
+      min-width:0 !important;
+      height:100% !important;
+      min-height:0 !important;
+
+      display:grid !important;
+      grid-template-rows:
+        1.15fr
+        repeat(4,1fr) !important;
+      gap:clamp(7px,1.55cqh,16px) !important;
+      align-content:stretch !important;
+    }
+
+    #command .interactive-total-card,
+    #command .overall-status{
+      width:100% !important;
+      min-width:0 !important;
+      height:100% !important;
+      min-height:0 !important;
+      max-height:none !important;
+
+      padding:
+        clamp(7px,1.4cqh,15px)
+        clamp(9px,1.25cqw,18px) !important;
+
+      display:flex !important;
+      flex-direction:column !important;
+      align-items:center !important;
+      justify-content:center !important;
+      gap:clamp(2px,.55cqh,5px) !important;
+      box-sizing:border-box !important;
+    }
+
+    #command .interactive-total-card > span,
+    #command .overall-status > span{
+      font-size:clamp(11px,2.35cqh,15px) !important;
+      line-height:1.15 !important;
+      font-weight:800 !important;
+      white-space:nowrap !important;
+    }
+
+    #command .interactive-total-card > strong{
+      font-size:clamp(30px,6.2cqh,43px) !important;
+      line-height:.98 !important;
+    }
+
+    #command .overall-status > strong{
+      font-size:clamp(26px,5.2cqh,37px) !important;
+      line-height:.98 !important;
+    }
+
+    #command .interactive-total-card > small,
+    #command .overall-status > small{
+      font-size:clamp(8px,1.75cqh,11.5px) !important;
+      line-height:1.1 !important;
+      white-space:nowrap !important;
+    }
+
+    /* --------------------------------------------------------------
+       Right column: 4 category rows
+       -------------------------------------------------------------- */
+    #command .interactive-category-column{
+      width:100% !important;
+      min-width:0 !important;
+      height:100% !important;
+      min-height:0 !important;
+
+      display:grid !important;
+      grid-template-rows:repeat(4,minmax(0,1fr)) !important;
+      gap:clamp(9px,2.15cqh,22px) !important;
+      align-content:stretch !important;
+      overflow:visible !important;
+    }
+
+    #command .interactive-category-row{
+      width:100% !important;
+      min-width:0 !important;
+      height:100% !important;
+      min-height:0 !important;
+
+      display:grid !important;
+      grid-template-columns:
+        clamp(160px,16.5cqw,205px)
+        minmax(0,1fr) !important;
+      column-gap:clamp(18px,2.4cqw,32px) !important;
+      align-items:stretch !important;
+      box-sizing:border-box !important;
+    }
+
+    #command .category-trigger{
+      width:100% !important;
+      min-width:0 !important;
+      height:100% !important;
+      min-height:0 !important;
+      max-height:none !important;
+
+      padding:
+        clamp(6px,1.2cqh,12px)
+        clamp(8px,1.05cqw,16px) !important;
+
+      display:flex !important;
+      flex-direction:column !important;
+      align-items:center !important;
+      justify-content:center !important;
+      gap:clamp(2px,.5cqh,5px) !important;
+      box-sizing:border-box !important;
+    }
+
+    #command .category-trigger > span{
+      font-size:clamp(10.5px,2.15cqh,14px) !important;
+      line-height:1.15 !important;
+      font-weight:800 !important;
+      white-space:nowrap !important;
+    }
+
+    #command .category-trigger > strong{
+      font-size:clamp(27px,5.4cqh,37px) !important;
+      line-height:.98 !important;
+    }
+
+    #command .category-trigger > small{
+      font-size:clamp(8px,1.65cqh,11px) !important;
+      line-height:1.1 !important;
+      white-space:nowrap !important;
+    }
+
+    /* --------------------------------------------------------------
+       Expanded detail cards: scale as one group
+       -------------------------------------------------------------- */
+    #command .interactive-detail-group{
+      width:100% !important;
+      min-width:0 !important;
+      height:100% !important;
+      min-height:0 !important;
+
+      display:grid !important;
+      grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+      gap:clamp(7px,1.25cqw,16px) !important;
+      align-items:stretch !important;
+      justify-content:stretch !important;
+      box-sizing:border-box !important;
+    }
+
+    #command .detail-card{
+      width:100% !important;
+      min-width:0 !important;
+      max-width:none !important;
+      height:100% !important;
+      min-height:0 !important;
+      max-height:none !important;
+
+      padding:
+        clamp(6px,1.05cqh,11px)
+        clamp(6px,.8cqw,13px) !important;
+
+      display:flex !important;
+      flex-direction:column !important;
+      align-items:center !important;
+      justify-content:center !important;
+      gap:clamp(2px,.45cqh,5px) !important;
+      box-sizing:border-box !important;
+    }
+
+    #command .detail-card > span{
+      font-size:clamp(9px,1.9cqh,13px) !important;
+      line-height:1.1 !important;
+      font-weight:800 !important;
+      white-space:nowrap !important;
+    }
+
+    #command .detail-card > strong{
+      font-size:clamp(22px,4.35cqh,30px) !important;
+      line-height:.98 !important;
+    }
+
+    #command .detail-card > small{
+      font-size:clamp(7.5px,1.5cqh,10.5px) !important;
+      line-height:1.05 !important;
+      white-space:nowrap !important;
+    }
+
+    /* --------------------------------------------------------------
+       Internal tabs + filter scale smoothly too
+       -------------------------------------------------------------- */
+    #command .command-view-tabs{
+      grid-template-columns:
+        clamp(100px,8vw,120px)
+        clamp(100px,8vw,120px)
+        clamp(118px,9.5vw,140px) !important;
+      height:clamp(38px,4.2vh,46px) !important;
+      min-height:0 !important;
+      gap:clamp(5px,.55vw,8px) !important;
+    }
+
+    #command .command-view-tab{
+      height:100% !important;
+      min-height:0 !important;
+      font-size:clamp(12px,.85vw,14px) !important;
+      padding:0 clamp(10px,.85vw,16px) !important;
+    }
+
+    #command #commandFlowView.active{
+      grid-template-rows:
+        clamp(54px,6.1vh,66px)
+        minmax(0,1fr) !important;
+      gap:clamp(8px,1.1vh,12px) !important;
+    }
+
+    #command .command-filter-card{
+      min-height:0 !important;
+      height:100% !important;
+      padding:
+        clamp(6px,.9vh,10px)
+        clamp(9px,.8vw,14px) !important;
+    }
+
+    #command .command-date-filter input{
+      height:clamp(31px,3.5vh,38px) !important;
+      font-size:clamp(11px,.75vw,13px) !important;
+    }
+
+    #command .command-apply-btn,
+    #command .command-quick-filter button{
+      height:clamp(31px,3.5vh,38px) !important;
+      font-size:clamp(11px,.75vw,13px) !important;
+    }
+
+    #command .interactive-flow-board{
+      grid-template-rows:
+        clamp(34px,4vh,44px)
+        minmax(0,1fr) !important;
+      min-height:0 !important;
+    }
+  }
+
+  /* Very short desktop: preserve full flow without clipping. */
+  @media (min-width:1200px) and (max-height:780px){
+    #command.page.active{
+      height:calc(100vh - 142px) !important;
+      padding-top:5px !important;
+      gap:6px !important;
+    }
+
+    #command .interactive-flow-stage{
+      padding-top:8px !important;
+      padding-bottom:6px !important;
+    }
+
+    #command .interactive-overall-column{
+      gap:6px !important;
+    }
+
+    #command .interactive-category-column{
+      gap:8px !important;
+    }
+
+    #command .interactive-detail-group{
+      gap:7px !important;
+    }
+  }
+
+
+  /* ==================================================================
+     V43 COMMAND FILTER BAR ONLY
+     Base: V41
+     Keep the flow cards/layout untouched.
+     ================================================================== */
+
+  @media (min-width:1200px){
+
+    /* Make only the upper filter row taller. */
+    #command #commandFlowView.active{
+      grid-template-rows:
+        clamp(72px,7.2vh,82px)
+        minmax(0,1fr) !important;
+      gap:10px !important;
+    }
+
+    #command .command-filter-card{
+      min-height:0 !important;
+      height:100% !important;
+      padding:10px 14px 11px !important;
+      box-sizing:border-box !important;
+      align-items:center !important;
+    }
+
+    /* Date group: align input bottoms and application button. */
+    #command .command-date-filter{
+      height:100% !important;
+      min-height:0 !important;
+      display:flex !important;
+      align-items:flex-end !important;
+      gap:8px !important;
+    }
+
+    #command .command-date-filter label{
+      display:flex !important;
+      flex-direction:column !important;
+      justify-content:flex-end !important;
+      gap:5px !important;
+      min-height:0 !important;
+      margin:0 !important;
+    }
+
+    #command .command-date-filter label span{
+      line-height:1.2 !important;
+      margin:0 !important;
+    }
+
+    #command .command-date-filter input{
+      height:38px !important;
+      box-sizing:border-box !important;
+      margin:0 !important;
+    }
+
+    #command .command-date-arrow{
+      height:38px !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      margin:0 !important;
+      padding:0 2px !important;
+      align-self:flex-end !important;
+    }
+
+    #command .command-apply-btn{
+      height:38px !important;
+      min-height:38px !important;
+      margin:0 !important;
+      align-self:flex-end !important;
+      box-sizing:border-box !important;
+    }
+
+    /* Quick filters keep their original V41 behavior, only center vertically
+       inside the now taller filter block. */
+    #command .command-quick-filter{
+      align-self:center !important;
+      margin:0 !important;
+    }
+  }
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
@@ -7745,7 +11231,7 @@
             </div>
 </div>
         <div class="ai-scatter-wrap">
-          <svg id="aiScatterSvg" class="ai-scatter-svg" viewBox="0 0 820 620" role="img" aria-label="AI模型預測分數與專業人員實測分數散佈圖"></svg>
+          <svg id="aiScatterSvg" class="ai-scatter-svg" viewBox="0 0 820 620" role="img" aria-label="AI模型預測分數與專業人員實測分數迴歸線與基準線圖"></svg>
           <div id="aiScatterTooltip" class="ai-scatter-tooltip" hidden></div>
         </div>
       </section>
@@ -7922,7 +11408,7 @@
       <section class="hospital-his-section hospital-his-right">
         <div class="hospital-his-head">
           <div>
-            <h3>HIS 結案後醫療利用成效</h3>
+            <h3>結案後醫療資源使用分析</h3>
           </div>
           <button type="button" class="hospital-his-info-btn" id="openHospitalHisInfo">指標計算說明</button>
         </div>
