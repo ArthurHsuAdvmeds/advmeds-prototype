@@ -7,7 +7,29 @@
 
   var NS = 'http://www.w3.org/2000/svg';
   var FONT = '"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,-apple-system,"Segoe UI",sans-serif';
-  var CLASSES = ['primary', 'success', 'warn', 'danger', 'muted'];
+  // 具名顏色（中英皆可）＋ 舊有的語意樣式別名
+  var COLORS = {
+    red: '#ef4444', 紅: '#ef4444', 紅色: '#ef4444',
+    orange: '#f97316', 橙: '#f97316', 橘: '#f97316',
+    amber: '#f59e0b', yellow: '#eab308', 黃: '#f59e0b',
+    green: '#22c55e', 綠: '#22c55e',
+    teal: '#14b8a6', 青: '#14b8a6',
+    blue: '#3b82f6', 藍: '#3b82f6',
+    indigo: '#6366f1', 靛: '#6366f1',
+    purple: '#a855f7', 紫: '#a855f7',
+    pink: '#ec4899', 粉: '#ec4899',
+    brown: '#a16207', 棕: '#a16207',
+    gray: '#94a3b8', grey: '#94a3b8', 灰: '#94a3b8',
+    black: '#334155', 黑: '#334155',
+    primary: '#3b82f6', success: '#22c55e', warn: '#f59e0b', danger: '#ef4444', muted: '#94a3b8'
+  };
+  var COLOR_NAMES = ['red', 'orange', 'amber', 'yellow', 'green', 'teal', 'blue',
+    'indigo', 'purple', 'pink', 'brown', 'gray', 'black'];
+  var KEY_ALIAS = {
+    fill: 'fill', bg: 'fill', background: 'fill', 底: 'fill', 底色: 'fill', 背景: 'fill',
+    stroke: 'stroke', border: 'stroke', 框: 'stroke', 框線: 'stroke', 線: 'stroke', 邊框: 'stroke',
+    text: 'text', color: 'text', 字: 'text', 文字: 'text'
+  };
 
   /* =========================================================
    * 1) 給 AI 讀的語法說明（可整段複製貼給 GPT / Claude）
@@ -67,14 +89,31 @@
     'P(批價收費) -.- N[自費項目需另行說明]',
     '```',
     '',
-    '## 六、強調樣式（可省略）',
+    '## 六、顏色（可省略）',
     '',
-    '在節點後面加 `:::樣式名`，可用 `primary`、`success`、`warn`、`danger`、`muted`。',
+    '在節點或連接線後面加 `:::顏色`，三種寫法擇一：',
+    '',
+    '| 寫法 | 說明 |',
+    '| --- | --- |',
+    '| `:::red` 或 `:::紅` | 具名顏色，中英文皆可 |',
+    '| `:::#ef4444` | 直接給色碼（`#rgb` 或 `#rrggbb`）|',
+    '| `:::fill=#fff1f2,stroke=#ef4444,text=#7f1d1d` | 分別指定底色／框線／文字 |',
+    '',
+    '- 可用的顏色名：`red 紅`、`orange 橙`、`amber 黃`、`green 綠`、`teal 青`、`blue 藍`、',
+    '  `indigo 靛`、`purple 紫`、`pink 粉`、`brown 棕`、`gray 灰`、`black 黑`。',
+    '  另外保留五個語意名稱：`primary`（藍）、`success`（綠）、`warn`（黃）、`danger`（紅）、`muted`（灰）。',
+    '- 只給一個顏色時，會自動配成「淡底色 + 該色框線 + 深色文字」，不必自己調三個值。',
+    '- 節點上色：寫在節點後面。連接線上色：寫在連接線（或線上文字）後面。',
     '',
     '```',
-    'A(重要步驟):::primary',
-    'Z(結案):::success',
+    'A(重要步驟):::blue',
+    'B(異常處理):::#ef4444',
+    'C(自訂):::fill=#f0fdf4,stroke=#16a34a,text=#14532d',
+    'A -->|正常| C',
+    'A -.->|逾時|:::red B          // 連接線與線上文字都會變紅色',
     '```',
+    '',
+    '沒有指定顏色時，圓角方形是白底、菱形是淡紫、正方形是淡黃，維持一致的預設外觀。',
     '',
     '## 七、完整範例',
     '',
@@ -86,15 +125,15 @@
     'C -->|是| A(讀取預約資料)',
     'C -->|否| B(現場掛號)',
     'B --> A',
-    'A --> P(批價收費):::primary',
+    'A --> P(批價收費):::blue',
     'P -.- N[自費項目需另行\\n向病人說明]',
     'P --> D{付款方式}',
     'D -->|現金| E(收現金)',
-    'D -->|刷卡| F(刷卡機結帳)',
+    'D -->|刷卡|:::orange F(刷卡機結帳):::#f97316',
     'E --> G(列印收據)',
     'F --> G',
     'G --- H[收據需蓋章]',
-    'G --> Z(完成):::success',
+    'G --> Z(完成):::green',
     '```',
     '',
     '## 八、輸出時的注意事項',
@@ -114,15 +153,15 @@
     'C -->|是| A(讀取預約資料)',
     'C -->|否| B(現場掛號)',
     'B --> A',
-    'A --> P(批價收費):::primary',
+    'A --> P(批價收費):::blue',
     'P -.- N[自費項目需另行\\n向病人說明]',
     'P --> D{付款方式}',
     'D -->|現金| E(收現金)',
-    'D -->|刷卡| F(刷卡機結帳)',
+    'D -->|刷卡|:::orange F(刷卡機結帳):::#f97316',
     'E --> G(列印收據)',
     'F --> G',
     'G --- H[收據需蓋章]',
-    'G --> Z(完成):::success',
+    'G --> Z(完成):::green',
     ''
   ].join('\n');
 
@@ -133,6 +172,112 @@
   var ID_RE = /^[^\s()\[\]{}|<>\-.:"']+/;
   var CONN_RE = /^(-+\.-+>|-{2,}>|-+\.-+|-{3,})/;
   var OPEN = { '(': [')', 'round'], '{': ['}', 'diamond'], '[': [']', 'note'] };
+
+  /* ---- 顏色 ---- */
+
+  function hexToRgb(hex) {
+    var h = hex.replace('#', '');
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  }
+
+  function rgbToHex(rgb) {
+    return '#' + rgb.map(function (v) {
+      var s = Math.max(0, Math.min(255, Math.round(v))).toString(16);
+      return s.length < 2 ? '0' + s : s;
+    }).join('');
+  }
+
+  // 把 a 與 b 依比例 t 混合（t = 1 時完全是 b）
+  function mix(a, b, t) {
+    var x = hexToRgb(a), y = hexToRgb(b);
+    return rgbToHex([0, 1, 2].map(function (i) { return x[i] * (1 - t) + y[i] * t; }));
+  }
+
+  // 允許：具名色、#rgb / #rrggbb、瀏覽器認得的 CSS 顏色字（如 tomato）
+  function toHex(value) {
+    if (!value) return null;
+    var v = String(value).trim();
+    var named = COLORS[v] || COLORS[v.toLowerCase()];
+    if (named) return named;
+    if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)) return v.toLowerCase();
+    try {
+      var probe = document.createElement('span');
+      probe.style.color = '';
+      probe.style.color = v;
+      if (!probe.style.color) return null;
+      probe.style.display = 'none';
+      document.body.appendChild(probe);
+      var computed = getComputedStyle(probe).color;
+      document.body.removeChild(probe);
+      var m = /rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(computed);
+      return m ? rgbToHex([+m[1], +m[2], +m[3]]) : null;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  // 由一個主色推出「淡底 + 主色框線 + 深色文字」
+  function paletteFrom(hex) {
+    return {
+      base: hex,
+      fill: mix(hex, '#ffffff', 0.88),
+      stroke: hex,
+      text: mix(hex, '#000000', 0.45)
+    };
+  }
+
+  // :::紅 / :::#ef4444 / :::fill=#fff,stroke=#ef4444,text=#7f1d1d
+  function resolveStyle(spec, lineNo, errors) {
+    if (/[=:]/.test(spec)) {
+      var got = {}, any = false;
+      spec.split(',').forEach(function (part) {
+        if (!part.trim()) return;
+        var at = part.search(/[=:]/);
+        var key = KEY_ALIAS[part.slice(0, at).trim().toLowerCase()];
+        var val = toHex(part.slice(at + 1));
+        if (!key || !val) {
+          errors.push({
+            line: lineNo, warn: true,
+            msg: '看不懂的顏色設定「' + part.trim() + '」，格式為 fill=顏色、stroke=顏色、text=顏色'
+          });
+          return;
+        }
+        got[key] = val; any = true;
+      });
+      if (!any) return null;
+      var base = got.stroke || got.text || got.fill;
+      var auto = paletteFrom(base);
+      return {
+        base: base,
+        fill: got.fill || auto.fill,
+        stroke: got.stroke || auto.stroke,
+        text: got.text || auto.text
+      };
+    }
+    var hex = toHex(spec);
+    if (!hex) {
+      errors.push({
+        line: lineNo, warn: true,
+        msg: '未知的顏色「:::' + spec + '」，可用色碼（#ef4444）或顏色名（' + COLOR_NAMES.slice(0, 6).join('、') + ' …）'
+      });
+      return null;
+    }
+    return paletteFrom(hex);
+  }
+
+  // 讀取 ::: 後面的樣式字串（遇到連接線就停）
+  function readStyleToken(s, pos) {
+    var m = /^[^\s()\[\]{}|<>"']+/.exec(s.slice(pos));
+    if (!m) return null;
+    var tok = m[0], cut = tok.length;
+    ['--', '-.'].forEach(function (sep) {
+      var i = tok.indexOf(sep);
+      if (i > 0 && i < cut) cut = i;
+    });
+    tok = tok.slice(0, cut);
+    return tok || null;
+  }
 
   function stripComment(line) {
     var depth = 0, q = null;
@@ -179,22 +324,22 @@
       pos = i + 1;
     }
 
-    var cls = null;
+    var styleName = null, style = null;
     if (s.slice(pos, pos + 3) === ':::') {
-      var cm = /^[A-Za-z0-9_-]+/.exec(s.slice(pos + 3));
-      if (cm) {
-        cls = cm[0];
-        pos += 3 + cls.length;
-        if (CLASSES.indexOf(cls) < 0) {
-          errors.push({ line: lineNo, warn: true, msg: '未知的樣式「:::' + cls + '」，可用：' + CLASSES.join('、') });
-          cls = null;
-        }
+      var tok = readStyleToken(s, pos + 3);
+      if (!tok) {
+        errors.push({ line: lineNo, warn: true, msg: '「:::」後面少了顏色或樣式名稱' });
+        pos += 3;
+      } else {
+        pos += 3 + tok.length;
+        styleName = tok;
+        style = resolveStyle(tok, lineNo, errors);
       }
     }
 
     var node = model.nodes.get(id);
     if (!node) {
-      node = { id: id, type: 'round', text: id, cls: null, defined: false, line: lineNo };
+      node = { id: id, type: 'round', text: id, style: null, styleName: null, defined: false, line: lineNo };
       model.nodes.set(id, node);
     }
     if (shape) {
@@ -206,7 +351,7 @@
       node.text = newText;
       node.defined = true;
     }
-    if (cls) node.cls = cls;
+    if (style) { node.style = style; node.styleName = styleName; }
     return { id: id, pos: pos };
   }
 
@@ -233,13 +378,26 @@
       var tok = cm[0];
       pos += tok.length;
 
-      var label = '';
-      pos = skipSpace(line, pos);
-      if (line[pos] === '|') {
-        var end = line.indexOf('|', pos + 1);
-        if (end < 0) { errors.push({ line: lineNo, msg: '線上文字缺少結尾的「|」' }); return; }
-        label = line.slice(pos + 1, end).trim().replace(/^["']|["']$/g, '');
-        pos = end + 1;
+      // 連接線後面可接 |文字| 與 :::顏色（順序不拘）
+      var label = '', edgeStyle = null, edgeStyleName = null;
+      for (var slot = 0; slot < 2; slot++) {
+        pos = skipSpace(line, pos);
+        if (line[pos] === '|' && !label) {
+          var end = line.indexOf('|', pos + 1);
+          if (end < 0) { errors.push({ line: lineNo, msg: '線上文字缺少結尾的「|」' }); return; }
+          label = line.slice(pos + 1, end).trim().replace(/^["']|["']$/g, '');
+          pos = end + 1;
+          continue;
+        }
+        if (line.slice(pos, pos + 3) === ':::' && !edgeStyle) {
+          var st = readStyleToken(line, pos + 3);
+          if (!st) { errors.push({ line: lineNo, warn: true, msg: '「:::」後面少了顏色或樣式名稱' }); pos += 3; break; }
+          pos += 3 + st.length;
+          edgeStyleName = st;
+          edgeStyle = resolveStyle(st, lineNo, errors);
+          continue;
+        }
+        break;
       }
 
       var next = readNode(line, pos, model, lineNo, errors);
@@ -250,7 +408,7 @@
         from: prev, to: next.id,
         dashed: tok.indexOf('.') >= 0,
         arrow: tok.charAt(tok.length - 1) === '>',
-        label: label, line: lineNo
+        label: label, style: edgeStyle, styleName: edgeStyleName, line: lineNo
       });
       prev = next.id;
     }
@@ -534,11 +692,25 @@
     function cross(item) { return item.kind === 'dummy' ? 1 : (dir === 'TD' ? item.node.w : item.node.h); }
     function along(item) { return item.kind === 'dummy' ? 1 : (dir === 'TD' ? item.node.h : item.node.w); }
 
+    // 線上文字也要佔位子：替兩端的節點多留一點橫向空間，
+    // 否則同一個分流點拉出的幾條線，標籤會互相覆蓋或壓到節點。
+    linkEdges.forEach(function (e) {
+      if (!e.label) { e.labelW = 0; e.labelH = 0; return; }
+      e.labelW = Math.round(textWidth(e.label, 12, 500)) + 12;
+      e.labelH = 20;
+      var pad = (dir === 'TD' ? e.labelW : e.labelH) * 0.35;
+      [itemOf.get(e.from), itemOf.get(e.to)].forEach(function (item) {
+        if (item) item.labelPad = Math.max(item.labelPad || 0, pad);
+      });
+    });
+    function halfCross(item) { return cross(item) / 2 + (item.labelPad || 0); }
+
     layers.forEach(function (layer) {
       var x = 0;
       layer.forEach(function (item) {
-        item.c = x + cross(item) / 2;
-        x += cross(item) + NODE_GAP;
+        x += halfCross(item);
+        item.c = x;
+        x += halfCross(item) + NODE_GAP;
       });
     });
 
@@ -557,15 +729,15 @@
       });
       var i;
       for (i = 1; i < layer.length; i++) {
-        var minC = want[i - 1] + cross(layer[i - 1]) / 2 + cross(layer[i]) / 2 + NODE_GAP;
+        var minC = want[i - 1] + halfCross(layer[i - 1]) + halfCross(layer[i]) + NODE_GAP;
         if (want[i] < minC) want[i] = minC;
       }
       for (i = layer.length - 2; i >= 0; i--) {
-        var maxC = want[i + 1] - cross(layer[i + 1]) / 2 - cross(layer[i]) / 2 - NODE_GAP;
+        var maxC = want[i + 1] - halfCross(layer[i + 1]) - halfCross(layer[i]) - NODE_GAP;
         if (want[i] > maxC) want[i] = maxC;
       }
       for (i = 1; i < layer.length; i++) {
-        var minC2 = want[i - 1] + cross(layer[i - 1]) / 2 + cross(layer[i]) / 2 + NODE_GAP;
+        var minC2 = want[i - 1] + halfCross(layer[i - 1]) + halfCross(layer[i]) + NODE_GAP;
         if (want[i] < minC2) want[i] = minC2;
       }
       layer.forEach(function (item, k) { item.c = want[k]; });
@@ -576,12 +748,25 @@
       for (var rb = maxRank - 1; rb >= 0; rb--) refine(layers[rb], downNb);
     }
 
+    // 層與層之間的距離，至少要放得下跨過這裡的線上文字（LR 時標籤是橫躺的，特別吃空間）
+    var gapAfter = [];
+    for (var gi = 0; gi < Math.max(1, maxRank); gi++) gapAfter[gi] = RANK_GAP;
+    linkEdges.forEach(function (e) {
+      if (!e.label) return;
+      var ra = rank[e.from], rb = rank[e.to];
+      if (ra == null || rb == null || ra === rb) return;
+      var need = (dir === 'TD' ? e.labelH : e.labelW) + 26;
+      for (var r = Math.min(ra, rb); r < Math.max(ra, rb); r++) {
+        gapAfter[r] = Math.max(gapAfter[r] || RANK_GAP, need);
+      }
+    });
+
     var acc = 0;
-    layers.forEach(function (layer) {
+    layers.forEach(function (layer, r) {
       var thick = 1;
       layer.forEach(function (item) { thick = Math.max(thick, along(item)); });
       layer.forEach(function (item) { item.a = acc + thick / 2; });
-      acc += thick + RANK_GAP;
+      acc += thick + (gapAfter[r] || RANK_GAP);
     });
 
     var all = [];
@@ -603,16 +788,22 @@
       pts[pts.length - 1] = clipToNode(b, pts[pts.length - 1], pts[pts.length - 2]);
       outEdges.push({
         from: e.from, to: e.to, dashed: e.dashed, arrow: e.arrow,
-        label: e.label, pts: pts, line: e.line
+        label: e.label, labelW: e.labelW, labelH: e.labelH,
+        style: e.style, styleName: e.styleName, pts: pts, line: e.line
       });
     });
     selfEdges.forEach(function (e) {
       var n = byId.get(e.from);
       outEdges.push({
         from: e.from, to: e.to, dashed: e.dashed, arrow: e.arrow,
-        label: e.label, selfLoop: true, node: n, pts: [], line: e.line
+        label: e.label,
+        labelW: e.label ? Math.round(textWidth(e.label, 12, 500)) + 12 : 0,
+        labelH: e.label ? 20 : 0,
+        style: e.style, styleName: e.styleName, selfLoop: true, node: n, pts: [], line: e.line
       });
     });
+
+    placeLabels(nodes, outEdges);
 
     /* --- 4-7 邊界 --- */
     var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -627,12 +818,21 @@
         minY = Math.min(minY, pt.y); maxY = Math.max(maxY, pt.y);
       });
       if (ed.selfLoop && ed.node) maxX = Math.max(maxX, ed.node.x + ed.node.w / 2 + 60);
+      if (ed.labelPos) {
+        minX = Math.min(minX, ed.labelPos.x - ed.labelW / 2);
+        maxX = Math.max(maxX, ed.labelPos.x + ed.labelW / 2);
+        minY = Math.min(minY, ed.labelPos.y - ed.labelH / 2);
+        maxY = Math.max(maxY, ed.labelPos.y + ed.labelH / 2);
+      }
     });
     if (!isFinite(minX)) { minX = 0; minY = 0; maxX = 100; maxY = 100; }
 
     var dx = PAD - minX, dy = PAD - minY;
     nodes.forEach(function (n) { if (n.x != null) { n.x += dx; n.y += dy; } });
-    outEdges.forEach(function (ed) { ed.pts.forEach(function (pt) { pt.x += dx; pt.y += dy; }); });
+    outEdges.forEach(function (ed) {
+      ed.pts.forEach(function (pt) { pt.x += dx; pt.y += dy; });
+      if (ed.labelPos) { ed.labelPos.x += dx; ed.labelPos.y += dy; }
+    });
 
     return {
       nodes: nodes.filter(function (n) { return n.x != null; }),
@@ -657,16 +857,6 @@
     '.fc-diamond .fc-label{fill:#312e81;}',
     '.fc-note .fc-shape{fill:#fefce8;stroke:#eab308;stroke-width:1.2;}',
     '.fc-note .fc-label{fill:#713f12;font-weight:400;}',
-    '.fc-cls-primary .fc-shape{fill:#eff6ff;stroke:#3b82f6;stroke-width:2;}',
-    '.fc-cls-primary .fc-label{fill:#1e3a8a;}',
-    '.fc-cls-success .fc-shape{fill:#ecfdf5;stroke:#10b981;stroke-width:2;}',
-    '.fc-cls-success .fc-label{fill:#065f46;}',
-    '.fc-cls-warn .fc-shape{fill:#fff7ed;stroke:#f59e0b;stroke-width:2;}',
-    '.fc-cls-warn .fc-label{fill:#7c2d12;}',
-    '.fc-cls-danger .fc-shape{fill:#fef2f2;stroke:#ef4444;stroke-width:2;}',
-    '.fc-cls-danger .fc-label{fill:#7f1d1d;}',
-    '.fc-cls-muted .fc-shape{fill:#f8fafc;stroke:#cbd5e1;}',
-    '.fc-cls-muted .fc-label{fill:#64748b;}',
     '.fc-line{fill:none;stroke:#64748b;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}',
     '.fc-line.dashed{stroke-dasharray:7 5;}',
     '.fc-arrow{fill:#64748b;stroke:none;}',
@@ -685,6 +875,31 @@
   function norm(v) {
     var len = Math.sqrt(v.x * v.x + v.y * v.y) || 1;
     return { x: v.x / len, y: v.y / len };
+  }
+
+  // 沿著折線取 t（0~1）位置的點，並回傳該處的法線方向
+  function pointAlong(pts, t) {
+    var seg = [], total = 0, i, d;
+    for (i = 1; i < pts.length; i++) {
+      d = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+      seg.push(d); total += d;
+    }
+    var want = total * t, acc = 0;
+    for (i = 0; i < seg.length; i++) {
+      if (acc + seg[i] >= want || i === seg.length - 1) {
+        var len = seg[i] || 1;
+        var r = Math.max(0, Math.min(1, (want - acc) / len));
+        var a = pts[i], b = pts[i + 1];
+        return {
+          x: a.x + (b.x - a.x) * r,
+          y: a.y + (b.y - a.y) * r,
+          nx: -(b.y - a.y) / len,
+          ny: (b.x - a.x) / len
+        };
+      }
+      acc += seg[i];
+    }
+    return { x: pts[0].x, y: pts[0].y, nx: 0, ny: 0 };
   }
 
   function polyMid(pts) {
@@ -755,7 +970,59 @@
         d += 'C' + mx + ' ' + a.y + ' ' + mx + ' ' + b.y + ' ' + b.x + ' ' + b.y;
       }
     }
-    return { d: d, tip: tip, tangent: tangent, mid: polyMid(pts) };
+    return { d: d, tip: tip, tangent: tangent, mid: polyMid(pts), pts: pts };
+  }
+
+  /* 線上文字的擺放：同一個分流點拉出的線在中點附近很近，
+     標籤一長就會互相覆蓋，所以讓每個標籤沿著自己的線找一個沒人佔的位置。 */
+  var LABEL_T = [0.5, 0.42, 0.58, 0.34, 0.66, 0.27, 0.73, 0.2, 0.8];
+  var LABEL_OFFSET = [0, 13, -13];
+
+  function boxHit(a, b, pad) {
+    return Math.abs((a.x + a.w / 2) - (b.x + b.w / 2)) < (a.w + b.w) / 2 + pad &&
+           Math.abs((a.y + a.h / 2) - (b.y + b.h / 2)) < (a.h + b.h) / 2 + pad;
+  }
+
+  function placeLabels(nodes, edges) {
+    var placed = [];
+    var nodeBoxes = nodes.filter(function (n) { return n.x != null; }).map(function (n) {
+      return { x: n.x - n.w / 2, y: n.y - n.h / 2, w: n.w, h: n.h };
+    });
+
+    edges.forEach(function (ed) {
+      if (!ed.label) return;
+      var w = ed.labelW, h = ed.labelH;
+      function boxAt(pt) { return { x: pt.x - w / 2, y: pt.y - h / 2, w: w, h: h }; }
+
+      if (ed.selfLoop) {
+        ed.labelPos = { x: ed.node.x + ed.node.w / 2 + 43, y: ed.node.y };
+        placed.push(boxAt(ed.labelPos));
+        return;
+      }
+      if (!ed.pts || ed.pts.length < 2) return;
+
+      var fallback = polyMid(ed.pts);
+      var best = null, freeOfLabels = null;
+      for (var oi = 0; oi < LABEL_OFFSET.length && !best; oi++) {
+        for (var ti = 0; ti < LABEL_T.length; ti++) {
+          var p = pointAlong(ed.pts, LABEL_T[ti]);
+          var c = { x: p.x + p.nx * LABEL_OFFSET[oi], y: p.y + p.ny * LABEL_OFFSET[oi] };
+          var box = boxAt(c);
+          var k, bad = false;
+          for (k = 0; k < placed.length; k++) if (boxHit(box, placed[k], 4)) { bad = true; break; }
+          if (bad) continue;
+          if (!freeOfLabels) freeOfLabels = { c: c, box: box };
+          for (k = 0; k < nodeBoxes.length; k++) if (boxHit(box, nodeBoxes[k], 0)) { bad = true; break; }
+          if (bad) continue;
+          best = { c: c, box: box };
+          break;
+        }
+      }
+
+      var chosen = best || freeOfLabels || { c: fallback, box: boxAt(fallback) };
+      ed.labelPos = chosen.c;
+      placed.push(chosen.box);
+    });
   }
 
   function arrowPath(tip, tangent) {
@@ -767,22 +1034,30 @@
   }
 
   function drawNode(n) {
-    var g = el('g', { class: 'fc-node fc-' + n.type + (n.cls ? ' fc-cls-' + n.cls : ''), 'data-id': n.id });
+    var g = el('g', {
+      class: 'fc-node fc-' + n.type, 'data-id': n.id,
+      'data-style': n.styleName || null
+    });
+    // 自訂顏色要用 inline style，否則會被 <style> 裡的預設值蓋掉
+    var shapeStyle = n.style
+      ? 'fill:' + n.style.fill + ';stroke:' + n.style.stroke + ';stroke-width:2'
+      : null;
     var hw = n.w / 2, hh = n.h / 2;
     if (n.type === 'diamond') {
       g.appendChild(el('polygon', {
-        class: 'fc-shape',
+        class: 'fc-shape', style: shapeStyle,
         points: [n.x + ' ' + (n.y - hh), (n.x + hw) + ' ' + n.y, n.x + ' ' + (n.y + hh), (n.x - hw) + ' ' + n.y].join(' ')
       }));
     } else {
       g.appendChild(el('rect', {
-        class: 'fc-shape',
+        class: 'fc-shape', style: shapeStyle,
         x: n.x - hw, y: n.y - hh, width: n.w, height: n.h,
         rx: n.type === 'round' ? 12 : 2, ry: n.type === 'round' ? 12 : 2
       }));
     }
     var text = el('text', {
       class: 'fc-text fc-label', x: n.x, y: n.y,
+      style: n.style ? 'fill:' + n.style.text : null,
       'font-size': n.fontSize, 'font-weight': n.fontWeight,
       'text-anchor': 'middle', 'dominant-baseline': 'central'
     });
@@ -794,19 +1069,30 @@
     return g;
   }
 
-  function drawEdge(ed, dir) {
-    var g = el('g', { class: 'fc-edge' });
-    var geo = edgeGeometry(ed, dir);
-    g.appendChild(el('path', { class: 'fc-line' + (ed.dashed ? ' dashed' : ''), d: geo.d }));
-    if (ed.arrow) g.appendChild(el('path', { class: 'fc-arrow', d: arrowPath(geo.tip, geo.tangent) }));
+  function drawEdge(ed, geo) {
+    var g = el('g', { class: 'fc-edge', 'data-style': ed.styleName || null });
+    var color = ed.style ? ed.style.stroke : null;
+    g.appendChild(el('path', {
+      class: 'fc-line' + (ed.dashed ? ' dashed' : ''), d: geo.d,
+      style: color ? 'stroke:' + color : null
+    }));
+    if (ed.arrow) {
+      g.appendChild(el('path', {
+        class: 'fc-arrow', d: arrowPath(geo.tip, geo.tangent),
+        style: color ? 'fill:' + color : null
+      }));
+    }
     if (ed.label) {
-      var w = textWidth(ed.label, 12, 500) + 12, h = 20;
+      var at = ed.labelPos || geo.mid;
+      var w = ed.labelW || (textWidth(ed.label, 12, 500) + 12), h = ed.labelH || 20;
       g.appendChild(el('rect', {
-        class: 'fc-edge-label-bg', x: geo.mid.x - w / 2, y: geo.mid.y - h / 2,
-        width: w, height: h, rx: 5, ry: 5
+        class: 'fc-edge-label-bg', x: at.x - w / 2, y: at.y - h / 2,
+        width: w, height: h, rx: 5, ry: 5,
+        style: color ? 'stroke:' + mix(color, '#ffffff', 0.6) : null
       }));
       g.appendChild(el('text', {
-        class: 'fc-text fc-edge-label-text', x: geo.mid.x, y: geo.mid.y,
+        class: 'fc-text fc-edge-label-text', x: at.x, y: at.y,
+        style: ed.style ? 'fill:' + ed.style.text : null,
         'text-anchor': 'middle', 'dominant-baseline': 'central'
       }, ed.label));
     }
@@ -849,7 +1135,9 @@
     body.appendChild(gEdges);
     body.appendChild(gNodes);
 
-    lay.edges.forEach(function (ed) { gEdges.appendChild(drawEdge(ed, lay.direction)); });
+    lay.edges.forEach(function (ed) {
+      gEdges.appendChild(drawEdge(ed, edgeGeometry(ed, lay.direction)));
+    });
     lay.nodes.forEach(function (n) { gNodes.appendChild(drawNode(n)); });
 
     return { svg: svg, width: W, height: H, layout: lay };
@@ -1067,7 +1355,9 @@
   global.FlowScript = {
     SPEC: SPEC,
     EXAMPLE: EXAMPLE,
-    CLASSES: CLASSES,
+    COLORS: COLORS,
+    COLOR_NAMES: COLOR_NAMES,
+    resolveStyle: resolveStyle,
     parse: parse,
     layout: layout,
     draw: draw,

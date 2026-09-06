@@ -38,6 +38,10 @@
     background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;
     font-family:var(--mono);font-size:12.5px;line-height:1.8;overflow:auto;color:var(--ink-2);
   }
+  .swatches{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .swatch{
+    font-family:var(--mono);font-size:12px;padding:6px 12px;border-radius:8px;border:2px solid;
+  }
   .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
   button.btn,a.btn{
     font-family:inherit;font-size:13px;color:var(--ink-2);background:var(--panel);
@@ -90,6 +94,16 @@
     <tr><td><code>A -.- B</code></td><td>虛線連接線（無箭頭）</td></tr>
   </table>
 
+  <h2>顏色</h2>
+  <table>
+    <tr><th style="width:180px">寫法</th><th>說明</th></tr>
+    <tr><td><code>A(文字):::red</code></td><td>具名顏色，中英文皆可（<code>:::紅</code> 也行）</td></tr>
+    <tr><td><code>A(文字):::#ef4444</code></td><td>直接給色碼，會自動配成淡底色 + 框線 + 深色文字</td></tr>
+    <tr><td><code>A(文字):::fill=#fff1f2,stroke=#ef4444,text=#7f1d1d</code></td><td>分別指定底色／框線／文字</td></tr>
+    <tr><td><code>A -->|逾時|:::red B</code></td><td>連接線也能上色，箭頭與線上文字會一起變色</td></tr>
+  </table>
+  <div class="swatches" id="swatches"></div>
+
   <h2>範例</h2>
   <pre id="example"></pre>
 
@@ -112,6 +126,19 @@
 (function () {
   var FS = window.FlowScript;
   document.getElementById('example').textContent = FS.EXAMPLE.trim();
+
+  // 顏色色票：直接用引擎算出來的配色，跟畫布上看到的一致
+  var zh = { red:'紅', orange:'橙', amber:'黃', green:'綠', teal:'青', blue:'藍',
+             indigo:'靛', purple:'紫', pink:'粉', brown:'棕', gray:'灰', black:'黑' };
+  var box = document.getElementById('swatches');
+  FS.COLOR_NAMES.forEach(function (name) {
+    var s = FS.resolveStyle(name, 0, []);
+    var d = document.createElement('span');
+    d.className = 'swatch';
+    d.style.cssText = 'background:' + s.fill + ';border-color:' + s.stroke + ';color:' + s.text;
+    d.textContent = name + ' ' + (zh[name] || '');
+    box.appendChild(d);
+  });
   document.getElementById('demoLink').href = FS.buildViewURL(FS.EXAMPLE, './view/');
   var toastEl = document.getElementById('toast');
   document.getElementById('copySpec').addEventListener('click', function () {
