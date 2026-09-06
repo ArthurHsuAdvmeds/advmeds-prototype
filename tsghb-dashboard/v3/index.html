@@ -12288,10 +12288,10 @@
   <section class="page" id="efficiency">
     <div class="eff-v81-tabs-row">
       <div class="eff-v79-tabs" id="effV79Tabs" role="tablist" aria-label="案件處理效率檢視">
-        <button class="eff-v79-tab active" data-eff-view="emergency" role="tab" aria-selected="true">緊急醫療處置</button>
-        <button class="eff-v79-tab" data-eff-view="bureau" role="tab">衛生局轉介</button>
-        <button class="eff-v79-tab" data-eff-view="hospital" role="tab">本院承接</button>
-        <button class="eff-v79-tab" data-eff-view="risk" role="tab">風險處理時效</button>
+        <button class="eff-v79-tab active" data-eff-view="overview" role="tab" aria-selected="true">總覽</button>
+        <button class="eff-v79-tab" data-eff-view="emergency" role="tab">緊急醫療處置效率</button>
+        <button class="eff-v79-tab" data-eff-view="bureau" role="tab">優化計畫衛生局處置效率</button>
+        <button class="eff-v79-tab" data-eff-view="hospital" role="tab">優化計畫醫院端處置效率</button>
       </div>
       <span class="efficiency-range-label" id="efficiencyRangeLabel">2026/01/01－2026/09/04</span>
     </div>
@@ -12311,15 +12311,53 @@
       </div>
     </div>
 
-    <div class="eff-v79-panel active" data-eff-panel="emergency">
-      <div class="eff-v79-section-heading"><div><span>緊急醫療處置</span><h3>處置結果與反應時間</h3></div><small>從網絡完成通報到實際出勤</small></div>
+    <!-- ===== Tab 1：總覽 ===== -->
+    <div class="eff-v79-panel active" data-eff-panel="overview">
+      <div class="eff-v79-section-heading"><div><span>總覽</span><h3>不同風險個案處理時間（平均）</h3></div><small>緊醫完成受理／優化計畫完成首次訪視 － 個案通報時間</small></div>
+
+      <article class="eff-v79-card eff-v79-risk-compare">
+        <div class="eff-v79-risk-row high"><div class="eff-v79-risk-name"><span>高風險</span><small>N = 84</small></div><div class="eff-v79-risk-bar"><i style="width:28%"></i></div><strong data-eff-value="riskHigh">1.6</strong><em>天</em><button class="eff-v79-info" data-metric="高風險個案處理時間(平均)">i</button></div>
+        <div class="eff-v79-risk-row medium"><div class="eff-v79-risk-name"><span>中風險</span><small>N = 156</small></div><div class="eff-v79-risk-bar"><i style="width:59%"></i></div><strong data-eff-value="riskMedium">3.4</strong><em>天</em><button class="eff-v79-info" data-metric="中風險個案處理時間(平均)">i</button></div>
+        <div class="eff-v79-risk-row low"><div class="eff-v79-risk-name"><span>低風險</span><small>N = 101</small></div><div class="eff-v79-risk-bar"><i style="width:100%"></i></div><strong data-eff-value="riskLow">5.8</strong><em>天</em><button class="eff-v79-info" data-metric="低風險個案處理時間(平均)">i</button></div>
+      </article>
+      <div class="eff-v79-risk-note">條形長度用來比較相對處理時間；實際值以右側平均天數為準。</div>
+
+      <div class="eff-v86-jump-head">各處置面向重點<small>點擊卡片可切換至該頁籤查看完整指標</small></div>
+      <div class="eff-v86-jump-grid">
+        <button type="button" class="eff-v86-jump emergency" data-eff-jump="emergency">
+          <span class="eff-v86-jump-title">緊急醫療處置效率<i>→</i></span>
+          <div class="eff-v86-jump-metrics">
+            <div><b data-eff-value="emergencyClose">88.4</b><em>%</em><small>緊醫案件結案率</small></div>
+            <div><b data-eff-value="emergencyTotal">2.5</b><em>小時</em><small>出勤總反應時間</small></div>
+          </div>
+        </button>
+        <button type="button" class="eff-v86-jump bureau" data-eff-jump="bureau">
+          <span class="eff-v86-jump-title">優化計畫衛生局處置效率<i>→</i></span>
+          <div class="eff-v86-jump-metrics">
+            <div><b data-eff-value="bureauToHospital">41.6</b><em>%</em><small>衛生局轉介本院率</small></div>
+            <div><b data-eff-value="bureauReply">1.1</b><em>天</em><small>衛生局回覆通報時間</small></div>
+          </div>
+        </button>
+        <button type="button" class="eff-v86-jump hospital" data-eff-jump="hospital">
+          <span class="eff-v86-jump-title">優化計畫醫院端處置效率<i>→</i></span>
+          <div class="eff-v86-jump-metrics">
+            <div><b data-eff-value="hospitalOpen">82.6</b><em>%</em><small>轉介案件開案率</small></div>
+            <div><b data-eff-value="replyBureau">1.5</b><em>天</em><small>回覆衛生局時間</small></div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== Tab 2：緊急醫療處置效率 ===== -->
+    <div class="eff-v79-panel" data-eff-panel="emergency" hidden>
+      <div class="eff-v79-section-heading"><div><span>緊急醫療處置效率</span><h3>處置結果與反應時間</h3></div><small>從網絡完成通報到實際出勤</small></div>
       <div class="eff-v79-emergency-layout">
         <article class="eff-v79-card eff-v79-rates-card">
           <div class="eff-v79-card-title"><h4>處置結果</h4><span>比例</span></div>
           <div class="eff-v79-rate-trio">
-            <div class="eff-v79-rate-item"><button class="eff-v79-info" data-metric="緊醫案件結案率">i</button><div class="eff-v79-donut" data-eff-ring="emergencyClose" style="--p:88.4"><div><strong data-eff-value="emergencyClose">88.4</strong><span>%</span></div></div><b>案件結案率</b></div>
-            <div class="eff-v79-rate-item"><button class="eff-v79-info" data-metric="緊醫電話處置率">i</button><div class="eff-v79-donut alt" data-eff-ring="phoneRate" style="--p:61.7"><div><strong data-eff-value="phoneRate">61.7</strong><span>%</span></div></div><b>電話處置率</b></div>
-            <div class="eff-v79-rate-item"><button class="eff-v79-info" data-metric="緊醫出勤處置率">i</button><div class="eff-v79-donut warm" data-eff-ring="dispatchRate" style="--p:38.3"><div><strong data-eff-value="dispatchRate">38.3</strong><span>%</span></div></div><b>出勤處置率</b></div>
+            <div class="eff-v79-rate-item"><button class="eff-v79-info" data-metric="緊醫案件結案率">i</button><div class="eff-v79-donut" data-eff-ring="emergencyClose" style="--p:88.4"><div><strong data-eff-value="emergencyClose">88.4</strong><em>%</em></div></div><b>案件結案率</b></div>
+            <div class="eff-v79-rate-item"><button class="eff-v79-info" data-metric="緊醫電話處置率">i</button><div class="eff-v79-donut alt" data-eff-ring="phoneRate" style="--p:61.7"><div><strong data-eff-value="phoneRate">61.7</strong><em>%</em></div></div><b>電話處置率</b></div>
+            <div class="eff-v79-rate-item"><button class="eff-v79-info" data-metric="緊醫出勤處置率">i</button><div class="eff-v79-donut warm" data-eff-ring="dispatchRate" style="--p:38.3"><div><strong data-eff-value="dispatchRate">38.3</strong><em>%</em></div></div><b>出勤處置率</b></div>
           </div>
         </article>
         <article class="eff-v79-card eff-v79-timeline-card">
@@ -12338,8 +12376,9 @@
       </div>
     </div>
 
+    <!-- ===== Tab 3：優化計畫衛生局處置效率 ===== -->
     <div class="eff-v79-panel" data-eff-panel="bureau" hidden>
-      <div class="eff-v79-section-heading"><div><span>優化計畫</span><h3>衛生局回覆與轉介</h3></div><small>通報轉介單 → 衛生局回覆單 → 轉介北投／轉介他院／暫不轉介</small></div>
+      <div class="eff-v79-section-heading"><div><span>優化計畫衛生局處置效率</span><h3>衛生局回覆與轉介</h3></div><small>通報轉介單 → 衛生局回覆單 → 轉介北投／轉介他院／暫不轉介</small></div>
 
       <article class="eff-v83-routing-card">
         <div class="eff-v83-routing-head">
@@ -12359,7 +12398,8 @@
         </div>
       </article>
 
-      <div class="eff-v83-bureau-rate-grid">
+      <div class="eff-v83-bureau-rate-grid eff-v86-bureau-rate-4">
+        <article class="eff-v86-flagged"><span>衛生局醫療轉介率</span><strong data-eff-value="bureauReferral">58.2</strong><em>%</em><small>轉介醫療機構 ÷ 已完成回覆單<b class="eff-v86-flag" title="分母定義待確認，詳見指標說明">定義待確認</b></small><button class="eff-v79-info" data-metric="衛生局醫療轉介率">i</button></article>
         <article><span>衛生局轉介本院率</span><strong data-eff-value="bureauToHospital">41.6</strong><em>%</em><small>轉介北投 ÷ 已完成回覆單</small><button class="eff-v79-info" data-metric="衛生局轉介本院率">i</button></article>
         <article><span>本院醫療轉介占率</span><strong data-eff-value="hospitalShare">71.5</strong><em>%</em><small>轉介北投 ÷（轉介北投＋轉介他院）</small><button class="eff-v79-info" data-metric="本院醫療轉介占率">i</button></article>
         <article><span>衛生局暫不轉介率</span><strong data-eff-value="nonReferralRate">41.8</strong><em>%</em><small>暫不轉介 ÷ 已完成回覆單</small><button class="eff-v79-info" data-metric="衛生局暫不轉介率">i</button></article>
@@ -12395,8 +12435,9 @@
       </div>
     </div>
 
+    <!-- ===== Tab 4：優化計畫醫院端處置效率 ===== -->
     <div class="eff-v79-panel" data-eff-panel="hospital" hidden>
-      <div class="eff-v79-section-heading"><div><span>本院承接</span><h3>開案、覆核與醫療介入</h3></div><small>從衛生局回覆到本院完成專業處置</small></div>
+      <div class="eff-v79-section-heading"><div><span>優化計畫醫院端處置效率</span><h3>開案、覆核與醫療介入</h3></div><small>從衛生局回覆到本院完成專業處置</small></div>
       <div class="eff-v79-rate-strip hospital">
         <article><span>轉介案件開案率</span><strong data-eff-value="hospitalOpen">82.6</strong><em>%</em><button class="eff-v79-info" data-metric="衛生局轉介案件開案率">i</button></article>
         <article><span>暫不轉介覆核同意率</span><strong data-eff-value="reviewAgree">74.1</strong><em>%</em><button class="eff-v79-info" data-metric="暫不轉介覆核同意率">i</button></article>
@@ -12414,16 +12455,6 @@
           <div class="eff-v79-process-item"><span>回覆衛生局時間</span><strong data-eff-value="replyBureau">1.5</strong><em>天</em><button class="eff-v79-info" data-metric="回覆衛生局時間">i</button></div>
         </div>
       </article>
-    </div>
-
-    <div class="eff-v79-panel" data-eff-panel="risk" hidden>
-      <div class="eff-v79-section-heading"><div><span>風險處理時效</span><h3>不同風險個案處理時間（平均）</h3></div><small>緊醫完成受理／優化計畫完成首次訪視</small></div>
-      <article class="eff-v79-card eff-v79-risk-compare">
-        <div class="eff-v79-risk-row high"><div class="eff-v79-risk-name"><span>高風險</span><small>N = 84</small></div><div class="eff-v79-risk-bar"><i style="width:28%"></i></div><strong data-eff-value="riskHigh">1.6</strong><em>天</em><button class="eff-v79-info" data-metric="高風險個案處理時間(平均)">i</button></div>
-        <div class="eff-v79-risk-row medium"><div class="eff-v79-risk-name"><span>中風險</span><small>N = 156</small></div><div class="eff-v79-risk-bar"><i style="width:59%"></i></div><strong data-eff-value="riskMedium">3.4</strong><em>天</em><button class="eff-v79-info" data-metric="中風險個案處理時間(平均)">i</button></div>
-        <div class="eff-v79-risk-row low"><div class="eff-v79-risk-name"><span>低風險</span><small>N = 101</small></div><div class="eff-v79-risk-bar"><i style="width:100%"></i></div><strong data-eff-value="riskLow">5.8</strong><em>天</em><button class="eff-v79-info" data-metric="低風險個案處理時間(平均)">i</button></div>
-      </article>
-      <div class="eff-v79-risk-note">條形長度用來比較相對處理時間；實際值以右側平均天數為準。</div>
     </div>
   </section>
 
@@ -16768,7 +16799,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       '緊醫首次專業評估時間':'「系統」首次完成「受理方式」表單的時間，減掉「系統」醫療管理員完成指派（給醫師/護理師）的時間。',
       '緊醫出勤準備時間':'醫療實際出勤時間（「出勤單」中填寫的出勤年、月、日、時間），減掉「系統」上首次完成「受理方式」表單的時間。',
       '緊醫出勤總反應時間':'醫療實際出勤時間（「出勤單」中填寫的出勤年、月、日、時間），減掉「系統」網絡通報完成時間。',
-      '衛生局醫療轉介率':'轉介醫療機構案件數（即衛生局優化計畫回覆單中勾選「轉介」的案件數） / 衛生局完成回覆單案件數。',
+      '衛生局醫療轉介率':'轉介醫療機構案件數（即衛生局優化計畫回覆單中勾選「轉介」的案件數） / 衛生局完成回覆單案件數。　※ 定義待確認：分母若採「所有轉介案」，依此公式算出來會固定是 100%，需與需求端確認分母應為「衛生局完成回覆單案件數」或「所有轉介案」。目前畫面以前者計算。',
       '衛生局轉介本院率':'轉介三總北投案件數（即衛生局優化計畫回覆單中勾選「轉介三總北投」的案件數） / 衛生局完成回覆單案件數。',
       '本院醫療轉介占率':'轉介三總北投案件數 /（轉介三總北投案件數 + 轉介他院案件數）。',
       '衛生局暫不轉介率':'暫不轉介案件數（衛生局優化計畫回覆單勾選「暫不轉介」） / 衛生局完成回覆單案件數。',
@@ -16818,7 +16849,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     const dialogTitle=document.getElementById('effV79DialogTitle');
     const dialogDefinition=document.getElementById('effV79DialogDefinition');
 
-    let activeView='emergency';
+    let activeView='overview';
     let category='all';
     let rangeMode='year';
     let customFactor=1;
@@ -16831,7 +16862,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
     function showView(view){
       const targetBtn=tabBar?.querySelector(`[data-eff-view="${view}"]`);
-      if(!targetBtn || targetBtn.hidden) view='emergency';
+      if(!targetBtn || targetBtn.hidden) view='overview';
       activeView=view;
       tabBar?.querySelectorAll('.eff-v79-tab').forEach(btn=>{
         const on=btn.dataset.effView===view;
@@ -16953,7 +16984,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       document.querySelectorAll('.page').forEach(page=>page.classList.toggle('active',page===target));
     },true);
 
-    showView('emergency');
+    showView('overview');
     applyPreset('year');
   };
 
@@ -21656,5 +21687,296 @@ img{ max-width:100%; height:auto; }
   .dashboard #efficiency.page.active{
     grid-template-rows:auto auto minmax(0,1fr) !important;
   }
+}
+</style>
+
+
+<style id="v86-efficiency-four-tab-restructure">
+/* =========================================================================
+   v86 — 案件處理效率指標改為四頁籤（依「參考暫存.csv」的歸屬 Tab 重新規劃）
+   -------------------------------------------------------------------------
+     Tab 1 總覽                   ← 高／中／低風險個案處理時間（3 項）
+     Tab 2 緊急醫療處置效率        ← 緊醫 7 項
+     Tab 3 優化計畫衛生局處置效率   ← 衛生局 8 項
+     Tab 4 優化計畫醫院端處置效率   ← 醫院端 10 項
+
+   與改版前的差異：
+     - 原「風險處理時效」升格為第一個頁籤「總覽」，並加上三個面向的重點摘要卡
+     - 補上 CSV 有、但畫面上原本沒有的「衛生局醫療轉介率」
+       （衛生局區塊因此由 3 欄變 4 欄）
+     - 其餘 27 個指標的位置與元件沿用 v79/v83，未更動
+   ========================================================================= */
+
+/* ---------- 頁籤：標籤變長，改為依內容寬度並可捲動 ---------- */
+#efficiency .eff-v79-tab{
+  min-width:0 !important;
+  padding:0 16px !important;
+  white-space:nowrap !important;
+}
+@media (min-width:1200px){
+  #efficiency .eff-v81-tabs-row .eff-v79-tabs{
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+  #efficiency .eff-v81-tabs-row .eff-v79-tabs::-webkit-scrollbar{ display:none; }
+}
+
+/* ---------- 總覽：三個面向的重點摘要（可點擊跳頁） ---------- */
+#efficiency .eff-v86-jump-head{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  margin:14px 0 8px;
+  font-size:13px;
+  font-weight:800;
+  color:#27364a;
+}
+#efficiency .eff-v86-jump-head small{
+  font-size:9px;
+  font-weight:600;
+  color:#98a2b3;
+}
+#efficiency .eff-v86-jump-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:9px;
+}
+#efficiency .eff-v86-jump{
+  position:relative;
+  min-height:104px;
+  padding:12px 14px;
+  border:1px solid #dfe6ee;
+  border-left-width:3px;
+  border-radius:9px;
+  background:#fff;
+  font-family:inherit;
+  text-align:left;
+  cursor:pointer;
+  transition:border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+#efficiency .eff-v86-jump:hover{
+  border-color:#b9c6d8;
+  box-shadow:0 3px 10px rgba(35,58,79,.08);
+  transform:translateY(-1px);
+}
+#efficiency .eff-v86-jump:focus-visible{
+  outline:2px solid #218fee;
+  outline-offset:2px;
+}
+#efficiency .eff-v86-jump.emergency{ border-left-color:#218fee; }
+#efficiency .eff-v86-jump.bureau{    border-left-color:#6974cd; }
+#efficiency .eff-v86-jump.hospital{  border-left-color:#ed8c5b; }
+
+#efficiency .eff-v86-jump-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  font-size:11.5px;
+  font-weight:800;
+  color:#344054;
+}
+#efficiency .eff-v86-jump-title i{
+  font-style:normal;
+  font-size:13px;
+  color:#a0adbd;
+}
+#efficiency .eff-v86-jump:hover .eff-v86-jump-title i{ color:#218fee; }
+
+#efficiency .eff-v86-jump-metrics{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin-top:12px;
+}
+#efficiency .eff-v86-jump-metrics b{
+  font-size:26px;
+  line-height:1;
+  font-weight:550;
+  color:#344054;
+}
+#efficiency .eff-v86-jump-metrics em{
+  font-style:normal;
+  font-size:9.5px;
+  color:#8a95a5;
+  margin-left:2px;
+}
+#efficiency .eff-v86-jump-metrics small{
+  display:block;
+  margin-top:5px;
+  font-size:8.5px;
+  color:#98a2b3;
+}
+#efficiency .eff-v86-jump.emergency .eff-v86-jump-metrics b{ color:#218fee; }
+#efficiency .eff-v86-jump.bureau .eff-v86-jump-metrics b{    color:#6974cd; }
+#efficiency .eff-v86-jump.hospital .eff-v86-jump-metrics b{  color:#d97945; }
+
+/* ---------- 衛生局：新增「衛生局醫療轉介率」後由 3 欄變 4 欄 ---------- */
+#efficiency .eff-v86-bureau-rate-4{
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+}
+/* v83 用 nth-child(3) 把「暫不轉介」染成橘色；補上第 4 張後要改指向第 4 張 */
+#efficiency .eff-v86-bureau-rate-4 article:nth-child(3):before{ background:#6974cd; }
+#efficiency .eff-v86-bureau-rate-4 article:nth-child(3)>strong{ color:#6974cd; }
+#efficiency .eff-v86-bureau-rate-4 article:nth-child(4):before{ background:#ed8c5b; }
+#efficiency .eff-v86-bureau-rate-4 article:nth-child(4)>strong{ color:#d97945; }
+
+/* 定義待確認的標記：CSV 對此指標註記「分母應該是所有轉介案，
+   不然轉介率照上面的公式算出來會是 100%」 */
+#efficiency .eff-v86-flagged{ border-color:#f0d9a8 !important; }
+/* 內嵌在說明文字行內，不額外增加卡片高度——
+   這一列的高度預算已經是滿的，多 16px 就會把下方區塊擠出面板 */
+#efficiency .eff-v86-flag{
+  display:inline-block;
+  margin-left:5px;
+  padding:0 5px;
+  border-radius:999px;
+  background:#fdf4e3;
+  color:#a9762a;
+  font-size:7.5px;
+  font-weight:800;
+  line-height:1.5;
+  letter-spacing:.2px;
+  vertical-align:baseline;
+}
+
+/* ---------- 窄視窗 ---------- */
+@media (max-width:1199px){
+  #efficiency .eff-v86-bureau-rate-4{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+@media (max-width:899px){
+  #efficiency .eff-v86-jump-grid{ grid-template-columns:minmax(0,1fr); }
+  #efficiency .eff-v86-jump{ min-height:0; }
+  #efficiency .eff-v86-bureau-rate-4{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+@media (max-width:599px){
+  #efficiency .eff-v86-bureau-rate-4{
+    grid-template-columns:minmax(0,1fr) !important;
+  }
+}
+</style>
+
+<script id="v86-efficiency-jump">
+(function(){
+  "use strict";
+  /* 總覽的重點摘要卡 → 切換到對應頁籤。
+     直接觸發該頁籤按鈕的 click，沿用 v80 既有的切換邏輯，不重複實作。 */
+  document.addEventListener("click", function(e){
+    var card = e.target && e.target.closest && e.target.closest("[data-eff-jump]");
+    if(!card) return;
+    var tab = document.querySelector('#effV79Tabs .eff-v79-tab[data-eff-view="' + card.dataset.effJump + '"]');
+    if(tab) tab.click();
+  });
+})();
+</script>
+
+
+<style id="v86b-efficiency-overview-fit">
+/* =========================================================================
+   v86b — 總覽頁籤的高度分配
+   風險比較卡原本是 height:calc(100vh - 342px)（min 350 / max 560），
+   在 900px 高的視窗會吃掉 558px，加上標題與註解就把新增的
+   「各處置面向重點」摘要卡擠出面板，被 overflow:hidden 切掉。
+   在總覽面板內改為彈性高度：固定內容先取得需要的空間，剩下的給風險卡。
+   ========================================================================= */
+@media (min-width:1200px){
+  /* 必須加 :not([hidden])。切換頁籤是靠 panel.hidden = true，
+     若這裡無條件寫 display:flex !important，會蓋掉 [hidden] 的 display:none，
+     總覽面板切走後仍會佔一個 grid track，把其他面板往下擠。 */
+  #efficiency .eff-v79-panel[data-eff-panel="overview"]:not([hidden]){
+    height:100% !important;
+    min-height:0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    overflow:hidden !important;
+    /* 頁面高度是 calc(100vh - N) 且 overflow:hidden，
+       不留這段的話最後一列會直接貼齊視窗底緣，看起來像被切掉 */
+    padding-bottom:10px !important;
+    box-sizing:border-box !important;
+  }
+  #efficiency [data-eff-panel="overview"] .eff-v79-section-heading,
+  #efficiency [data-eff-panel="overview"] .eff-v79-risk-note,
+  #efficiency [data-eff-panel="overview"] .eff-v86-jump-head,
+  #efficiency [data-eff-panel="overview"] .eff-v86-jump-grid{
+    flex:0 0 auto !important;
+  }
+  #efficiency [data-eff-panel="overview"] .eff-v79-risk-compare{
+    flex:1 1 auto !important;
+    height:auto !important;
+    min-height:230px !important;
+    max-height:none !important;
+  }
+  #efficiency [data-eff-panel="overview"] .eff-v86-jump-head{
+    margin-top:12px !important;
+  }
+}
+
+/* 衛生局頁籤：底部區塊原本是 height:calc(100vh - 570px)，
+   與上方內容加總後會超出面板 2~3px（改版前就存在），把表格註腳切掉。
+   改為彈性高度，讓它剛好吃掉剩餘空間，任何視窗高度都不會溢出。 */
+@media (min-width:1200px){
+  #efficiency .eff-v79-panel[data-eff-panel="bureau"]:not([hidden]){
+    height:100% !important;
+    min-height:0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    overflow:hidden !important;
+    padding-bottom:8px !important;
+    box-sizing:border-box !important;
+  }
+  #efficiency [data-eff-panel="bureau"] .eff-v79-section-heading,
+  #efficiency [data-eff-panel="bureau"] .eff-v83-routing-card,
+  #efficiency [data-eff-panel="bureau"] .eff-v86-bureau-rate-4{
+    flex:0 0 auto !important;
+  }
+  #efficiency [data-eff-panel="bureau"] .eff-v83-bureau-bottom{
+    flex:1 1 auto !important;
+    height:auto !important;
+    min-height:0 !important;
+    max-height:none !important;
+  }
+}
+
+/* 緊急醫療／醫院端頁籤：同樣改為彈性高度。
+   醫院端在改版前就固定溢出 8px（1600x700 時達 59px），
+   緊急醫療則在矮視窗會溢出，兩者都是內部卡片用固定高度造成的。 */
+@media (min-width:1200px){
+  #efficiency .eff-v79-panel[data-eff-panel="emergency"]:not([hidden]),
+  #efficiency .eff-v79-panel[data-eff-panel="hospital"]:not([hidden]){
+    height:100% !important;
+    min-height:0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    overflow:hidden !important;
+    padding-bottom:8px !important;
+    box-sizing:border-box !important;
+  }
+  #efficiency [data-eff-panel="emergency"] .eff-v79-section-heading,
+  #efficiency [data-eff-panel="hospital"] .eff-v79-section-heading,
+  #efficiency [data-eff-panel="hospital"] .eff-v79-rate-strip{
+    flex:0 0 auto !important;
+  }
+  #efficiency [data-eff-panel="emergency"] .eff-v79-emergency-layout,
+  #efficiency [data-eff-panel="hospital"] .eff-v79-process-matrix{
+    flex:1 1 auto !important;
+    height:auto !important;
+    min-height:0 !important;
+    max-height:none !important;
+  }
+}
+
+/* 短視窗：壓縮摘要卡，優先保住風險卡的可讀性 */
+@media (min-width:1200px) and (max-height:760px){
+  #efficiency [data-eff-panel="overview"] .eff-v86-jump{
+    min-height:0 !important;
+    padding:9px 12px !important;
+  }
+  #efficiency [data-eff-panel="overview"] .eff-v86-jump-metrics{ margin-top:8px !important; }
+  #efficiency [data-eff-panel="overview"] .eff-v86-jump-metrics b{ font-size:21px !important; }
+  #efficiency [data-eff-panel="overview"] .eff-v79-risk-compare{ min-height:190px !important; }
 }
 </style>
