@@ -21626,3 +21626,35 @@ img{ max-width:100%; height:auto; }
   }
 })();
 </script>
+
+
+<style id="v85-efficiency-grid-rows-fix">
+/* =========================================================================
+   v85 — 修正「案件處理效率指標」頁的 grid row 與實際結構不符（標題爆版）
+   -------------------------------------------------------------------------
+   症狀：桌機版日期篩選卡壓在「處置結果與反應時間」標題上，
+         eyebrow 小字「緊急醫療處置」被切掉。
+
+   根因：#efficiency 的 grid-template-rows 是 `50px 32px minmax(0,1fr)`，
+         這組數字是為「篩選卡(50px) + .analysis-filter-row(32px) + 面板」
+         寫的。v81 改版把 .analysis-filter-row 換成了 .eff-v81-tabs-row
+         次級頁籤列並放在最前面，子元素順序變成：
+
+             row1  .eff-v81-tabs-row      實際 44px
+             row2  .page-time-filter      實際 54px  ← 被塞進 32px 的軌道
+             row3  .eff-v79-panel
+
+         row2 溢出 54-32=22px，扣掉 row-gap 7px 後正好壓住面板 15px。
+         （--ui-filter-h 是 54px，v72 之後篩選卡一律 54px，
+           舊的 `#efficiency .page-time-filter{height:50px}` 已被蓋掉。）
+
+   修法：改用 `auto auto minmax(0,1fr)`，讓前兩軌自己量子元素高度。
+         這樣之後再改頁籤列或篩選卡高度都不需要同步維護魔術數字。
+         只作用於 >=1200px 的桌機版；<=1199px 由 v84 改為 flex 堆疊，不受影響。
+   ========================================================================= */
+@media (min-width:1200px){
+  .dashboard #efficiency.page.active{
+    grid-template-rows:auto auto minmax(0,1fr) !important;
+  }
+}
+</style>
