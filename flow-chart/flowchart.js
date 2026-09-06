@@ -647,7 +647,10 @@
       if (Math.abs(b.layer - a.layer) > 1) {
         for (var lr = a.layer + step; lr !== b.layer; lr += step) {
           var d = { kind: 'dummy', id: 'd' + (dummySeq++), edge: e, layer: lr, pos: 0 };
-          layers[lr].push(d);
+          // 轉折點放在「上一節」附近，而不是整層的最後面，初始排序才不會太亂
+          var prev = chain[chain.length - 1];
+          var at = layers[prev.layer].indexOf(prev);
+          layers[lr].splice(at < 0 ? layers[lr].length : Math.min(layers[lr].length, at + 1), 0, d);
           chain.push(d);
         }
       }
@@ -683,10 +686,73 @@
       setPos(layer);
     }
 
-    for (var it = 0; it < 6; it++) {
-      for (var r1 = 1; r1 <= maxRank; r1++) reorder(layers[r1], upNb);
-      for (var r2 = maxRank - 1; r2 >= 0; r2--) reorder(layers[r2], downNb);
+    // v、w 相鄰時，v 在前造成的交錯數
+    function pairCross(v, w, nbr) {
+      var vs = nbr.get(v), ws = nbr.get(w);
+      if (!vs || !ws || !vs.length || !ws.length) return 0;
+      var c = 0;
+      for (var i = 0; i < vs.length; i++) {
+        for (var j = 0; j < ws.length; j++) if (vs[i].pos > ws[j].pos) c++;
+      }
+      return c;
     }
+
+    // 重心法收斂後，再試著對調相鄰節點；這一步才是真正把交錯壓下來的關鍵
+    // allowEqual：連「一樣好」的對調也接受，用來跨過平手的局面
+    // （例如分流出去的兩條支線要整組左右換位，中間每一步都不會立刻變好）
+    function transpose(allowEqual) {
+      var changed = true, guard = 0;
+      while (changed && guard++ < 12) {
+        changed = false;
+        layers.forEach(function (layer) {
+          for (var i = 0; i + 1 < layer.length; i++) {
+            var v = layer[i], w = layer[i + 1];
+            if (v.pinAnchor || w.pinAnchor) continue;   // 側邊補充說明要黏著來源節點
+            var keep = pairCross(v, w, upNb) + pairCross(v, w, downNb);
+            var swap = pairCross(w, v, upNb) + pairCross(w, v, downNb);
+            if (swap < keep || (allowEqual && swap === keep && keep > 0)) {
+              layer[i] = w; layer[i + 1] = v;
+              w.pos = i; v.pos = i + 1;
+              changed = true;
+            }
+          }
+        });
+      }
+    }
+
+    function totalCrossings() {
+      var total = 0;
+      layers.forEach(function (layer) {
+        var seq = [];
+        layer.forEach(function (item) {
+          var ns = downNb.get(item);
+          if (!ns || !ns.length) return;
+          ns.slice().sort(function (a, b) { return a.pos - b.pos; })
+            .forEach(function (n) { seq.push(n.pos); });
+        });
+        for (var i = 0; i < seq.length; i++) {
+          for (var j = i + 1; j < seq.length; j++) if (seq[i] > seq[j]) total++;
+        }
+      });
+      return total;
+    }
+
+    function snapshot() { return layers.map(function (l) { return l.slice(); }); }
+    function restore(snap) {
+      snap.forEach(function (l, r) { layers[r] = l; setPos(l); });
+    }
+
+    // 每一輪都記錄交錯數，最後採用最好的一輪（而不是最後一輪）
+    var best = snapshot(), bestCross = totalCrossings();
+    for (var it = 0; it < 14; it++) {
+      var r;
+      if (it % 2 === 0) { for (r = 1; r <= maxRank; r++) reorder(layers[r], upNb); }
+      else { for (r = maxRank - 1; r >= 0; r--) reorder(layers[r], downNb); }
+      transpose(it % 4 === 3);
+      var now = totalCrossings();
+      if (now < bestCross) { bestCross = now; best = snapshot(); }
+    }
+    restore(best);
 
     /* --- 4-5 座標 --- */
     function cross(item) { return item.kind === 'dummy' ? 1 : (dir === 'TD' ? item.node.w : item.node.h); }
@@ -840,7 +906,8 @@
       width: Math.round(maxX - minX + PAD * 2),
       height: Math.round(maxY - minY + PAD * 2),
       direction: dir,
-      title: model.title
+      title: model.title,
+      crossings: bestCross
     };
   }
 
