@@ -666,23 +666,38 @@
     /* --- 4-4 重心法降低交錯 --- */
     function reorder(layer, nbr) {
       if (layer.length < 2) return;
-      var base = new Map();
-      layer.forEach(function (it) {
-        if (it.pinAnchor) return;
+
+      // 側邊補充說明不參與重心排序，先抽出來，等主要節點排好再塞回錨點旁邊。
+      // （若跟著一起排，同一個分流點拉出的節點重心值會完全相同，
+      //   旁註就會全部被擠到整排的最後面，離自己的錨點很遠。）
+      var pinned = [], free = [], base = new Map();
+      layer.forEach(function (it) { (it.pinAnchor ? pinned : free).push(it); });
+
+      free.forEach(function (it) {
         var ns = nbr.get(it);
-        var v = (ns && ns.length) ? median(ns.map(function (n) { return n.pos; })) : it.pos;
-        base.set(it, v);
+        base.set(it, (ns && ns.length) ? median(ns.map(function (n) { return n.pos; })) : it.pos);
       });
-      layer.forEach(function (it) {
-        if (!it.pinAnchor) return;
-        var anchor = itemOf.get(it.pinAnchor);
-        var av = base.has(anchor) ? base.get(anchor) : (anchor ? anchor.pos : it.pos);
-        base.set(it, av + it.pinOffset);
-      });
-      layer.sort(function (a, b) {
+      free.sort(function (a, b) {
         var d = base.get(a) - base.get(b);
         return d || (a.pos - b.pos);
       });
+
+      var out = free;
+      pinned.forEach(function (note) {
+        var anchor = itemOf.get(note.pinAnchor);
+        var at = anchor ? out.indexOf(anchor) : -1;
+        if (at < 0) { out.push(note); return; }
+        var k;
+        if (note.pinOffset >= 0) {   // 同一個錨點的旁註往外側排
+          for (k = at + 1; k < out.length && out[k].pinAnchor === note.pinAnchor; k++) { /* skip */ }
+        } else {
+          for (k = at; k > 0 && out[k - 1].pinAnchor === note.pinAnchor; k--) { /* skip */ }
+        }
+        out.splice(k, 0, note);
+      });
+
+      layer.length = 0;
+      Array.prototype.push.apply(layer, out);
       setPos(layer);
     }
 
@@ -698,6 +713,25 @@
     }
 
     // 重心法收斂後，再試著對調相鄰節點；這一步才是真正把交錯壓下來的關鍵
+    // 把「錨點 + 掛在它身上的旁註」綁成一個整體，對調時一起搬。
+    // 否則只要節點都掛了旁註，同層節點永遠不會相鄰，就完全換不動。
+    function buildBlocks(layer) {
+      var blocks = [], byKey = {};
+      layer.forEach(function (it) {
+        var key = it.pinAnchor ? it.pinAnchor : (it.kind === 'node' ? it.node.id : it.id);
+        if (byKey[key]) { byKey[key].items.push(it); return; }
+        byKey[key] = { items: [it] };
+        blocks.push(byKey[key]);
+      });
+      return blocks;
+    }
+
+    function applyBlocks(layer, blocks) {
+      layer.length = 0;
+      blocks.forEach(function (b) { b.items.forEach(function (it) { layer.push(it); }); });
+      setPos(layer);
+    }
+
     // allowEqual：連「一樣好」的對調也接受，用來跨過平手的局面
     // （例如分流出去的兩條支線要整組左右換位，中間每一步都不會立刻變好）
     function transpose(allowEqual) {
@@ -705,14 +739,19 @@
       while (changed && guard++ < 12) {
         changed = false;
         layers.forEach(function (layer) {
-          for (var i = 0; i + 1 < layer.length; i++) {
-            var v = layer[i], w = layer[i + 1];
-            if (v.pinAnchor || w.pinAnchor) continue;   // 側邊補充說明要黏著來源節點
-            var keep = pairCross(v, w, upNb) + pairCross(v, w, downNb);
-            var swap = pairCross(w, v, upNb) + pairCross(w, v, downNb);
+          if (layer.length < 2) return;
+          var blocks = buildBlocks(layer);
+          for (var i = 0; i + 1 < blocks.length; i++) {
+            var keep = 0, swap = 0;
+            blocks[i].items.forEach(function (v) {
+              blocks[i + 1].items.forEach(function (w) {
+                keep += pairCross(v, w, upNb) + pairCross(v, w, downNb);
+                swap += pairCross(w, v, upNb) + pairCross(w, v, downNb);
+              });
+            });
             if (swap < keep || (allowEqual && swap === keep && keep > 0)) {
-              layer[i] = w; layer[i + 1] = v;
-              w.pos = i; v.pos = i + 1;
+              var tmp = blocks[i]; blocks[i] = blocks[i + 1]; blocks[i + 1] = tmp;
+              applyBlocks(layer, blocks);
               changed = true;
             }
           }
@@ -785,7 +824,11 @@
       var want = layer.map(function (item) {
         if (item.pinAnchor) {
           var anchor = itemOf.get(item.pinAnchor);
-          if (anchor) return anchor.c + item.pinOffset * 400;
+          // 就貼在錨點旁邊，位移量用實際尺寸算
+          if (anchor) {
+            return anchor.c + (item.pinOffset >= 0 ? 1 : -1) *
+              (halfCross(anchor) + NODE_GAP + halfCross(item));
+          }
         }
         var ns = nbr.get(item);
         if (!ns || !ns.length) return item.c;
