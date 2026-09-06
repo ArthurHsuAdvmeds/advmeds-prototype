@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FlowScript 流程圖原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f6f8; --panel:#ffffff; --line:#e4e7ec; --line-strong:#d0d5dd;
+    --ink:#101828; --ink-2:#475467; --ink-3:#98a2b3; --accent:#2563eb;
+    --mono:"JetBrains Mono","Cascadia Mono",Consolas,"Courier New",monospace;
+    --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box}
+  code,pre{font-variant-ligatures:none;font-feature-settings:"liga" 0,"calt" 0}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:56px 24px 80px}
+  h1{font-size:28px;margin:0 0 8px;letter-spacing:.2px}
+  .lead{color:var(--ink-2);font-size:15px;line-height:1.8;margin:0 0 28px}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:36px}
+  a.card{
+    display:block;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:20px;text-decoration:none;color:inherit;transition:.15s;
+  }
+  a.card:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 8px 22px rgba(16,24,40,.07)}
+  a.card b{display:block;font-size:16px;margin-bottom:6px}
+  a.card span{font-size:13px;color:var(--ink-2);line-height:1.7}
+  h2{font-size:15px;margin:32px 0 12px;letter-spacing:.3px}
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th,td{text-align:left;font-size:13px;padding:10px 14px;border-bottom:1px solid var(--line)}
+  th{background:#fbfcfd;color:var(--ink-2);font-weight:600;font-size:12px;letter-spacing:.3px}
+  tr:last-child td{border-bottom:0}
+  code{font-family:var(--mono);font-size:12.5px;background:#f2f4f7;padding:2px 6px;border-radius:5px}
+  pre{
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+    font-family:var(--mono);font-size:12.5px;line-height:1.8;overflow:auto;color:var(--ink-2);
+  }
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+  button.btn,a.btn{
+    font-family:inherit;font-size:13px;color:var(--ink-2);background:var(--panel);
+    border:1px solid var(--line-strong);border-radius:8px;padding:8px 14px;cursor:pointer;text-decoration:none;
+  }
+  button.btn:hover,a.btn:hover{background:#f9fafb;color:var(--ink)}
+  button.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+  .foot{margin-top:40px;font-size:12px;color:var(--ink-3);line-height:1.8}
+  #toast{
+    position:fixed;left:50%;bottom:28px;transform:translate(-50%,16px);background:#101828;color:#fff;
+    font-size:13px;padding:9px 16px;border-radius:8px;opacity:0;pointer-events:none;transition:.18s;
+  }
+  #toast.on{opacity:1;transform:translate(-50%,0)}
+  @media (max-width:680px){ .cards{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>FlowScript 流程圖原型</h1>
+  <p class="lead">
+    用一套極簡的文字語法描述流程，即時畫成流程圖。<br>
+    左側編輯、右側預覽；產生的檢視連結可直接分享給他人唯讀瀏覽。
+  </p>
+
+  <div class="cards">
+    <a class="card" href="./edit/">
+      <b>編輯 Edit →</b>
+      <span>左側輸入語法、右側即時預覽，可匯出 SVG / PNG，或複製檢視連結。</span>
+    </a>
+    <a class="card" href="./view/" id="demoLink">
+      <b>檢視 View →</b>
+      <span>依網址 query 的內容呈現唯讀流程圖，適合分享給客戶或同事。</span>
+    </a>
+  </div>
+
+  <h2>節點形狀</h2>
+  <table>
+    <tr><th style="width:180px">寫法</th><th style="width:140px">形狀</th><th>用途</th></tr>
+    <tr><td><code>A(文字)</code></td><td>圓角方形</td><td>一般流程步驟</td></tr>
+    <tr><td><code>B{文字}</code></td><td>菱形</td><td>判斷、流程分流</td></tr>
+    <tr><td><code>C[文字]</code></td><td>正方形</td><td>某步驟的補充說明（只連一條線時會自動放到側邊）</td></tr>
+  </table>
+
+  <h2>連接線</h2>
+  <table>
+    <tr><th style="width:180px">寫法</th><th>樣式</th></tr>
+    <tr><td><code>A --> B</code></td><td>單向實線箭頭</td></tr>
+    <tr><td><code>A -.-> B</code></td><td>單向虛線箭頭</td></tr>
+    <tr><td><code>A --- B</code></td><td>實線連接線（無箭頭）</td></tr>
+    <tr><td><code>A -.- B</code></td><td>虛線連接線（無箭頭）</td></tr>
+  </table>
+
+  <h2>範例</h2>
+  <pre id="example"></pre>
+
+  <div class="row">
+    <button class="btn primary" id="copySpec">複製「給 AI 的使用說明」</button>
+    <a class="btn" href="./edit/">開啟編輯器</a>
+    <a class="btn" href="./README.md">語法文件（Markdown）</a>
+  </div>
+
+  <p class="foot">
+    複製使用說明後貼給 GPT / Claude，即可請 AI 直接輸出符合語法的流程圖原始碼，<br>
+    再把回覆貼回編輯器就能出圖。
+  </p>
+</div>
+
+<div id="toast"></div>
+
+<script src="./flowchart.js"></script>
+<script>
+(function () {
+  var FS = window.FlowScript;
+  document.getElementById('example').textContent = FS.EXAMPLE.trim();
+  document.getElementById('demoLink').href = FS.buildViewURL(FS.EXAMPLE, './view/');
+  var toastEl = document.getElementById('toast');
+  document.getElementById('copySpec').addEventListener('click', function () {
+    FS.copyText(FS.SPEC).then(function () {
+      toastEl.textContent = '使用說明已複製，可直接貼給 AI';
+      toastEl.classList.add('on');
+      setTimeout(function () { toastEl.classList.remove('on'); }, 1800);
+    });
+  });
+})();
+</script>
+</body>
+</html>

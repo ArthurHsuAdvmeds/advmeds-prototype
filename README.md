@@ -19,6 +19,8 @@ https://arthurhsuadvmeds.github.io/advmeds-prototype/{專案資料夾}/{子資�
 | 路徑 | 網址 |
 | --- | --- |
 | `tsghb-dashboard/index.html` | https://arthurhsuadvmeds.github.io/advmeds-prototype/tsghb-dashboard/ |
+| `flow-chart/index.html` | https://arthurhsuadvmeds.github.io/advmeds-prototype/flow-chart/ |
+| `flow-chart/edit/index.html` | https://arthurhsuadvmeds.github.io/advmeds-prototype/flow-chart/edit/ |
 
 規則：
 
