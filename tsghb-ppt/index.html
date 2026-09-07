@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>三軍總醫院北投分院｜精神醫療快速應變平台 簡報</title>
+<style>
+  :root{
+    --blue:#1fa7de;
+    --blue-d:#0d7fb4;
+    --blue-l:#5ec8f0;
+    --green:#8cc63f;
+    --green-d:#5aa832;
+    --ink:#17384c;
+    --ink-2:#2d5a75;
+    --muted:#66879a;
+    --line:#dceaf2;
+    --paper:#ffffff;
+    --shell:#0d2433;
+    --bar-h:64px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:var(--shell);
+    color:var(--ink);
+    font-family:"Microsoft JhengHei","Noto Sans TC","PingFang TC","Heiti TC",Arial,sans-serif;
+    overflow:hidden;
+  }
+  button{font-family:inherit;cursor:pointer}
+
+  .app{height:100%;display:flex;flex-direction:column}
+
+  /* ── 舞台 ───────────────────────────────── */
+  .stage-wrap{
+    flex:1;
+    min-height:0;
+    display:grid;
+    place-items:center;
+    padding:18px 60px;
+  }
+  .stage{
+    position:relative;
+    width:min(100%, calc((100vh - var(--bar-h) - 40px) * 16 / 9));
+    aspect-ratio:16 / 9;
+    container-type:inline-size;
+    background:var(--paper);
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 24px 60px rgba(0,0,0,.45);
+  }
+  .slide{
+    position:absolute;
+    inset:0;
+    opacity:0;
+    visibility:hidden;
+    transform:translateX(3%);
+    transition:opacity .32s ease, transform .32s ease;
+    background:var(--paper);
+    overflow:hidden;
+  }
+  .slide.is-active{opacity:1;visibility:visible;transform:none}
+  .slide.is-prev{transform:translateX(-3%)}
+
+  /* ── 版面元件（一律用 cqw，隨舞台等比縮放）── */
+  .pad{position:absolute;inset:0;padding:4.6cqw 5.6cqw;display:flex;flex-direction:column}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:.7cqw;
+    font-size:1.3cqw;letter-spacing:.18em;color:var(--blue-d);font-weight:700;
+  }
+  .eyebrow::before{content:"";width:1.8cqw;height:.28cqw;background:var(--green);border-radius:2px}
+  h1.title{font-size:4.1cqw;margin:.7cqw 0 0;color:var(--ink);letter-spacing:.02em;font-weight:700}
+  .subtitle{font-size:1.75cqw;color:var(--muted);margin:.7cqw 0 0;font-weight:500}
+  .rule{width:5.5cqw;height:.4cqw;border-radius:.3cqw;background:linear-gradient(90deg,var(--blue),var(--green));margin:1.4cqw 0 2.2cqw;flex:none}
+
+  /* 以圖為主的頁面：壓縮標題區，把版面讓給截圖 */
+  .pad--tight{padding:3.6cqw 4.6cqw}
+  .head-row{display:flex;align-items:flex-end;gap:1.6cqw;flex:none}
+  .head-row .subtitle{margin:0 0 .4cqw auto;font-size:1.45cqw;text-align:right}
+  .hr{
+    height:.18cqw;flex:none;border-radius:.2cqw;margin:1.1cqw 0 1.5cqw;
+    background:linear-gradient(90deg,var(--blue),var(--green) 22%,rgba(140,198,63,0) 70%);
+  }
+
+  .body{flex:1;min-height:0}
+  .cols{display:grid;gap:2.4cqw;height:100%}
+  .cols-2{grid-template-columns:1fr 1fr}
+  .cols-3{grid-template-columns:repeat(3,1fr)}
+  .cols-a{grid-template-columns:1.15fr .85fr}
+
+  .card{
+    background:#f7fbfd;
+    border:1px solid var(--line);
+    border-radius:1.1cqw;
+    padding:1.8cqw 1.9cqw;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    overflow:hidden;
+  }
+  .card h3{
+    margin:0 0 1.1cqw;font-size:1.95cqw;color:var(--blue-d);
+    display:flex;align-items:center;gap:.8cqw;font-weight:700;
+  }
+  .card h3 .dot{width:.85cqw;height:.85cqw;border-radius:50%;background:var(--green);flex:none}
+  .card .lead{font-size:1.35cqw;color:var(--ink-2);margin:-.5cqw 0 1.2cqw;font-weight:600}
+
+  ul.checks{list-style:none;margin:0;padding:0;display:grid;gap:1.05cqw}
+  ul.checks > li{position:relative;padding-left:2.2cqw;font-size:1.5cqw;line-height:1.4;color:var(--ink);font-weight:600}
+  ul.checks > li::before{
+    content:"✓";position:absolute;left:0;top:.15cqw;
+    color:#fff;background:var(--green);border-radius:50%;
+    width:1.5cqw;height:1.5cqw;font-size:.95cqw;
+    display:flex;align-items:center;justify-content:center;font-weight:700;
+  }
+  ul.checks .note{display:block;font-size:1.18cqw;color:var(--muted);margin-top:.35cqw;line-height:1.45;font-weight:400}
+
+  ol.steps{list-style:none;margin:0;padding:0;display:grid;gap:1.4cqw;counter-reset:s}
+  ol.steps > li{position:relative;padding-left:3.4cqw;counter-increment:s}
+  ol.steps > li::before{
+    content:counter(s);position:absolute;left:0;top:0;
+    width:2.4cqw;height:2.4cqw;border-radius:.6cqw;
+    background:linear-gradient(140deg,var(--blue),var(--blue-d));color:#fff;
+    font-size:1.3cqw;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+  }
+  ol.steps b{display:block;font-size:1.65cqw;color:var(--ink);margin-bottom:.3cqw}
+  ol.steps span{display:block;font-size:1.28cqw;color:var(--muted);line-height:1.5}
+
+  /* 圖片：以 max-width/max-height 收縮，元素框緊貼影像，不留黑白邊 */
+  .figure{
+    flex:1;min-height:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .figure img{
+    max-width:100%;max-height:100%;width:auto;height:auto;
+    display:block;background:#fff;
+    border:1px solid var(--line);border-radius:.7cqw;
+    box-shadow:0 1cqw 2.4cqw rgba(23,56,76,.14);
+  }
+  /* 流程圖：可捲動的長圖檢視區 */
+  .flowpane{
+    flex:1;min-height:0;overflow:auto;
+    background:#fff;border:1px solid var(--line);border-radius:1cqw;
+    box-shadow:inset 0 0 0 1px #fff, 0 1cqw 2.4cqw rgba(23,56,76,.10);
+    padding:1cqw;
+  }
+  .flowpane img{display:block;margin:0 auto}
+  .flowpane a{display:block;cursor:pointer}
+  .flowpane a:hover img{outline:.2cqw solid var(--blue-l);outline-offset:.4cqw;border-radius:.3cqw}
+
+  .capbar{display:flex;align-items:center;gap:1cqw;flex:none;margin-top:.9cqw}
+  .capbar .cap{flex:1;margin-top:0}
+  .mini-btn{
+    flex:none;font-size:1.1cqw;line-height:1;text-decoration:none;
+    padding:.75cqw 1.2cqw;border-radius:5cqw;
+    border:1px solid var(--line);background:#fff;color:var(--ink-2);
+    display:inline-flex;align-items:center;font-family:inherit;
+  }
+  .mini-btn:hover{border-color:var(--blue-l);color:var(--blue-d)}
+  .mini-btn.is-primary{
+    background:linear-gradient(120deg,var(--blue),var(--blue-d));
+    border-color:transparent;color:#fff;font-weight:600;
+  }
+  .mini-btn.is-primary:hover{color:#fff;filter:brightness(1.06)}
+  .zoomable{cursor:zoom-in}
+  .cap{font-size:1.12cqw;color:var(--muted);margin-top:.8cqw;line-height:1.5;flex:none}
+  .cap b{color:var(--blue-d);font-weight:600;margin-left:.5cqw}
+
+  .card--num{justify-content:center}
+  .card--num .num{
+    font-size:2.4cqw;font-weight:800;line-height:1;color:#c3e2f4;
+    letter-spacing:.06em;margin-bottom:.7cqw;
+  }
+
+  .phone{
+    width:12cqw;border-radius:1.8cqw;background:#1d2b33;padding:.8cqw .55cqw 1.3cqw;
+    box-shadow:0 1.4cqw 3cqw rgba(0,0,0,.28);flex:none;
+  }
+  .phone img{display:block;width:100%;border-radius:1.1cqw}
+
+  .push{
+    background:#fff;border:1px solid var(--line);border-left:.42cqw solid var(--green);
+    border-radius:.9cqw;padding:1.1cqw 1.3cqw;
+    box-shadow:0 .8cqw 2cqw rgba(23,56,76,.10);
+  }
+  .push .who{font-size:1.05cqw;color:var(--green-d);font-weight:700;margin-bottom:.45cqw;letter-spacing:.05em}
+  .push p{margin:0;font-size:1.35cqw;line-height:1.5;color:var(--ink)}
+  .push .link{font-size:1.1cqw;color:var(--blue-d);margin-top:.4cqw;word-break:break-all}
+
+  .tabs{display:flex;gap:.8cqw;margin-bottom:1.3cqw;flex-wrap:wrap;flex:none}
+  .tab{
+    border:1px solid var(--line);background:#fff;color:var(--ink-2);
+    border-radius:6cqw;padding:.7cqw 1.6cqw;font-size:1.35cqw;font-weight:600;
+    transition:background .15s,color .15s,border-color .15s;
+  }
+  .tab:hover{border-color:var(--blue-l)}
+  .tab[aria-selected="true"]{background:linear-gradient(120deg,var(--blue),var(--blue-d));border-color:transparent;color:#fff}
+  .panels{flex:1;min-height:0}
+  .panel{display:none;height:100%}
+  .panel.is-open{display:flex;flex-direction:column}
+
+  .chips{display:flex;gap:.6cqw;flex-wrap:wrap;margin-top:1cqw;flex:none}
+  .chip{
+    font-size:1.08cqw;padding:.42cqw 1cqw;border-radius:4cqw;
+    background:#eaf6fc;color:var(--blue-d);border:1px solid #cfe9f6;
+    font-family:inherit;line-height:1.5;
+  }
+  .chip--link{font-size:1.25cqw;padding:.6cqw 1.4cqw;font-weight:600}
+  .chip--link:hover{background:var(--blue-d);border-color:transparent;color:#fff}
+
+  .hero{position:absolute;inset:0;display:flex;align-items:center}
+  .hero img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .hero .veil{position:absolute;inset:0}
+  .hero .inner{position:relative;padding:0 6cqw;color:#fff;max-width:70%}
+  .hero h1{font-size:6.2cqw;margin:0;line-height:1.16;letter-spacing:.03em;text-shadow:0 .3cqw 1.4cqw rgba(0,0,0,.28)}
+  .hero h1 small{display:block;font-size:2.6cqw;font-weight:500;opacity:.92;margin-bottom:.8cqw;letter-spacing:.24em}
+  .hero .tagline{font-size:1.85cqw;margin:2cqw 0 0;opacity:.95;font-weight:500;letter-spacing:.08em}
+  .hero .org{margin-top:3cqw;font-size:1.35cqw;opacity:.9;letter-spacing:.06em;border-top:1px solid rgba(255,255,255,.35);padding-top:1.1cqw;display:inline-block}
+
+  .statement{
+    position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+    padding:0 7cqw;background:linear-gradient(120deg,#eaf7fd 0%,#f3fbf1 100%);
+  }
+  .statement .big{font-size:3.1cqw;line-height:1.6;color:var(--ink);font-weight:700;margin:0}
+  .statement .big em{font-style:normal;color:var(--blue-d);border-bottom:.3cqw solid var(--green);padding-bottom:.15cqw}
+  .metric{font-size:8cqw;font-weight:800;line-height:1;background:linear-gradient(120deg,var(--blue),var(--green));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* ── 控制列 ─────────────────────────────── */
+  .bar{
+    height:var(--bar-h);flex:none;
+    display:flex;align-items:center;gap:14px;
+    padding:0 18px;
+    background:rgba(255,255,255,.05);
+    border-top:1px solid rgba(255,255,255,.10);
+    color:#dcecf5;position:relative;
+  }
+  .progress{position:absolute;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .3s ease}
+  .nav-btn{
+    width:38px;height:38px;flex:none;border-radius:10px;
+    border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);
+    color:#eaf6fc;font-size:16px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .15s,opacity .15s;
+  }
+  .nav-btn:hover{background:rgba(255,255,255,.16)}
+  .nav-btn:disabled{opacity:.3;cursor:default}
+  .meta{flex:1;min-width:0;display:flex;align-items:baseline;gap:12px}
+  .meta .idx{font-size:13px;color:#8fb6c9;font-variant-numeric:tabular-nums;flex:none}
+  .meta .now{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tool{
+    height:38px;padding:0 14px;border-radius:10px;
+    border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);
+    color:#eaf6fc;font-size:13px;display:flex;align-items:center;
+  }
+  .tool:hover{background:rgba(255,255,255,.16)}
+  .tool kbd{
+    font-family:inherit;font-size:11px;opacity:.6;margin-left:6px;
+    border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:0 4px;
+  }
+
+  .edge{
+    position:fixed;top:0;bottom:var(--bar-h);width:56px;
+    border:0;background:transparent;color:#fff;opacity:.22;font-size:26px;
+    display:flex;align-items:center;justify-content:center;transition:opacity .15s;
+  }
+  .edge:hover{opacity:.85}
+  .edge.next{right:0}
+  .edge.prev{left:0}
+  .edge:disabled{opacity:0;cursor:default}
+
+  /* ── 總覽 ───────────────────────────────── */
+  .overview{
+    position:fixed;inset:0;z-index:40;display:none;
+    background:rgba(8,26,36,.97);padding:24px 30px;overflow:auto;
+  }
+  .overview.is-open{display:block}
+  .overview h2{color:#eaf6fc;font-size:15px;margin:0 0 18px;font-weight:600;letter-spacing:.06em}
+  .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
+  .thumb{
+    border:2px solid transparent;border-radius:10px;overflow:hidden;background:#fff;
+    padding:0;text-align:left;
+  }
+  .thumb:hover{border-color:var(--blue-l)}
+  .thumb.is-current{border-color:var(--green)}
+  .thumb .mini{
+    position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;
+    container-type:inline-size;pointer-events:none;
+  }
+  .thumb .mini .slide{opacity:1;visibility:visible;transform:none;transition:none}
+  .thumb .label{display:flex;gap:8px;align-items:center;padding:8px 10px;background:#0f2f42;color:#dcecf5;font-size:12px}
+  .thumb .label b{color:#7fd0f0;font-variant-numeric:tabular-nums;flex:none}
+  .thumb .label span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* ── 放大檢視 ───────────────────────────── */
+  .lightbox{
+    position:fixed;inset:0;z-index:60;display:none;
+    background:rgba(6,20,28,.95);padding:40px 24px;overflow:auto;
+  }
+  .lightbox.is-open{display:block}
+  .lightbox .inner{min-height:100%;display:flex;align-items:center;justify-content:center}
+  .lightbox img{max-width:100%;height:auto;border-radius:8px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .lightbox .close{
+    position:fixed;top:16px;right:20px;width:42px;height:42px;border-radius:50%;
+    border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font-size:20px;
+  }
+  .lightbox .hint{position:fixed;bottom:14px;left:0;right:0;text-align:center;color:#9fc4d6;font-size:12px}
+
+  @media (max-width:900px){
+    .stage-wrap{padding:10px 12px}
+    .edge{display:none}
+    .tool span{display:none}
+    .tool kbd{display:none}
+    .tool{padding:0 11px}
+    .meta .now{font-size:13px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="stage-wrap">
+    <div class="stage" id="stage">
+
+      <!-- 1 ─ 封面 -->
+      <section class="slide" data-title="封面｜精神醫療快速應變平台">
+        <div class="hero">
+          <img class="bg" src="assets/cover-hospital.jpg" alt="三軍總醫院北投分院">
+          <div class="veil" style="background:linear-gradient(100deg,rgba(7,58,88,.94) 0%,rgba(10,96,140,.88) 46%,rgba(20,140,180,.30) 80%,rgba(255,255,255,0) 100%)"></div>
+          <div class="inner">
+            <h1><small>精神醫療</small>快速應變平台</h1>
+            <p class="tagline">平台簡介</p>
+            <div class="org">三軍總醫院北投分院｜醫師院會 Demo 簡報　2026.09.07</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2 ─ 核心價值與平台願景 -->
+      <section class="slide" data-title="核心價值與平台願景">
+        <div class="statement">
+          <div class="eyebrow">CORE VALUE</div>
+          <h1 class="title" style="margin-bottom:1.6cqw">核心價值與平台願景</h1>
+          <p class="big">
+            以資訊數位化<em>打破局處藩籬</em>，提升應變效率<br>
+            確保個案從<em>通報、處置、追蹤</em>的完全透明與安全
+          </p>
+          <div class="chips" style="margin-top:2.6cqw">
+            <button class="chip chip--link" data-goto="3">通報便利</button>
+            <button class="chip chip--link" data-goto="4">個案追蹤</button>
+            <button class="chip chip--link" data-goto="5">精準評估</button>
+            <button class="chip chip--link" data-goto="6">通報流程</button>
+            <button class="chip chip--link" data-goto="7">中繼站台</button>
+            <button class="chip chip--link" data-goto="8">數據儀錶板</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3 ─ 通報便利 -->
+      <section class="slide" data-title="通報便利">
+        <div class="pad">
+          <div class="eyebrow">01　REPORTING</div>
+          <h1 class="title">通報便利</h1>
+          <div class="rule"></div>
+          <div class="body cols cols-2">
+            <div class="card">
+              <h3><span class="dot"></span>單一平台整合管理</h3>
+              <div class="lead">跨局處一站式入口</div>
+              <ul class="checks">
+                <li>多單位統一入口
+                  <span class="note">衛政、社政、民政等單位皆可從單一通報入口完成</span></li>
+                <li>消除通報壁壘、紀錄完整可回追
+                  <span class="note">取代多次的電話或紙本溝通，保留完整跨單位溝通紀錄</span></li>
+                <li>帳號權限明確
+                  <span class="note">機關登入權限明確，符合資安規範</span></li>
+              </ul>
+              <div style="display:flex;gap:1.4cqw;margin-top:1.4cqw;flex:1;min-height:0">
+                <div class="figure zoomable" data-zoom="assets/login-platform.jpg">
+                  <img src="assets/login-platform.jpg" alt="精神醫療快速應變平台登入頁">
+                </div>
+                <div class="figure zoomable" data-zoom="assets/login-cloud.png">
+                  <img src="assets/login-cloud.png" alt="享健康共照雲登入頁">
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="display:flex;flex-direction:column">
+              <h3><span class="dot"></span>輕量化與行動輔助</h3>
+              <div style="display:flex;gap:2cqw;align-items:center;flex:1;min-height:0">
+                <ul class="checks" style="flex:1">
+                  <li>LINE@ 通報小幫手
+                    <span class="note">即時接收通報聯繫，一鍵取得通報平台入口</span></li>
+                  <li>通報進度即時掌握
+                    <span class="note">通報流程圖，清楚掌握收案狀況</span></li>
+                  <li>RWD 響應式畫面
+                    <span class="note">跨平台通報的便利性</span></li>
+                </ul>
+                <div class="phone zoomable" data-zoom="assets/phone-home.jpg">
+                  <img src="assets/phone-home.jpg" alt="手機版通報平台首頁">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 ─ 個案追蹤 -->
+      <section class="slide" data-title="個案追蹤">
+        <div class="pad">
+          <div class="eyebrow">02　CASE TRACKING</div>
+          <h1 class="title">個案追蹤</h1>
+          <p class="subtitle">透明且自動化追蹤通報進度</p>
+          <div class="rule"></div>
+          <div class="body cols cols-a">
+            <div style="display:flex;flex-direction:column;min-height:0">
+              <ol class="steps">
+                <li><b>自動化進度推播</b><span>系統透過 LINE@ 小幫手即時主動推播個案受理、約訪聯繫及結案訊息。</span></li>
+                <li><b>動態全流程標籤</b><span>案件標籤自動隨收案狀態變更（如：待諮詢、通報中、高風險評估中、訪視追蹤）。</span></li>
+                <li><b>雙向即時溝通</b><span>醫療端與通報端可於個案聯絡簿即時留言、約定共訪時間與補充資料。</span></li>
+                <li><b>完整歷程不遺漏</b><span>歷史通報紀錄與變更明細自動歸檔，徹底消除資訊落差與重複通報。</span></li>
+              </ol>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:1.2cqw;min-height:0">
+              <div class="push">
+                <div class="who">LINE@ 通報小幫手</div>
+                <p>有新的緊急醫療個案已被指派給您<br>個案姓名：王大明</p>
+              </div>
+              <div class="push">
+                <div class="who">LINE@ 通報小幫手</div>
+                <p>您收到一則來自 心衛志工 陳小花的留言訊息</p>
+                <div class="link">http://oyo.tw/QFAGN</div>
+              </div>
+              <div class="figure zoomable" data-zoom="assets/agent-log.png">
+                <img src="assets/agent-log.png" alt="個案狀態歷程記錄">
+              </div>
+              <div class="cap">個案狀態歷程：來源、內容、狀態、共照群組與狀態時間全程留痕</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5 ─ 精準評估 -->
+      <section class="slide" data-title="精準評估">
+        <div class="pad">
+          <div class="eyebrow">03　ASSESSMENT</div>
+          <h1 class="title">精準評估</h1>
+          <p class="subtitle">即時因應即持續追蹤</p>
+          <div class="rule"></div>
+          <div class="body cols cols-3">
+            <div class="card card--num">
+              <div class="num">01</div>
+              <h3><span class="dot"></span>標準化評估量表</h3>
+              <ul class="checks">
+                <li>整合 BSRS-5 簡式健康量表</li>
+                <li>CGI-S 臨床整體印象量表</li>
+                <li>GAF 檢測與高風險檢傷量表</li>
+                <li>精準快速判讀個案風險狀況</li>
+              </ul>
+            </div>
+            <div class="card card--num">
+              <div class="num">02</div>
+              <h3><span class="dot"></span>動態風險等級變更</h3>
+              <ul class="checks">
+                <li>支援二次通報與動態等級調整</li>
+                <li>因應個案病情變化及時更動</li>
+                <li>即時通知指派醫師與醫療團隊</li>
+                <li>防範社區高風險意外事件</li>
+              </ul>
+            </div>
+            <div class="card card--num">
+              <div class="num">03</div>
+              <h3><span class="dot"></span>精準派案與持續追蹤</h3>
+              <ul class="checks">
+                <li>指派負責人即時分配醫療團隊</li>
+                <li>填寫諮詢確認、出動與訪視單</li>
+                <li>進行三日內追蹤與持續個管</li>
+                <li>落實全程醫療護航與結案評估</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6 ─ 通報流程 -->
+      <section class="slide" data-title="通報流程">
+        <div class="pad pad--tight">
+          <div class="head-row">
+            <div>
+              <div class="eyebrow">04　WORKFLOW</div>
+              <h1 class="title" style="font-size:3.3cqw">通報流程</h1>
+            </div>
+            <p class="subtitle">三類通報情境的完整處理流程　·　點擊圖片開啟線上流程圖</p>
+          </div>
+          <div class="hr"></div>
+          <div class="tabs" role="tablist">
+            <button class="tab" role="tab" aria-selected="true" data-panel="p-emg">緊急醫療</button>
+            <button class="tab" role="tab" aria-selected="false" data-panel="p-12">第一二類優化計畫</button>
+            <button class="tab" role="tab" aria-selected="false" data-panel="p-3">第三類優化計畫</button>
+          </div>
+          <div class="panels">
+            <div class="panel is-open" id="p-emg">
+              <div class="flowpane">
+                <a href="https://oyo.tw/X5IOZ" target="_blank" rel="noopener" title="開啟緊急醫療流程圖">
+                  <img src="assets/flow-emergency.png" alt="緊急醫療通報處理流程" style="width:50%">
+                </a>
+              </div>
+              <div class="capbar">
+                <div class="cap">緊急醫療通報處理流程：通報者填單 → 指派者派案 → 醫師／護理師受理（電話、電話+出動）→ 三日內追蹤結案，各節點同步 LINE 推播。</div>
+                <button class="mini-btn" data-zoom="assets/flow-emergency.png">放大檢視</button>
+                <a class="mini-btn is-primary" href="https://oyo.tw/X5IOZ" target="_blank" rel="noopener">開啟流程圖 ↗</a>
+              </div>
+            </div>
+            <div class="panel" id="p-12">
+              <div class="flowpane">
+                <a href="https://oyo.tw/3AB7C" target="_blank" rel="noopener" title="開啟第一／二類優化計畫流程圖">
+                  <img src="assets/flow-plan12.png" alt="第一二類優化計畫流程" style="width:100%">
+                </a>
+              </div>
+              <div class="capbar">
+                <div class="cap">第一／二類優化計畫流程：通報者填寫轉介單 → 衛生局回覆單（轉介北投／轉介他院／暫不轉介）→ 指派者覆核與後續處理。</div>
+                <button class="mini-btn" data-zoom="assets/flow-plan12.png">放大檢視</button>
+                <a class="mini-btn is-primary" href="https://oyo.tw/3AB7C" target="_blank" rel="noopener">開啟流程圖 ↗</a>
+              </div>
+            </div>
+            <div class="panel" id="p-3">
+              <div class="flowpane">
+                <a href="https://oyo.tw/SM0EV" target="_blank" rel="noopener" title="開啟第三類優化計畫流程圖">
+                  <img src="assets/flow-plan3.png" alt="第三類優化計畫流程" style="width:30%">
+                </a>
+              </div>
+              <div class="capbar">
+                <div class="cap">第三類優化計畫流程：院內人員登入後台建立個案並自行轉介 → 由指派者或通報者自行指派醫師與護理師。</div>
+                <button class="mini-btn" data-zoom="assets/flow-plan3.png">放大檢視</button>
+                <a class="mini-btn is-primary" href="https://oyo.tw/SM0EV" target="_blank" rel="noopener">開啟流程圖 ↗</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7 ─ 中繼站台 -->
+      <section class="slide" data-title="中繼站台">
+        <div class="pad pad--tight">
+          <div class="head-row">
+            <div>
+              <div class="eyebrow">05　DATA HUB</div>
+              <h1 class="title" style="font-size:3.3cqw">中繼站台</h1>
+            </div>
+            <p class="subtitle">個案管理系統：HIS 與通報系統歷次處遇記錄整合</p>
+          </div>
+          <div class="hr"></div>
+          <div class="body" style="display:flex;flex-direction:column;min-height:0">
+            <div class="figure zoomable" data-zoom="assets/case-history.png">
+              <img src="assets/case-history.png" alt="個案管理系統歷次處遇記錄">
+            </div>
+            <div class="chips">
+              <span class="chip">日期區間：近七日／近一個月／近半年／近一年／近三年／自訂</span>
+              <span class="chip">分類：HIS 科別</span>
+              <span class="chip">緊急醫療</span>
+              <span class="chip">第一類優化計畫</span>
+              <span class="chip">第二類優化計畫</span>
+              <span class="chip">第三類優化計畫</span>
+              <span class="chip">處方內容頁籤</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8 ─ 數據儀錶板 -->
+      <section class="slide" data-title="數據儀錶板">
+        <div class="pad pad--tight">
+          <div class="head-row">
+            <div>
+              <div class="eyebrow">06　DASHBOARD</div>
+              <h1 class="title" style="font-size:3.3cqw">數據儀錶板</h1>
+            </div>
+            <p class="subtitle">精神健康個案通報管理儀錶板　·　九大分析頁籤</p>
+          </div>
+          <div class="hr"></div>
+          <div class="body" style="display:flex;flex-direction:column;min-height:0">
+            <div class="figure zoomable" data-zoom="assets/dashboard.png">
+              <img src="assets/dashboard.png" alt="精神健康個案通報管理儀錶板">
+            </div>
+            <div class="chips">
+              <span class="chip">基本資料</span>
+              <span class="chip">通報案件風險分析</span>
+              <span class="chip">案件處理效率指標</span>
+              <span class="chip">精神症狀改善成效指標</span>
+              <span class="chip">AI 模型預測準確率</span>
+              <span class="chip">通報者基本資料分析</span>
+              <span class="chip">醫療機構端處理成效分析</span>
+              <span class="chip">醫院內控指標 (SNQ)</span>
+              <span class="chip">指揮儀表板</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9 ─ 結語 -->
+      <section class="slide" data-title="結語｜100% 數位化">
+        <div class="hero">
+          <img class="bg" src="assets/illus-closing.jpg" alt="">
+          <div class="veil" style="background:linear-gradient(90deg,rgba(255,255,255,.97) 0%,rgba(255,255,255,.92) 44%,rgba(255,255,255,.35) 68%,rgba(255,255,255,0) 100%)"></div>
+          <div class="inner" style="color:var(--ink);max-width:64%">
+            <div class="metric">100%</div>
+            <p class="big" style="font-size:2.9cqw;line-height:1.6;font-weight:700;margin:1.6cqw 0 0">
+              以 <em style="font-style:normal;color:var(--blue-d)">100% 數位化及全程追蹤</em>的系統，<br>
+              強化臺北市緊急醫療應變量能，<br>
+              建構<em style="font-style:normal;color:var(--green-d)">強韌社會安全網</em>。
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10 ─ 結束 -->
+      <section class="slide" data-title="敬請指教">
+        <div class="hero">
+          <img class="bg" src="assets/cover-hospital.jpg" alt="">
+          <div class="veil" style="background:linear-gradient(100deg,rgba(7,58,88,.93) 0%,rgba(10,92,134,.90) 50%,rgba(16,120,162,.86) 100%)"></div>
+          <div class="inner" style="max-width:100%;text-align:center;width:100%">
+            <h1 style="font-size:5.2cqw"><small>THANK YOU</small>敬請指教</h1>
+            <p class="tagline" style="letter-spacing:.14em">精神醫療快速應變平台｜三軍總醫院北投分院</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <button class="edge prev" id="edgePrev" aria-label="上一頁">‹</button>
+  <button class="edge next" id="edgeNext" aria-label="下一頁">›</button>
+
+  <footer class="bar">
+    <div class="progress" id="progress"></div>
+    <button class="nav-btn" id="btnPrev" aria-label="上一頁">‹</button>
+    <button class="nav-btn" id="btnNext" aria-label="下一頁">›</button>
+    <div class="meta">
+      <span class="idx" id="idx">1 / 10</span>
+      <span class="now" id="now">封面</span>
+    </div>
+    <button class="tool" id="btnGrid"><span>總覽</span><kbd>G</kbd></button>
+    <button class="tool" id="btnFull"><span>全螢幕</span><kbd>F</kbd></button>
+  </footer>
+</div>
+
+<div class="overview" id="overview">
+  <h2>簡報總覽　·　點選頁面直接跳頁　·　Esc 關閉</h2>
+  <div class="thumbs" id="thumbs"></div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="close" id="lbClose" aria-label="關閉">×</button>
+  <div class="inner"><img id="lbImg" src="" alt=""></div>
+  <div class="hint">點擊任意處或按 Esc 關閉</div>
+</div>
+
+<script>
+(function(){
+  var stage    = document.getElementById('stage');
+  var slides   = Array.prototype.slice.call(stage.querySelectorAll('.slide'));
+  var total    = slides.length;
+  var current  = 0;
+
+  var idxEl    = document.getElementById('idx');
+  var nowEl    = document.getElementById('now');
+  var progress = document.getElementById('progress');
+  var overview = document.getElementById('overview');
+  var thumbs   = document.getElementById('thumbs');
+  var lightbox = document.getElementById('lightbox');
+  var lbImg    = document.getElementById('lbImg');
+
+  /* ── 換頁 ─────────────────────────────── */
+  function show(n, push){
+    n = Math.max(0, Math.min(total - 1, n));
+    slides.forEach(function(s, i){
+      s.classList.toggle('is-active', i === n);
+      s.classList.toggle('is-prev', i < n);
+    });
+    current = n;
+    idxEl.textContent = (n + 1) + ' / ' + total;
+    nowEl.textContent = slides[n].dataset.title || '';
+    progress.style.width = ((n + 1) / total * 100) + '%';
+    document.getElementById('btnPrev').disabled = document.getElementById('edgePrev').disabled = (n === 0);
+    document.getElementById('btnNext').disabled = document.getElementById('edgeNext').disabled = (n === total - 1);
+    Array.prototype.forEach.call(thumbs.children, function(t, i){
+      t.classList.toggle('is-current', i === n);
+    });
+    if (push !== false) {
+      /* file:// 開啟時 replaceState 可能被瀏覽器擋下，忽略即可 */
+      try { history.replaceState(null, '', '#p' + (n + 1)); } catch (err) {}
+    }
+  }
+  function next(){ show(current + 1); }
+  function prev(){ show(current - 1); }
+
+  document.getElementById('btnNext').addEventListener('click', next);
+  document.getElementById('btnPrev').addEventListener('click', prev);
+  document.getElementById('edgeNext').addEventListener('click', next);
+  document.getElementById('edgePrev').addEventListener('click', prev);
+
+  /* ── 鍵盤 ─────────────────────────────── */
+  document.addEventListener('keydown', function(e){
+    if (lightbox.classList.contains('is-open')){
+      if (e.key === 'Escape') closeLb();
+      return;
+    }
+    if (overview.classList.contains('is-open')){
+      if (e.key === 'Escape' || e.key.toLowerCase() === 'g') toggleGrid(false);
+      return;
+    }
+    switch(e.key){
+      case 'ArrowRight': case 'PageDown': case ' ': case 'Enter':
+        e.preventDefault(); next(); break;
+      case 'ArrowLeft': case 'PageUp': case 'Backspace':
+        e.preventDefault(); prev(); break;
+      case 'Home': e.preventDefault(); show(0); break;
+      case 'End':  e.preventDefault(); show(total - 1); break;
+      case 'g': case 'G': toggleGrid(true); break;
+      case 'f': case 'F': toggleFull(); break;
+      default:
+        if (/^[1-9]$/.test(e.key)) show(parseInt(e.key, 10) - 1);
+    }
+  });
+
+  /* ── 觸控滑動 ─────────────────────────── */
+  var tx = 0, ty = 0;
+  stage.addEventListener('touchstart', function(e){
+    tx = e.changedTouches[0].clientX; ty = e.changedTouches[0].clientY;
+  }, {passive:true});
+  stage.addEventListener('touchend', function(e){
+    var dx = e.changedTouches[0].clientX - tx;
+    var dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) { dx < 0 ? next() : prev(); }
+  }, {passive:true});
+
+  /* ── 全螢幕 ───────────────────────────── */
+  function toggleFull(){
+    if (!document.fullscreenElement) {
+      (document.documentElement.requestFullscreen || function(){})
+        .call(document.documentElement);
+    } else if (document.exitFullscreen) {
+      document.exitFullscreen();
+    }
+  }
+  document.getElementById('btnFull').addEventListener('click', toggleFull);
+
+  /* ── 通報流程頁籤 ─────────────────────── */
+  document.addEventListener('click', function(e){
+    var tab = e.target.closest ? e.target.closest('.tab') : null;
+    if (!tab) return;
+    var slide = tab.closest('.slide');
+    slide.querySelectorAll('.tab').forEach(function(t){
+      t.setAttribute('aria-selected', String(t === tab));
+    });
+    slide.querySelectorAll('.panel').forEach(function(p){
+      p.classList.toggle('is-open', p.id === tab.dataset.panel);
+    });
+  });
+
+  /* ── 圖片放大 ─────────────────────────── */
+  function openLb(src){
+    lbImg.src = src;
+    lightbox.classList.add('is-open');
+  }
+  function closeLb(){
+    lightbox.classList.remove('is-open');
+    lbImg.src = '';
+  }
+  stage.addEventListener('click', function(e){
+    if (!e.target.closest) return;
+    var z = e.target.closest('[data-zoom]');
+    if (z) { openLb(z.dataset.zoom); return; }
+    var g = e.target.closest('[data-goto]');
+    if (g) show(parseInt(g.dataset.goto, 10) - 1);
+  });
+  lightbox.addEventListener('click', closeLb);
+
+  /* ── 總覽縮圖（複製投影片本體，靠 cqw 自動縮小）── */
+  slides.forEach(function(s, i){
+    var btn  = document.createElement('button');
+    btn.className = 'thumb';
+    var mini = document.createElement('div');
+    mini.className = 'mini';
+    var clone = s.cloneNode(true);
+    clone.classList.add('is-active');
+    clone.classList.remove('is-prev');
+    clone.removeAttribute('id');
+    /* 縮圖是複製品，移除 id 以免與本體重複 */
+    clone.querySelectorAll('[id]').forEach(function(el){ el.removeAttribute('id'); });
+    mini.appendChild(clone);
+    var label = document.createElement('div');
+    label.className = 'label';
+    label.innerHTML = '<b>' + (i + 1) + '</b><span></span>';
+    label.querySelector('span').textContent = s.dataset.title || '';
+    btn.appendChild(mini);
+    btn.appendChild(label);
+    btn.addEventListener('click', function(){ toggleGrid(false); show(i); });
+    thumbs.appendChild(btn);
+  });
+
+  function toggleGrid(open){
+    var willOpen = (open === undefined) ? !overview.classList.contains('is-open') : open;
+    overview.classList.toggle('is-open', willOpen);
+  }
+  document.getElementById('btnGrid').addEventListener('click', function(){ toggleGrid(); });
+
+  /* ── 啟動 ─────────────────────────────── */
+  var m = /#p(\d+)/.exec(location.hash);
+  show(m ? parseInt(m[1], 10) - 1 : 0);
+})();
+</script>
+</body>
+</html>
