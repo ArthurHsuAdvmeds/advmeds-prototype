@@ -139,6 +139,12 @@
     border:1px solid var(--line);border-radius:.7cqw;
     box-shadow:0 1cqw 2.4cqw rgba(23,56,76,.14);
   }
+  /* 圖片本身即為連結時，錨點需撐滿以保留高度限制 */
+  .figure a{
+    display:flex;width:100%;height:100%;
+    align-items:center;justify-content:center;
+  }
+  .figure a:hover img{outline:.2cqw solid var(--blue-l);outline-offset:.4cqw}
   /* 流程圖：可捲動的長圖檢視區 */
   .flowpane{
     flex:1;min-height:0;overflow:auto;
@@ -152,6 +158,7 @@
 
   .capbar{display:flex;align-items:center;gap:1cqw;flex:none;margin-top:.9cqw}
   .capbar .cap{flex:1;margin-top:0}
+  .capbar .chips{flex:1;margin-top:0}
   .mini-btn{
     flex:none;font-size:1.1cqw;line-height:1;text-decoration:none;
     padding:.75cqw 1.2cqw;border-radius:5cqw;
@@ -550,17 +557,25 @@
           </div>
           <div class="hr"></div>
           <div class="body" style="display:flex;flex-direction:column;min-height:0">
-            <div class="figure zoomable" data-zoom="assets/case-history.png">
-              <img src="assets/case-history.png" alt="個案管理系統歷次處遇記錄">
+            <div class="figure">
+              <a href="https://arthurhsuadvmeds.github.io/advmeds-prototype/tsghb-middleware"
+                 target="_blank" rel="noopener" title="開啟中繼站台">
+                <img src="assets/case-history.png" alt="個案管理系統歷次處遇記錄">
+              </a>
             </div>
-            <div class="chips">
-              <span class="chip">日期區間：近七日／近一個月／近半年／近一年／近三年／自訂</span>
-              <span class="chip">分類：HIS 科別</span>
-              <span class="chip">緊急醫療</span>
-              <span class="chip">第一類優化計畫</span>
-              <span class="chip">第二類優化計畫</span>
-              <span class="chip">第三類優化計畫</span>
-              <span class="chip">處方內容頁籤</span>
+            <div class="capbar">
+              <div class="chips" style="margin-top:0">
+                <span class="chip">日期區間：近七日／近一個月／近半年／近一年／近三年／自訂</span>
+                <span class="chip">分類：HIS 科別</span>
+                <span class="chip">緊急醫療</span>
+                <span class="chip">第一類優化計畫</span>
+                <span class="chip">第二類優化計畫</span>
+                <span class="chip">第三類優化計畫</span>
+                <span class="chip">處方內容頁籤</span>
+              </div>
+              <button class="mini-btn" data-zoom="assets/case-history.png">放大檢視</button>
+              <a class="mini-btn is-primary" href="https://arthurhsuadvmeds.github.io/advmeds-prototype/tsghb-middleware"
+                 target="_blank" rel="noopener">開啟中繼站台 ↗</a>
             </div>
           </div>
         </div>
@@ -578,10 +593,14 @@
           </div>
           <div class="hr"></div>
           <div class="body" style="display:flex;flex-direction:column;min-height:0">
-            <div class="figure zoomable" data-zoom="assets/dashboard.png">
-              <img src="assets/dashboard.png" alt="精神健康個案通報管理儀錶板">
+            <div class="figure">
+              <a href="https://arthurhsuadvmeds.github.io/advmeds-prototype/tsghb-dashboard/"
+                 target="_blank" rel="noopener" title="開啟數據儀錶板">
+                <img src="assets/dashboard.png" alt="精神健康個案通報管理儀錶板">
+              </a>
             </div>
-            <div class="chips">
+            <div class="capbar">
+              <div class="chips" style="margin-top:0">
               <span class="chip">基本資料</span>
               <span class="chip">通報案件風險分析</span>
               <span class="chip">案件處理效率指標</span>
@@ -591,6 +610,10 @@
               <span class="chip">醫療機構端處理成效分析</span>
               <span class="chip">醫院內控指標 (SNQ)</span>
               <span class="chip">指揮儀表板</span>
+              </div>
+              <button class="mini-btn" data-zoom="assets/dashboard.png">放大檢視</button>
+              <a class="mini-btn is-primary" href="https://arthurhsuadvmeds.github.io/advmeds-prototype/tsghb-dashboard/"
+                 target="_blank" rel="noopener">開啟儀錶板 ↗</a>
             </div>
           </div>
         </div>
