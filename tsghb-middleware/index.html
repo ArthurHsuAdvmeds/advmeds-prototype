@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HIS 整合 Prototype</title>
+<style>
+  :root{
+    --ink:#1c2b2a; --muted:#5f7370; --line:#dde5e3; --page:#f5f7f6; --card:#ffffff;
+    --teal:#0e7c66; --teal-bg:#e3f2ee; --teal-dark:#0a5748;
+    --blue:#185fa5; --blue-bg:#e6f1fb; --blue-dark:#0c447c;
+    --amber:#9a6a0a; --amber-bg:#faeeda; --amber-dark:#633806;
+    --green:#2f7d4f; --green-bg:#e4f3ea; --green-dark:#1c5636;
+    --coral:#b8451f; --coral-bg:#faece7; --coral-dark:#712b13;
+    --purple:#534ab7; --purple-bg:#eeedfe; --purple-dark:#3c3489;
+    --red:#a32d2d; --red-bg:#fcebeb; --red-dark:#791f1f;
+    --mono:"Consolas","Courier New",monospace;
+  }
+  *{box-sizing:border-box; margin:0;}
+  body{font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif; color:var(--ink); background:var(--page);}
+  button{font-family:inherit; cursor:pointer;}
+  input[type=date]{font-family:inherit; border:1px solid var(--line); border-radius:8px; padding:5px 8px; font-size:13px; color:var(--ink); background:var(--card);}
+
+  /* ============ 模擬 HIS（傳統視窗風格） ============ */
+  .his-desktop{min-height:100vh; background:#3a6ea5; display:flex; align-items:center; justify-content:center; padding:24px;}
+  .his-window{width:720px; max-width:100%; background:#ece9d8; border:1px solid #0a3b78; border-radius:6px 6px 0 0; box-shadow:0 12px 40px rgba(0,0,0,.35); font-family:"Microsoft JhengHei","PMingLiU",sans-serif;}
+  .his-titlebar{background:linear-gradient(#2b6cd4,#1a4fa0); color:#fff; padding:7px 12px; font-size:14px; font-weight:700; display:flex; justify-content:space-between; align-items:center; border-radius:5px 5px 0 0;}
+  .his-titlebar .win-btns span{display:inline-block; width:18px; height:16px; background:#d6d3c9; border:1px solid #7b7b7b; margin-left:3px; text-align:center; line-height:14px; font-size:11px; color:#333;}
+  .his-menubar{background:#ece9d8; border-bottom:1px solid #c9c5b2; padding:4px 10px; font-size:13px; color:#333;}
+  .his-menubar span{margin-right:16px;}
+  .his-body{padding:16px;}
+  .his-fieldset{border:1px solid #a9a591; background:#f4f2e8; padding:12px 14px; margin-bottom:14px;}
+  .his-fieldset legend{font-size:13px; padding:0 6px; color:#444;}
+  .his-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:6px 24px; font-size:14px;}
+  .his-grid b{color:#1a4fa0;}
+  .his-toolbar{display:flex; gap:10px; flex-wrap:wrap;}
+  .his-btn{background:linear-gradient(#fdfdfb,#e3e0d0); border:1px solid #8b8871; padding:8px 16px; font-size:14px; font-family:inherit; border-radius:3px;}
+  .his-btn:active{background:#d9d6c5;}
+  .his-btn.primary{border:2px solid #d85a30; font-weight:700; color:#8a3413;}
+  .his-statusbar{border-top:1px solid #c9c5b2; padding:5px 12px; font-size:12px; color:#666; display:flex; justify-content:space-between;}
+  .his-hint{margin-top:14px; text-align:center; font-size:13px; color:#dbe7f5;}
+  .his-hint code{background:rgba(255,255,255,.15); padding:2px 8px; border-radius:4px; font-family:var(--mono); font-size:12px;}
+
+  /* ============ 客製化網頁 ============ */
+  .app{display:none; min-height:100vh;}
+  .app-header{background:var(--card); border-bottom:1px solid var(--line); padding:12px 28px 0; position:sticky; top:0; z-index:20;}
+  .header-row{display:flex; align-items:center; gap:16px;}
+  .brand{display:flex; align-items:center; gap:8px; font-weight:700; color:var(--teal-dark); font-size:15px; letter-spacing:.05em;}
+  .brand .dot{width:10px; height:10px; border-radius:50%; background:var(--teal);}
+  .patient-chip{margin-left:auto; display:flex; align-items:center; gap:10px;}
+  .avatar{width:38px; height:38px; border-radius:50%; background:var(--teal-bg); color:var(--teal-dark); display:flex; align-items:center; justify-content:center; font-weight:700;}
+  .patient-chip .meta{font-size:12px; color:var(--muted);}
+  .patient-chip .name{font-size:15px; font-weight:700; color:var(--ink);}
+
+  /* 主 TAB */
+  .main-tabs{display:flex; gap:4px; margin-top:10px;}
+  .main-tab{border:none; background:none; padding:11px 22px; font-size:14.5px; color:var(--muted); border-bottom:3px solid transparent; font-weight:500;}
+  .main-tab.active{color:var(--teal-dark); border-bottom-color:var(--teal); font-weight:700;}
+  .main-tab:disabled{color:#c2cfcc; cursor:not-allowed;}
+  .main-tab .sel-name{display:inline-block; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:bottom; background:var(--teal-bg); color:var(--teal-dark); font-size:12px; border-radius:999px; padding:1px 10px; margin-left:8px;}
+
+  .container{max-width:1080px; margin:0 auto; padding:22px 24px 60px;}
+
+  /* 篩選列 */
+  .filter-bar{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 16px; margin-bottom:14px; display:flex; flex-direction:column; gap:10px;}
+  .filter-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .filter-label{font-size:12px; color:var(--muted); font-weight:700; letter-spacing:.05em; min-width:56px;}
+  .pill{border:1px solid var(--line); background:var(--card); border-radius:999px; padding:5px 14px; font-size:13px; color:var(--muted);}
+  .pill.active{background:var(--teal); border-color:var(--teal); color:#fff;}
+  .pill.rpt.active{background:var(--amber-dark); border-color:var(--amber-dark);}
+  .custom-range{display:none; align-items:center; gap:6px; font-size:13px; color:var(--muted);}
+  .custom-range.show{display:flex;}
+
+  /* HIS 科別下拉多選 */
+  .dept-dd{position:relative;}
+  .dept-btn{border:1px solid var(--line); background:var(--card); border-radius:999px; padding:5px 14px; font-size:13px; color:var(--muted); display:flex; align-items:center; gap:6px;}
+  .dept-btn.has-sel{background:var(--blue-bg); border-color:var(--blue); color:var(--blue-dark); font-weight:500;}
+  .dept-btn .cnt{background:var(--blue); color:#fff; border-radius:999px; font-size:11px; padding:0 7px; line-height:17px;}
+  .dept-panel{display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:30; width:300px; background:var(--card); border:1px solid var(--line); border-radius:12px; box-shadow:0 10px 32px rgba(28,43,42,.14); overflow:hidden;}
+  .dept-panel.open{display:block;}
+  .dept-search{padding:10px; border-bottom:1px solid var(--line);}
+  .dept-search input{width:100%; border:1px solid var(--line); border-radius:8px; padding:7px 10px; font-size:13px; font-family:inherit;}
+  .dept-list{max-height:240px; overflow-y:auto; padding:6px 0;}
+  .dept-item{display:flex; align-items:center; gap:9px; padding:8px 14px; font-size:13.5px; cursor:pointer;}
+  .dept-item:hover{background:var(--teal-bg);}
+  .dept-item input{accent-color:var(--blue);}
+  .dept-item .n{margin-left:auto; font-size:11.5px; color:var(--muted); background:#f0f4f3; border-radius:999px; padding:0 8px; line-height:18px;}
+  .dept-foot{display:flex; justify-content:space-between; padding:8px 12px; border-top:1px solid var(--line);}
+  .dept-foot button{border:none; background:none; font-size:12.5px; color:var(--teal-dark);}
+  .dept-foot button:hover{text-decoration:underline;}
+  .dept-none{padding:16px; text-align:center; font-size:13px; color:var(--muted);}
+  .chips{display:flex; gap:6px; flex-wrap:wrap;}
+  .chip{display:inline-flex; align-items:center; gap:5px; background:var(--blue-bg); color:var(--blue-dark); font-size:12px; border-radius:999px; padding:3px 6px 3px 11px;}
+  .chip b{cursor:pointer; font-weight:700; border-radius:50%; width:16px; height:16px; line-height:15px; text-align:center;}
+  .chip b:hover{background:rgba(12,68,124,.15);}
+
+  /* 清單 */
+  .list-card{background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden;}
+  .list-summary{font-size:12.5px; color:var(--muted); padding:10px 16px; border-bottom:1px solid var(--line); background:#fafcfb;}
+  table{width:100%; border-collapse:collapse; font-size:14px;}
+  .table-scroll{max-height:494px; overflow-y:auto; overscroll-behavior:contain;}
+  .table-scroll::-webkit-scrollbar{width:10px;}
+  .table-scroll::-webkit-scrollbar-thumb{background:#c9d6d3; border-radius:8px; border:2px solid var(--card);}
+  .table-scroll::-webkit-scrollbar-thumb:hover{background:#a9bcb8;}
+  thead th{text-align:left; font-size:12.5px; font-weight:700; color:var(--muted); padding:11px 16px; background:#fafcfb; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:2;}
+  th.sortable{cursor:pointer; user-select:none;}
+  th.sortable:hover{color:var(--teal-dark); background:#f0f7f4;}
+  th.sortable .arrow{display:inline-block; margin-left:5px; font-size:11px; color:#b9c7c4; width:12px;}
+  th.sortable .arrow::after{content:"⇅";}
+  th.sortable.sorted{color:var(--teal-dark);}
+  th.sortable.sorted .arrow{color:var(--teal);}
+  th.sortable.sorted.desc .arrow::after{content:"▼";}
+  th.sortable.sorted.asc .arrow::after{content:"▲";}
+  tbody tr{border-bottom:1px solid var(--line); cursor:pointer; transition:background .12s;}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:#eef6f3;}
+  tbody tr.focused{background:var(--teal-bg); box-shadow:inset 3px 0 0 var(--teal);}
+  tbody td{padding:12px 16px; vertical-align:middle;}
+  td.date{font-family:var(--mono); font-size:13px; color:var(--muted); white-space:nowrap;}
+  .tag{display:inline-block; font-size:12px; padding:3px 12px; border-radius:999px; font-weight:500; white-space:nowrap;}
+  .tag.his{background:var(--blue-bg); color:var(--blue-dark);}
+  .tag.emerg{background:var(--red-bg); color:var(--red-dark);}
+  .tag.plan{background:var(--amber-bg); color:var(--amber-dark);}
+  .src-tag{display:inline-block; font-size:12px; padding:3px 10px; border-radius:6px; font-weight:700; white-space:nowrap;}
+  .src-tag.HIS{background:#eef3fb; color:var(--blue-dark); border:1px solid #cfe0f3;}
+  .src-tag.REPORT{background:#fdf4e6; color:var(--amber-dark); border:1px solid #f1dfc0;}
+  .doc-name{font-weight:500;}
+  .doc-acct{font-family:var(--mono); font-size:12px; color:var(--muted); background:#f0f4f3; border:1px solid var(--line); border-radius:6px; padding:1px 7px; margin-left:6px; white-space:nowrap;}
+  .empty{padding:32px; text-align:center; color:var(--muted); font-size:14px;}
+  .hint-bar{margin-top:10px; font-size:12.5px; color:var(--muted);}
+  .hint-bar b{color:var(--teal-dark);}
+
+  /* ============ 處方內容 ============ */
+  .detail-empty{background:var(--card); border:1px dashed var(--line); border-radius:12px; padding:56px 24px; text-align:center; color:var(--muted); font-size:14px;}
+  .detail-head{display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap;}
+  .detail-title{font-size:17px; font-weight:700;}
+  .detail-sub{font-size:13px; color:var(--muted); width:100%;}
+  .sub-tabs{display:flex; gap:4px; border-bottom:2px solid var(--line); margin:4px 0 18px;}
+  .sub-tab{border:none; background:none; padding:9px 16px; font-size:13.5px; color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-2px; font-weight:500;}
+  .sub-tab.active{color:var(--teal-dark); border-bottom-color:var(--teal); font-weight:700;}
+  .sub-tab .count{display:inline-block; background:var(--teal-bg); color:var(--teal-dark); border-radius:999px; font-size:11px; padding:1px 8px; margin-left:6px;}
+
+  .soap-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media (max-width:680px){ .soap-grid{grid-template-columns:1fr;} .his-grid{grid-template-columns:1fr;} }
+  .quad{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px;}
+  .quad h3{font-size:13px; font-weight:700; letter-spacing:.06em; margin-bottom:10px; display:flex; align-items:center; gap:8px;}
+  .quad h3 .badge{width:26px; height:26px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; font-size:14px;}
+  .quad.s h3{color:var(--purple-dark);} .quad.s .badge{background:var(--purple-bg); color:var(--purple-dark);}
+  .quad.o h3{color:var(--teal-dark);} .quad.o .badge{background:var(--teal-bg); color:var(--teal-dark);}
+  .quad.a h3{color:var(--coral-dark);} .quad.a .badge{background:var(--coral-bg); color:var(--coral-dark);}
+  .quad.p h3{color:var(--blue-dark);} .quad.p .badge{background:var(--blue-bg); color:var(--blue-dark);}
+  .quad p{font-size:14px; line-height:1.75; color:var(--ink);}
+  .icd-table{font-size:13px;}
+  .icd-table th{background:transparent; padding:6px 8px; border-bottom:1px solid var(--line); font-size:12px;}
+  .icd-table td{padding:8px; border-bottom:1px solid var(--line);}
+  .icd-table tr{cursor:default;}
+  .icd-table tr:hover{background:transparent;}
+  .icd-code{font-family:var(--mono); background:var(--coral-bg); color:var(--coral-dark); padding:2px 8px; border-radius:6px; font-size:12.5px; white-space:nowrap;}
+  .icd-type{display:inline-block; font-size:11.5px; font-weight:700; padding:2px 9px; border-radius:6px; white-space:nowrap;}
+  .icd-type.icd10{background:var(--teal-bg); color:var(--teal-dark);}
+  .icd-type.icd9{background:#f0f4f3; color:var(--muted); border:1px solid var(--line);}
+
+  .visit-layout{display:grid; grid-template-columns:280px 1fr; gap:16px; align-items:start;}
+  @media (max-width:760px){ .visit-layout{grid-template-columns:1fr;} }
+  .visit-list{background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden;}
+  .visit-list-head{font-size:12.5px; font-weight:700; color:var(--muted); padding:10px 14px; background:#fafcfb; border-bottom:1px solid var(--line);}
+  .visit-item{padding:12px 14px; border-bottom:1px solid var(--line); cursor:pointer;}
+  .visit-item:last-child{border-bottom:none;}
+  .visit-item:hover{background:var(--teal-bg);}
+  .visit-item.selected{background:var(--teal-bg); border-left:3px solid var(--teal); padding-left:11px;}
+  .visit-item .v-date{font-family:var(--mono); font-size:13px; font-weight:700;}
+  .visit-item .v-meta{font-size:12px; color:var(--muted); margin-top:3px;}
+  .v-tag{display:inline-block; font-size:11px; padding:1px 9px; border-radius:999px; font-weight:700; margin-left:7px; vertical-align:1px;}
+  .v-tag.eval{background:var(--blue-bg); color:var(--blue-dark);}
+  .v-tag.follow{background:var(--green-bg); color:var(--green-dark);}
+  .v-tag.close{background:var(--purple-bg); color:var(--purple-dark);}
+  .visit-filter{display:flex; gap:5px; padding:8px 10px; border-bottom:1px solid var(--line); background:#fafcfb; flex-wrap:wrap;}
+  .v-pill{border:1px solid var(--line); background:var(--card); border-radius:999px; padding:2px 10px; font-size:11.5px; color:var(--muted);}
+  .v-pill.active{background:var(--teal); border-color:var(--teal); color:#fff;}
+  .visit-empty{padding:24px 14px; font-size:13px; color:var(--muted); text-align:center;}
+  .view{display:none;}
+  .view.active{display:block;}
+  .tabpane{display:none;}
+  .tabpane.active{display:block;}
+  footer{margin-top:36px; font-size:12px; color:#9fb0ad; text-align:center;}
+</style>
+</head>
+<body>
+
+<!-- ================= 模擬 HIS 畫面 ================= -->
+<div class="his-desktop" id="hisView">
+  <div>
+    <div class="his-window">
+      <div class="his-titlebar">
+        <span>醫療資訊系統 HIS — 門診醫囑作業 [OPD-021]</span>
+        <span class="win-btns"><span>—</span><span>□</span><span>✕</span></span>
+      </div>
+      <div class="his-menubar"><span>系統(S)</span><span>病歷(C)</span><span>醫囑(O)</span><span>查詢(Q)</span><span>說明(H)</span></div>
+      <div class="his-body">
+        <fieldset class="his-fieldset">
+          <legend>病患基本資料</legend>
+          <div class="his-grid">
+            <div>身分證字號：<b>A123456789</b></div>
+            <div>姓名：<b>王小明</b></div>
+            <div>性別／年齡：<b>男 / 68 歲</b></div>
+            <div>身分：<b>健保</b></div>
+            <div>科別：<b>身心科門診</b></div>
+            <div>診間：<b>05 診</b></div>
+          </div>
+        </fieldset>
+        <fieldset class="his-fieldset">
+          <legend>功能</legend>
+          <div class="his-toolbar">
+            <button class="his-btn">病歷查詢</button>
+            <button class="his-btn">開立醫囑</button>
+            <button class="his-btn">檢驗報告</button>
+            <button class="his-btn primary" onclick="openCasePage()">▶ 個案紀錄（客製化網頁）</button>
+          </div>
+        </fieldset>
+      </div>
+      <div class="his-statusbar"><span>使用者：DR0231 林志豪</span><span id="hisClock"></span></div>
+    </div>
+    <p class="his-hint">點「個案紀錄」按鈕 → 以 <code>window.open('?patient=A123456789&gender=1&birth=1958-03-15')</code> 開啟客製化網頁</p>
+  </div>
+</div>
+
+<!-- ================= 客製化網頁 ================= -->
+<div class="app" id="appView">
+  <header class="app-header">
+    <div class="header-row">
+      <div class="brand"><span class="dot"></span>個案管理系統</div>
+      <div class="patient-chip">
+        <div class="avatar" id="pAvatar">A</div>
+        <div>
+          <div class="name" id="pName">A123456789</div>
+          <div class="meta">身分證字號 <span id="pChart">A123456789</span> · <span id="pGender">男</span> · <span id="pAge">—</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="main-tabs">
+      <button class="main-tab active" id="mainTabList" onclick="switchMain('list')">歷次處遇記錄</button>
+      <button class="main-tab" id="mainTabDetail" onclick="switchMain('detail')" disabled>處方內容<span class="sel-name" id="selName" style="display:none"></span></button>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- TAB 1：歷次處遇記錄 -->
+    <div class="view active" id="listView">
+      <div class="filter-bar">
+        <div class="filter-row">
+          <span class="filter-label">日期區間</span>
+          <button class="pill" data-range="7d">近七日</button>
+          <button class="pill" data-range="1m">近一個月</button>
+          <button class="pill active" data-range="6m">近半年</button>
+          <button class="pill" data-range="1y">近一年</button>
+          <button class="pill" data-range="3y">近三年</button>
+          <button class="pill" data-range="custom">自訂</button>
+          <span class="custom-range" id="customRange">
+            <input type="date" id="dateFrom"> ～ <input type="date" id="dateTo">
+          </span>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">分類</span>
+          <button class="pill active" data-cat="all" id="pillAll">全部</button>
+          <div class="dept-dd" id="deptDd">
+            <button class="dept-btn" id="deptBtn" onclick="toggleDeptPanel(event)">
+              HIS 科別 <span class="cnt" id="deptCnt" style="display:none">0</span> ▾
+            </button>
+            <div class="dept-panel" id="deptPanel">
+              <div class="dept-search"><input type="text" id="deptSearch" placeholder="搜尋科別…" oninput="renderDeptList()"></div>
+              <div class="dept-list" id="deptList"></div>
+              <div class="dept-foot">
+                <span>
+                  <button onclick="selectAllDepts()">全選</button>
+                  <button onclick="clearDepts()" style="margin-left:10px">清除選取</button>
+                </span>
+                <button onclick="closeDeptPanel()">完成</button>
+              </div>
+            </div>
+          </div>
+          <button class="pill rpt" data-cat="緊急醫療">緊急醫療</button>
+          <button class="pill rpt" data-cat="第一類優化計畫">第一類優化計畫</button>
+          <button class="pill rpt" data-cat="第二類優化計畫">第二類優化計畫</button>
+          <button class="pill rpt" data-cat="第三類優化計畫">第三類優化計畫</button>
+        </div>
+        <div class="filter-row" id="chipRow" style="display:none">
+          <span class="filter-label">已選科別</span>
+          <div class="chips" id="chips"></div>
+        </div>
+      </div>
+
+      <div class="list-card">
+        <div class="list-summary" id="listSummary"></div>
+        <div class="table-scroll" id="tableScroll">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:12%" class="sortable" data-sort="date">日期<span class="arrow"></span></th>
+              <th style="width:12%" class="sortable" data-sort="source">大分類<span class="arrow"></span></th>
+              <th style="width:17%" class="sortable" data-sort="cat">類別<span class="arrow"></span></th>
+              <th style="width:22%" class="sortable" data-sort="doc">看診醫師<span class="arrow"></span></th>
+              <th>案件</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+        </div>
+        <div class="empty" id="empty" style="display:none">此條件下無紀錄</div>
+      </div>
+      <p class="hint-bar">點選任一列可 <b>Focus</b> 該筆紀錄，再切換上方「處方內容」頁籤檢視 SOAP。</p>
+      <footer>Prototype · 資料為模擬用假資料 · 今日：<span id="todayLabel"></span></footer>
+    </div>
+
+    <!-- TAB 2：處方內容 -->
+    <div class="view" id="detailView">
+      <div class="detail-empty" id="detailEmpty">尚未選取紀錄——請先於「歷次處遇記錄」點選一筆案件</div>
+      <div id="detailBody" style="display:none">
+        <div class="detail-head">
+          <span class="detail-title" id="dTitle"></span>
+          <span class="detail-sub" id="dSub"></span>
+        </div>
+        <div class="sub-tabs" id="subTabs" style="display:none">
+          <button class="sub-tab active" id="subTabSoap" onclick="switchSub('soap')">個管 SOAP</button>
+          <button class="sub-tab" id="subTabVisits" onclick="switchSub('visits')">訪視紀錄<span class="count" id="visitCount">0</span></button>
+        </div>
+        <div class="tabpane active" id="paneSoap">
+          <div class="soap-grid">
+            <div class="quad s"><h3><span class="badge">S</span>主觀陳述 Subjective</h3><p id="qS"></p></div>
+            <div class="quad o"><h3><span class="badge">O</span>客觀發現 Objective</h3><p id="qO"></p></div>
+            <div class="quad a"><h3><span class="badge">A</span>評估 Assessment</h3>
+              <table class="icd-table"><thead><tr><th style="width:20%">Type</th><th style="width:26%">Code</th><th>描述</th></tr></thead><tbody id="qA"></tbody></table>
+            </div>
+            <div class="quad p"><h3><span class="badge">P</span>處置計畫 Plan</h3><p id="qP"></p></div>
+          </div>
+        </div>
+        <div class="tabpane" id="paneVisits">
+          <div class="visit-layout">
+            <div class="visit-list">
+              <div class="visit-list-head">訪視紀錄</div>
+              <div class="visit-filter" id="visitFilter">
+                <button class="v-pill active" data-vc="all">全部</button>
+                <button class="v-pill" data-vc="評估訪視">評估</button>
+                <button class="v-pill" data-vc="追蹤訪視">追蹤</button>
+                <button class="v-pill" data-vc="結案訪視">結案</button>
+              </div>
+              <div id="visitItems"></div>
+            </div>
+            <div>
+              <div class="soap-grid" id="visitSoap">
+                <div class="quad s"><h3><span class="badge">S</span>主觀陳述 Subjective</h3><p id="vS"></p></div>
+                <div class="quad o"><h3><span class="badge">O</span>客觀發現 Objective</h3><p id="vO"></p></div>
+                <div class="quad a"><h3><span class="badge">A</span>評估 Assessment</h3>
+                  <table class="icd-table"><thead><tr><th style="width:20%">Type</th><th style="width:26%">Code</th><th>描述</th></tr></thead><tbody id="vA"></tbody></table>
+                </div>
+                <div class="quad p"><h3><span class="badge">P</span>處置計畫 Plan</h3><p id="vP"></p></div>
+              </div>
+              <div class="visit-empty" id="visitNone" style="display:none">尚無訪視紀錄</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer>Prototype · 資料為模擬用假資料</footer>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- 模擬資料（實作時改為呼叫 API） ---------- */
+const RECORDS = [
+  { id:"R016", date:"2026-07-05", source:"HIS", cat:"身心科門診", doc:"林志豪", acct:"DR0231", caseName:"藥物調整回診",
+    S:"自述服藥後偶有輕微噁心，情緒平穩，睡眠約六小時。",
+    O:"生命徵象穩定，對答切題，無錐體外症候。",
+    A:[["F32.1","中度鬱症，單次發作"]],
+    P:"衛教隨餐服藥以減少腸胃不適；維持原劑量，兩週後回診。" },
+
+  { id:"R015", date:"2026-06-20", source:"HIS", cat:"家庭醫學科門診", doc:"林志豪", acct:"DR0231", caseName:"高血壓回診",
+    S:"自述居家血壓多在 135–145 mmHg，無頭暈胸悶。",
+    O:"BP 140/88 mmHg，HR 74，體重與上次持平。",
+    A:[["I10","本態性高血壓"]],
+    P:"Amlodipine 5 mg QD 續用；衛教低鈉飲食與每日居家血壓紀錄；一個月後回診。" },
+
+  { id:"R014", date:"2026-05-28", source:"HIS", cat:"復健科門診", doc:"郭沛珊", acct:"DR0298", caseName:"下背痛追蹤",
+    S:"自述下背痛較前改善，久站仍有痠痛感。",
+    O:"腰椎活動度改善，物理治療已完成 8 次。",
+    A:[["M54.5","下背痛"]],
+    P:"完成剩餘物理治療療程；持續核心肌群運動；視症狀 PRN 回診。" },
+
+  { id:"R013", date:"2026-04-22", source:"HIS", cat:"神經內科門診", doc:"許文彥", acct:"DR0377", caseName:"頭暈追蹤",
+    S:"自述起身頭暈頻率明顯減少，每週約一次。",
+    O:"姿勢性血壓差 10 mmHg，較前改善。",
+    A:[["I95.1","姿勢性低血壓"]],
+    P:"維持目前藥物；持續起身緩慢與水分補充衛教；三個月後回診。" },
+
+  { id:"R012", date:"2026-02-25", source:"HIS", cat:"眼科門診", doc:"趙心慈", acct:"DR0644", caseName:"糖尿病眼底檢查",
+    S:"無視力模糊主訴，配合年度眼底檢查。",
+    O:"雙眼矯正視力 0.9，眼底檢查無糖尿病視網膜病變。",
+    A:[["Z13.5","眼疾患篩檢"],["E11.9","第二型糖尿病，無併發症"]],
+    P:"每年定期眼底追蹤；血糖控制衛教。" },
+
+  { id:"R011", date:"2026-01-30", source:"HIS", cat:"牙科門診", doc:"江柏翰", acct:"DR0719", caseName:"洗牙與口腔檢查",
+    S:"無明顯牙痛，例行半年洗牙。",
+    O:"牙結石中度堆積，牙齦輕度發炎，無蛀牙。",
+    A:[["K05.10","慢性牙齦炎，未特定"]],
+    P:"完成全口洗牙；衛教牙線使用；半年後回診。" },
+
+  { id:"R010", date:"2026-07-12", source:"HIS", cat:"身心科門診", doc:"林志豪", acct:"DR0231", caseName:"憂鬱症回診",
+    S:"自述近兩週睡眠改善，入睡約需 30 分鐘，情緒較平穩，仍偶有提不起勁，無自殺意念。",
+    O:"外觀整潔，對答切題，情感反應適切。PHQ-9 得分 9 分（前次 14 分）。",
+    A:[["F32.1","中度鬱症，單次發作"],["G47.00","失眠，未特定"]],
+    P:"Sertraline 50 mg QD 續用；持續睡眠衛教；4 週後回診，安排心理治療轉介評估。" },
+
+  { id:"R009", date:"2026-07-01", source:"REPORT", cat:"第一類優化計畫", doc:"張淑芬", acct:"CM0788", caseName:"自殺防治個管收案",
+    S:"個案表示出院後心情起伏大，對返回職場感到焦慮，願意接受關懷訪視。",
+    O:"BSRS-5 得分 11 分，有明確支持系統（女兒同住）。目前規律回診身心科。",
+    A:[["Z91.51","個人自害病史"],["F32.1","中度鬱症，單次發作"]],
+    P:"依第一類優化計畫收案，訂定 6 個月關懷計畫；每兩週訪視一次，連結社區心理衛生資源。",
+    visits:[
+      { date:"2026-07-10", staff:"張淑芬 CM0788", type:"電話訪視", vClass:"追蹤訪視",
+        S:"個案表示情緒穩定，已恢復兼職工作，睡眠尚可，無自殺意念。",
+        O:"電訪對答清晰，語氣平穩。BSRS-5 得分 6 分，服藥順從性良好。",
+        A:[["Z91.51","個人自害病史"],["Z71.9","諮商，未特定"]],
+        P:"維持每兩週電訪；提醒 7/22 身心科回診；鼓勵持續參與社區支持團體。" },
+      { date:"2026-07-03", staff:"張淑芬 CM0788", type:"家庭訪視", vClass:"評估訪視",
+        S:"個案表示夜間偶有負面想法但能自我調適，女兒表示個案作息已規律。",
+        O:"家中藥物已由女兒集中保管，環境安全。BSRS-5 得分 8 分。",
+        A:[["Z91.51","個人自害病史"],["F32.1","中度鬱症，單次發作"]],
+        P:"完成居家安全評估；與家屬確認緊急聯絡流程；預約兩週後電話訪視。" }
+    ] },
+
+  { id:"R008", date:"2026-06-30", source:"REPORT", cat:"緊急醫療", doc:"陳美惠", acct:"DR0512", caseName:"藥物過量急診通報",
+    S:"家屬代訴個案於家中吞服大量安眠藥後意識不清，由 119 送達急診。",
+    O:"E3V4M5，BP 108/70 mmHg，SpO2 96%。BZD 尿液篩檢陽性，肝腎功能正常。",
+    A:[["T42.4X2A","苯二氮平類中毒，故意自害（初次就醫）"],["R40.0","嗜睡"]],
+    P:"急診留觀、活性碳處置；完成自殺防治通報；照會身心科評估收案，家屬衛教藥物保管。" },
+
+  { id:"R007", date:"2026-06-02", source:"HIS", cat:"居家照護科", doc:"吳建宏", acct:"DR0455", caseName:"居家醫療訪診",
+    S:"個案表示下肢無力、上下樓梯吃力，胃口普通，藥物由媳婦協助管理。",
+    O:"BP 142/88 mmHg，步態不穩，起身行走測試（TUG）18 秒，浴室無防滑設施。",
+    A:[["R26.2","步行困難，他處未分類"],["Z91.81","跌倒病史／跌倒高風險"]],
+    P:"建議加裝浴室扶手與防滑墊；轉介物理治療；列入跌倒高風險名單，兩週後追蹤。" },
+
+  { id:"R006", date:"2026-05-20", source:"REPORT", cat:"第二類優化計畫", doc:"李國榮", acct:"CM0621", caseName:"高風險再自傷防治個管",
+    S:"個案自述一年內第二次自傷後接受收案，對藥物治療配合度不佳。",
+    O:"一年內兩次自傷就醫紀錄，BSRS-5 得分 13 分，社會支持薄弱（獨居）。",
+    A:[["Z91.52","個人自害病史（近期）"],["F33.1","復發性鬱症，中度"]],
+    P:"依第二類優化計畫收案，密集關懷（每週一次）；連結社工評估經濟與居住支持。",
+    visits:[
+      { date:"2026-06-12", staff:"李國榮 CM0621", type:"家庭訪視", vClass:"評估訪視",
+        S:"個案表示最近與鄰居互動增加，情緒略有改善，但仍不定時服藥。",
+        O:"藥盒查核發現漏服約三成，居家環境整潔。BSRS-5 得分 10 分。",
+        A:[["Z91.14","個人不遵醫囑病史"],["F33.1","復發性鬱症，中度"]],
+        P:"導入每日用藥提醒（長效針劑評估）；下週續訪；照會個管醫師調整處方。" }
+    ] },
+
+  { id:"R005", date:"2026-04-14", source:"HIS", cat:"家庭醫學科門診", doc:"林志豪", acct:"DR0231", caseName:"糖尿病回診",
+    S:"自述晨間血糖偏高（150–180 mg/dL），偶有口渴、夜尿。服藥規律。",
+    O:"BP 138/86 mmHg。HbA1c 8.2%，空腹血糖 162 mg/dL。足部檢查無傷口。",
+    A:[["E11.9","第二型糖尿病，無併發症"],["I10","本態性高血壓"]],
+    P:"Metformin 調整為 850 mg BID；衛教飲食與血糖自我監測；4 週後追蹤 HbA1c。" },
+
+  { id:"R004", date:"2026-03-08", source:"REPORT", cat:"第三類優化計畫", doc:"周怡君", acct:"CM0533", caseName:"社區關懷個管收案",
+    S:"里幹事轉介，個案近期喪偶情緒低落，同意接受社區關懷服務。",
+    O:"BSRS-5 得分 7 分，無自傷病史，有宗教團體支持系統。",
+    A:[["Z63.4","家屬失蹤或死亡（哀慟反應）"],["Z65.9","社會心理狀況相關問題，未特定"]],
+    P:"依第三類優化計畫收案，每月關懷訪視；轉介社區哀傷輔導團體。",
+    visits:[
+      { date:"2026-06-10", staff:"周怡君 CM0533", type:"家庭訪視", vClass:"結案訪視",
+        S:"個案表示生活作息規律，持續參與教會活動，情緒穩定，同意結案。",
+        O:"BSRS-5 連續兩次低於 6 分（本次 4 分），支持系統穩固。",
+        A:[["Z63.4","家屬失蹤或死亡（哀慟反應）"],["Z71.9","諮商，未特定"]],
+        P:"完成結案評估並結案；提供心理衛生資源聯絡方式，如有需要可再轉介。" },
+      { date:"2026-04-05", staff:"周怡君 CM0533", type:"電話訪視", vClass:"追蹤訪視",
+        S:"個案表示已參加教會團契活動，情緒較收案時平穩。",
+        O:"電訪語氣平穩，BSRS-5 得分 5 分。",
+        A:[["Z63.4","家屬失蹤或死亡（哀慟反應）"]],
+        P:"維持每月電訪；鼓勵持續參與社區活動；連續兩次低於 6 分可評估結案。" },
+      { date:"2026-03-15", staff:"周怡君 CM0533", type:"家庭訪視", vClass:"評估訪視",
+        S:"初次訪視，個案表示夜間思念亡夫難以入睡，食慾略降。",
+        O:"BSRS-5 得分 7 分，居家環境整潔，有宗教團體與女兒支持。",
+        A:[["Z63.4","家屬失蹤或死亡（哀慟反應）"]],
+        P:"完成收案評估，訂定每月關懷計畫；轉介社區哀傷輔導團體。" }
+    ] },
+
+  { id:"R003", date:"2025-11-18", source:"HIS", cat:"神經內科門診", doc:"許文彥", acct:"DR0377", caseName:"頭暈評估",
+    S:"反覆姿勢性頭暈兩週，起身時明顯，無耳鳴、無局部無力。",
+    O:"姿勢性血壓差 22 mmHg，神經學檢查無局部徵象，Dix-Hallpike 陰性。",
+    A:[["I95.1","姿勢性低血壓"]],
+    P:"衛教緩慢起身與水分補充；檢視降壓藥物劑量並照會家醫科；一個月後回診。" },
+
+  { id:"R002", date:"2025-06-24", source:"HIS", cat:"復健科門診", doc:"郭沛珊", acct:"DR0298", caseName:"下背痛複診",
+    S:"下背痛三個月，久坐加劇，無下肢放射痛。",
+    O:"腰椎活動度受限，SLR 陰性，X 光示 L4-L5 退化性變化。",
+    A:[["724.2","下背痛","ICD-9"],["721.3","腰薦椎退化性脊椎病變","ICD-9"]],
+    P:"安排物理治療 12 次；核心肌群運動衛教；NSAID PRN。" },
+
+  { id:"R001", date:"2024-09-10", source:"HIS", cat:"身心科門診", doc:"林志豪", acct:"DR0231", caseName:"失眠初診",
+    S:"入睡困難三個月，每晚需 1–2 小時才能入睡，日間疲倦。",
+    O:"外觀疲態，情緒低落傾向，PHQ-9 得分 12 分。",
+    A:[["780.52","失眠，未特定","ICD-9"],["296.22","重鬱症，單次發作，中度","ICD-9"]],
+    P:"睡眠衛教；開立 Sertraline 25 mg QD；兩週後回診評估。" }
+];
+
+const TAG_CLASS = c => c === "緊急醫療" ? "emerg" : (c.includes("優化計畫") ? "plan" : "his");
+const PLAN_CATS = ["第一類優化計畫","第二類優化計畫","第三類優化計畫"];
+
+/* ---------- HIS 端 ---------- */
+function openCasePage(){
+  const url = location.pathname + "?patient=A123456789&gender=1&birth=1958-03-15";
+  window.open(url, "casePage", "width=1150,height=820");
+}
+function tick(){
+  const el = document.getElementById("hisClock");
+  if (el) el.textContent = new Date().toLocaleString("zh-TW");
+}
+setInterval(tick, 1000); tick();
+
+/* ---------- 客製化網頁端 ---------- */
+const params = new URLSearchParams(location.search);
+const idNo = params.get("patient");
+const genderParam = params.get("gender");
+const birthParam = params.get("birth");
+
+function computeAge(birthStr){
+  if (!birthStr) return null;
+  const birth = new Date(birthStr);
+  if (Number.isNaN(birth.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age -= 1;
+  return age >= 0 ? age : null;
+}
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+let state = { range:"6m", from:null, to:null, cat:"all", depts:new Set(), sortKey:"date", sortDir:-1 };
+let current = null;
+
+/* HIS 科別清單由資料彙整（實作時可改為呼叫科別 API） */
+const HIS_DEPTS = [...new Set(RECORDS.filter(r => r.source === "HIS").map(r => r.cat))]
+  .map(d => ({ name:d, n:RECORDS.filter(r => r.cat === d).length }));
+
+if (idNo){
+  document.getElementById("hisView").style.display = "none";
+  document.getElementById("appView").style.display = "block";
+  document.getElementById("pChart").textContent = idNo;
+  document.getElementById("pName").textContent = idNo;
+  document.getElementById("pAvatar").textContent = idNo.charAt(0);
+  document.getElementById("pGender").textContent =
+    genderParam === "1" ? "男" : (genderParam === "2" ? "女" : "—");
+  const age = computeAge(birthParam);
+  document.getElementById("pAge").textContent = age !== null ? age + " 歲" : "—";
+  document.title = "個案紀錄 - " + idNo;
+  document.getElementById("todayLabel").textContent = TODAY.toLocaleDateString("zh-TW");
+  renderDeptList();
+  renderRows();
+}
+
+/* ----- 日期區間 ----- */
+function rangeStart(){
+  const d = new Date(TODAY);
+  switch(state.range){
+    case "7d": d.setDate(d.getDate() - 7); return d;
+    case "1m": d.setMonth(d.getMonth() - 1); return d;
+    case "6m": d.setMonth(d.getMonth() - 6); return d;
+    case "1y": d.setFullYear(d.getFullYear() - 1); return d;
+    case "3y": d.setFullYear(d.getFullYear() - 3); return d;
+    default: return null;
+  }
+}
+function inRange(dateStr){
+  const d = new Date(dateStr + "T00:00:00");
+  if (state.range === "custom"){
+    if (state.from && d < state.from) return false;
+    if (state.to && d > state.to) return false;
+    return true;
+  }
+  return d >= rangeStart() && d <= TODAY;
+}
+function rangeLabel(){
+  const names = {"7d":"近七日","1m":"近一個月","6m":"近半年","1y":"近一年","3y":"近三年"};
+  if (state.range !== "custom") {
+    return names[state.range] + "（" + rangeStart().toLocaleDateString("zh-TW") + " ～ 今日）";
+  }
+  const f = state.from ? state.from.toLocaleDateString("zh-TW") : "不限";
+  const t = state.to ? state.to.toLocaleDateString("zh-TW") : "今日";
+  return "自訂（" + f + " ～ " + t + "）";
+}
+
+document.querySelectorAll(".pill[data-range]").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".pill[data-range]").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    state.range = btn.dataset.range;
+    document.getElementById("customRange").classList.toggle("show", state.range === "custom");
+    renderRows();
+  };
+});
+document.getElementById("dateFrom").onchange = e => { state.from = e.target.value ? new Date(e.target.value + "T00:00:00") : null; renderRows(); };
+document.getElementById("dateTo").onchange = e => { state.to = e.target.value ? new Date(e.target.value + "T00:00:00") : null; renderRows(); };
+
+/* ----- 分類（通報 pills + HIS 科別下拉多選） ----- */
+document.querySelectorAll(".pill[data-cat]").forEach(btn => {
+  btn.onclick = () => {
+    state.cat = btn.dataset.cat;
+    state.depts.clear();
+    syncCatUI();
+    renderRows();
+  };
+});
+
+function syncCatUI(){
+  document.querySelectorAll(".pill[data-cat]").forEach(b =>
+    b.classList.toggle("active", state.depts.size === 0 && b.dataset.cat === state.cat));
+  const btn = document.getElementById("deptBtn");
+  const cnt = document.getElementById("deptCnt");
+  btn.classList.toggle("has-sel", state.depts.size > 0);
+  cnt.style.display = state.depts.size ? "inline-block" : "none";
+  cnt.textContent = state.depts.size;
+  const chipRow = document.getElementById("chipRow");
+  const chips = document.getElementById("chips");
+  chipRow.style.display = state.depts.size ? "flex" : "none";
+  chips.innerHTML = "";
+  state.depts.forEach(d => {
+    const c = document.createElement("span");
+    c.className = "chip";
+    c.innerHTML = d + "<b title='移除'>×</b>";
+    c.querySelector("b").onclick = () => { state.depts.delete(d); if(!state.depts.size) state.cat = "all"; syncCatUI(); renderDeptList(); renderRows(); };
+    chips.appendChild(c);
+  });
+}
+
+function toggleDeptPanel(e){
+  e.stopPropagation();
+  document.getElementById("deptPanel").classList.toggle("open");
+  const s = document.getElementById("deptSearch"); s.value = ""; renderDeptList(); s.focus();
+}
+function closeDeptPanel(){ document.getElementById("deptPanel").classList.remove("open"); }
+document.addEventListener("click", e => {
+  if (!document.getElementById("deptDd")?.contains(e.target)) closeDeptPanel();
+});
+
+function renderDeptList(){
+  const kw = (document.getElementById("deptSearch").value || "").trim();
+  const box = document.getElementById("deptList");
+  box.innerHTML = "";
+  const list = HIS_DEPTS.filter(d => !kw || d.name.includes(kw));
+  if (!list.length){ box.innerHTML = '<div class="dept-none">查無符合的科別</div>'; return; }
+  list.forEach(d => {
+    const label = document.createElement("label");
+    label.className = "dept-item";
+    label.innerHTML = '<input type="checkbox"' + (state.depts.has(d.name) ? " checked" : "") + '> ' + d.name +
+      '<span class="n">' + d.n + ' 筆</span>';
+    label.querySelector("input").onchange = ev => {
+      if (ev.target.checked) state.depts.add(d.name); else state.depts.delete(d.name);
+      if (state.depts.size) state.cat = "__dept__"; else state.cat = "all";
+      syncCatUI(); renderRows();
+    };
+    box.appendChild(label);
+  });
+}
+function selectAllDepts(){
+  const kw = (document.getElementById("deptSearch").value || "").trim();
+  HIS_DEPTS.filter(d => !kw || d.name.includes(kw)).forEach(d => state.depts.add(d.name));
+  if (state.depts.size) state.cat = "__dept__";
+  syncCatUI(); renderDeptList(); renderRows();
+}
+function clearDepts(){ state.depts.clear(); state.cat = "all"; syncCatUI(); renderDeptList(); renderRows(); }
+
+/* ----- 清單 ----- */
+function passCat(r){
+  if (state.depts.size) return r.source === "HIS" && state.depts.has(r.cat);
+  if (state.cat === "all") return true;
+  return r.cat === state.cat;
+}
+
+/* ----- 排序 ----- */
+const SRC_LABEL = s => s === "HIS" ? "HIS 科別" : "通報系統";
+function sortList(list){
+  const k = state.sortKey, dir = state.sortDir;
+  return list.slice().sort((a, b) => {
+    let cmp = 0;
+    if (k === "date") cmp = a.date.localeCompare(b.date);
+    else if (k === "source") cmp = SRC_LABEL(a.source).localeCompare(SRC_LABEL(b.source), "zh-Hant-TW");
+    else if (k === "cat") cmp = a.cat.localeCompare(b.cat, "zh-Hant-TW");
+    else if (k === "doc") cmp = a.doc.localeCompare(b.doc, "zh-Hant-TW") || a.acct.localeCompare(b.acct);
+    if (cmp !== 0) return cmp * dir;
+    return b.date.localeCompare(a.date);
+  });
+}
+function syncSortUI(){
+  document.querySelectorAll("th.sortable").forEach(th => {
+    const on = th.dataset.sort === state.sortKey;
+    th.classList.toggle("sorted", on);
+    th.classList.toggle("desc", on && state.sortDir === -1);
+    th.classList.toggle("asc", on && state.sortDir === 1);
+  });
+}
+document.querySelectorAll("th.sortable").forEach(th => {
+  th.onclick = () => {
+    const key = th.dataset.sort;
+    if (state.sortKey === key) state.sortDir = -state.sortDir;
+    else { state.sortKey = key; state.sortDir = -1; }
+    renderRows();
+  };
+});
+
+function renderRows(){
+  const tbody = document.getElementById("rows");
+  tbody.innerHTML = "";
+  document.getElementById("tableScroll").scrollTop = 0;
+  syncSortUI();
+  const list = sortList(RECORDS.filter(r => inRange(r.date) && passCat(r)));
+  document.getElementById("empty").style.display = list.length ? "none" : "block";
+  document.getElementById("listSummary").textContent = rangeLabel() + " · 共 " + list.length + " 筆";
+  list.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.dataset.id = r.id;
+    if (current && current.id === r.id) tr.classList.add("focused");
+    tr.onclick = () => focusRecord(r.id);
+    tr.innerHTML =
+      '<td class="date">' + r.date + '</td>' +
+      '<td><span class="src-tag ' + r.source + '">' + (r.source === "HIS" ? "HIS 科別" : "通報系統") + '</span></td>' +
+      '<td><span class="tag ' + TAG_CLASS(r.cat) + '">' + r.cat + '</span></td>' +
+      '<td><span class="doc-name">' + r.doc + '</span><span class="doc-acct">' + r.acct + '</span></td>' +
+      '<td>' + r.caseName + '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+/* ----- Focus 與主 TAB ----- */
+function focusRecord(id){
+  current = RECORDS.find(x => x.id === id);
+  document.querySelectorAll("#rows tr").forEach(tr =>
+    tr.classList.toggle("focused", tr.dataset.id === id));
+  const tab = document.getElementById("mainTabDetail");
+  tab.disabled = false;
+  const sel = document.getElementById("selName");
+  sel.style.display = "inline-block";
+  sel.textContent = current.date + " " + current.caseName;
+  fillDetail();
+}
+
+function switchMain(t){
+  if (t === "detail" && !current) return;
+  document.getElementById("mainTabList").classList.toggle("active", t === "list");
+  document.getElementById("mainTabDetail").classList.toggle("active", t === "detail");
+  document.getElementById("listView").classList.toggle("active", t === "list");
+  document.getElementById("detailView").classList.toggle("active", t === "detail");
+  window.scrollTo(0, 0);
+}
+
+/* ----- 處方內容 ----- */
+function fillSoap(prefix, obj){
+  document.getElementById(prefix + "S").textContent = obj.S;
+  document.getElementById(prefix + "O").textContent = obj.O;
+  document.getElementById(prefix + "P").textContent = obj.P;
+  document.getElementById(prefix + "A").innerHTML = obj.A.map(a => {
+    const type = a[2] || "ICD-10";
+    return '<tr><td><span class="icd-type ' + (type === "ICD-9" ? "icd9" : "icd10") + '">' + type + '</span></td>' +
+      '<td><span class="icd-code">' + a[0] + '</span></td><td>' + a[1] + '</td></tr>';
+  }).join("");
+}
+
+function fillDetail(){
+  const r = current;
+  document.getElementById("detailEmpty").style.display = "none";
+  document.getElementById("detailBody").style.display = "block";
+  document.getElementById("dTitle").textContent = r.caseName;
+  document.getElementById("dSub").textContent =
+    r.date + " · " + (r.source === "HIS" ? "HIS 科別：" : "通報系統：") + r.cat +
+    " · 醫師：" + r.doc + "（HIS 帳號 " + r.acct + "） · 紀錄編號 " + r.id;
+  fillSoap("q", r);
+  const isPlan = PLAN_CATS.includes(r.cat);
+  document.getElementById("subTabs").style.display = isPlan ? "flex" : "none";
+  if (isPlan){
+    const visits = r.visits || [];
+    document.getElementById("visitCount").textContent = visits.length;
+    visitClassFilter = "all";
+    document.querySelectorAll(".v-pill").forEach(b => b.classList.toggle("active", b.dataset.vc === "all"));
+    renderVisits(visits);
+  }
+  switchSub("soap");
+}
+
+const V_TAG = c => c === "評估訪視" ? "eval" : (c === "追蹤訪視" ? "follow" : "close");
+let visitClassFilter = "all";
+
+document.getElementById("visitFilter").addEventListener("click", e => {
+  const btn = e.target.closest(".v-pill");
+  if (!btn) return;
+  visitClassFilter = btn.dataset.vc;
+  document.querySelectorAll(".v-pill").forEach(b => b.classList.toggle("active", b === btn));
+  renderVisits(current.visits || []);
+});
+
+function renderVisits(visits){
+  const box = document.getElementById("visitItems");
+  box.innerHTML = "";
+  const none = document.getElementById("visitNone");
+  const grid = document.getElementById("visitSoap");
+  const list = visits.filter(v => visitClassFilter === "all" || v.vClass === visitClassFilter);
+  if (!list.length){
+    none.style.display = "block"; grid.style.display = "none";
+    none.textContent = visits.length ? "此分類無訪視紀錄" : "尚無訪視紀錄";
+    box.innerHTML = '<div class="visit-empty">' + none.textContent + '</div>';
+    return;
+  }
+  none.style.display = "none"; grid.style.display = "grid";
+  list.forEach((v, i) => {
+    const div = document.createElement("div");
+    div.className = "visit-item" + (i === 0 ? " selected" : "");
+    div.onclick = () => {
+      document.querySelectorAll(".visit-item").forEach(el => el.classList.remove("selected"));
+      div.classList.add("selected");
+      fillSoap("v", v);
+    };
+    div.innerHTML = '<div class="v-date">' + v.date + '</div>' +
+      '<div class="v-meta">' + v.vClass + ' · ' + v.staff + '</div>';
+    box.appendChild(div);
+  });
+  fillSoap("v", list[0]);
+}
+
+function switchSub(t){
+  document.getElementById("subTabSoap").classList.toggle("active", t === "soap");
+  document.getElementById("subTabVisits").classList.toggle("active", t === "visits");
+  document.getElementById("paneSoap").classList.toggle("active", t === "soap");
+  document.getElementById("paneVisits").classList.toggle("active", t === "visits");
+}
+</script>
+</body>
+</html>
