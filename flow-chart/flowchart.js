@@ -521,8 +521,9 @@
     return { x: center.x + dx * t, y: center.y + dy * t };
   }
 
-  function layout(model) {
-    var dir = model.direction === 'LR' ? 'LR' : 'TD';
+  // opts.direction 可以在不改原始碼的情況下指定方向（檢視頁的直式/橫式切換用）
+  function layout(model, opts) {
+    var dir = ((opts && opts.direction) || model.direction) === 'LR' ? 'LR' : 'TD';
     var nodes = Array.from(model.nodes.values());
     nodes.forEach(sizeNode);
 
@@ -1210,8 +1211,8 @@
   }
 
   // 產生一張圖的 <svg>。回傳 {svg, width, height, layout}
-  function draw(model) {
-    var lay = layout(model);
+  function draw(model, opts) {
+    var lay = layout(model, opts);
     var titleH = lay.title ? 46 : 0;
     var W = Math.max(lay.width, lay.title ? textWidth(lay.title, 17, 700) + 80 : 0);
     var H = lay.height + titleH;
@@ -1254,11 +1255,11 @@
   }
 
   // 解析 + 繪製並塞進容器
-  function renderInto(container, source) {
+  function renderInto(container, source, opts) {
     var res = parse(source);
     var drawn;
     try {
-      drawn = draw(res.model);
+      drawn = draw(res.model, opts);
     } catch (err) {
       res.errors.push({ line: 0, msg: '繪製失敗：' + (err && err.message ? err.message : err) });
       drawn = draw({ title: '', direction: 'TD', nodes: new Map(), edges: [] });
@@ -1440,6 +1441,25 @@
     return out;
   }
 
+  // 改寫原始碼裡的 direction（沒有就補一行），讓切換方向後匯出與連結都一致
+  function setDirection(text, dir) {
+    dir = dir === 'LR' ? 'LR' : 'TD';
+    var lines = String(text == null ? '' : text).split(/\r?\n/), i;
+    for (i = 0; i < lines.length; i++) {
+      if (/^\s*direction\s*:?\s*\S+/i.test(lines[i])) {
+        lines[i] = lines[i].replace(/^(\s*direction\s*:?\s*)\S+/i, '$1' + dir);
+        return lines.join('\n');
+      }
+    }
+    var at = 0;
+    for (i = 0; i < lines.length; i++) {
+      if (/^\s*title\s+/i.test(lines[i])) { at = i + 1; break; }
+    }
+    lines.splice(at, 0, 'direction ' + dir);
+    if (lines[at + 1] != null && lines[at + 1].trim() !== '') lines.splice(at + 1, 0, '');
+    return lines.join('\n');
+  }
+
   function buildViewURL(text, base) {
     var href = base || new URL('../view/', global.location.href).href;
     return href + (href.indexOf('?') >= 0 ? '&' : '?') + 'src=' + encode(text);
@@ -1479,6 +1499,7 @@
     encode: encode,
     decode: decode,
     sourceFromLocation: sourceFromLocation,
+    setDirection: setDirection,
     buildViewURL: buildViewURL,
     copyText: copyText
   };

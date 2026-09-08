@@ -29,6 +29,20 @@
   .brand{display:flex;align-items:baseline;gap:8px}
   .brand b{font-size:15px}
   .brand span{font-size:12px;color:var(--ink-3)}
+  a.brand{
+    text-decoration:none;color:inherit;padding:6px 8px;margin-left:-8px;border-radius:8px;
+  }
+  a.brand:hover{background:#f2f4f7}
+  a.brand:hover b{color:var(--accent)}
+  .seg{display:inline-flex;background:#f2f4f7;border-radius:8px;padding:3px;gap:2px}
+  .seg button{
+    font-family:inherit;font-size:12.5px;border:0;background:transparent;color:var(--ink-2);
+    padding:5px 11px;border-radius:6px;cursor:pointer;white-space:nowrap;
+  }
+  .seg button:hover{color:var(--ink)}
+  .seg button.on{
+    background:var(--panel);color:var(--ink);font-weight:500;box-shadow:0 1px 2px rgba(16,24,40,.08);
+  }
   .chip{
     font-size:11px;color:var(--ink-2);background:#f2f4f7;border-radius:999px;
     padding:3px 10px;letter-spacing:.3px;
@@ -81,7 +95,7 @@
 <body>
 
 <header>
-  <div class="brand"><b id="docTitle">FlowScript</b><span>流程圖檢視</span></div>
+  <a class="brand" href="../" title="回到 FlowScript 說明首頁"><b id="docTitle">FlowScript</b><span>流程圖檢視</span></a>
   <span class="chip hide-sm">唯讀</span>
   <span class="chip hide-sm" id="stat"></span>
   <div class="spacer"></div>
@@ -101,6 +115,10 @@
     <a class="btn" href="../edit/">前往編輯器</a>
   </div>
   <div class="float-tools" id="tools">
+    <div class="seg" id="dirSeg">
+      <button data-dir="TD" title="由上往下">直式</button>
+      <button data-dir="LR" title="由左往右">橫式</button>
+    </div>
     <button class="btn icon" id="zoomOut" title="縮小">−</button>
     <button class="btn icon" id="zoomIn" title="放大">＋</button>
     <button class="btn" id="zoomFit">符合視窗</button>
@@ -130,8 +148,38 @@
     document.getElementById('empty').classList.add('on');
     document.getElementById('tools').style.display = 'none';
   } else {
-    current = FS.renderInto(canvas, source);
-    vp = FS.attachViewport(current.svg, current.width, current.height);
+    // ?dir=TD|LR：不改原始碼，只覆寫呈現方向
+    var forced = null;
+    try {
+      var q = new URLSearchParams(location.search).get('dir');
+      if (q && /^(TD|TB|LR)$/i.test(q)) forced = q.toUpperCase() === 'LR' ? 'LR' : 'TD';
+    } catch (e) { forced = null; }
+
+    function render() {
+      current = FS.renderInto(canvas, source, forced ? { direction: forced } : null);
+      vp = FS.attachViewport(current.svg, current.width, current.height);
+      var dir = forced || current.model.direction;
+      dirButtons.forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-dir') === dir); });
+    }
+
+    var dirButtons = Array.prototype.slice.call(document.querySelectorAll('#dirSeg button'));
+    dirButtons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var dir = btn.getAttribute('data-dir');
+        if ((forced || current.model.direction) === dir) return;
+        forced = dir;
+        render();
+        try {   // 寫回網址，重新整理或分享時保留
+          var url = new URL(location.href);
+          url.searchParams.set('dir', dir);
+          history.replaceState(null, '', url.toString());
+        } catch (e) { /* ignore */ }
+        document.getElementById('btnEdit').href = editHref();
+        toast(dir === 'LR' ? '已切換為橫式' : '已切換為直式');
+      });
+    });
+
+    render();
 
     document.getElementById('docTitle').textContent = current.model.title || 'FlowScript';
     document.getElementById('stat').textContent =
@@ -147,7 +195,11 @@
         }).join('<br>');
     }
 
-    document.getElementById('btnEdit').href = FS.buildViewURL(source, '../edit/');
+    // 在編輯器開啟時，把目前看到的方向一併帶過去
+    function editHref() {
+      return FS.buildViewURL(forced ? FS.setDirection(source, forced) : source, '../edit/');
+    }
+    document.getElementById('btnEdit').href = editHref();
     document.getElementById('btnCopySrc').addEventListener('click', function () {
       FS.copyText(source).then(function () { toast('原始碼已複製'); },
         function () { toast('複製失敗'); });
