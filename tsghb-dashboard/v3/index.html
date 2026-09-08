@@ -13793,6 +13793,96 @@ document.addEventListener('DOMContentLoaded', () => {
     '松山區':55,'信義區':70,'大安區':90,'中山區':65,'中正區':50,'大同區':45,
     '萬華區':75,'文山區':80,'南港區':60,'內湖區':70,'士林區':65,'北投區':75
   };
+  /* ===== 個案點位圖層：依地址 GPS 座標定位、依初評風險上色 =====
+     原型階段沒有真實個案地址，這裡以各行政區的「實際邊界多邊形」做拒絕取樣
+     產生座標，確保每個點都真的落在該行政區內，之後接上真實資料時，
+     只要把 buildCasePoints() 換成回傳 {id, district, code, level, lng, lat}
+     的真實個案陣列即可，其餘繪製、tooltip、圖例、篩選邏輯都不必改。
+
+     初評風險的分布沿用風險分析頁 riskDatasets.all.scale
+     （低 33.33 / 中 55.56 / 高 11.11），讓兩頁的初評結構一致。
+     以固定亂數種子產生，重新整理不會跳動。 */
+  const GEO_RISK_MIX = { low:33.33, medium:55.56, high:11.11 };
+  const GEO_RISK_LABEL = { low:'低風險（輕度）', medium:'中風險（中度）', high:'高風險（重度）' };
+  const GEO_POINT_R = 3.1;
+  let geoCasePoints = null;
+  let geoCaseSignature = '';
+
+  /* mulberry32：固定種子的偽亂數，確保點位可重現 */
+  function geoRng(seed){
+    return function(){
+      seed = seed + 0x6D2B79F5 | 0;
+      let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  function buildCasePoints(features){
+    const rnd = geoRng(20260904);
+    const points = [];
+    let serial = 0;
+
+    features.forEach(feature=>{
+      const name = feature.properties.TOWNNAME;
+      const total = taipeiDistrictData[name] || 0;
+      if(!total) return;
+
+      /* 依比例配額，餘數用最大餘數法補齊，確保各區三級人數合計等於該區案件數 */
+      const exact = {
+        low: total * GEO_RISK_MIX.low / 100,
+        medium: total * GEO_RISK_MIX.medium / 100,
+        high: total * GEO_RISK_MIX.high / 100
+      };
+      const quota = { low:Math.floor(exact.low), medium:Math.floor(exact.medium), high:Math.floor(exact.high) };
+      let remainder = total - (quota.low + quota.medium + quota.high);
+      Object.keys(exact)
+        .sort((a,b)=>(exact[b]-quota[b])-(exact[a]-quota[a]))
+        .forEach(k=>{ if(remainder>0){ quota[k]++; remainder--; } });
+
+      const bag = [];
+      Object.entries(quota).forEach(([level,count])=>{ for(let i=0;i<count;i++) bag.push(level); });
+      /* 洗牌，避免同一風險等級在區內連成一片 */
+      for(let i=bag.length-1;i>0;i--){
+        const j = Math.floor(rnd()*(i+1));
+        const t = bag[i]; bag[i]=bag[j]; bag[j]=t;
+      }
+
+      const [[minLng,minLat],[maxLng,maxLat]] = d3.geoBounds(feature);
+      const code = String(feature.properties.TOWNCODE);
+      bag.forEach(level=>{
+        let lng, lat, guard = 0;
+        do{
+          lng = minLng + rnd()*(maxLng-minLng);
+          lat = minLat + rnd()*(maxLat-minLat);
+          guard++;
+        } while(!d3.geoContains(feature,[lng,lat]) && guard < 400);
+        points.push({
+          id: 'TP' + String(++serial).padStart(4,'0'),
+          district: name, code, level, lng, lat
+        });
+      });
+    });
+
+    return points;
+  }
+
+  /* 基本資料頁的日期篩選會改寫 taipeiDistrictData，因此用內容簽章判斷是否需重算 */
+  function getCasePoints(features){
+    const signature = features.map(f=>`${f.properties.TOWNNAME}:${taipeiDistrictData[f.properties.TOWNNAME]||0}`).join('|');
+    if(!geoCasePoints || signature !== geoCaseSignature){
+      geoCasePoints = buildCasePoints(features);
+      geoCaseSignature = signature;
+    }
+    return geoCasePoints;
+  }
+
+  function geoRiskBreakdown(districtName){
+    const out = { low:0, medium:0, high:0 };
+    (geoCasePoints||[]).forEach(p=>{ if(!districtName || p.district===districtName) out[p.level]++; });
+    return out;
+  }
+
   const offshoreNames = new Set(['澎湖縣','金門縣','連江縣']);
   let geoTopologyCounties = null;
   let geoTopologyTowns = null;
@@ -13803,6 +13893,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let geoCountyName = null;
   let geoSelectedCode = null;
   let geoZoom = d3.zoomIdentity;
+  let geoPointsMode = false;
   let basicActiveTotal = 420;
 
   // ===== Basic page: 2026-only quick filters =====
@@ -13993,6 +14084,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function geoLegendHtml(values){
+    /* 點位模式：圖例改為初評風險三級，而非案件數熱度 */
+    if(geoPointsMode){
+      const b=geoRiskBreakdown(null);
+      return `<div class="geo-legend-title">初評風險 · 每點為一件通報個案</div>`
+        +`<div class="geo-legend-items">`
+        +`<span><i class="geo-legend-dot" style="background:#e4573f"></i>高風險（重度）${b.high}</span>`
+        +`<span><i class="geo-legend-dot" style="background:#f29a3a"></i>中風險（中度）${b.medium}</span>`
+        +`<span><i class="geo-legend-dot" style="background:#f2c94c"></i>低風險（輕度）${b.low}</span>`
+        +`</div>`;
+    }
     if(geoLevel==='nation'){
       return `<div class="geo-legend-title">通報案件數 · 熱度由多至少</div><div class="geo-legend-items"><span><i style="background:#d94a3a"></i>有通報資料</span><span><i style="background:#e8e1d8"></i>無資料</span></div>`;
     }
@@ -14008,6 +14109,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderNationMap(){
     geoLevel='nation'; geoCountyCode=null; geoCountyName=null; geoSelectedCode=null;
+    /* 全臺層級不畫個案點位，回到縣市熱度圖 */
+    geoPointsMode=false; geoSvg.node().classList.remove('points-mode');
     const mainFeatures=geoCountyFeatures.filter(f=>!offshoreNames.has(f.properties.COUNTYNAME));
     const projection=fitProjection(mainFeatures,900,650,42);
     const path=d3.geoPath(projection);
@@ -14107,17 +14210,41 @@ document.addEventListener('DOMContentLoaded', () => {
       .on('mousemove',(event,d)=>showGeoTooltip(event,d))
       .on('mouseleave',hideGeoTooltip)
       .on('click',(event,d)=>selectGeoRegion(String(d.properties.TOWNCODE)));
+    /* 個案點位圖層：每一筆通報依其地址 GPS 座標落點，顏色代表初評風險。
+       畫在行政區之後、標籤之前，讓行政區名稱仍可讀。 */
+    geoPointsMode = geoCountyCode===TAIPEI_CODE;
+    geoSvg.node().classList.toggle('points-mode', geoPointsMode);
+    if(geoPointsMode){
+      /* 依 低→中→高 排序後再繪製，讓高風險點畫在最上層不被蓋住 */
+      const drawOrder = { low:0, medium:1, high:2 };
+      const casePoints = getCasePoints(features)
+        .slice()
+        .sort((a,b)=>drawOrder[a.level]-drawOrder[b.level]);
+      const layer = geoViewport.append('g').attr('class','geo-points');
+      layer.selectAll('circle').data(casePoints).join('circle')
+        .attr('class',d=>`geo-case ${d.level}`)
+        .attr('data-code',d=>d.code)
+        .attr('cx',d=>projection([d.lng,d.lat])[0])
+        .attr('cy',d=>projection([d.lng,d.lat])[1])
+        .attr('r',GEO_POINT_R)
+        .on('mousemove',(event,d)=>showCaseTooltip(event,d))
+        .on('mouseleave',hideGeoTooltip)
+        .on('click',(event,d)=>{ event.stopPropagation(); selectGeoRegion(d.code); });
+    }
+
     // Labels only for Taipei (keeps dense counties readable in future expansion mode).
     if(geoCountyCode===TAIPEI_CODE){
       geoViewport.selectAll('text').data(features).join('text').attr('class','geo-label')
         .attr('x',d=>path.centroid(d)[0]).attr('y',d=>path.centroid(d)[1]).text(d=>d.properties.TOWNNAME.replace(/區$/,''));
     }
-    updateGeoUi(features); resetGeoZoom();
+    updateGeoUi(features); resetGeoZoom(); applyCasePointScale();
   }
 
   function selectGeoRegion(code){
     geoSelectedCode = geoSelectedCode===code ? null : code;
     geoViewport.selectAll('.geo-region').classed('selected',d=>geoCode(d)===geoSelectedCode).classed('dimmed',d=>geoSelectedCode && geoCode(d)!==geoSelectedCode);
+    /* 選取行政區時，其他區的個案點位一起淡出 */
+    geoViewport.selectAll('.geo-case').classed('dimmed',d=>!!geoSelectedCode && d.code!==geoSelectedCode);
     document.querySelectorAll('.geo-rank-row').forEach(b=>b.classList.toggle('active',b.dataset.code===geoSelectedCode));
   }
 
@@ -14131,7 +14258,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('geoTotalLabel').textContent=geoLevel==='nation'?'全臺總收案件':`${geoCountyName}案件`;
     document.getElementById('geoMapSubtitle').textContent=geoLevel==='nation'?'全臺縣市分布｜目前僅臺北市有通報資料':`${geoCountyName}行政區分布${geoCountyCode===TAIPEI_CODE?'':'｜目前尚無通報資料'}`;
     document.getElementById('geoRankingTitle').textContent=geoLevel==='nation'?'縣市排行':'行政區排行';
-    document.getElementById('geoRankingSub').textContent='依通報案件數排序';
+    document.getElementById('geoRankingSub').textContent=geoPointsMode?'依通報案件數排序｜長條為初評風險組成':'依通報案件數排序';
     document.getElementById('geoFootnote').textContent=geoLevel==='nation'?'點擊縣市可下探至該縣市行政區；無案件資料的縣市仍保留下探能力供未來擴充。':'點擊行政區可固定選取；使用「全臺」麵包屑返回上一層。';
     document.getElementById('geoBreadcrumb').innerHTML = geoLevel==='nation'
       ? `<button type="button" class="geo-crumb active" data-level="nation">全臺</button>`
@@ -14144,7 +14271,24 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderGeoRanking(features){
     const items=features.map(f=>({code:geoCode(f),name:geoName(f),value:geoValue(f)})).sort((a,b)=>(b.value??-1)-(a.value??-1)||a.name.localeCompare(b.name,'zh-Hant'));
     const max=Math.max(1,...items.map(x=>x.value||0));
-    const rankValues=items.map(x=>x.value); geoRanking.innerHTML=items.map((x,i)=>`<button type="button" class="geo-rank-row ${x.value==null?'no-data':geoColorClass(x.value,rankValues)}" data-code="${x.code}"><b class="geo-rank-no">${i+1}</b><span class="geo-rank-name">${x.name}</span><span class="geo-rank-bar"><i style="width:${x.value==null?0:(x.value/max*100).toFixed(1)}%"></i></span><strong class="geo-rank-value">${x.value==null?'—':x.value}</strong></button>`).join('');
+    const rankValues=items.map(x=>x.value);
+    /* 點位模式：長條改為「初評風險組成」堆疊條。
+       原本的長條是案件數熱度（多→紅、少→綠），與點位的風險配色語意衝突，
+       會讓人把「案件多」誤讀成「風險高」。 */
+    if(geoPointsMode){
+      geoRanking.innerHTML=items.map((x,i)=>{
+        const b=geoRiskBreakdown(x.name);
+        const t=Math.max(1,b.low+b.medium+b.high);
+        const seg=(n,cls)=>n?`<i class="${cls}" style="width:${(n/t*100).toFixed(1)}%" title="${GEO_RISK_LABEL[cls]}：${n} 件"></i>`:'';
+        return `<button type="button" class="geo-rank-row risk-mode" data-code="${x.code}">`
+          +`<b class="geo-rank-no">${i+1}</b>`
+          +`<span class="geo-rank-name">${x.name}</span>`
+          +`<span class="geo-rank-bar risk">${seg(b.high,'high')}${seg(b.medium,'medium')}${seg(b.low,'low')}</span>`
+          +`<strong class="geo-rank-value">${x.value==null?'—':x.value}</strong></button>`;
+      }).join('');
+    }else{
+      geoRanking.innerHTML=items.map((x,i)=>`<button type="button" class="geo-rank-row ${x.value==null?'no-data':geoColorClass(x.value,rankValues)}" data-code="${x.code}"><b class="geo-rank-no">${i+1}</b><span class="geo-rank-name">${x.name}</span><span class="geo-rank-bar"><i style="width:${x.value==null?0:(x.value/max*100).toFixed(1)}%"></i></span><strong class="geo-rank-value">${x.value==null?'—':x.value}</strong></button>`).join('');
+    }
     geoRanking.querySelectorAll('.geo-rank-row').forEach(btn=>btn.addEventListener('click',()=>{
       if(geoLevel==='nation'){
         const f=geoCountyFeatures.find(x=>String(x.properties.COUNTYCODE)===btn.dataset.code); if(f) drillCounty(btn.dataset.code,f.properties.COUNTYNAME);
@@ -14159,8 +14303,33 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function hideGeoTooltip(){ geoTooltip.hidden=true; }
 
+  /* 個案點位的 tooltip：顯示編號、行政區、初評風險與座標 */
+  function showCaseTooltip(event,d){
+    const stageRect=geoStage.getBoundingClientRect();
+    geoTooltip.innerHTML=`<div class="geo-tip-title">${d.id}</div>`
+      +`<div class="geo-tip-row"><span>行政區</span><strong>${d.district}</strong></div>`
+      +`<div class="geo-tip-row"><span>初評風險</span><strong class="geo-tip-risk ${d.level}">${GEO_RISK_LABEL[d.level]}</strong></div>`
+      +`<div class="geo-tip-row"><span>座標</span><strong>${d.lat.toFixed(4)}, ${d.lng.toFixed(4)}</strong></div>`;
+    geoTooltip.hidden=false;
+    let x=event.clientX-stageRect.left+14, y=event.clientY-stageRect.top+14;
+    const w=200,h=104;
+    if(x+w>stageRect.width) x-=w+28;
+    if(y+h>stageRect.height) y-=h+28;
+    geoTooltip.style.left=`${x}px`; geoTooltip.style.top=`${y}px`;
+  }
+
+  /* 點位要維持固定的螢幕尺寸，因此半徑與描邊隨縮放倍率反向補償 */
+  function applyCasePointScale(){
+    if(!geoPointsMode) return;
+    const k=geoZoom.k||1;
+    geoViewport.selectAll('.geo-case')
+      .attr('r',GEO_POINT_R/k)
+      .attr('stroke-width',0.9/k);
+  }
+
   const geoZoomBehavior=d3.zoom().scaleExtent([1,5]).on('zoom',event=>{
     geoZoom=event.transform; geoViewport.attr('transform',geoZoom); geoStage.classList.toggle('draggable',geoZoom.k>1); document.getElementById('geoZoomReset').textContent=`${Math.round(geoZoom.k*100)}%`;
+    applyCasePointScale();
   });
   geoSvg.call(geoZoomBehavior).on('dblclick.zoom',null);
   function resetGeoZoom(){ geoSvg.transition().duration(180).call(geoZoomBehavior.transform,d3.zoomIdentity); }
@@ -21979,4 +22148,101 @@ img{ max-width:100%; height:auto; }
   #efficiency [data-eff-panel="overview"] .eff-v86-jump-metrics b{ font-size:21px !important; }
   #efficiency [data-eff-panel="overview"] .eff-v79-risk-compare{ min-height:190px !important; }
 }
+</style>
+
+
+<style id="v87-geo-case-points">
+/* =========================================================================
+   v87 — 區域分布圖改為「個案點位圖」
+   -------------------------------------------------------------------------
+   原本是以行政區為單位的面量圖（choropleth），依案件數多寡上色。
+   改為每一筆通報個案依其地址 GPS 座標落一個點，顏色代表初評風險：
+       高風險（重度）#e4573f ／ 中風險（中度）#f29a3a ／ 低風險（輕度）#f2c94c
+   色票與「通報案件風險分析」頁的 .risk-dot / .risk-seg 一致。
+
+   底圖在點位模式下改為中性淺色，行政區界只保留輪廓，
+   否則面量色會與點位的風險色互相干擾、看不出點。
+   ========================================================================= */
+
+/* ---------- 點位模式下的底圖：去除熱度填色，只留輪廓 ---------- */
+#districtMapDialog .geo-svg.points-mode .geo-region,
+#districtMapDialog .geo-svg.points-mode .geo-region.no-data,
+#districtMapDialog .geo-svg.points-mode .geo-region.has-data,
+#districtMapDialog .geo-svg.points-mode .geo-region.level-1,
+#districtMapDialog .geo-svg.points-mode .geo-region.level-2,
+#districtMapDialog .geo-svg.points-mode .geo-region.level-3,
+#districtMapDialog .geo-svg.points-mode .geo-region.level-4{
+  fill:#f4f8fa !important;
+  stroke:#c3d2dd !important;
+}
+#districtMapDialog .geo-svg.points-mode .geo-region.selected{
+  fill:#e8f2f8 !important;
+  stroke:#7fa8c4 !important;
+}
+#districtMapDialog .geo-svg.points-mode .geo-region.dimmed{
+  opacity:.55;
+}
+/* 底圖變淺後，行政區名稱要加深才讀得到 */
+#districtMapDialog .geo-svg.points-mode .geo-label{
+  fill:#5b6b7c !important;
+  paint-order:stroke;
+  stroke:rgba(255,255,255,.9);
+  stroke-width:2.4px;
+  stroke-linejoin:round;
+}
+
+/* ---------- 個案點位 ---------- */
+#districtMapDialog .geo-points{ pointer-events:auto; }
+#districtMapDialog .geo-case{
+  stroke:#fff;
+  stroke-width:.9;
+  fill-opacity:.88;
+  cursor:pointer;
+  transition:fill-opacity .12s ease;
+}
+#districtMapDialog .geo-case.high{   fill:#e4573f; }
+#districtMapDialog .geo-case.medium{ fill:#f29a3a; }
+#districtMapDialog .geo-case.low{    fill:#f2c94c; }
+/* 高風險畫在最上層不易被蓋住 */
+#districtMapDialog .geo-case.high{ fill-opacity:.95; }
+#districtMapDialog .geo-case:hover{
+  fill-opacity:1;
+  stroke:#20303f;
+}
+#districtMapDialog .geo-case.dimmed{
+  fill-opacity:.16;
+  stroke-opacity:.3;
+  pointer-events:none;
+}
+
+/* ---------- 圖例的圓點樣式（原本是方塊色塊） ---------- */
+#districtMapDialog .geo-legend-dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  border:1px solid #fff;
+  box-shadow:0 0 0 1px rgba(32,48,63,.18);
+}
+
+/* ---------- 右側排行：點位模式改為風險組成堆疊條 ---------- */
+#districtMapDialog .geo-rank-bar.risk{
+  display:flex;
+  overflow:hidden;
+}
+#districtMapDialog .geo-rank-bar.risk>i{
+  display:block;
+  height:100%;
+  border-radius:0;
+}
+#districtMapDialog .geo-rank-bar.risk>i.high{   background:#e4573f !important; }
+#districtMapDialog .geo-rank-bar.risk>i.medium{ background:#f29a3a !important; }
+#districtMapDialog .geo-rank-bar.risk>i.low{    background:#f2c94c !important; }
+#districtMapDialog .geo-rank-bar.risk>i:first-child{ border-radius:999px 0 0 999px; }
+#districtMapDialog .geo-rank-bar.risk>i:last-child{  border-radius:0 999px 999px 0; }
+#districtMapDialog .geo-rank-bar.risk>i:only-child{  border-radius:999px; }
+
+/* ---------- tooltip 的風險文字上色 ---------- */
+#districtMapDialog .geo-tip-risk.high{   color:#e4573f; }
+#districtMapDialog .geo-tip-risk.medium{ color:#d9822b; }
+#districtMapDialog .geo-tip-risk.low{    color:#b9911f; }
 </style>
