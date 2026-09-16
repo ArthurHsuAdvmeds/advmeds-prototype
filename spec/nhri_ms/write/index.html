@@ -2593,6 +2593,8 @@
   .mphr-field:focus-within{box-shadow:inset 0 0 0 1px var(--green-300)}
   .mphr-field input,.mphr-field select{flex:1;min-width:0;border:none;outline:none;background:transparent;font-family:inherit;font-size:14px;color:var(--grey-900);height:100%}
   .mphr-field input::placeholder{color:var(--grey-500)}
+  .ro-field{background:var(--grey-100);box-shadow:inset 0 0 0 1px var(--grey-300)}
+  .ro-field > span{flex:1;min-width:0;font-size:14px;font-weight:700;color:var(--grey-900)}
   .mphr-suffix{flex-shrink:0;font-size:13px;color:var(--grey-500);padding-left:6px}
   .fld{margin-bottom:16px}
   .fld > label{display:block;font-size:14px;font-weight:700;color:var(--grey-900);margin-bottom:8px}
@@ -2680,35 +2682,35 @@
         </div>
         <div class="fld">
           <label style="{{ lblBmi }}">BMI（kg/m²）</label>
-          <div class="mphr-field" style="background:var(--grey-100);box-shadow:inset 0 0 0 1px var(--grey-300)">
-            <span style="flex:1;font-size:14px;font-weight:700;color:var(--grey-900)">{{ bmiStr }}</span>
+          <div class="mphr-field ro-field" style="{{ boxBmi }}">
+            <span style="{{ valBmi }}">{{ bmiStr }}</span>
           </div>
           <div style="font-size:12px;color:var(--grey-600);margin-top:6px">{{ refBmi }}</div>
         </div>
         <div class="fld">
-          <label style="{{ lblWaist }}">腰圍（cm）</label>
-          <div class="mphr-field"><input type="number" value="{{ waist }}" sc-camel-on-change="{{ upd_waist }}" placeholder="0"></div>
+          <label style="{{ lblWaist }}">腰圍（cm）<span class="req">*</span></label>
+          <div class="mphr-field" style="{{ boxEditWaist }}"><input type="number" value="{{ waist }}" sc-camel-on-change="{{ upd_waist }}" placeholder="0" style="{{ valWaist }}"></div>
           <div style="font-size:12px;color:var(--grey-600);margin-top:6px">{{ refWaist }}</div>
         </div>
         <div class="fld">
           <label style="{{ lblGrip }}">握力（較佳值，kg）<span class="req">*</span></label>
-          <div class="mphr-field"><input type="number" value="{{ grip }}" sc-camel-on-change="{{ upd_grip }}" placeholder="0"></div>
+          <div class="mphr-field" style="{{ boxEditGrip }}"><input type="number" value="{{ grip }}" sc-camel-on-change="{{ upd_grip }}" placeholder="0" style="{{ valGrip }}"></div>
           <div style="font-size:12px;color:var(--grey-600);margin-top:6px">{{ refGrip }}</div>
         </div>
         <div class="fld">
-          <label style="{{ lblCalfL }}">左小腿圍（cm）</label>
-          <div class="mphr-field"><input type="number" value="{{ calfL }}" sc-camel-on-change="{{ upd_calfL }}" placeholder="0"></div>
+          <label style="{{ lblCalfL }}">左小腿圍（cm）<span class="req">*</span></label>
+          <div class="mphr-field" style="{{ boxEditCalfL }}"><input type="number" value="{{ calfL }}" sc-camel-on-change="{{ upd_calfL }}" placeholder="0" style="{{ valCalfL }}"></div>
           <div style="font-size:12px;color:var(--grey-600);margin-top:6px">{{ refCalf }}</div>
         </div>
         <div class="fld">
-          <label style="{{ lblCalfR }}">右小腿圍（cm）</label>
-          <div class="mphr-field"><input type="number" value="{{ calfR }}" sc-camel-on-change="{{ upd_calfR }}" placeholder="0"></div>
+          <label style="{{ lblCalfR }}">右小腿圍（cm）<span class="req">*</span></label>
+          <div class="mphr-field" style="{{ boxEditCalfR }}"><input type="number" value="{{ calfR }}" sc-camel-on-change="{{ upd_calfR }}" placeholder="0" style="{{ valCalfR }}"></div>
           <div style="font-size:12px;color:var(--grey-600);margin-top:6px">{{ refCalf }}</div>
         </div>
         <div class="fld">
           <label style="{{ lblWaistCalf }}">腰腿比</label>
-          <div class="mphr-field" style="background:var(--grey-100);box-shadow:inset 0 0 0 1px var(--grey-300)">
-            <span style="flex:1;font-size:14px;font-weight:700;color:var(--grey-900)">{{ waistCalfStr }}</span>
+          <div class="mphr-field ro-field" style="{{ boxWaistCalf }}">
+            <span style="{{ valWaistCalf }}">{{ waistCalfStr }}</span>
           </div>
           <div style="font-size:12px;color:var(--grey-600);margin-top:6px">腰圍 ÷ 較粗小腿圍（{{ thickCalfLabel }}）；{{ refWaistCalf }}</div>
         </div>
@@ -3008,21 +3010,33 @@ class Component extends DCLogic {
       color: bad ? "var(--red-500)" : "var(--grey-900)",
     });
 
-    // 身體量測欄位：數值超出標準值時標題轉紅（未填則維持原色）
-    const outOfRange = (bad) => bad ? { color: "var(--red-500)" } : {};
-    const lblBmi = outOfRange(bmi != null && (bmi < 18.5 || bmi >= 24));
-    const lblWaist = outOfRange(waist != null && waist >= (male ? 90 : 80));
-    const lblGrip = outOfRange(lowStrength);
-    const lblCalfL = outOfRange(cL != null && cL < calfT);
-    const lblCalfR = outOfRange(cR != null && cR < calfT);
-    const lblWaistCalf = outOfRange(obese);
+    // 身體量測欄位：數值超出標準值時整格轉紅（標題、框線、數值），未填則維持原色
+    const outOfRange = {
+      Bmi: bmi != null && (bmi < 18.5 || bmi >= 24),
+      Waist: waist != null && waist >= (male ? 90 : 80),
+      Grip: lowStrength,
+      CalfL: cL != null && cL < calfT,
+      CalfR: cR != null && cR < calfT,
+      WaistCalf: obese,
+    };
+    const fieldStyles = {};
+    for (const [k, bad] of Object.entries(outOfRange)) {
+      fieldStyles["lbl" + k] = bad ? { color: "var(--red-500)" } : {};
+      // 唯讀格（BMI／腰腿比）超標時整格染紅底
+      fieldStyles["box" + k] = bad ? {
+        background: "var(--red-50)", boxShadow: "inset 0 0 0 1px var(--red-300)",
+      } : {};
+      // 填寫格維持白底，只換框線
+      fieldStyles["boxEdit" + k] = bad ? { boxShadow: "inset 0 0 0 1px var(--red-300)" } : {};
+      fieldStyles["val" + k] = bad ? { color: "var(--red-500)" } : {};
+    }
     const fmt = (v, d) => v == null ? "—" : v.toFixed(d);
 
     return {
       ...s, ageGroup, isMale: male, isFemale: !male,
       waistCalfStr: fmt(waistCalf, 2), thickCalfLabel,
       refBmi, refWaist, refGrip, refCalf, refWaistCalf,
-      lblBmi, lblWaist, lblGrip, lblCalfL, lblCalfR, lblWaistCalf,
+      ...fieldStyles,
       bmiStr: fmt(bmi, 1), asmStr: fmt(asm, 2), smiStr: fmt(smi, 2), asmBmiStr: fmt(asmBmi, 3),
       bannerStyle, bannerTitle, bannerDetail,
       bannerTitleStyle: { fontSize: 15, fontWeight: 700, marginBottom: 8, color: tc.tx },

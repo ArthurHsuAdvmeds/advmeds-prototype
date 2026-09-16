@@ -2721,32 +2721,32 @@
         </div>
         <div class="fld">
           <label style="{{ lblBmi }}">BMI（kg/m²）</label>
-          <div class="mphr-field ro-field"><span>{{ bmiStr }}</span></div>
+          <div class="mphr-field ro-field" style="{{ boxBmi }}"><span style="{{ valBmi }}">{{ bmiStr }}</span></div>
           <div class="hint">{{ refBmi }}</div>
         </div>
         <div class="fld">
           <label style="{{ lblWaist }}">腰圍（cm）</label>
-          <div class="mphr-field ro-field"><span>{{ waist }}</span></div>
+          <div class="mphr-field ro-field" style="{{ boxWaist }}"><span style="{{ valWaist }}">{{ waist }}</span></div>
           <div class="hint">{{ refWaist }}</div>
         </div>
         <div class="fld">
           <label style="{{ lblGrip }}">握力（較佳值，kg）</label>
-          <div class="mphr-field ro-field"><span>{{ grip }}</span></div>
+          <div class="mphr-field ro-field" style="{{ boxGrip }}"><span style="{{ valGrip }}">{{ grip }}</span></div>
           <div class="hint">{{ refGrip }}</div>
         </div>
         <div class="fld">
           <label style="{{ lblCalfL }}">左小腿圍（cm）</label>
-          <div class="mphr-field ro-field"><span>{{ calfL }}</span></div>
+          <div class="mphr-field ro-field" style="{{ boxCalfL }}"><span style="{{ valCalfL }}">{{ calfL }}</span></div>
           <div class="hint">{{ refCalf }}</div>
         </div>
         <div class="fld">
           <label style="{{ lblCalfR }}">右小腿圍（cm）</label>
-          <div class="mphr-field ro-field"><span>{{ calfR }}</span></div>
+          <div class="mphr-field ro-field" style="{{ boxCalfR }}"><span style="{{ valCalfR }}">{{ calfR }}</span></div>
           <div class="hint">{{ refCalf }}</div>
         </div>
         <div class="fld">
           <label style="{{ lblWaistCalf }}">腰腿比</label>
-          <div class="mphr-field ro-field"><span>{{ waistCalfStr }}</span></div>
+          <div class="mphr-field ro-field" style="{{ boxWaistCalf }}"><span style="{{ valWaistCalf }}">{{ waistCalfStr }}</span></div>
           <div class="hint">腰圍 ÷ 較粗小腿圍（{{ thickCalfLabel }}）；{{ refWaistCalf }}</div>
         </div>
       </div>
@@ -2983,21 +2983,33 @@ class Component extends DCLogic {
       color: bad ? "var(--red-500)" : "var(--grey-900)",
     });
 
-    // 身體量測欄位：數值超出標準值時標題轉紅（未填則維持原色）
-    const outOfRange = (bad) => bad ? { color: "var(--red-500)" } : {};
-    const lblBmi = outOfRange(bmi != null && (bmi < 18.5 || bmi >= 24));
-    const lblWaist = outOfRange(waist != null && waist >= (male ? 90 : 80));
-    const lblGrip = outOfRange(lowStrength);
-    const lblCalfL = outOfRange(cL != null && cL < calfT);
-    const lblCalfR = outOfRange(cR != null && cR < calfT);
-    const lblWaistCalf = outOfRange(obese);
+    // 身體量測欄位：數值超出標準值時整格轉紅（標題、框線、數值），未填則維持原色
+    const outOfRange = {
+      Bmi: bmi != null && (bmi < 18.5 || bmi >= 24),
+      Waist: waist != null && waist >= (male ? 90 : 80),
+      Grip: lowStrength,
+      CalfL: cL != null && cL < calfT,
+      CalfR: cR != null && cR < calfT,
+      WaistCalf: obese,
+    };
+    const fieldStyles = {};
+    for (const [k, bad] of Object.entries(outOfRange)) {
+      fieldStyles["lbl" + k] = bad ? { color: "var(--red-500)" } : {};
+      // 唯讀格（BMI／腰腿比）超標時整格染紅底
+      fieldStyles["box" + k] = bad ? {
+        background: "var(--red-50)", boxShadow: "inset 0 0 0 1px var(--red-300)",
+      } : {};
+      // 填寫格維持白底，只換框線
+      fieldStyles["boxEdit" + k] = bad ? { boxShadow: "inset 0 0 0 1px var(--red-300)" } : {};
+      fieldStyles["val" + k] = bad ? { color: "var(--red-500)" } : {};
+    }
     const fmt = (v, d) => v == null ? "—" : v.toFixed(d);
 
     return {
       ...s, ageGroup, sexLabel, asmModeLabel,
       waistCalfStr: fmt(waistCalf, 2), thickCalfLabel,
       refBmi, refWaist, refGrip, refCalf, refWaistCalf,
-      lblBmi, lblWaist, lblGrip, lblCalfL, lblCalfR, lblWaistCalf,
+      ...fieldStyles,
       bmiStr: fmt(bmi, 1), asmStr: fmt(asm, 2), smiStr: fmt(smi, 2), asmBmiStr: fmt(asmBmi, 3),
       bannerStyle, bannerTitle, bannerDetail,
       bannerTitleStyle: { fontSize: 15, fontWeight: 700, marginBottom: 8, color: tc.tx },
