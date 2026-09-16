@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>肌少症評估量表 — 原型</title>
+<style>
+  :root{
+    /* 與原型頁共用的設計 token */
+    --green-50:#F0FBD7;--green-100:#C3EC85;--green-300:#7BC235;--green-500:#5FA626;--green-700:#478B1A;
+    --teal-50:#D0FCF9;--teal-300:#19AAD1;--teal-500:#1285B3;
+    --grey-0:#FFFFFF;--grey-100:#F0F0F0;--grey-200:#E0E0E0;--grey-300:#D8D8D8;--grey-400:#C4C4C4;
+    --grey-500:#9E9E9E;--grey-600:#818181;--grey-700:#666666;--grey-900:#333333;
+    --radius-md:4px;--radius-lg:5px;
+    --shadow-card:0px 4px 6px -4px rgba(0,0,0,.1),0px 10px 15px -3px rgba(0,0,0,.1);
+    --font-body:"Noto Sans TC",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;min-height:100vh;padding:56px 20px;
+    background:var(--grey-100);color:var(--grey-900);font-family:var(--font-body);
+  }
+  .wrap{max-width:720px;margin:0 auto}
+
+  header{margin-bottom:28px}
+  h1{margin:0 0 8px;font-size:26px;font-weight:700}
+  .sub{font-size:14px;color:var(--grey-700);line-height:1.7}
+  .tag{
+    display:inline-block;margin-top:12px;padding:4px 12px;border-radius:100px;
+    background:var(--green-50);color:var(--green-700);font-size:12px;font-weight:700;
+  }
+
+  .card{
+    display:block;text-decoration:none;color:inherit;
+    background:var(--grey-0);border-radius:var(--radius-lg);
+    box-shadow:inset 0 0 0 1px var(--grey-200),var(--shadow-card);
+    padding:22px 24px;margin-bottom:14px;
+    transition:box-shadow .15s,transform .15s;
+  }
+  a.card:hover{box-shadow:inset 0 0 0 1px var(--green-300),var(--shadow-card);transform:translateY(-1px)}
+  a.card:focus-visible{outline:2px solid var(--green-300);outline-offset:2px}
+
+  .row{display:flex;align-items:center;gap:16px}
+  .icon{
+    flex-shrink:0;width:44px;height:44px;border-radius:var(--radius-lg);
+    display:flex;align-items:center;justify-content:center;color:var(--grey-0);
+  }
+  .icon.write{background:var(--green-300)}
+  .icon.result{background:var(--teal-300)}
+  .icon.zip{background:var(--grey-700)}
+  .body{flex:1;min-width:0}
+  .title{font-size:16px;font-weight:700;margin-bottom:4px}
+  .desc{font-size:13px;color:var(--grey-700);line-height:1.6}
+  .chev{flex-shrink:0;color:var(--grey-400)}
+
+  .meta{
+    margin-top:12px;padding-top:12px;border-top:1px solid var(--grey-200);
+    font-size:12px;color:var(--grey-600);line-height:1.8;
+  }
+  .meta b{color:var(--grey-900)}
+  code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px;background:var(--grey-100);padding:1px 5px;border-radius:var(--radius-md);
+  }
+  footer{margin-top:24px;font-size:12px;color:var(--grey-600);line-height:1.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>肌少症評估量表</h1>
+    <div class="sub">國家衛生研究院 — 依 AWGS 2025 共識實作的評估量表原型。</div>
+    <span class="tag">AWGS 2025</span>
+  </header>
+
+  <a class="card" href="./write/">
+    <div class="row">
+      <div class="icon write">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 20h4l10-10a2.83 2.83 0 1 0-4-4L4 16v4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M13.5 6.5l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="body">
+        <div class="title">填寫頁</div>
+        <div class="desc">輸入身體量測與肌肉量資料，即時計算 SMI、ASM/BMI 並判定肌少症風險。</div>
+      </div>
+      <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </a>
+
+  <a class="card" href="./result/">
+    <div class="row">
+      <div class="icon result">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="6" y="3" width="12" height="4" rx="1.5" stroke="currentColor" stroke-width="2"/>
+          <path d="M6 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1" stroke="currentColor" stroke-width="2"/>
+          <path d="M8 12l2.5 2.5L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="body">
+        <div class="title">結果頁</div>
+        <div class="desc">已完成評估的唯讀檢視，評估結果置於最上方，異常項目以紅色標示。</div>
+      </div>
+      <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </a>
+
+  <a class="card" href="./nhri-ms-spec.zip" download>
+    <div class="row">
+      <div class="icon zip">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="body">
+        <div class="title">下載完整素材與 Spec</div>
+        <div class="desc">兩頁 HTML、共用 JS 與字型、以及 <code>CLAUDE.md</code> 規格文件，解壓後可直接離線開啟。</div>
+      </div>
+      <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="meta">
+      <b>nhri-ms-spec.zip</b>　<span id="zipsize"></span><br>
+      內含 <code>CLAUDE.md</code>（規格與判定邏輯）、<code>write/</code>、<code>result/</code>、<code>assets/</code>（dc-runtime、設計系統、React、Noto Sans TC）。無需 build，解壓後直接開啟 HTML 即可。
+    </div>
+  </a>
+
+  <footer>
+    判定門檻依 AWGS 2025 共識（BIA 量測）。頁面內的個案資料為展示用虛構資料，非真實病患紀錄。
+  </footer>
+
+</div>
+
+<script>
+  // 顯示 zip 實際大小；取不到就整段留白，不要顯示錯的數字
+  fetch('./nhri-ms-spec.zip', { method: 'HEAD' })
+    .then(function (r) {
+      var n = r.ok && r.headers.get('content-length');
+      if (!n) return;
+      document.getElementById('zipsize').textContent = (n / 1048576).toFixed(1) + ' MB';
+    })
+    .catch(function () {});
+</script>
+</body>
+</html>
