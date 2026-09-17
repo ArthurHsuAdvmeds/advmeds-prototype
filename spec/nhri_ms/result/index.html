@@ -2682,22 +2682,25 @@
 
       <h2 style="margin: 0 0 20px; font-size: 17px; font-weight: 700; color: var(--color-primary); padding-bottom: 4px; border-bottom: 1px solid var(--grey-200)">基本資料</h2>
 
+      <div class="fld">
+        <label>姓名</label>
+        <div class="mphr-field ro-field" style="width: 200px"><span>{{ name }}</span></div>
+      </div>
+
+      <div class="fld">
+        <label>性別</label>
+        <div class="mphr-field ro-field" style="width: 200px"><span>{{ sexLabel }}</span></div>
+      </div>
+
+      <div class="fld">
+        <label>身分證字號</label>
+        <div class="mphr-field ro-field" style="width: 200px"><span>{{ pid }}</span></div>
+      </div>
+
       <div class="two-col">
         <div class="fld">
-          <label>姓名</label>
-          <div class="mphr-field ro-field"><span>{{ name }}</span></div>
-        </div>
-        <div class="fld">
-          <label>性別</label>
-          <div class="mphr-field ro-field"><span>{{ sexLabel }}</span></div>
-        </div>
-        <div class="fld">
-          <label>身分證字號</label>
-          <div class="mphr-field ro-field"><span>{{ pid }}</span></div>
-        </div>
-        <div class="fld">
           <label>年齡（歲）</label>
-          <div class="mphr-field ro-field"><span>{{ age }}</span></div>
+          <div class="mphr-field ro-field" style="width: 200px"><span>{{ age }}</span></div>
           <div class="hint">年齡分組：<b style="color:var(--grey-900)">{{ ageGroup }}</b></div>
         </div>
       </div>

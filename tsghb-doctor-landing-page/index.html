@@ -5126,85 +5126,100 @@
   a { color:#19aad1; text-decoration:none; }
   a:hover { color:#0c6496; }
   @keyframes dcFade { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:none;} }
+
+  /* 版面：手機／平板為一般捲動頁 */
+  .lp-root { min-height:100vh; display:flex; flex-direction:column; background:#f8f8f8; }
+  .lp-hero { display:flex; flex-wrap:wrap; align-items:stretch; background:#96daec; }
+  .lp-hero-title { flex:1 1 320px; min-width:min(100%,300px); background:linear-gradient(90deg,#19aad1 0%,#8fd7ea 100%); padding:clamp(32px,6vw,72px) clamp(20px,5vw,64px); display:flex; align-items:center; }
+  .lp-hero-title h1 { margin:0; color:#fff; font-weight:700; font-size:clamp(34px,5.6vw,68px); line-height:1.22; letter-spacing:.04em; text-shadow:0 1px 2px rgba(0,80,110,.18); }
+  .lp-hero-art { flex:1 1 440px; min-width:min(100%,320px); display:flex; }
+  .lp-hero-art img { display:block; width:100%; height:100%; min-height:200px; object-fit:cover; object-position:left center; }
+  .lp-main { flex:1; max-width:1280px; width:100%; margin:0 auto; padding:clamp(28px,5vw,56px) clamp(16px,3vw,32px) 64px; box-sizing:border-box; }
+  .lp-grid { display:grid; gap:clamp(20px,2.5vw,32px); grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); }
+  .lp-card { background:#fff; border-radius:5px; box-shadow:0 1px 4px rgba(0,0,0,.12); padding:clamp(16px,2vw,24px); display:flex; flex-direction:column; gap:20px; transition:box-shadow .2s ease,transform .2s ease; }
+  .lp-media { display:block; border-radius:4px; overflow:hidden; }
+  .lp-media img { display:block; width:100%; aspect-ratio:631/434; object-fit:cover; }
+  .lp-body { display:flex; flex-direction:column; gap:12px; align-items:center; text-align:center; padding:0 4px 4px; }
+  .lp-body h2 { margin:0; font-size:clamp(20px,2vw,26px); font-weight:700; letter-spacing:.02em; }
+  .lp-body p { margin:0; font-size:15px; line-height:1.7; color:#666; text-wrap:pretty; max-width:34ch; }
+  .lp-btn { margin-top:6px; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 24px; border-radius:100px; color:#fff; font-size:15px; font-weight:500; letter-spacing:.04em; }
+  .lp-footer { background:#fff; border-top:1px solid #eee; padding:24px 20px; }
+
+  /* 電腦瀏覽：整頁收在一個視窗高度內，不需捲動 */
+  @media (min-width:1024px) and (min-height:600px) {
+    .lp-root { height:100vh; height:100dvh; min-height:0; }
+    .lp-hero { flex:none; height:clamp(200px,34vh,380px); flex-wrap:nowrap; }
+    .lp-hero-title { padding:0 clamp(32px,5vw,72px); }
+    .lp-hero-title h1 { font-size:min(5.6vw,7.5vh); }
+    .lp-hero-art img { min-height:0; }
+    .lp-main { flex:1 1 auto; min-height:0; display:flex; max-width:1440px; padding:clamp(16px,3.5vh,40px) 32px; }
+    .lp-grid { flex:1; min-height:0; grid-template-columns:repeat(3,1fr); gap:32px; }
+    .lp-card { min-height:0; gap:clamp(10px,1.8vh,20px); padding:clamp(12px,2vh,24px); }
+    .lp-media { flex:1 1 auto; min-height:0; display:flex; justify-content:center; background:transparent !important; }
+    .lp-media img { width:auto; max-width:100%; height:100%; border-radius:4px; }
+    .lp-body { flex:none; gap:clamp(4px,1vh,12px); }
+    .lp-body p { max-width:none; }
+    .lp-btn { margin-top:clamp(0px,.5vh,6px); }
+    .lp-footer { flex:none; padding:14px 20px; }
+  }
 </style>
 </helmet>
-<div style="min-height:100vh;display:flex;flex-direction:column;background:#f8f8f8">
+<div class="lp-root">
 
   <header style="position:sticky;top:0;z-index:40;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.08)">
     <div style="max-width:1280px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:14px">
       <img src="./assets/img/logo-tsghb.png" alt="三軍總醫院北投分院" style="width:44px;height:44px;object-fit:contain;flex:none">
       <span style="font-size:clamp(17px,2.4vw,22px);font-weight:700;letter-spacing:.02em;color:#333">精神醫療快速應變平台</span>
-      <nav style="margin-left:auto;display:flex;align-items:center;gap:4px">
-        <button type="button" sc-camel-on-click="{{ toggleMenu }}" aria-label="主選單" aria-expanded="{{ menuOpen }}" style="width:44px;height:44px;display:grid;place-items:center;background:none;border:0;border-radius:4px;cursor:pointer;color:#333" style-hover="background:#f0f0f0">
-          <span style="display:flex;flex-direction:column;gap:5px;width:24px">
-            <span style="display:block;height:2.5px;background:currentColor;border-radius:2px"></span>
-            <span style="display:block;height:2.5px;background:currentColor;border-radius:2px"></span>
-            <span style="display:block;height:2.5px;background:currentColor;border-radius:2px"></span>
-          </span>
-        </button>
-      </nav>
     </div>
-    <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
-      <div style="border-top:1px solid #eee;background:#fff">
-        <div style="max-width:1280px;margin:0 auto;padding:8px 20px 16px;display:flex;flex-direction:column;gap:2px">
-          <sc-for list="{{ items }}" as="item" hint-placeholder-count="3">
-            <a href="{{ item.href }}" target="{{ item.target }}" sc-camel-on-click="{{ item.onClick }}" style="display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;border-radius:4px;font-size:16px;font-weight:500;color:#333" style-hover="background:#f0fbff;color:#0c6496">
-              <span style="width:8px;height:8px;border-radius:50%;background:{{ item.color }};flex:none"></span>
-              {{ item.title }}
-            </a>
-          </sc-for>
-        </div>
-      </div>
-    </sc-if>
   </header>
 
-  <section style="display:flex;flex-wrap:wrap;align-items:stretch;background:#96daec">
-    <div style="flex:1 1 320px;min-width:min(100%,300px);background:linear-gradient(90deg,#19aad1 0%,#8fd7ea 100%);padding:clamp(32px,6vw,72px) clamp(20px,5vw,64px);display:flex;align-items:center">
-      <h1 style="margin:0;color:#fff;font-weight:700;font-size:clamp(34px,5.6vw,68px);line-height:1.22;letter-spacing:.04em;text-shadow:0 1px 2px rgba(0,80,110,.18)">精神醫療<br>快速應變平台</h1>
+  <section class="lp-hero">
+    <div class="lp-hero-title">
+      <h1>精神醫療<br>快速應變平台</h1>
     </div>
-    <div style="flex:1 1 440px;min-width:min(100%,320px);display:flex">
-      <img src="./assets/img/hero.png" alt="醫護、警消與社工協作示意" style="display:block;width:100%;height:100%;min-height:200px;object-fit:cover;object-position:left center">
+    <div class="lp-hero-art">
+      <img src="./assets/img/hero.png" alt="醫護、警消與社工協作示意">
     </div>
   </section>
 
-  <main style="flex:1;max-width:1280px;width:100%;margin:0 auto;padding:clamp(28px,5vw,56px) clamp(16px,3vw,32px) 64px;box-sizing:border-box">
-    <div style="display:grid;gap:clamp(20px,2.5vw,32px);grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))">
-      <article style="background:#fff;border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.12);padding:clamp(16px,2vw,24px);display:flex;flex-direction:column;gap:20px;transition:box-shadow .2s ease,transform .2s ease" style-hover="box-shadow:0 10px 15px -3px rgba(0,0,0,.12),0 4px 6px -4px rgba(0,0,0,.1);transform:translateY(-2px)">
-        <a href="https://mphr-tsghb.docloop.pro/patient-groups/list?" target="_blank" rel="noopener" style="display:block;border-radius:4px;overflow:hidden;background:#19aad1">
-          <img src="./assets/img/feature-case-list.png" alt="個案清單" style="display:block;width:100%;aspect-ratio:631/434;object-fit:cover">
+  <main class="lp-main">
+    <div class="lp-grid">
+      <article class="lp-card" style-hover="box-shadow:0 10px 15px -3px rgba(0,0,0,.12),0 4px 6px -4px rgba(0,0,0,.1);transform:translateY(-2px)">
+        <a href="https://mphr-tsghb.docloop.pro/patient-groups/list?" target="_blank" rel="noopener" class="lp-media" style="background:#19aad1">
+          <img src="./assets/img/feature-case-list.png" alt="我的清單">
         </a>
-        <div style="display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;padding:0 4px 4px">
-          <h2 style="margin:0;font-size:clamp(20px,2vw,26px);font-weight:700;color:#19aad1;letter-spacing:.02em">個案清單</h2>
-          <p style="margin:0;font-size:15px;line-height:1.7;color:#666;text-wrap:pretty;max-width:34ch">由警察、消防隊員、公衛護理師、社工進行通報</p>
-          <a href="https://mphr-tsghb.docloop.pro/patient-groups/list?" target="_blank" rel="noopener" style="margin-top:6px;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 24px;border-radius:100px;background:#19aad1;color:#fff;font-size:15px;font-weight:500;letter-spacing:.04em" style-hover="filter:brightness(.92);color:#fff">
+        <div class="lp-body">
+          <h2 style="color:#19aad1">我的清單</h2>
+          <p>由警察、消防隊員、公衛護理師、社工進行通報</p>
+          <a href="https://mphr-tsghb.docloop.pro/patient-groups/list?" target="_blank" rel="noopener" class="lp-btn" style="background:#19aad1" style-hover="filter:brightness(.92);color:#fff">
             前往頁面
             <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 16 12 9 18"></polyline></svg>
           </a>
         </div>
       </article>
 
-      <article style="background:#fff;border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.12);padding:clamp(16px,2vw,24px);display:flex;flex-direction:column;gap:20px;transition:box-shadow .2s ease,transform .2s ease" style-hover="box-shadow:0 10px 15px -3px rgba(0,0,0,.12),0 4px 6px -4px rgba(0,0,0,.1);transform:translateY(-2px)">
-        <a href="https://mphr-tsghb.docloop.pro/data-dashboard?c=tsghbperp" target="_blank" rel="noopener" style="display:block;border-radius:4px;overflow:hidden;background:#1285b3">
-          <img src="./assets/img/feature-dashboard.png" alt="數據儀表板" style="display:block;width:100%;aspect-ratio:631/434;object-fit:cover">
+      <article class="lp-card" style-hover="box-shadow:0 10px 15px -3px rgba(0,0,0,.12),0 4px 6px -4px rgba(0,0,0,.1);transform:translateY(-2px)">
+        <a href="#" sc-camel-on-click="{{ openDev }}" class="lp-media" style="background:#0c6496">
+          <img src="./assets/img/feature-report-history.png" alt="平台歷史紀錄">
         </a>
-        <div style="display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;padding:0 4px 4px">
-          <h2 style="margin:0;font-size:clamp(20px,2vw,26px);font-weight:700;color:#1285b3;letter-spacing:.02em">數據儀表板</h2>
-          <p style="margin:0;font-size:15px;line-height:1.7;color:#666;text-wrap:pretty;max-width:34ch">由警察、消防隊員、公衛護理師、社工進行通報</p>
-          <a href="https://mphr-tsghb.docloop.pro/data-dashboard?c=tsghbperp" target="_blank" rel="noopener" style="margin-top:6px;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 24px;border-radius:100px;background:#1285b3;color:#fff;font-size:15px;font-weight:500;letter-spacing:.04em" style-hover="filter:brightness(.92);color:#fff">
+        <div class="lp-body">
+          <h2 style="color:#0c6496">平台歷史紀錄</h2>
+          <p>由警察、消防隊員、公衛護理師、社工進行通報</p>
+          <a href="#" sc-camel-on-click="{{ openDev }}" class="lp-btn" style="background:#0c6496" style-hover="filter:brightness(.92);color:#fff">
             前往頁面
             <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 16 12 9 18"></polyline></svg>
           </a>
         </div>
       </article>
 
-      <article style="background:#fff;border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.12);padding:clamp(16px,2vw,24px);display:flex;flex-direction:column;gap:20px;transition:box-shadow .2s ease,transform .2s ease" style-hover="box-shadow:0 10px 15px -3px rgba(0,0,0,.12),0 4px 6px -4px rgba(0,0,0,.1);transform:translateY(-2px)">
-        <a href="#" sc-camel-on-click="{{ openDev }}" style="display:block;border-radius:4px;overflow:hidden;background:#0c6496">
-          <img src="./assets/img/feature-report-history.png" alt="通報歷史紀錄" style="display:block;width:100%;aspect-ratio:631/434;object-fit:cover">
+      <article class="lp-card" style-hover="box-shadow:0 10px 15px -3px rgba(0,0,0,.12),0 4px 6px -4px rgba(0,0,0,.1);transform:translateY(-2px)">
+        <a href="https://mphr-tsghb.docloop.pro/data-dashboard?c=tsghbperp" target="_blank" rel="noopener" class="lp-media" style="background:#1285b3">
+          <img src="./assets/img/feature-dashboard.png" alt="數據儀表板">
         </a>
-        <div style="display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;padding:0 4px 4px">
-          <h2 style="margin:0;font-size:clamp(20px,2vw,26px);font-weight:700;color:#0c6496;letter-spacing:.02em">通報歷史紀錄</h2>
-          <p style="margin:0;font-size:15px;line-height:1.7;color:#666;text-wrap:pretty;max-width:34ch">由警察、消防隊員、公衛護理師、社工進行通報</p>
-          <a href="#" sc-camel-on-click="{{ openDev }}" style="margin-top:6px;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 24px;border-radius:100px;background:#0c6496;color:#fff;font-size:15px;font-weight:500;letter-spacing:.04em" style-hover="filter:brightness(.92);color:#fff">
+        <div class="lp-body">
+          <h2 style="color:#1285b3">數據儀表板</h2>
+          <p>由警察、消防隊員、公衛護理師、社工進行通報</p>
+          <a href="https://mphr-tsghb.docloop.pro/data-dashboard?c=tsghbperp" target="_blank" rel="noopener" class="lp-btn" style="background:#1285b3" style-hover="filter:brightness(.92);color:#fff">
             前往頁面
             <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 16 12 9 18"></polyline></svg>
           </a>
@@ -5213,7 +5228,7 @@
     </div>
   </main>
 
-  <footer style="background:#fff;border-top:1px solid #eee;padding:24px 20px">
+  <footer class="lp-footer">
     <div style="max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center;justify-content:space-between;font-size:13px;color:#666">
       <span>三軍總醫院北投分院　精神醫療快速應變平台</span>
       <span>本平台資料僅供授權之醫療、警消及社政人員使用</span>
@@ -5227,7 +5242,7 @@
           <svg width="30" height="30" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
         </div>
         <h3 style="margin:0 0 10px;font-size:20px;font-weight:700;color:#333">功能開發中</h3>
-        <p style="margin:0 0 4px;font-size:15px;line-height:1.7;color:#666">通報歷史紀錄尚在開發中，{{ countdownText }}</p>
+        <p style="margin:0 0 4px;font-size:15px;line-height:1.7;color:#666">平台歷史紀錄尚在開發中，{{ countdownText }}</p>
         <button type="button" sc-camel-on-click="{{ goBack }}" style="margin-top:22px;min-height:44px;padding:0 28px;border:0;border-radius:100px;background:#0c6496;color:#fff;font-size:15px;font-weight:500;cursor:pointer" style-hover="filter:brightness(1.1)">立即返回上一頁</button>
       </div>
     </div>
@@ -5236,13 +5251,13 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script="" data-props="{}">
 class Component extends DCLogic {
-  state = { menuOpen: false, devOpen: false, count: 3 };
+  state = { devOpen: false, count: 3 };
 
   componentWillUnmount() { clearInterval(this.timer); }
 
   openDev = (e) => {
     if (e) e.preventDefault();
-    this.setState({ devOpen: true, menuOpen: false, count: 3 });
+    this.setState({ devOpen: true, count: 3 });
     clearInterval(this.timer);
     this.timer = setInterval(() => {
       const n = this.state.count - 1;
@@ -5258,30 +5273,10 @@ class Component extends DCLogic {
   };
 
   renderVals() {
-    const items = [
-      {
-        key: 'cases', title: '個案清單', color: '#19aad1', img: 'assets/card1.png',
-        desc: '由警察、消防隊員、公衛護理師、社工進行通報',
-        href: 'https://mphr-tsghb.docloop.pro/patient-groups/list?', target: '_blank', onClick: undefined
-      },
-      {
-        key: 'dashboard', title: '數據儀表板', color: '#1285b3', img: 'assets/card2.png',
-        desc: '由警察、消防隊員、公衛護理師、社工進行通報',
-        href: 'https://mphr-tsghb.docloop.pro/data-dashboard?c=tsghbperp', target: '_blank', onClick: undefined
-      },
-      {
-        key: 'history', title: '通報歷史紀錄', color: '#0c6496', img: 'assets/card3.png',
-        desc: '由警察、消防隊員、公衛護理師、社工進行通報',
-        href: '#', target: undefined, onClick: this.openDev
-      }
-    ];
     return {
-      items,
-      menuOpen: this.state.menuOpen,
       devOpen: this.state.devOpen,
       countdownText: this.state.count + ' 秒後自動返回上一頁。',
       openDev: this.openDev,
-      toggleMenu: () => this.setState(s => ({ menuOpen: !s.menuOpen })),
       goBack: this.goBack
     };
   }

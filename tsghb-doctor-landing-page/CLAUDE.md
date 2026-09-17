@@ -65,13 +65,22 @@ tsghb-doctor-landing-page/
 
 | 區塊 | 內容 |
 | --- | --- |
-| Header（sticky） | 院徽 + 平台名稱，右側漢堡選單；展開後列出三個功能連結（`<sc-for list="{{ items }}">`） |
+| Header（sticky） | 院徽 + 平台名稱（無選單） |
 | Hero | 左側漸層底大標「精神醫療 快速應變平台」，右側 `hero.png` |
-| 功能卡片 | 三張 `<article>`，`auto-fit` grid，窄螢幕自動堆疊 |
+| 功能卡片 | 三張 `<article>`，由左到右：我的清單、平台歷史紀錄、數據儀表板 |
 | Footer | 院名 + 使用授權說明 |
 | 開發中彈窗 | `devOpen` 為真時顯示，倒數 3 秒後自動返回上一頁 |
 
-三張卡片的主色：個案清單 `#19aad1`、數據儀表板 `#1285b3`、通報歷史紀錄 `#0c6496`。
+三張卡片的主色：我的清單 `#19aad1`、平台歷史紀錄 `#0c6496`、數據儀表板 `#1285b3`。
+
+### 響應式
+
+版面樣式集中在 `<helmet>` 最後一個 `<style>`，以 `lp-*` class 命名。
+
+- **手機／平板**：一般捲動頁，卡片 `auto-fit` grid 自動堆疊，圖片固定 631:434 比例。
+- **電腦**（`min-width:1024px` 且 `min-height:600px`）：整頁收在一個視窗高度內、不需捲動
+  （參考正式站 `rapid-response-platform`）。`.lp-root` 固定 `100dvh`，Hero 高度 `clamp(200px,34vh,380px)`，
+  卡片區吃剩餘高度，卡片圖片 `height:100%` 隨可用空間縮放。
 
 ---
 
@@ -79,21 +88,20 @@ tsghb-doctor-landing-page/
 
 | 欄位 | 說明 |
 | --- | --- |
-| `menuOpen` | 漢堡選單展開 |
 | `devOpen` | 「功能開發中」彈窗開關 |
 | `count` | 彈窗倒數秒數（從 3 開始） |
 
-- **個案清單** → 新分頁開 `https://mphr-tsghb.docloop.pro/patient-groups/list?`
+- **我的清單** → 新分頁開 `https://mphr-tsghb.docloop.pro/patient-groups/list?`
+- **平台歷史紀錄** → 尚未開發，呼叫 `openDev` 開彈窗；倒數結束或按按鈕觸發 `goBack`（`history.back()`）
 - **數據儀表板** → 新分頁開 `https://mphr-tsghb.docloop.pro/data-dashboard?c=tsghbperp`
-- **通報歷史紀錄** → 尚未開發，呼叫 `openDev` 開彈窗；倒數結束或按按鈕觸發 `goBack`（`history.back()`）
 
 ---
 
 ## 5. 修改須知
 
-- **連結有兩處來源**：卡片的 `href` 寫在 `<x-dc>` 版面中，漢堡選單的連結寫在 `renderVals()` 的 `items`。
-  改網址或標題時兩處都要改。
-- `items` 內的 `img` / `desc` 欄位目前沒有被版面使用（卡片圖片直接寫在 HTML），屬於殘留欄位。
+- 每張卡片的連結在圖片與「前往頁面」按鈕各寫一次，改網址時兩處都要改。
+- 電腦版要維持一頁不捲動：新增內容時請確認 1280×720 仍能完整顯示。
+- 圖檔名沿用舊名（`feature-case-list.png` = 我的清單、`feature-report-history.png` = 平台歷史紀錄）。
 - 三張卡片的描述文字目前相同（皆為「由警察、消防隊員、公衛護理師、社工進行通報」），屬於待補的佔位文案。
 - 改完請用瀏覽器實際開啟確認，並檢查 console 無錯誤。
 
