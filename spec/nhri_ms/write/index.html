@@ -2792,13 +2792,7 @@
         </button>
       </div>
 
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
-        <div style="{{ tileAsm }}">
-          <div style="{{ tileAsmName }}">四肢肌肉量</div>
-          <div style="{{ tileAsmVal }}">{{ asmStr }}</div>
-          <div style="font-size:11px;color:var(--grey-500);margin-top:6px">kg</div>
-          <div style="font-size:11px;color:var(--grey-600);margin-top:8px">{{ refAsm }}</div>
-        </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px">
         <div style="{{ tileSmi }}">
           <div style="{{ tileSmiName }}">SMI</div>
           <div style="{{ tileSmiVal }}">{{ smiStr }}</div>
@@ -2989,11 +2983,7 @@ class Component extends DCLogic {
       else tags.push({ text: "未見異常", style: chip("var(--green-50)", "var(--green-700)") });
     }
 
-    // 評估結果三個指標：門檻值與超標樣式
-    // ASM 本身沒有獨立門檻，由 SMI 門檻乘身高² 換算回來，與 SMI 判定同步
-    const asmT = hm ? massT * hm * hm : null;
-    const lowAsm = asm != null && asmT != null && asm < asmT;
-    const refAsm = asmT == null ? "需身高換算門檻" : `門檻 ≥ ${asmT.toFixed(2)} kg`;
+    // 評估結果兩個指標：門檻值與超標樣式
     const refSmi = `門檻 ≥ ${massT.toFixed(1)} kg/m²`;
     const refAsmBmi = `門檻 ≥ ${asmBmiT.toFixed(2)}`;
     const tileBox = (bad) => ({
@@ -3037,12 +3027,11 @@ class Component extends DCLogic {
       waistCalfStr: fmt(waistCalf, 2), thickCalfLabel,
       refBmi, refWaist, refGrip, refCalf, refWaistCalf,
       ...fieldStyles,
-      bmiStr: fmt(bmi, 1), asmStr: fmt(asm, 2), smiStr: fmt(smi, 2), asmBmiStr: fmt(asmBmi, 3),
+      bmiStr: fmt(bmi, 1), smiStr: fmt(smi, 2), asmBmiStr: fmt(asmBmi, 3),
       bannerStyle, bannerTitle, bannerDetail,
       bannerTitleStyle: { fontSize: 15, fontWeight: 700, marginBottom: 8, color: tc.tx },
       tags,
-      refAsm, refSmi, refAsmBmi,
-      tileAsm: tileBox(lowAsm), tileAsmName: tileName(lowAsm), tileAsmVal: tileVal(lowAsm),
+      refSmi, refAsmBmi,
       tileSmi: tileBox(lowMassSmi), tileSmiName: tileName(lowMassSmi), tileSmiVal: tileVal(lowMassSmi),
       tileRatio: tileBox(lowMassBmi), tileRatioName: tileName(lowMassBmi), tileRatioVal: tileVal(lowMassBmi),
       upd_year: this.set("year"),
