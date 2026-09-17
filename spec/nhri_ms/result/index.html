@@ -2654,11 +2654,18 @@
         </button>
       </div>
 
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+        <div style="{{ tileAsm }}">
+          <div style="{{ tileAsmName }}">四肢 ASM 總量</div>
+          <div style="{{ tileAsmVal }}">{{ asmStr }}</div>
+          <div style="font-size:11px;color:var(--grey-500);margin-top:6px">kg</div>
+          <div style="font-size:11px;color:var(--grey-600);margin-top:8px">{{ asmSource }}</div>
+        </div>
         <div style="{{ tileSmi }}">
           <div style="{{ tileSmiName }}">SMI</div>
           <div style="{{ tileSmiVal }}">{{ smiStr }}</div>
           <div style="font-size:11px;color:var(--grey-500);margin-top:6px">kg/m²</div>
+          <div style="font-size:11px;color:var(--grey-500);margin-top:2px">四肢 ASM 總量 ÷ 身高²</div>
           <div style="font-size:11px;color:var(--grey-600);margin-top:8px">{{ refSmi }}</div>
         </div>
         <div style="{{ tileRatio }}">
@@ -2669,10 +2676,12 @@
         </div>
       </div>
 
-      <div style="{{ bannerStyle }}">
-        <div style="{{ bannerTitleStyle }}">{{ bannerTitle }}</div>
-        <div style="font-size:13px;line-height:1.6;color:var(--grey-800)">{{ bannerDetail }}</div>
-      </div>
+      <sc-if value="{{ hasResult }}" hint-placeholder-val="{{ true }}">
+        <div style="{{ bannerStyle }}">
+          <div style="{{ bannerTitleStyle }}">{{ bannerTitle }}</div>
+          <div style="font-size:13px;line-height:1.6;color:var(--grey-800)">{{ bannerDetail }}</div>
+        </div>
+      </sc-if>
     </div>
 
     <!-- FORM CARD -->
@@ -2911,56 +2920,39 @@ class Component extends DCLogic {
     const lowMass = lowMassSmi || lowMassBmi;
     const lowStrength = grip != null && grip < strT;
     const isSarc = lowMass && lowStrength;
-    const partial = !isSarc && (lowMass || lowStrength);
 
-    let tone, bannerTitle, bannerDetail;
+    // 臨床流程只有兩種結果文字，標題依指定內容呈現、不可改動；
+    // 肌肉量或握力未填時尚無結果，整塊不顯示（不另設中間狀態）
+    const hasResult = (smi != null || asmBmi != null) && grip != null;
+    let bannerTitle, bannerDetail;
     if (isSarc) {
-      tone = "danger";
-      bannerTitle = "依目前資料符合 AWGS 2025 肌少症";
+      bannerTitle = "符合肌少症診斷";
       const massMsg = lowMassSmi ? `SMI ${smi.toFixed(2)} kg/m² 低於 ${massT.toFixed(1)}` : `ASM/BMI ${asmBmi.toFixed(2)} 低於 ${asmBmiT.toFixed(2)}`;
-      bannerDetail = `${massMsg}，且握力 ${grip.toFixed(1)} kg 低於 ${strT.toFixed(1)} kg。已同時符合低肌肉量與低肌力。`;
-    } else if (partial) {
-      tone = "warning";
-      bannerTitle = "可能肌少症（尚未符合完整判定）";
-      const met = lowMass ? "低肌肉量" : "低肌力";
-      const miss = lowMass ? "低肌力" : "低肌肉量";
-      bannerDetail = `目前僅符合${met}，尚未符合${miss}。AWGS 2025 需同時滿足低肌肉量與低肌力才判定為肌少症。`;
-    } else if ((smi == null && asmBmi == null) || grip == null) {
-      tone = "info";
-      bannerTitle = "尚待輸入完整數值";
-      bannerDetail = "請完整填寫肌肉量（ASM／SMI）與握力，即可依 AWGS 2025 判定肌少症風險。";
+      bannerDetail = `${massMsg}，且握力 ${grip.toFixed(1)} kg 低於 ${strT.toFixed(1)} kg，已同時符合低肌肉量與低肌力。`;
     } else {
-      tone = "ok";
-      bannerTitle = "目前未符合肌少症判定條件";
-      bannerDetail = "低肌肉量與低肌力皆未達門檻。建議定期追蹤身體組成與握力變化。";
+      bannerTitle = "未符合肌少症診斷";
+      bannerDetail = "AWGS 2025 需同時符合低肌肉量與低肌力，目前未同時符合。";
     }
-    const toneMap = {
-      danger: { bg: "var(--red-50)", bd: "var(--red-100)", tx: "var(--red-500)" },
-      warning: { bg: "var(--orange-50)", bd: "var(--orange-100)", tx: "var(--orange-500)" },
-      info: { bg: "var(--grey-100)", bd: "var(--grey-300)", tx: "var(--grey-700)" },
-      ok: { bg: "var(--green-50)", bd: "var(--green-100)", tx: "var(--green-700)" },
-    };
-    const tc = toneMap[tone];
+    const tc = isSarc
+      ? { bg: "var(--red-50)", bd: "var(--red-100)", tx: "var(--red-500)" }
+      : { bg: "var(--green-50)", bd: "var(--green-100)", tx: "var(--green-700)" };
     const bannerStyle = {
       marginTop: 20, padding: "16px 18px", borderRadius: 5,
       background: tc.bg, boxShadow: `inset 0 0 0 1px ${tc.bd}`,
     };
 
     const chip = (bg, tx) => ({ fontSize: 12, fontWeight: 700, padding: "5px 12px", borderRadius: 100, background: bg, color: tx, whiteSpace: "nowrap" });
-    const calfLow = (cL != null && cL < calfT) || (cR != null && cR < calfT);
     const obese = waistCalf != null && waistCalf > waistCalfT;
+    // 臨床流程只使用三種標籤
     const tags = [];
-    if (calfLow) tags.push({ text: "低肌肉量風險", style: chip("var(--orange-50)", "var(--orange-500)") });
-    if (obese) tags.push({ text: "肥胖型肌少症風險", style: chip("var(--orange-50)", "var(--orange-500)") });
-    if (lowStrength) tags.push({ text: "肌力不足", style: chip("var(--red-50)", "var(--red-500)") });
-    if (lowMass) tags.push({ text: "肌肉量不足", style: chip("var(--red-50)", "var(--red-500)") });
-    if (tags.length === 0) {
-      if (smi == null || grip == null) tags.push({ text: "資料不完整", style: chip("var(--grey-100)", "var(--grey-700)") });
-      else tags.push({ text: "未見異常", style: chip("var(--green-50)", "var(--green-700)") });
-    }
+    if (isSarc) tags.push({ text: "符合肌少症診斷", style: chip("var(--red-50)", "var(--red-500)") });
+    if (lowStrength) tags.push({ text: "肌力低下", style: chip("var(--orange-50)", "var(--orange-500)") });
+    if (lowMass) tags.push({ text: "肌肉質量不足", style: chip("var(--red-50)", "var(--red-500)") });
 
-    // 評估結果兩個指標：門檻值與超標樣式
-    const refSmi = `門檻 ≥ ${massT.toFixed(1)} kg/m²`;
+    // 評估結果三個指標：ASM 總量無門檻，SMI 與 ASM/BMI 顯示門檻與超標樣式
+    const asmSource = s.asmMode === "asm" ? "右上肢 + 左上肢 + 右下肢 + 左下肢"
+      : s.asmMode === "mass" ? "直接輸入" : "SMI × 身高²";
+    const refSmi = `正常 ≥ ${massT.toFixed(1)} kg/m²`;
     const refAsmBmi = `門檻 ≥ ${asmBmiT.toFixed(2)}`;
     const tileBox = (bad) => ({
       borderRadius: "var(--radius-lg)", padding: "16px",
@@ -3003,11 +2995,12 @@ class Component extends DCLogic {
       waistCalfStr: fmt(waistCalf, 2), thickCalfLabel,
       refBmi, refWaist, refGrip, refCalf, refWaistCalf,
       ...fieldStyles,
-      bmiStr: fmt(bmi, 1), smiStr: fmt(smi, 2), asmBmiStr: fmt(asmBmi, 3),
-      bannerStyle, bannerTitle, bannerDetail,
+      bmiStr: fmt(bmi, 1), asmStr: fmt(asm, 2), smiStr: fmt(smi, 2), asmBmiStr: fmt(asmBmi, 3),
+      hasResult, bannerStyle, bannerTitle, bannerDetail,
       bannerTitleStyle: { fontSize: 15, fontWeight: 700, marginBottom: 8, color: tc.tx },
       tags,
-      refSmi, refAsmBmi,
+      asmSource, refSmi, refAsmBmi,
+      tileAsm: tileBox(false), tileAsmName: tileName(false), tileAsmVal: tileVal(false),
       tileSmi: tileBox(lowMassSmi), tileSmiName: tileName(lowMassSmi), tileSmiVal: tileVal(lowMassSmi),
       tileRatio: tileBox(lowMassBmi), tileRatioName: tileName(lowMassBmi), tileRatioVal: tileVal(lowMassBmi),
       modeAsm: s.asmMode === "asm", modeMass: s.asmMode === "mass", modeSmi: s.asmMode === "smi",
