@@ -5143,7 +5143,8 @@
   .lp-body h2 { margin:0; font-size:clamp(20px,2vw,26px); font-weight:700; letter-spacing:.02em; }
   .lp-body p { margin:0; font-size:15px; line-height:1.7; color:#666; text-wrap:pretty; max-width:34ch; }
   .lp-btn { margin-top:6px; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 24px; border-radius:100px; color:#fff; font-size:15px; font-weight:500; letter-spacing:.04em; }
-  .lp-footer { background:#fff; border-top:1px solid #eee; padding:24px 20px; }
+  .lp-footer { background:#fff; border-top:1px solid #eee; padding:24px 0; }
+  .lp-bar { padding-inline:clamp(20px,5vw,64px); }
 
   /* 電腦瀏覽：整頁收在一個視窗高度內，不需捲動 */
   @media (min-width:1024px) and (min-height:600px) {
@@ -5160,14 +5161,15 @@
     .lp-body { flex:none; gap:clamp(4px,1vh,12px); }
     .lp-body p { max-width:none; }
     .lp-btn { margin-top:clamp(0px,.5vh,6px); }
-    .lp-footer { flex:none; padding:14px 20px; }
+    .lp-footer { flex:none; padding:14px 0; }
+    .lp-bar { padding-inline:clamp(32px,5vw,72px); }
   }
 </style>
 </helmet>
 <div class="lp-root">
 
   <header style="position:sticky;top:0;z-index:40;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.08)">
-    <div style="max-width:1280px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:14px">
+    <div class="lp-bar" style="padding-block:10px;display:flex;align-items:center;gap:14px">
       <img src="./assets/img/logo-tsghb.png" alt="三軍總醫院北投分院" style="width:44px;height:44px;object-fit:contain;flex:none">
       <span style="font-size:clamp(17px,2.4vw,22px);font-weight:700;letter-spacing:.02em;color:#333">精神醫療快速應變平台</span>
     </div>
@@ -5229,7 +5231,7 @@
   </main>
 
   <footer class="lp-footer">
-    <div style="max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center;justify-content:space-between;font-size:13px;color:#666">
+    <div class="lp-bar" style="display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center;justify-content:space-between;font-size:13px;color:#666">
       <span>三軍總醫院北投分院　精神醫療快速應變平台</span>
       <span>本平台資料僅供授權之醫療、警消及社政人員使用</span>
     </div>
