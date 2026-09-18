@@ -5141,8 +5141,17 @@
   .lp-media img { display:block; width:100%; aspect-ratio:631/434; object-fit:cover; }
   .lp-body { display:flex; flex-direction:column; gap:12px; align-items:center; text-align:center; padding:0 4px 4px; }
   .lp-body h2 { margin:0; font-size:clamp(20px,2vw,26px); font-weight:700; letter-spacing:.02em; }
-  .lp-body p { margin:0; font-size:15px; line-height:1.7; color:#666; text-wrap:pretty; max-width:34ch; }
-  .lp-btn { margin-top:6px; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 24px; border-radius:100px; color:#fff; font-size:15px; font-weight:500; letter-spacing:.04em; }
+  .lp-btn { margin-top:4px; box-sizing:border-box; width:100%; max-width:260px; display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:42px; padding:0 16px; border-radius:6px; color:#fff; font-size:15px; font-weight:500; letter-spacing:.04em; }
+
+  /* 手機／平板：卡片改橫式，圖片在左、標題與按鈕在右 */
+  @media (max-width:1023px) {
+    .lp-grid { grid-template-columns:minmax(0,1fr); max-width:640px; margin:0 auto; gap:16px; }
+    .lp-card { flex-direction:row; align-items:center; gap:16px; padding:12px; }
+    .lp-media { flex:0 0 42%; min-width:0; }
+    .lp-body { flex:1; min-width:0; gap:10px; padding:0; }
+    .lp-body h2 { font-size:clamp(17px,4.6vw,22px); }
+    .lp-btn { margin-top:0; max-width:none; min-height:38px; padding:0 10px; font-size:14px; }
+  }
   .lp-footer { background:#fff; border-top:1px solid #eee; padding:24px 0; }
   .lp-bar { padding-inline:clamp(20px,5vw,64px); }
 
@@ -5159,7 +5168,6 @@
     .lp-media { flex:1 1 auto; min-height:0; display:flex; justify-content:center; background:transparent !important; }
     .lp-media img { width:auto; max-width:100%; height:100%; border-radius:4px; }
     .lp-body { flex:none; gap:clamp(4px,1vh,12px); }
-    .lp-body p { max-width:none; }
     .lp-btn { margin-top:clamp(0px,.5vh,6px); }
     .lp-footer { flex:none; padding:14px 0; }
     .lp-bar { padding-inline:clamp(32px,5vw,72px); }
@@ -5192,10 +5200,9 @@
         </a>
         <div class="lp-body">
           <h2 style="color:#19aad1">我的案件</h2>
-          <p>快速查詢被指派給我的通報案件</p>
           <a href="https://mphr-tsghb.docloop.pro/patient-groups/list?" target="_blank" rel="noopener" class="lp-btn" style="background:#19aad1" style-hover="filter:brightness(.92);color:#fff">
+            <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 12h6M9 16h6"></path></svg>
             前往頁面
-            <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 16 12 9 18"></polyline></svg>
           </a>
         </div>
       </article>
@@ -5206,10 +5213,9 @@
         </a>
         <div class="lp-body">
           <h2 style="color:#0c6496">案件查詢</h2>
-          <p>查詢平台過往的通報個案與通報紀錄</p>
           <a href="#" sc-camel-on-click="{{ openDev }}" class="lp-btn" style="background:#0c6496" style-hover="filter:brightness(.92);color:#fff">
+            <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             前往頁面
-            <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 16 12 9 18"></polyline></svg>
           </a>
         </div>
       </article>
@@ -5220,10 +5226,9 @@
         </a>
         <div class="lp-body">
           <h2 style="color:#1285b3">管理儀錶板</h2>
-          <p>全方位總覽本平台效益、院內服務品質等指標</p>
           <a href="https://mphr-tsghb.docloop.pro/data-dashboard?c=tsghbperp" target="_blank" rel="noopener" class="lp-btn" style="background:#1285b3" style-hover="filter:brightness(.92);color:#fff">
+            <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="20" x2="6" y2="14"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="18" y1="20" x2="18" y2="10"></line></svg>
             前往頁面
-            <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 16 12 9 18"></polyline></svg>
           </a>
         </div>
       </article>
