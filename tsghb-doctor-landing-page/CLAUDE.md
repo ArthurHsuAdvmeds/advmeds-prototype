@@ -1,6 +1,6 @@
 # 三軍總醫院北投分院 — 精神醫療快速應變平台（醫師入口頁）原型
 
-單頁靜態原型：醫師登入後的入口頁，提供「個案清單」「數據儀表板」「通報歷史紀錄」三張功能卡片。
+單頁靜態原型：醫師登入後的入口頁，提供「我的案件」「案件查詢」「管理儀錶板」三張功能卡片。
 
 ---
 
@@ -19,9 +19,9 @@ tsghb-doctor-landing-page/
    ├─ img/
    │  ├─ logo-tsghb.png                 院徽（header 左上）
    │  ├─ hero.png                       主視覺右側插圖
-   │  ├─ feature-case-list.png          個案清單卡片
-   │  ├─ feature-dashboard.png          數據儀表板卡片
-   │  └─ feature-report-history.png     通報歷史紀錄卡片
+   │  ├─ feature-case-list.png          我的案件卡片
+   │  ├─ feature-dashboard.png          管理儀錶板卡片
+   │  └─ feature-report-history.png     案件查詢卡片
    └─ fonts/             noto-sans-tc-001…105.woff2（Noto Sans TC 子集切片）
 ```
 
@@ -67,11 +67,11 @@ tsghb-doctor-landing-page/
 | --- | --- |
 | Header（sticky） | 院徽 + 平台名稱（無選單） |
 | Hero | 左側漸層底大標「精神醫療 快速應變平台」，右側 `hero.png` |
-| 功能卡片 | 三張 `<article>`，由左到右：我的清單、平台歷史紀錄、數據儀表板 |
+| 功能卡片 | 三張 `<article>`，由左到右：我的案件、案件查詢、管理儀錶板 |
 | Footer | 院名 + 使用授權說明 |
 | 開發中彈窗 | `devOpen` 為真時顯示，倒數 3 秒後自動返回上一頁 |
 
-三張卡片的主色：我的清單 `#19aad1`、平台歷史紀錄 `#0c6496`、數據儀表板 `#1285b3`。
+三張卡片的主色：我的案件 `#19aad1`、案件查詢 `#0c6496`、管理儀錶板 `#1285b3`。
 
 ### 響應式
 
@@ -91,9 +91,9 @@ tsghb-doctor-landing-page/
 | `devOpen` | 「功能開發中」彈窗開關 |
 | `count` | 彈窗倒數秒數（從 3 開始） |
 
-- **我的清單** → 新分頁開 `https://mphr-tsghb.docloop.pro/patient-groups/list?`
-- **平台歷史紀錄** → 尚未開發，呼叫 `openDev` 開彈窗；倒數結束或按按鈕觸發 `goBack`（`history.back()`）
-- **數據儀表板** → 新分頁開 `https://mphr-tsghb.docloop.pro/data-dashboard?c=tsghbperp`
+- **我的案件** → 新分頁開 `https://mphr-tsghb.docloop.pro/patient-groups/list?`
+- **案件查詢** → 尚未開發，呼叫 `openDev` 開彈窗；倒數結束或按按鈕觸發 `goBack`（`history.back()`）
+- **管理儀錶板** → 新分頁開 `https://mphr-tsghb.docloop.pro/data-dashboard?c=tsghbperp`
 
 ---
 
@@ -101,7 +101,7 @@ tsghb-doctor-landing-page/
 
 - 每張卡片的連結在圖片與「前往頁面」按鈕各寫一次，改網址時兩處都要改。
 - 電腦版要維持一頁不捲動：新增內容時請確認 1280×720 仍能完整顯示。
-- 圖檔名沿用舊名（`feature-case-list.png` = 我的清單、`feature-report-history.png` = 平台歷史紀錄）。
+- 圖檔名沿用舊名（`feature-case-list.png` = 我的案件、`feature-report-history.png` = 案件查詢）。
 - 改完請用瀏覽器實際開啟確認，並檢查 console 無錯誤。
 
 ---
