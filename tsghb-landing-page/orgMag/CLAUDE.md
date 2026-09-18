@@ -1,7 +1,7 @@
 # 三軍總醫院北投分院 — 精神醫療快速應變平台｜機構管理者入口頁原型
 
 機構管理者登入後的入口頁（Landing page）：Hero 大標 + 兩張功能卡片（**平台使用者列表**、**報表匯出**），
-目前兩張卡片都以「功能開發中」彈窗提示。
+點卡片以新分頁開啟對應功能。
 
 ---
 
@@ -73,7 +73,6 @@ tsghb-orgmag/            下載包根目錄（repo 中為 tsghb-landing-page/）
 | Hero | 左側藍色漸層底（`#2a6ac4 → #5b9be6`）白色大標「精神醫療／快速應變平台」，右側 `orgmag-hero.png`，插圖區底色 `#cfe0f7` |
 | 功能卡片 | 兩張 `<article>`，置中、最大寬 880px：平台使用者列表、報表匯出；每張只有圖片、標題與「前往頁面」按鈕，**無說明文字** |
 | Footer | 左：院名＋平台名；右：「本平台資料僅供授權之醫療、警消及社政人員使用」 |
-| 開發中彈窗 | `devOpen` 為真時顯示，文字帶入功能名稱，倒數 3 秒後自動返回上一頁 |
 
 ### 3.1 功能卡片
 
@@ -95,36 +94,22 @@ tsghb-orgmag/            下載包根目錄（repo 中為 tsghb-landing-page/）
 
 ---
 
-## 4. 狀態與行為（`state`）
+## 4. 行為
 
-| 欄位 | 說明 |
+頁面沒有 `state`，`renderVals()` 回傳空物件；兩張卡片都是純連結，新分頁開啟（`target="_blank" rel="noopener"`）。
+
+| 卡片 | 連結 |
 | --- | --- |
-| `devOpen` | 「功能開發中」彈窗開關 |
-| `devName` | 彈窗中顯示的功能名稱 |
-| `count` | 彈窗倒數秒數（從 3 開始） |
+| 平台使用者列表 | `https://mphr-tsghb.docloop.pro/organizations/org-admin-list?orgId=5&managerRoleId=11&page=3&c=tsghbperp` |
+| 報表匯出 | `https://mphr-tsghb.docloop.pro/care/report/management?c=tsghbperp` |
 
-| 卡片 | handler | 目前行為 |
-| --- | --- | --- |
-| 平台使用者列表 | `openUserList` | 開彈窗：「平台使用者列表尚在開發中，N 秒後自動返回上一頁。」 |
-| 報表匯出 | `openReportExport` | 開彈窗：「報表匯出尚在開發中，N 秒後自動返回上一頁。」 |
-
-兩個 handler 都呼叫共用的 `openDev(e, name)`；彈窗文字由 `renderVals()` 的 `devText` 組出。
-倒數到 0 或按「立即返回上一頁」時呼叫 `goBack`：關閉彈窗並 `history.back()`（沒有上一頁時只關閉彈窗）。
-
-設計稿中兩張卡片已標註正式網址，**尚未套用**，上線時改用：
-
-```
-平台使用者列表 https://mphr-tsghb.docloop.pro/organizations/org-admin-list?orgId=5&c=tsghbperp
-報表匯出       https://mphr-tsghb.docloop.pro/care/report/management?c=tsghbperp
-```
+與醫師頁不同，本頁沒有「功能開發中」彈窗；若日後新增尚未開發的卡片，可照 `doctor/index.html` 的 `openDev`／`goBack` 與彈窗 markup 加回。
 
 ---
 
 ## 5. 修改須知
 
-- **每張卡片的連結寫兩次**（圖片與「前往頁面」按鈕），改網址時兩處都要改。
-  改成外連時把 `sc-camel-on-click="{{ openUserList }}"` 換成 `href="…" target="_blank" rel="noopener"`
-  （HTML 內 `&` 要寫成 `&amp;`）；若兩張都改成外連，`openDev` 與彈窗可一併移除。
+- **每張卡片的連結寫兩次**（圖片與「前往頁面」按鈕），改網址時兩處都要改；HTML 內 `&` 要寫成 `&amp;`。
 - **電腦版要維持一頁不捲動**：新增內容後請確認 1280×720 與 1440×900 都能完整顯示。
 - 三張插圖為去背 PNG（1547×1016），取自設計稿；換圖時**同檔名覆蓋**即可，不需改 HTML。
 - 改完請用瀏覽器實際開啟，並檢查 console 無錯誤。

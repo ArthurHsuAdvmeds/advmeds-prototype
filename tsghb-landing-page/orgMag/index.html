@@ -5193,14 +5193,13 @@
 
   <main class="lp-main">
     <div class="lp-grid">
-      <!-- TODO: 平台使用者列表正式網址確定後，把兩處 openUserList 換成 href（參考 doctor 頁「我的案件」寫法） -->
       <article class="lp-card" style-hover="box-shadow:0 10px 15px -3px rgba(0,0,0,.12),0 4px 6px -4px rgba(0,0,0,.1);transform:translateY(-2px)">
-        <a href="#" sc-camel-on-click="{{ openUserList }}" class="lp-media">
+        <a href="https://mphr-tsghb.docloop.pro/organizations/org-admin-list?orgId=5&amp;managerRoleId=11&amp;page=3&amp;c=tsghbperp" target="_blank" rel="noopener" class="lp-media">
           <img src="../assets/img/feature-user-list.png" alt="平台使用者列表">
         </a>
         <div class="lp-body">
           <h2 style="color:#2f6fcf">平台使用者列表</h2>
-          <a href="#" sc-camel-on-click="{{ openUserList }}" class="lp-btn" style="background:#2f6fcf" style-hover="filter:brightness(.92);color:#fff">
+          <a href="https://mphr-tsghb.docloop.pro/organizations/org-admin-list?orgId=5&amp;managerRoleId=11&amp;page=3&amp;c=tsghbperp" target="_blank" rel="noopener" class="lp-btn" style="background:#2f6fcf" style-hover="filter:brightness(.92);color:#fff">
             前往頁面
             <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
           </a>
@@ -5208,12 +5207,12 @@
       </article>
 
       <article class="lp-card" style-hover="box-shadow:0 10px 15px -3px rgba(0,0,0,.12),0 4px 6px -4px rgba(0,0,0,.1);transform:translateY(-2px)">
-        <a href="#" sc-camel-on-click="{{ openReportExport }}" class="lp-media">
+        <a href="https://mphr-tsghb.docloop.pro/care/report/management?c=tsghbperp" target="_blank" rel="noopener" class="lp-media">
           <img src="../assets/img/feature-report-export.png" alt="報表匯出">
         </a>
         <div class="lp-body">
           <h2 style="color:#5b93dc">報表匯出</h2>
-          <a href="#" sc-camel-on-click="{{ openReportExport }}" class="lp-btn" style="background:#8db6ec" style-hover="filter:brightness(.92);color:#fff">
+          <a href="https://mphr-tsghb.docloop.pro/care/report/management?c=tsghbperp" target="_blank" rel="noopener" class="lp-btn" style="background:#8db6ec" style-hover="filter:brightness(.92);color:#fff">
             前往頁面
             <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
           </a>
@@ -5229,54 +5228,12 @@
     </div>
   </footer>
 
-  <sc-if value="{{ devOpen }}" hint-placeholder-val="{{ false }}">
-    <div role="dialog" aria-modal="true" style="position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:20px">
-      <div style="background:#fff;border-radius:5px;box-shadow:0 10px 15px -3px rgba(0,0,0,.2);max-width:400px;width:100%;padding:32px 28px;text-align:center;animation:dcFade .2s ease both">
-        <div style="width:56px;height:56px;margin:0 auto 18px;border-radius:50%;background:#e6effc;display:grid;place-items:center;color:#2f6fcf">
-          <svg width="30" height="30" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
-        </div>
-        <h3 style="margin:0 0 10px;font-size:20px;font-weight:700;color:#333">功能開發中</h3>
-        <p style="margin:0 0 4px;font-size:15px;line-height:1.7;color:#666">{{ devText }}</p>
-        <button type="button" sc-camel-on-click="{{ goBack }}" style="margin-top:22px;min-height:44px;padding:0 28px;border:0;border-radius:100px;background:#2f6fcf;color:#fff;font-size:15px;font-weight:500;cursor:pointer" style-hover="filter:brightness(1.1)">立即返回上一頁</button>
-      </div>
-    </div>
-  </sc-if>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script="" data-props="{}">
 class Component extends DCLogic {
-  state = { devOpen: false, devName: '', count: 3 };
-
-  componentWillUnmount() { clearInterval(this.timer); }
-
-  openDev = (e, name) => {
-    if (e) e.preventDefault();
-    this.setState({ devOpen: true, devName: name, count: 3 });
-    clearInterval(this.timer);
-    this.timer = setInterval(() => {
-      const n = this.state.count - 1;
-      if (n <= 0) { clearInterval(this.timer); this.goBack(); }
-      else this.setState({ count: n });
-    }, 1000);
-  };
-
-  openUserList = (e) => this.openDev(e, '平台使用者列表');
-  openReportExport = (e) => this.openDev(e, '報表匯出');
-
-  goBack = () => {
-    clearInterval(this.timer);
-    this.setState({ devOpen: false });
-    if (window.history.length > 1) window.history.back();
-  };
-
   renderVals() {
-    return {
-      devOpen: this.state.devOpen,
-      devText: this.state.devName + '尚在開發中，' + this.state.count + ' 秒後自動返回上一頁。',
-      openUserList: this.openUserList,
-      openReportExport: this.openReportExport,
-      goBack: this.goBack
-    };
+    return {};
   }
 }
 </script>

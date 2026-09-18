@@ -41,7 +41,7 @@ tsghb-landing-page/
 - 頁面採 dc-runtime 樣板（`<x-dc>` + `<script type="text/x-dc">`），**`window.__resources` 不可移除**，細節見各頁 CLAUDE.md 第 2 節。
 - 版面樣式放在 `<helmet>` 最後一個 `<style>`，以 `lp-*` class 命名；斷點統一：
   手機／平板 `max-width:1023px`、電腦 `min-width:1024px and min-height:600px`（電腦版一頁不捲動）。
-- Header、Footer 文字與「功能開發中」彈窗各頁一致。
+- Header、Footer 文字各頁一致；需要「功能開發中」彈窗的頁面沿用 `doctor/` 的寫法。
 - 改完請用瀏覽器實際開啟確認，並檢查 console 無錯誤。
 
 ---
