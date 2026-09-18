@@ -49,6 +49,7 @@
   }
   .icon.doctor{background:var(--teal-300)}
   .icon.orgmag{background:var(--blue-500)}
+  .icon.zip{background:var(--grey-700)}
   .body{flex:1;min-width:0}
   .title{font-size:16px;font-weight:700;margin-bottom:4px}
   .desc{font-size:13px;color:var(--grey-700);line-height:1.6}
@@ -58,6 +59,8 @@
     margin-top:12px;padding-top:12px;border-top:1px solid var(--grey-200);
     font-size:12px;color:var(--grey-600);line-height:1.8;
   }
+  .meta b{color:var(--grey-900)}
+  .section{margin:32px 0 14px;font-size:14px;font-weight:700;color:var(--grey-700)}
   code{
     font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
     font-size:12px;background:var(--grey-100);padding:1px 5px;border-radius:var(--radius-md);
@@ -117,10 +120,71 @@
     <div class="meta"><code>orgMag/</code></div>
   </a>
 
+  <h2 class="section">下載素材與 Spec</h2>
+
+  <a class="card" href="./tsghb-doctor-spec.zip" download>
+    <div class="row">
+      <div class="icon zip">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="body">
+        <div class="title">下載醫師入口頁素材與 Spec</div>
+        <div class="desc">頁面 HTML、共用 JS、字型與插圖，以及 <code>CLAUDE.md</code> 規格文件，解壓後可直接離線開啟。</div>
+      </div>
+      <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="meta">
+      <b>tsghb-doctor-spec.zip</b>　<span data-zipsize="./tsghb-doctor-spec.zip"></span><br>
+      內含 <code>CLAUDE.md</code>、<code>doctor/</code>、<code>assets/</code>（dc-runtime、設計系統、React、Noto Sans TC、醫師頁插圖）。
+    </div>
+  </a>
+
+  <a class="card" href="./tsghb-orgmag-spec.zip" download>
+    <div class="row">
+      <div class="icon zip">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="body">
+        <div class="title">下載機構管理者入口頁素材與 Spec</div>
+        <div class="desc">頁面 HTML、共用 JS、字型與插圖，以及 <code>CLAUDE.md</code> 規格文件，解壓後可直接離線開啟。</div>
+      </div>
+      <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="meta">
+      <b>tsghb-orgmag-spec.zip</b>　<span data-zipsize="./tsghb-orgmag-spec.zip"></span><br>
+      內含 <code>CLAUDE.md</code>、<code>orgMag/</code>、<code>assets/</code>（dc-runtime、設計系統、React、Noto Sans TC、機構管理者頁插圖）。
+    </div>
+  </a>
+
   <footer>
-    各頁共用 <code>assets/</code>（dc-runtime、React、Noto Sans TC、插圖）。無需 build，直接開啟 HTML 即可。
+    各頁共用 <code>assets/</code>（dc-runtime、React、Noto Sans TC、插圖）。無需 build，直接開啟 HTML 即可；下載包解壓後同樣可離線開啟。
   </footer>
 
 </div>
+
+<script>
+  // 顯示 zip 實際大小；取不到就整段留白，不要顯示錯的數字
+  document.querySelectorAll('[data-zipsize]').forEach(function (el) {
+    fetch(el.getAttribute('data-zipsize'), { method: 'HEAD' })
+      .then(function (r) {
+        var n = r.ok && r.headers.get('content-length');
+        if (!n) return;
+        el.textContent = (n / 1048576).toFixed(1) + ' MB';
+      })
+      .catch(function () {});
+  });
+</script>
 </body>
 </html>
