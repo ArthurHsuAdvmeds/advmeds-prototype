@@ -4,6 +4,10 @@
 
 **各頁的詳細規格寫在各自資料夾的 `CLAUDE.md`**，本文件只記共通規則、導覽頁與打包方式。
 
+> **正式實作採 Vue 3（前端）+ .NET Core 8（後端）。** 這裡的 HTML 是給團隊對照的**參考原型**，
+> 以 dc-runtime + React 快速做出畫面，不是正式程式碼；實作時依各頁 CLAUDE.md 第 3、4 節的版面與行為用 Vue 3 重寫，
+> 語法對照、元件拆分與後端注意事項見各頁 CLAUDE.md 第 6 節。各角色頁的 Header、Hero、功能卡片、Footer 建議做成共用元件。
+
 | 資料夾 | 內容 | 規格 | 下載包 |
 | --- | --- | --- | --- |
 | `doctor/` | 醫師入口頁：我的案件、案件查詢、管理儀錶板 | `doctor/CLAUDE.md` | `tsghb-doctor-spec.zip` |
@@ -41,7 +45,7 @@ tsghb-landing-page/
 - 頁面採 dc-runtime 樣板（`<x-dc>` + `<script type="text/x-dc">`），**`window.__resources` 不可移除**，細節見各頁 CLAUDE.md 第 2 節。
 - 版面樣式放在 `<helmet>` 最後一個 `<style>`，以 `lp-*` class 命名；斷點統一：
   手機／平板 `max-width:1023px`、電腦 `min-width:1024px and min-height:600px`（電腦版一頁不捲動）。
-- Header、Footer 文字各頁一致；需要「功能開發中」彈窗的頁面沿用 `doctor/` 的寫法。
+- Header、Footer 文字與「前往頁面」按鈕樣式（`.lp-btn`）各頁一致；需要「功能開發中」彈窗的頁面沿用 `doctor/` 的寫法。
 - 改完請用瀏覽器實際開啟確認，並檢查 console 無錯誤。
 
 ---
@@ -49,7 +53,7 @@ tsghb-landing-page/
 ## 3. 新增角色頁
 
 1. 複製一個既有角色資料夾（例如 `orgMag/`），改名後修改版面與 logic。
-2. 在該資料夾寫一份 `CLAUDE.md`（章節照 `orgMag/CLAUDE.md`）。
+2. 在該資料夾寫一份 `CLAUDE.md`（章節照 `orgMag/CLAUDE.md`），第 6 節要寫明該頁在 Vue 3 + .NET Core 8 下的元件拆分與後端注意事項。
 3. 插圖放 `assets/img/`，檔名加角色前綴避免衝突。
 4. 在 `index.html` 加一張導連卡片與一張下載卡片。
 5. 依第 4 節產生下載包。

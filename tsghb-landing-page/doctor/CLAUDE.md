@@ -3,6 +3,9 @@
 醫師登入後的入口頁（Landing page）：Hero 大標 + 三張功能卡片（**我的案件**、**案件查詢**、**管理儀錶板**），
 點卡片導向對應功能，尚未開發的功能以「功能開發中」彈窗提示。
 
+> **正式實作採 Vue 3 + .NET Core 8。** 本資料夾的 HTML 是視覺與互動的**參考原型**（dc-runtime + React），
+> 不要移植它的執行框架；請依第 3、4 節的版面與行為用 Vue 3 重寫，做法見第 6 節。
+
 ---
 
 ## 1. 檔案結構
@@ -35,9 +38,9 @@ tsghb-doctor/            下載包根目錄（repo 中為 tsghb-landing-page/）
 
 ---
 
-## 2. 技術結構
+## 2. 原型技術結構（閱讀原型用，不需移植）
 
-頁面本體是一份完整 HTML，內容放在 `<x-dc>` 元素中，由 `dc-runtime.js` 解析後以 React 渲染。
+原型頁面本體是一份完整 HTML，內容放在 `<x-dc>` 元素中，由 `dc-runtime.js` 解析後以 React 渲染。
 
 ```html
 <head>
@@ -116,7 +119,7 @@ tsghb-doctor/            下載包根目錄（repo 中為 tsghb-landing-page/）
 
 ---
 
-## 5. 修改須知
+## 5. 修改原型須知
 
 - **每張卡片的連結寫兩次**（圖片與「前往頁面」按鈕），改網址或改成彈窗時兩處都要改。
 - 案件查詢上線後：把兩處 `sc-camel-on-click="{{ openDev }}"` 換成 `href="…" target="_blank" rel="noopener"`，
@@ -128,7 +131,82 @@ tsghb-doctor/            下載包根目錄（repo 中為 tsghb-landing-page/）
 
 ---
 
-## 6. 部署
+## 6. 正式實作指引（Vue 3 + .NET Core 8）
+
+原型只決定**長相與行為**；以下是把它搬進 Vue 3 前端、.NET Core 8 後端專案時的對應方式。
+專案既有的慣例（目錄結構、路由、狀態管理、UI 元件庫、TypeScript 與否）優先，本節只是建議。
+
+### 6.1 原型語法對照
+
+| 原型（dc-runtime） | Vue 3 |
+| --- | --- |
+| `renderVals()` 回傳值 + `{{ 變數 }}` | `<script setup>` 的 `ref` / `computed`，模板一樣用 `{{ }}` |
+| `sc-camel-on-click="{{ fn }}"` | `@click.prevent="fn"` |
+| `<sc-if value="{{ x }}">` / `<sc-for>` | `v-if` / `v-for` |
+| `style-hover="…"` | `<style scoped>` 裡的 `:hover` |
+| `sc-camel-view-box` | 一般的 `viewBox` |
+| `<helmet>` 內的 `lp-*` 規則 | 搬到元件的 `<style scoped>`，斷點與數值照抄 |
+| `componentWillUnmount` | `onBeforeUnmount` |
+| `history.back()` | `router.back()`（Vue Router） |
+
+`window.__resources`、`dc-runtime.js`、`ds-bundle.js`、React 都**不需要**帶進正式專案。
+
+### 6.2 元件拆分（建議）
+
+```
+DoctorLanding.vue           路由頁面
+├─ LandingHeader.vue        院徽 + 平台名稱（各角色共用）
+├─ LandingHero.vue          props: gradient, image, imageAlt（各角色共用）
+├─ FeatureCard.vue ×3       props: title, color, image, icon, href?（各角色共用）
+├─ LandingFooter.vue        （各角色共用）
+└─ DevNoticeDialog.vue      「功能開發中」彈窗
+```
+
+- 三張卡片用陣列資料 + `v-for` 產生；`FeatureCard` 有 `href` 時渲染 `<a target="_blank" rel="noopener">`，
+  沒有時 `emit('click')`，由頁面決定開彈窗。圖片與按鈕要連到同一個目標（原型中兩處都可點）。
+- 卡片主色（標題／按鈕／圖片底色）以 prop 傳入，對照第 3.1 節。
+
+彈窗倒數邏輯（對應原型的 `openDev` / `goBack`）：
+
+```ts
+const router = useRouter()
+const devOpen = ref(false)
+const count = ref(3)
+let timer: number | undefined
+
+function openDev() {
+  devOpen.value = true
+  count.value = 3
+  clearInterval(timer)
+  timer = window.setInterval(() => {
+    if (--count.value <= 0) goBack()
+  }, 1000)
+}
+
+function goBack() {
+  clearInterval(timer)
+  devOpen.value = false
+  if (window.history.length > 1) router.back()
+}
+
+onBeforeUnmount(() => clearInterval(timer))
+```
+
+### 6.3 資產
+
+- 插圖與院徽放進前端專案（`src/assets/` 以 `import` 引用，或放 `public/`），檔名沿用第 1 節。
+- 字型：專案若已載入 Noto Sans TC 就沿用；否則可用原型 `<helmet>` 中的 `@font-face` 子集切片（`assets/fonts/`）。
+
+### 6.4 後端（.NET Core 8）
+
+- 本頁是純前端畫面，**不需要新增 API**。
+- 外部連結（`mphr-tsghb.docloop.pro` 網域、`c=tsghbperp` 參數）不要寫死在元件裡，
+  放在前端環境設定（Vite `.env` 的 `VITE_*`）或由後端 `appsettings.{Environment}.json` 經設定 API 提供，方便切換測試／正式環境。
+- 依登入角色決定顯示哪個 Landing page 時，角色以後端驗證後的身分（claims）為準，前端路由守衛只負責導向。
+
+---
+
+## 7. 部署（原型）
 
 本原型放在 GitHub Pages repo（`advmeds-prototype`）底下，push 到 `main` 後自動部署，不經任何 build。
 

@@ -3,6 +3,9 @@
 機構管理者登入後的入口頁（Landing page）：Hero 大標 + 兩張功能卡片（**平台使用者列表**、**報表匯出**），
 點卡片以新分頁開啟對應功能。
 
+> **正式實作採 Vue 3 + .NET Core 8。** 本資料夾的 HTML 是視覺與互動的**參考原型**（dc-runtime + React），
+> 不要移植它的執行框架；請依第 3、4 節的版面與行為用 Vue 3 重寫，做法見第 6 節。
+
 ---
 
 ## 1. 檔案結構
@@ -30,9 +33,9 @@ tsghb-orgmag/            下載包根目錄（repo 中為 tsghb-landing-page/）
 
 ---
 
-## 2. 技術結構
+## 2. 原型技術結構（閱讀原型用，不需移植）
 
-頁面本體是一份完整 HTML，內容放在 `<x-dc>` 元素中，由 `dc-runtime.js` 解析後以 React 渲染。
+原型頁面本體是一份完整 HTML，內容放在 `<x-dc>` 元素中，由 `dc-runtime.js` 解析後以 React 渲染。
 
 ```html
 <head>
@@ -76,13 +79,14 @@ tsghb-orgmag/            下載包根目錄（repo 中為 tsghb-landing-page/）
 
 ### 3.1 功能卡片
 
-| 卡片 | 標題色 | 按鈕色 | 圖檔 |
+| 卡片 | 主色（標題／按鈕） | 按鈕圖示 | 圖檔 |
 | --- | --- | --- | --- |
-| 平台使用者列表 | `#2f6fcf` | `#2f6fcf` | `feature-user-list.png` |
-| 報表匯出 | `#5b93dc` | `#8db6ec`（較淺，依設計稿） | `feature-report-export.png` |
+| 平台使用者列表 | `#2f6fcf` | 使用者群組 | `feature-user-list.png` |
+| 報表匯出 | `#5b93dc` | 下載 | `feature-report-export.png` |
 
-按鈕為**膠囊形**（`border-radius:100px`、高 34px），文字「前往頁面」後接 `›` 箭頭 SVG；
-與醫師頁的方角、圖示在左的按鈕不同，是依設計稿刻意區分。
+按鈕樣式與醫師頁（`doctor/`）**完全一致**：`.lp-btn` 三段規則（基本、手機、電腦）逐字相同，
+圓角 6px 的滿版按鈕（最大寬 260px、高 42px），圖示在文字左側，hover 時 `filter:brightness(.92)`。
+改按鈕樣式時兩頁要一起改。
 
 ### 3.2 響應式
 
@@ -107,7 +111,7 @@ tsghb-orgmag/            下載包根目錄（repo 中為 tsghb-landing-page/）
 
 ---
 
-## 5. 修改須知
+## 5. 修改原型須知
 
 - **每張卡片的連結寫兩次**（圖片與「前往頁面」按鈕），改網址時兩處都要改；HTML 內 `&` 要寫成 `&amp;`。
 - **電腦版要維持一頁不捲動**：新增內容後請確認 1280×720 與 1440×900 都能完整顯示。
@@ -116,7 +120,56 @@ tsghb-orgmag/            下載包根目錄（repo 中為 tsghb-landing-page/）
 
 ---
 
-## 6. 部署
+## 6. 正式實作指引（Vue 3 + .NET Core 8）
+
+原型只決定**長相與行為**；以下是把它搬進 Vue 3 前端、.NET Core 8 後端專案時的對應方式。
+專案既有的慣例（目錄結構、路由、狀態管理、UI 元件庫、TypeScript 與否）優先，本節只是建議。
+
+### 6.1 原型語法對照
+
+| 原型（dc-runtime） | Vue 3 |
+| --- | --- |
+| `renderVals()` 回傳值 + `{{ 變數 }}` | `<script setup>` 的 `ref` / `computed`，模板一樣用 `{{ }}` |
+| `sc-camel-on-click="{{ fn }}"` | `@click.prevent="fn"` |
+| `<sc-if value="{{ x }}">` / `<sc-for>` | `v-if` / `v-for` |
+| `style-hover="…"` | `<style scoped>` 裡的 `:hover` |
+| `sc-camel-view-box` | 一般的 `viewBox` |
+| `<helmet>` 內的 `lp-*` 規則 | 搬到元件的 `<style scoped>`，斷點與數值照抄 |
+
+`window.__resources`、`dc-runtime.js`、`ds-bundle.js`、React 都**不需要**帶進正式專案。
+
+### 6.2 元件拆分（建議）
+
+```
+OrgManagerLanding.vue       路由頁面
+├─ LandingHeader.vue        院徽 + 平台名稱（各角色共用）
+├─ LandingHero.vue          props: gradient, image, imageAlt（各角色共用）
+├─ FeatureCard.vue ×2       props: title, color, image, icon, href（各角色共用）
+└─ LandingFooter.vue        （各角色共用）
+```
+
+- 與醫師頁共用同一組元件，只換資料；兩張卡片用陣列資料 + `v-for` 產生。
+- 卡片為純連結：`<a :href target="_blank" rel="noopener">`，圖片與按鈕連到同一個網址。
+- 本頁不需要「功能開發中」彈窗；日後有未開發的卡片，沿用醫師頁的 `DevNoticeDialog.vue`。
+- 按鈕樣式與醫師頁一致（第 3.1 節），`FeatureCard` 共用即可保證一致。
+
+### 6.3 資產
+
+- 插圖與院徽放進前端專案（`src/assets/` 以 `import` 引用，或放 `public/`），檔名沿用第 1 節。
+- 字型：專案若已載入 Noto Sans TC 就沿用；否則可用原型 `<helmet>` 中的 `@font-face` 子集切片（`assets/fonts/`）。
+
+### 6.4 後端（.NET Core 8）
+
+- 本頁是純前端畫面，**不需要新增 API**。
+- 外部連結（`mphr-tsghb.docloop.pro` 網域、`c=tsghbperp` 參數）不要寫死在元件裡，
+  放在前端環境設定（Vite `.env` 的 `VITE_*`）或由後端 `appsettings.{Environment}.json` 經設定 API 提供，方便切換測試／正式環境。
+- 平台使用者列表網址中的 `orgId=5`、`managerRoleId=11` 是原型寫死的值；正式實作時請確認是否應改由
+  登入者所屬機構（後端驗證後的身分／claims）帶入，`page=3` 是否需要保留也請一併確認。
+- 依登入角色決定顯示哪個 Landing page 時，角色以後端驗證後的身分為準，前端路由守衛只負責導向。
+
+---
+
+## 7. 部署（原型）
 
 本原型放在 GitHub Pages repo（`advmeds-prototype`）底下，push 到 `main` 後自動部署，不經任何 build。
 
