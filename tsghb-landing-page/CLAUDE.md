@@ -25,9 +25,9 @@ tsghb-landing-page/
    ├─ img/
    │  ├─ logo-tsghb.png                 院徽（header 左上）
    │  ├─ hero.png                       主視覺右側插圖
-   │  ├─ orgmag-hero.png                orgMag 主視覺（佔位圖，待替換）
-   │  ├─ feature-user-list.png          平台使用者列表卡片（佔位圖，待替換）
-   │  ├─ feature-report-export.png      報表匯出卡片（佔位圖，待替換）
+   │  ├─ orgmag-hero.png                orgMag 主視覺
+   │  ├─ feature-user-list.png          平台使用者列表卡片
+   │  ├─ feature-report-export.png      報表匯出卡片
    │  ├─ feature-case-list.png          我的案件卡片
    │  ├─ feature-dashboard.png          管理儀錶板卡片
    │  └─ feature-report-history.png     案件查詢卡片
@@ -140,5 +140,5 @@ https://arthurhsuadvmeds.github.io/advmeds-prototype/tsghb-landing-page/doctor/
 
 - 兩張卡片目前都開「功能開發中」彈窗（`openUserList` / `openReportExport`，文字由 `devText` 帶入功能名稱）。
   平台使用者列表的正式網址確定後，把圖片與按鈕兩處改成 `href`＋`target="_blank"`。
-- 三張插圖目前是佔位圖（虛線框寫著檔名），拿到正式插圖後**同檔名覆蓋**即可，不需改 HTML。
+- 三張插圖為去背 PNG（1547×1016），取自設計稿 artifact；更新時**同檔名覆蓋**即可，不需改 HTML。
   尺寸比照既有圖：主視覺 1526×614、卡片 631×434。
