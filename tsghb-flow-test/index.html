@@ -336,6 +336,15 @@ dialog::backdrop { background: rgba(10, 20, 18, .45); }
 .dlg-acts { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-top: 12px; }
 .dlg-acts .spacer { flex: 1; }
 .copy-msg { font-size: .85rem; color: var(--ok); }
+.import-box { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+.import-box summary { cursor: pointer; font-weight: 500; }
+.import-box[open] summary { margin-bottom: 8px; }
+.import-box .dlg-note { margin: 0 0 8px; }
+#importText { min-height: 150px; font-size: .85rem; }
+.import-acts { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-top: 8px; }
+.import-msg { font-size: .85rem; color: var(--muted); }
+.import-msg.is-ok { color: var(--ok); }
+.import-msg.is-error { color: var(--fail); }
 </style>
 
 <div class="wrap">
@@ -364,7 +373,7 @@ dialog::backdrop { background: rgba(10, 20, 18, .45); }
     <h2 id="reportTitle">測試紀錄</h2>
     <button type="button" class="btn ghost" data-act="close">關閉</button>
   </div>
-  <p class="dlg-note">進度只存在這台電腦的這個瀏覽器裡。測完請複製下面的紀錄回報；換電腦、用無痕視窗或清除瀏覽資料，進度就不會在。</p>
+  <p class="dlg-note">進度只存在這台電腦的這個瀏覽器裡。測完請複製下面的紀錄回報；換電腦、用無痕視窗或清除瀏覽資料後，可以在下方貼上完整紀錄來還原。</p>
   <label for="reportText" class="sr">測試紀錄內容</label>
   <textarea id="reportText" readonly rows="16"></textarea>
   <div class="dlg-acts">
@@ -373,6 +382,17 @@ dialog::backdrop { background: rgba(10, 20, 18, .45); }
     <span class="spacer"></span>
     <button type="button" class="btn bad" data-act="wipe" data-arm>清除全部進度</button>
   </div>
+  <details class="import-box">
+    <summary>貼上測試紀錄，還原進度</summary>
+    <p class="dlg-note">把另一台電腦產生的完整測試紀錄貼到下面，再按「還原進度」。請保留紀錄底部的「可還原進度資料」區塊。</p>
+    <label for="importText" class="sr">要匯入的測試紀錄</label>
+    <textarea id="importText" rows="7" placeholder="在這裡貼上完整的測試紀錄"></textarea>
+    <div class="import-acts">
+      <button type="button" class="btn" data-act="paste">從剪貼簿貼上</button>
+      <button type="button" class="btn primary" data-act="import">還原進度</button>
+      <span id="importMsg" class="import-msg" role="status"></span>
+    </div>
+  </details>
 </dialog>
 
 <script>
@@ -1053,6 +1073,67 @@ dialog::backdrop { background: rgba(10, 20, 18, .45); }
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
   }
 
+  const STATE_START = '[TSGHB-FLOWTEST-STATE]';
+  const STATE_END = '[/TSGHB-FLOWTEST-STATE]';
+  const exportState = () => JSON.stringify({
+    v: 1,
+    cur: state.cur,
+    tester: state.tester,
+    cases: state.cases,
+  });
+
+  function parseImportedState(text) {
+    const sourceText = String(text || '').trim();
+    if (!sourceText) throw new Error('請先貼上測試紀錄。');
+
+    let payloadText = sourceText;
+    const start = sourceText.indexOf(STATE_START);
+    if (start >= 0) {
+      const payloadStart = start + STATE_START.length;
+      const end = sourceText.indexOf(STATE_END, payloadStart);
+      if (end < 0) throw new Error('找不到完整的可還原進度資料。');
+      payloadText = sourceText.slice(payloadStart, end).trim();
+    }
+
+    let payload;
+    try { payload = JSON.parse(payloadText); } catch (e) {
+      throw new Error('這不是有效的測試紀錄，請貼上頁面產生的完整內容。');
+    }
+    if (payload && payload.state && typeof payload.state === 'object' && !payload.cases) payload = payload.state;
+    if (!payload || typeof payload !== 'object' || !payload.cases || typeof payload.cases !== 'object') {
+      throw new Error('這份內容沒有可還原的進度資料。');
+    }
+    if (payload.v !== undefined && Number(payload.v) !== 1) throw new Error('這份紀錄的版本與目前頁面不相容。');
+
+    const next = { cur: CASES[payload.cur] ? payload.cur : ORDER[0], tester: typeof payload.tester === 'string' ? payload.tester : '', cases: {} };
+    let importedCases = 0, importedSteps = 0, skippedCases = 0;
+    const validStatus = new Set(['ok', 'fail', 'skip']);
+    Object.entries(payload.cases).forEach(([id, old]) => {
+      const c = CASES[id];
+      if (!c || !old || typeof old !== 'object') { skippedCases++; return; }
+      if (old.sig !== undefined && String(old.sig) !== SIG[id]) { skippedCases++; return; }
+
+      const r = { sig: SIG[id], s: {}, n: {} };
+      const validIndex = (key) => {
+        const i = Number(key);
+        return Number.isInteger(i) && i >= 0 && i < c.steps.length && c.steps[i].k !== 'seg' ? i : null;
+      };
+      if (old.s && typeof old.s === 'object') Object.entries(old.s).forEach(([key, value]) => {
+        const i = validIndex(key);
+        if (i !== null && validStatus.has(value)) { r.s[i] = value; importedSteps++; }
+      });
+      if (old.n && typeof old.n === 'object') Object.entries(old.n).forEach(([key, value]) => {
+        const i = validIndex(key);
+        if (i !== null && typeof value === 'string' && value) r.n[i] = value;
+      });
+      if (Object.keys(r.s).length || Object.keys(r.n).length) {
+        next.cases[id] = r;
+        importedCases++;
+      }
+    });
+    return { state: next, importedCases, importedSteps, skippedCases };
+  }
+
   function buildReport() {
     const t = { todo: 0, run: 0, done: 0, fail: 0 };
     ORDER.forEach((id) => { t[stat(CASES[id]).status]++; });
@@ -1082,6 +1163,7 @@ dialog::backdrop { background: rgba(10, 20, 18, .45); }
       });
     });
     if (!any) L.push('', '（還沒有任何測試紀錄）');
+    L.push('', '--- 可還原進度資料（請保留以下內容） ---', STATE_START, exportState(), STATE_END);
     return L.join('\n');
   }
 
@@ -1107,6 +1189,45 @@ dialog::backdrop { background: rgba(10, 20, 18, .45); }
     let ok = false;
     try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
     msg.textContent = ok ? '已複製，可以直接貼到回報的地方' : '瀏覽器不讓網頁自動複製，已經幫你全選，請按 Ctrl+C（Mac 按 ⌘C）';
+  }
+
+  function setImportMsg(message, type) {
+    const el = $('#importMsg');
+    el.textContent = message;
+    el.className = `import-msg${type ? ` is-${type}` : ''}`;
+  }
+
+  async function pasteReport() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text) throw new Error('剪貼簿是空的');
+      $('#importText').value = text;
+      setImportMsg('已從剪貼簿貼上，請確認後按「還原進度」。', 'ok');
+    } catch (e) {
+      $('#importText').focus();
+      setImportMsg('瀏覽器不允許直接讀取剪貼簿，請在文字框按 Ctrl+V（Mac 按 ⌘V）。', '');
+    }
+  }
+
+  function importProgress() {
+    let parsed;
+    try { parsed = parseImportedState($('#importText').value); } catch (e) {
+      setImportMsg(e.message, 'error');
+      return;
+    }
+    if (!window.confirm('還原進度會覆蓋這台電腦目前的測試進度，確定要繼續嗎？')) return;
+
+    state.cur = parsed.state.cur;
+    state.tester = parsed.state.tester;
+    state.cases = parsed.state.cases;
+    failDraft = null;
+    focusAfter = null;
+    save();
+    try { history.replaceState(null, '', '#' + state.cur); } catch (e) { /* 預覽環境可能不允許改網址 */ }
+    $('#tester').value = state.tester;
+    $('#reportText').value = buildReport();
+    setImportMsg(`已還原 ${parsed.importedCases} 個情況、${parsed.importedSteps} 步。${parsed.skippedCases ? `另有 ${parsed.skippedCases} 個情況因版本不同略過。` : ''}`, 'ok');
+    render();
   }
 
   document.addEventListener('click', (e) => {
@@ -1168,6 +1289,8 @@ dialog::backdrop { background: rgba(10, 20, 18, .45); }
     if (act === 'report') { openReport(); return; }
     if (act === 'close') { closeReport(); return; }
     if (act === 'copy') { copyReport(); return; }
+    if (act === 'paste') { pasteReport(); return; }
+    if (act === 'import') { importProgress(); return; }
     if (act === 'wipe') {
       if (!armed(b)) return;
       state.cases = {};
