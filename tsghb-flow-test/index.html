@@ -1,0 +1,1170 @@
+<title>通報流程測試導引</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+:root {
+  --ground: #F2F5F4;
+  --surface: #FFFFFF;
+  --surface-2: #E8EEEC;
+  --ink: #16201E;
+  --muted: #586A65;
+  --line: #D2DCD8;
+  --accent: #0D6B62;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #DCEFEB;
+  --k-S: #975A00;
+  --k-F: #2A5BA5;
+  --k-B: #6948A3;
+  --k-M: #067F3E;
+  --k-C: #0D6B62;
+  --k-X: #B3261E;
+  --ok: #117347;
+  --fail: #BC3227;
+  --fail-soft: #FBE5E2;
+  --skip: #87918D;
+  --on-state: #FFFFFF;
+  --bubble: #D9F4E2;
+  --bubble-ink: #0F2E1B;
+  --warn-bg: #FFF2D3;
+  --warn-ink: #6B4200;
+  --shadow: 0 1px 2px rgba(14, 40, 36, .06), 0 8px 24px rgba(14, 40, 36, .07);
+  --font: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", "Heiti TC", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0F1514;
+    --surface: #161F1D;
+    --surface-2: #1E2927;
+    --ink: #E3ECE9;
+    --muted: #97A8A3;
+    --line: #2B3936;
+    --accent: #52B8AC;
+    --accent-ink: #06201D;
+    --accent-soft: #163632;
+    --k-S: #E0A34A;
+    --k-F: #86ACEB;
+    --k-B: #BBA2EE;
+    --k-M: #55D18C;
+    --k-C: #52B8AC;
+    --k-X: #F08274;
+    --ok: #4FC98C;
+    --fail: #F08274;
+    --fail-soft: #3A1D1A;
+    --skip: #7C8A86;
+    --on-state: #0B1413;
+    --bubble: #1B3B2A;
+    --bubble-ink: #DDF3E5;
+    --warn-bg: #3A2E14;
+    --warn-ink: #F3CD84;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0F1514;
+  --surface: #161F1D;
+  --surface-2: #1E2927;
+  --ink: #E3ECE9;
+  --muted: #97A8A3;
+  --line: #2B3936;
+  --accent: #52B8AC;
+  --accent-ink: #06201D;
+  --accent-soft: #163632;
+  --k-S: #E0A34A;
+  --k-F: #86ACEB;
+  --k-B: #BBA2EE;
+  --k-M: #55D18C;
+  --k-C: #52B8AC;
+  --k-X: #F08274;
+  --ok: #4FC98C;
+  --fail: #F08274;
+  --fail-soft: #3A1D1A;
+  --skip: #7C8A86;
+  --on-state: #0B1413;
+  --bubble: #1B3B2A;
+  --bubble-ink: #DDF3E5;
+  --warn-bg: #3A2E14;
+  --warn-ink: #F3CD84;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font: 15px/1.65 var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 56px; }
+@media (min-width: 700px) { .wrap { padding-inline: 28px; } }
+.sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+/* ===== 頁首 ===== */
+header.top {
+  display: flex; flex-wrap: wrap; gap: 12px 28px;
+  align-items: flex-end; justify-content: space-between;
+  padding-bottom: 14px; border-bottom: 1px solid var(--line);
+}
+.brand h1 { margin: 0; font-size: 1.55rem; font-weight: 700; letter-spacing: .03em; line-height: 1.3; text-wrap: balance; }
+.brand p { margin: 2px 0 0; color: var(--muted); font-size: .85rem; }
+.tools { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.field { display: flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--muted); }
+.field input { width: 9.5em; }
+.stats { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.t-ok { color: var(--ok); }
+.t-fail { color: var(--fail); }
+.howto { margin: 12px 0 20px; font-size: .88rem; color: var(--muted); max-width: 62em; }
+
+input[type="text"], textarea, select {
+  font: inherit; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px;
+  max-width: 100%;
+}
+textarea { width: 100%; resize: vertical; line-height: 1.55; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.btn {
+  font: inherit; font-size: .9rem; line-height: 1.4;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  border-radius: 8px; padding: 6px 13px; cursor: pointer;
+}
+.btn:hover { border-color: var(--accent); }
+.btn[disabled] { opacity: .45; cursor: default; border-color: var(--line); }
+.btn.small { padding: 3px 9px; font-size: .8rem; }
+.btn.ghost { background: transparent; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 500; }
+.btn.danger { background: var(--fail); border-color: var(--fail); color: var(--on-state); font-weight: 500; }
+.btn.bad { color: var(--fail); border-color: color-mix(in srgb, var(--fail) 45%, var(--line)); }
+.btn.bad:hover { border-color: var(--fail); }
+@media (prefers-reduced-motion: no-preference) {
+  .btn, .case-btn { transition: background-color .12s, border-color .12s, color .12s; }
+}
+
+/* ===== 版面 ===== */
+.picker { display: none; margin-bottom: 18px; }
+.picker select { width: 100%; }
+.layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 32px; align-items: start; }
+.rail {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px);
+  max-height: calc(100vh - 24px); overflow: auto; padding-right: 4px;
+}
+@media (max-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .rail { display: none; }
+  .picker { display: block; }
+}
+
+/* ===== 情況清單 ===== */
+.flow + .flow { margin-top: 18px; }
+.flow h2 {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin: 0 0 4px; padding: 0 8px;
+  font-size: .8rem; font-weight: 700; letter-spacing: .08em; color: var(--muted);
+}
+.fc { font-weight: 500; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.flow ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; }
+.case-btn {
+  width: 100%; display: grid; grid-template-columns: 1.3rem 9px minmax(0, 1fr) auto;
+  gap: 8px; align-items: center; text-align: left;
+  font: inherit; font-size: .88rem; line-height: 1.45; color: var(--ink);
+  background: transparent; border: 0; border-radius: 8px; padding: 6px 8px; cursor: pointer;
+}
+.case-btn:hover { background: var(--surface-2); }
+.case-btn[aria-current="true"] { background: var(--accent-soft); font-weight: 500; }
+.cn { font-family: var(--mono); font-size: .78rem; color: var(--muted); text-align: right; }
+.cc { font-size: .75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dot { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--skip); }
+.st-run .dot { border-color: var(--accent); background: linear-gradient(90deg, var(--accent) 50%, transparent 50%); }
+.st-done .dot { border-color: var(--ok); background: var(--ok); }
+.st-fail .dot { border-color: var(--fail); background: var(--fail); }
+
+/* ===== 情況標頭 ===== */
+.case-head { display: grid; gap: 6px; margin-bottom: 14px; }
+.eyebrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .82rem; color: var(--muted); letter-spacing: .05em; }
+.tag { font-size: .72rem; font-weight: 700; letter-spacing: .04em; padding: 0 7px; border-radius: 4px; background: var(--accent); color: var(--accent-ink); }
+.case-head h2 { margin: 0; font-size: 1.5rem; line-height: 1.35; text-wrap: balance; }
+.prog { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.bar { flex: 1 1 200px; height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; display: flex; }
+.bar i { display: block; height: 100%; }
+.b-ok { background: var(--ok); }
+.b-fail { background: var(--fail); }
+.b-skip { background: var(--skip); }
+.prog-num { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.intro { background: var(--surface-2); border-radius: 10px; padding: 10px 14px; font-size: .9rem; margin-bottom: 12px; max-width: 62em; }
+
+/* ===== 下一步 ===== */
+.next {
+  background: var(--surface); border: 1.5px solid var(--accent); border-radius: 14px;
+  box-shadow: var(--shadow); padding: 16px 18px 18px; margin: 18px 0 8px;
+}
+.next.is-failing { border-color: var(--fail); }
+.next.is-done { border-color: var(--ok); }
+.next-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+.next-label { font-size: .82rem; font-weight: 700; letter-spacing: .12em; color: var(--accent); }
+.is-failing .next-label { color: var(--fail); }
+.is-done .next-label { color: var(--ok); }
+.next-pos { font-family: var(--mono); font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.next .text { font-size: 1.15rem; font-weight: 500; line-height: 1.5; }
+.next .bubble { font-size: 1rem; }
+.look { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
+.look h3 { margin: 0 0 6px; font-size: .8rem; font-weight: 500; letter-spacing: .06em; color: var(--muted); }
+.look ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.look li { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; font-size: .9rem; }
+.qline { color: var(--muted); margin-left: 4px; }
+.none { margin: 0; font-size: .88rem; color: var(--muted); }
+.fail-label { display: block; margin: 14px 0 6px; font-size: .85rem; color: var(--muted); }
+.next-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; align-items: center; }
+.next-acts .btn { padding: 9px 16px; font-size: .95rem; }
+.next-acts .spacer { flex: 1; }
+.done-sum { margin: 0; font-size: 1rem; }
+@media (max-width: 620px) {
+  .next { padding: 14px; }
+  .next-acts .btn { flex: 1 1 auto; }
+  .next-acts .spacer { display: none; }
+}
+
+/* ===== 步驟內容 ===== */
+.meta { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; margin-bottom: 3px; }
+.kind {
+  display: inline-flex; align-items: center; white-space: nowrap;
+  font-size: .74rem; font-weight: 500; letter-spacing: .04em; line-height: 1.6;
+  padding: 0 8px; border-radius: 999px; color: var(--kc);
+  background: color-mix(in srgb, var(--kc) 11%, transparent);
+  border: 1px solid color-mix(in srgb, var(--kc) 32%, transparent);
+}
+.k-S { --kc: var(--k-S); }
+.k-F { --kc: var(--k-F); }
+.k-B { --kc: var(--k-B); }
+.k-M { --kc: var(--k-M); }
+.k-C { --kc: var(--k-C); }
+.k-X { --kc: var(--k-X); }
+.who { font-size: .86rem; font-weight: 700; }
+.endtag { font-size: .72rem; font-weight: 700; padding: 0 7px; border-radius: 4px; background: var(--ink); color: var(--ground); line-height: 1.6; }
+.chip {
+  display: inline-block; padding: 0 6px; margin: 0 2px; border-radius: 5px;
+  background: var(--surface-2); border: 1px solid var(--line);
+  font-weight: 500; font-size: .92em; line-height: 1.5;
+}
+.ph { display: inline-block; padding: 0 5px; margin: 0 1px; border: 1px dashed currentColor; border-radius: 4px; font-size: .9em; line-height: 1.4; opacity: .85; }
+.bubble {
+  margin-top: 6px; display: inline-block; max-width: min(100%, 34rem);
+  background: var(--bubble); color: var(--bubble-ink);
+  border-radius: 16px 16px 16px 4px; padding: 8px 14px;
+  font-size: .92rem; line-height: 1.6; overflow-wrap: anywhere;
+}
+.bubble b { font-weight: 700; }
+.cap { margin: 4px 0 0; font-size: .75rem; color: var(--muted); }
+.hints { margin: 6px 0 0; padding-left: 1.15em; font-size: .85rem; color: var(--muted); }
+.warn { margin: 8px 0 0; background: var(--warn-bg); color: var(--warn-ink); border-radius: 8px; padding: 6px 10px; font-size: .86rem; }
+.warn b { margin-right: 8px; }
+.linkish {
+  display: inline-block; margin-top: 6px; padding: 0; border: 0; background: none;
+  color: var(--accent); font: inherit; font-size: .85rem; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+
+/* ===== 步驟清單 ===== */
+.list-h { margin: 28px 0 8px; font-size: .8rem; font-weight: 700; letter-spacing: .08em; color: var(--muted); }
+.steps { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.step { display: grid; grid-template-columns: 2.2rem minmax(0, 1fr) auto; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--line); }
+.steps > li:first-child { border-top: 0; }
+.num { font-family: var(--mono); font-size: .82rem; color: var(--muted); padding-top: 2px; font-variant-numeric: tabular-nums; }
+.mark { display: block; font-family: var(--font); font-size: .95rem; font-weight: 700; line-height: 1.3; }
+.step.is-current { background: var(--accent-soft); }
+.step.is-current .num { color: var(--accent); font-weight: 600; }
+.step.is-ok .mark { color: var(--ok); }
+.step.is-fail { background: var(--fail-soft); }
+.step.is-fail .mark { color: var(--fail); }
+.step.is-skip .mark { color: var(--skip); font-size: .8rem; }
+.step.is-ok .text, .step.is-skip .text { color: var(--muted); }
+.step.is-ok .bubble, .step.is-skip .bubble { opacity: .7; }
+.acts { display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-start; justify-content: flex-end; }
+.acts .btn[aria-pressed="true"].m-ok { background: var(--ok); border-color: var(--ok); color: var(--on-state); }
+.acts .btn[aria-pressed="true"].m-fail { background: var(--fail); border-color: var(--fail); color: var(--on-state); }
+.acts .btn[aria-pressed="true"].m-skip { background: var(--skip); border-color: var(--skip); color: var(--on-state); }
+.note-box { margin-top: 8px; }
+.note-box label { display: block; font-size: .78rem; color: var(--muted); margin-bottom: 3px; }
+.seg {
+  display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline;
+  padding: 7px 14px; background: var(--surface-2); border-top: 1px solid var(--line);
+  font-size: .8rem; color: var(--muted);
+}
+.seg-t { font-weight: 700; letter-spacing: .04em; }
+@media (max-width: 620px) {
+  .step { grid-template-columns: 1.9rem minmax(0, 1fr); }
+  .acts { grid-column: 2; justify-content: flex-start; }
+}
+
+/* ===== 接續與參考 ===== */
+.cont {
+  margin-top: 14px; padding: 12px 14px; border: 1px dashed var(--line); border-radius: 10px;
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .9rem;
+}
+.cont > span { margin-right: 4px; }
+.next .cont { margin-top: 12px; }
+.refs { display: grid; gap: 8px; }
+details.ref { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0 14px; }
+details.ref summary { cursor: pointer; padding: 10px 0; font-weight: 500; }
+details.ref[open] summary { border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+details.ref p { margin: 0 0 10px; font-size: .9rem; }
+.plain { margin: 0 0 12px; padding-left: 1.15em; font-size: .9rem; display: grid; gap: 6px; }
+.plain ul { margin: 4px 0 0; padding-left: 1.15em; }
+.legend-list { list-style: none; padding-left: 0; }
+.legend-list li { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.tbl { overflow-x: auto; margin-bottom: 12px; }
+table { border-collapse: collapse; width: 100%; min-width: 34rem; font-size: .88rem; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: .8rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+
+/* ===== 測試紀錄 ===== */
+dialog {
+  border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink);
+  padding: 18px; width: min(720px, calc(100vw - 32px)); box-shadow: var(--shadow);
+}
+dialog::backdrop { background: rgba(10, 20, 18, .45); }
+.dlg-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.dlg-head h2 { margin: 0; font-size: 1.15rem; }
+.dlg-note { margin: 8px 0 12px; font-size: .85rem; color: var(--muted); }
+#reportText { min-height: 320px; font-size: .85rem; }
+.dlg-acts { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-top: 12px; }
+.dlg-acts .spacer { flex: 1; }
+.copy-msg { font-size: .85rem; color: var(--ok); }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>通報流程測試導引</h1>
+      <p>依 FolwTest/plan.md 整理（2026-09-19）・緊急醫療、第一／二／三類優化計畫、跨流程共 33 個情況</p>
+    </div>
+    <div class="tools">
+      <label class="field" for="tester">測試人員 <input id="tester" type="text" placeholder="姓名" autocomplete="name"></label>
+      <span id="stats" class="stats" aria-live="polite"></span>
+      <button type="button" class="btn" data-act="report">測試紀錄</button>
+    </div>
+  </header>
+  <p class="howto">照「下一步」做：操作做完按「完成」；LINE 訊息或後台畫面和預期一樣按「符合」，不一樣按「不符合」並寫下實際看到什麼。用不到的步驟按「略過」。進度會自動存在這個瀏覽器，測完按右上角「測試紀錄」複製結果回報。</p>
+  <div class="picker"><label for="casePick" class="sr">選擇要測的情況</label><select id="casePick"></select></div>
+  <div class="layout">
+    <nav class="rail" id="rail" aria-label="測試情況"></nav>
+    <main id="runner"></main>
+  </div>
+  <noscript><p>這個頁面需要開啟 JavaScript 才能使用。</p></noscript>
+</div>
+
+<dialog id="reportDlg" aria-labelledby="reportTitle">
+  <div class="dlg-head">
+    <h2 id="reportTitle">測試紀錄</h2>
+    <button type="button" class="btn ghost" data-act="close">關閉</button>
+  </div>
+  <p class="dlg-note">進度只存在這台電腦的這個瀏覽器裡。測完請複製下面的紀錄回報；換電腦、用無痕視窗或清除瀏覽資料，進度就不會在。</p>
+  <label for="reportText" class="sr">測試紀錄內容</label>
+  <textarea id="reportText" readonly rows="16"></textarea>
+  <div class="dlg-acts">
+    <button type="button" class="btn primary" data-act="copy">複製紀錄</button>
+    <span id="copyMsg" class="copy-msg" role="status"></span>
+    <span class="spacer"></span>
+    <button type="button" class="btn bad" data-act="wipe" data-arm>清除全部進度</button>
+  </div>
+</dialog>
+
+<script>
+(() => {
+  'use strict';
+
+  // ===== 小工具 =====
+  const $ = (sel) => document.querySelector(sel);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  // [選項] 顯示成選項標籤，{欄位} 顯示成「依實際內容」的佔位框
+  const fmt = (s) => esc(s)
+    .replace(/\[([^\]]+)\]/g, '<span class="chip">$1</span>')
+    .replace(/\{([^}]+)\}/g, '<span class="ph">$1</span>');
+
+  // ===== 步驟 =====
+  // S 前提 / F 前台操作 / B 後台操作 / M 收到 LINE / C 後台確認 / X 不應發生
+  const mk = (k) => (who, text, o) => Object.assign({ k, who, text }, o || {});
+  const S = mk('S'), F = mk('F'), B = mk('B'), M = mk('M'), C = mk('C'), X = mk('X');
+  const BE = (who, text, o) => B(who, text, Object.assign({ end: true }, o || {}));
+  const seg = (text, hint) => ({ k: 'seg', text, hint });
+
+  const KIND = { S: '前提', F: '前台操作', B: '後台操作', M: '收到 LINE', C: '後台確認', X: '不應發生' };
+  const isAction = (k) => k === 'S' || k === 'F' || k === 'B';
+
+  const TWICE = '分兩次指派（先加醫師、再加護理師）時，兩位都要收到';
+  const REMIND = '選測：出勤隔天 08:00，若案件摘要／三日內追蹤／處置結果還沒填完，出勤單填寫者會收到「請於三日內補齊…」提醒';
+  const QUIET = '個案因為優化計畫待在某位醫師的共照群裡時也一樣，那位醫師不會收到';
+  const SYS = '系統內建發送，不在腳本裡';
+
+  // ===== 緊急醫療 =====
+  const emHead = () => [
+    F('通報者', '填寫緊急醫療通報單'),
+    M('通報者', '收到通報完成的訊息'),
+    M('指派者', '收到待指派的訊息'),
+    B('指派者', '進行指派（把個案加入醫師、護理師的共照群）'),
+    M('被指派醫師、護理師', '收到指派通知', { q: '有新的緊急醫療個案已被指派給您', hint: TWICE }),
+  ];
+  const emTail = () => [
+    BE('醫師', '填寫處置結果', { ref: 'dispose', hint: '選哪一個處置結果，結案訊息的後段就不同' }),
+    M('通報者', '收到結案訊息', { q: '您通報的緊急醫療個案：XXX 已結案\n{依處置結果的內容}' }),
+    M('通報者', '收到系統發送的滿意度問卷連結', { hint: SYS }),
+    F('通報者', '填寫滿意度調查'),
+  ];
+  const EM_BACK = { text: '之後接情況 1~3 的「填寫受理方式」繼續走：', links: ['em1', 'em2', 'em3'] };
+
+  const EM = [
+    { id: 'em1', title: '僅電話', refs: ['dispose'], steps: [
+      ...emHead(),
+      B('醫師', '填寫受理方式 [電話]'),
+      B('醫師', '填寫案件摘要、三日內追蹤'),
+      ...emTail(),
+    ] },
+    { id: 'em2', title: '電話＋出勤（未確認時間）', refs: ['dispose'], steps: [
+      ...emHead(),
+      B('醫師', '填寫受理方式 [電話 + 出勤] [未確認時間]'),
+      B('醫師', '傳訊息給通報者，約共訪時間'),
+      M('通報者', '收到醫師傳來的訊息'),
+      B('通報者', '點連結回覆醫師訊息'),
+      M('醫師', '收到通報者的回覆'),
+      B('醫師', '點連結回覆通報者訊息'),
+      B('醫師', '填寫出勤時間日期確認單'),
+      B('醫師', '填寫出勤單', { hint: REMIND }),
+      B('醫師', '填寫案件摘要、三日內追蹤'),
+      ...emTail(),
+    ] },
+    { id: 'em3', title: '電話＋出勤（已確認時間）', refs: ['dispose'], steps: [
+      ...emHead(),
+      B('醫師', '填寫受理方式 [電話 + 出勤] [已確認時間]'),
+      B('醫師', '填寫出勤單', { hint: REMIND }),
+      B('醫師', '填寫案件摘要、三日內追蹤'),
+      ...emTail(),
+    ] },
+    { id: 'em4', title: '處置中再次通報（已指派）', steps: [
+      S('個案', '處於緊急醫療通報中：已完成指派、尚未填處置結果'),
+      F('另一位通報者', '再次對這位個案進行緊急醫療通報'),
+      C('另一位通報者', '前台帶出的是「緊急醫療_再次通報單」，不是新的通報單'),
+      M('被指派醫師、護理師', '收到再次通報的通知', { q: '您負責的緊急醫療個案有新的再次通報\n個案姓名／通報者／個案連結' }),
+      C('醫師', '個案多了「處置中再通報 (緊醫)」標籤'),
+      C('醫師', '風險標籤換成「X風險 (緊醫-再次)」'),
+      C('醫師', '追蹤多一筆「再次通報 / 通報者：…」'),
+    ] },
+    { id: 'em5', title: '處置中再次通報（未指派）', next: EM_BACK, steps: [
+      S('個案', '處於緊急醫療通報中：指派者尚未指派'),
+      F('另一位通報者', '再次對這位個案進行緊急醫療通報'),
+      C('另一位通報者', '前台帶出的是「緊急醫療_再次通報單」'),
+      X('', '不會發任何 LINE 訊息', { hint: QUIET }),
+      C('指派者', '個案多了「處置中再通報 (緊醫)」與「X風險 (緊醫-再次)」'),
+      B('指派者', '進行指派'),
+      M('被指派醫師、護理師', '收到指派通知（與一般指派相同）', { q: '有新的緊急醫療個案已被指派給您' }),
+    ] },
+    { id: 'em6', title: '通報中風險變更（已指派）', steps: [
+      S('個案', '處於緊急醫療通報中：已完成指派、尚未填處置結果'),
+      F('原通報者', '填寫「緊急醫療_通報風險變更」'),
+      M('被指派醫師、護理師', '收到風險變更的通知', { q: '您負責的緊急醫療個案通報風險已變更\n個案姓名／通報者／個案連結' }),
+      C('醫師', '個案多了「處置中再通報 (緊醫)」標籤'),
+      C('醫師', '風險標籤換成「X風險 (緊醫-變更)」'),
+      C('醫師', '追蹤多一筆「通報風險變更 / 通報者：…」'),
+    ] },
+    { id: 'em7', title: '通報中風險變更（未指派）', next: EM_BACK, steps: [
+      S('個案', '處於緊急醫療通報中：指派者尚未指派'),
+      F('原通報者', '填寫「緊急醫療_通報風險變更」'),
+      X('', '不會發任何 LINE 訊息', { hint: QUIET }),
+      C('指派者', '個案多了「處置中再通報 (緊醫)」與「X風險 (緊醫-變更)」'),
+      B('指派者', '進行指派'),
+      M('被指派醫師、護理師', '收到指派通知（與一般指派相同）', { q: '有新的緊急醫療個案已被指派給您' }),
+    ] },
+    { id: 'em8', title: '醫師端風險變更', steps: [
+      S('個案', '處於緊急醫療流程中（身上有「通報中／待確認出勤日期／已確認出勤日期／已完成評估」其中一個）'),
+      B('醫師', '填寫「緊急醫療_機構端精神病人高風險檢傷風險變更」'),
+      C('醫師', '風險標籤換成「X風險 (緊醫-管理)」'),
+      C('醫師', '追蹤多一筆「完成表單」與「管理者評估 / X風險 / N分」'),
+      B('醫師', '編輯同一份表單，改分數'),
+      C('醫師', '追蹤寫的是「更新表單」'),
+      C('醫師', '風險標籤跟著換成新的等級'),
+      S('個案', '反例：個案已結案（上述標籤都已清掉）'),
+      B('醫師', '再填一份「緊急醫療_機構端精神病人高風險檢傷風險變更」'),
+      C('醫師', '標籤與追蹤都沒有變化'),
+      X('', '整個情況都不會發 LINE 訊息'),
+    ] },
+    { id: 'em9', title: '醫師自行通報（全程由醫師填寫）', refs: ['dispose'], steps: [
+      S('醫師', '以自己的帳號擔任通報者'),
+      F('醫師', '填寫緊急醫療通報單'),
+      M('醫師', '以通報者身分收到通報完成的訊息'),
+      M('指派者', '收到待指派的訊息'),
+      B('指派者', '指派給這位醫師（與護理師）'),
+      M('醫師、護理師', '收到指派通知', { q: '有新的緊急醫療個案已被指派給您' }),
+      B('醫師', '照情況 1~3 的「填寫受理方式」起繼續填（受理方式、出勤、案件摘要、三日內追蹤）'),
+      BE('醫師', '填寫處置結果', { ref: 'dispose' }),
+      M('醫師', '以通報者身分收到結案訊息', { q: '您通報的緊急醫療個案：XXX 已結案\n{依處置結果的內容}' }),
+      M('醫師', '收到系統發送的滿意度問卷連結', { hint: SYS }),
+      F('醫師', '填寫滿意度調查'),
+      M('醫師', '每一則都看得出是以哪個身分收到的', { hint: ['通報者身分：「您通報的…」', '被指派身分：「…已被指派給您」'] }),
+    ] },
+  ];
+
+  // ===== 第一類優化計畫（第二類由這裡換字產生）=====
+  const O1 = [
+    F('通報者', '填寫第一類轉介單（疑似或社區精神病人個案轉介單）'),
+    M('通報者', '收到通報訊息', { q: 'XXX 的第一類優化計畫通報' }),
+    M('衛生局', '收到待處理的訊息', { q: '有新的優化計畫個案待指派，請完成衛生局回覆單' }),
+    B('衛生局', '填寫衛生局回覆單（衛生局家訪紀錄與回覆內容）'),
+    M('指派者', '收到待指派的訊息', { q: '優化計劃有新進案待指派' }),
+    B('指派者', '進行指派（把個案加入醫師、護理師的共照群）'),
+    M('被指派醫師、護理師', '收到指派通知', { q: '有新的第一類優化計畫個案已被指派給您', hint: TWICE }),
+    B('醫師', '填寫機構確認單 [衛生局回覆情況：轉介三軍總醫院北投分院]'),
+    M('通報者', '收到「已轉介北投」通知', { q: '【通報者通知】第一類優化計畫\n經衛生局評估後已轉介三軍總醫院北投分院，後續將由醫療團隊與您聯繫\n＋ 個案連結' }),
+    M('衛生局回覆單填寫者', '收到「已轉介北投」通知', { q: '【衛生局通知】第一類優化計畫\n經機構確認，本案已轉介三軍總醫院北投分院' }),
+    B('醫師', '填寫評估訪視紀錄單 [訪視成功]'),
+    B('醫師', '完成評估訪視紀錄表'),
+    B('醫師', '填寫機構回覆單 [開案]'),
+    M('衛生局', '收到「已開案」通知', { q: '【衛生局通知】第一類優化計畫\n經轉介單位評估，個案：XXX 已開案' }),
+    B('醫師', '填寫追蹤訪視紀錄單 [訪視成功]', { hint: '可以重複填多次' }),
+    B('醫師', '完成追蹤訪視進度紀錄表'),
+    BE('醫師', '填寫結案訪視紀錄單', { hint: '結案原因選「服務已達3個月／服務未滿3個月」會出現必填的評估題，其餘 6 種原因出現選填的那一套' }),
+    M('通報者', '收到結案通知', { q: '【通報者通知】第一類優化計畫\n個案：XXX 的第一類優化計畫已結案\n結案原因：{結案原因}' }),
+    M('衛生局回覆單填寫者', '收到結案通知', { q: '【衛生局通知】第一類優化計畫\n本案已結案\n結案原因：{結案原因}' }),
+    B('醫師', '填寫家屬服務滿意度（選填）', { hint: '選填，不測可以按「略過」' }),
+    F('通報者', '前往後台填寫服務執行效益追蹤評估表、使用者平台滿意度回饋'),
+  ];
+  const head7 = () => [seg('前段：同情況 1 的步驟 1~7'), ...O1.slice(0, 7), seg('從這裡開始與情況 1 不同')];
+  const missed = () => [
+    S('個案', '處於評估訪視或追蹤訪視階段'),
+    B('醫師', '填寫評估訪視紀錄單 [訪視未遇]'),
+    C('醫師', '「完成表單」追蹤有寫'),
+    C('醫師', '狀態照樣從「通報中」推到「評估中」'),
+    C('醫師', '「已完成第N次訪視」沒有增加'),
+    C('醫師', '沒有「完成評估」追蹤'),
+    C('醫師', '風險標籤沒變'),
+    B('醫師', '填寫追蹤訪視紀錄單 [未接聽或訪視未遇]'),
+    C('醫師', '訪視次數沒有增加'),
+    C('醫師', '剩餘訪視次數沒有被扣'),
+    X('', '整個情況都不會發 LINE 訊息'),
+  ];
+
+  const CAT1 = [
+    { id: 'o1-1', title: '轉介北投 → 開案 → 結案', tag: '主流程', steps: O1 },
+    { id: 'o1-2', title: '轉介北投 → 無法開案', refs: ['noopen'], steps: [
+      seg('前段：同情況 1 的步驟 1~12'), ...O1.slice(0, 12), seg('從這裡開始與情況 1 不同'),
+      BE('醫師', '填寫機構回覆單 [無法開案] [原因]', { ref: 'noopen', hint: '選哪一個原因，衛生局收到的內容就不同' }),
+      M('衛生局', '收到「無法開案」通知', { q: '【衛生局通知】第一類優化計畫\n經轉介單位評估，個案：XXX 無法開案\n{依原因的內容}' }),
+      M('通報者', '收到「無法開案」通知', { q: '【通報者通知】第一類優化計畫\n經轉介單位評估無法開案，本案結案' }),
+      C('醫師', '個案身上只剩「轉介未開案 (優化)」'),
+      C('醫師', '醫師共照群已移出個案'),
+    ] },
+    { id: 'o1-3', title: '轉介他院', steps: [
+      ...head7(),
+      BE('醫師', '填寫機構確認單 [轉介他院] [院所名稱]'),
+      M('通報者', '收到「已轉介他院」通知', { q: '【通報者通知】第一類優化計畫\n經衛生局評估後已轉介至 {院所名稱}，本案於本平台結案' }),
+      M('衛生局回覆單填寫者', '收到「已轉介他院」通知', { q: '【衛生局通知】第一類優化計畫\n經機構確認，本案已轉介至 {院所名稱}，本案於本平台結案' }),
+      C('醫師', '個案標籤為「不轉介/轉介他院 (優化)」'),
+      C('醫師', '醫師與護理師的共照群都已移出個案'),
+    ] },
+    { id: 'o1-4', title: '暫不轉介 → 覆核同意', steps: [
+      ...head7(),
+      BE('醫師', '填寫機構確認單 [暫不轉介] [不轉介覆核：同意]'),
+      M('通報者', '收到「同意暫不轉介」通知', { q: '【通報者通知】第一類優化計畫\n經覆核同意暫不轉介，本案結案' }),
+      M('衛生局回覆單填寫者', '收到「同意暫不轉介」通知', { q: '【衛生局通知】第一類優化計畫\n不轉介覆核結果：同意暫不轉介，本案結案' }),
+      C('醫師', '醫師與護理師的共照群都已移出個案'),
+    ] },
+    { id: 'o1-5', title: '暫不轉介 → 覆核駁回 → 北投', steps: [
+      ...head7(),
+      B('醫師', '填寫機構確認單 [暫不轉介] [駁回] [轉介院所：三軍總醫院北投分院]'),
+      M('衛生局回覆單填寫者', '收到「重新轉介」通知', { q: '【衛生局通知】第一類優化計畫\n經覆核已被重新轉介給：三軍總醫院北投分院' }),
+      M('通報者', '收到「已轉介北投」通知', { q: '【通報者通知】第一類優化計畫\n經覆核已轉介三軍總醫院北投分院\n＋ 個案連結' }),
+      C('醫師', '共照群仍保留個案'),
+      seg('後段：接情況 1 的步驟 11~21', '機構回覆單想測「無法開案」時，改照情況 2 的步驟 13~16'),
+      ...O1.slice(10),
+    ] },
+    { id: 'o1-6', title: '暫不轉介 → 覆核駁回 → 松德', steps: [
+      ...head7(),
+      BE('醫師', '填寫機構確認單 [暫不轉介] [駁回] [轉介院所：臺北市立聯合醫院松德院區]'),
+      M('衛生局回覆單填寫者', '收到「重新轉介」通知', { q: '【衛生局通知】第一類優化計畫\n經覆核已被重新轉介給：臺北市立聯合醫院松德院區' }),
+      M('通報者', '收到「已轉介松德」通知', { q: '【通報者通知】第一類優化計畫\n經覆核已轉介至 臺北市立聯合醫院松德院區，本案於本平台結案' }),
+      C('醫師', '醫師與護理師的共照群都已移出個案'),
+    ] },
+    { id: 'o1-7', title: '暫不轉介 → 覆核駁回 → 其他院所', steps: [
+      ...head7(),
+      BE('醫師', '填寫機構確認單 [暫不轉介] [駁回] [轉介院所：其他] [院所名稱]'),
+      M('衛生局回覆單填寫者', '收到「重新轉介」通知', { q: '【衛生局通知】第一類優化計畫\n經覆核已被重新轉介給：{院所名稱}' }),
+      M('通報者', '收到「已轉介他院」通知', { q: '【通報者通知】第一類優化計畫\n經覆核已轉介至 {院所名稱}，本案於本平台結案' }),
+      C('醫師', '醫師與護理師的共照群都已移出個案'),
+    ] },
+    { id: 'o1-8', title: '訪視未遇', steps: missed() },
+    { id: 'o1-9', title: '衛生局自行通報', note: '通報者與衛生局回覆單填寫者是同一人。也可以改走情況 3（轉介他院）或情況 2（無法開案），同樣會收到兩則、稱謂不同。', steps: [
+      S('衛生局人員', '以自己的帳號擔任通報者，而且是「衛生局優化計畫進案結案通知群」的管理者'),
+      F('衛生局人員', '填寫第一類轉介單'),
+      M('衛生局人員', '收到通報訊息', { q: 'XXX 的第一類優化計畫通報' }),
+      M('衛生局人員', '收到待處理的訊息', { q: '有新的優化計畫個案待指派' }),
+      B('衛生局人員', '填寫衛生局回覆單'),
+      seg('接情況 1 的步驟 5~8'),
+      ...O1.slice(4, 8),
+      seg('回到本情況'),
+      M('衛生局人員', '以通報者身分收到「已轉介北投」通知', { q: '【通報者通知】第一類優化計畫\n經衛生局評估後已轉介三軍總醫院北投分院，後續將由醫療團隊與您聯繫\n＋ 個案連結' }),
+      M('衛生局人員', '以衛生局身分收到「已轉介北投」通知', { q: '【衛生局通知】第一類優化計畫\n經機構確認，本案已轉介三軍總醫院北投分院' }),
+      seg('接情況 1 的步驟 11~17'),
+      ...O1.slice(10, 17),
+      seg('回到本情況'),
+      M('衛生局人員', '以通報者身分收到結案通知', { q: '【通報者通知】第一類優化計畫\n個案：XXX 的第一類優化計畫已結案\n結案原因：{結案原因}' }),
+      M('衛生局人員', '以衛生局身分收到結案通知', { q: '【衛生局通知】第一類優化計畫\n本案已結案\n結案原因：{結案原因}' }),
+      M('衛生局人員', '兩則的第一行看得出是以哪個身分收到的'),
+    ] },
+  ];
+  const CAT2 = JSON.parse(JSON.stringify(CAT1).replace(/第一類/g, '第二類').replace(/"o1-/g, '"o2-'));
+
+  // ===== 第三類優化計畫 =====
+  const T1 = [
+    F('通報者（機構人員）', '填寫機構自行轉介單'),
+    M('通報者', '收到通報訊息', { q: 'XXX 的第三類優化計畫通報' }),
+    B('指派者', '在後台用「未指派 (優化-第三類)」標籤找到個案，進行指派', { warn: '指派者不會收到 LINE：第三類的轉介單不會把個案加入待派案清冊（第一／二類會），要自己到後台找個案' }),
+    M('被指派醫師、護理師', '收到指派通知', { q: '有新的第三類優化計畫個案已被指派給您', hint: TWICE }),
+    B('醫師', '填寫評估訪視紀錄單 [訪視成功]'),
+    B('醫師', '完成評估訪視紀錄表'),
+    B('醫師', '填寫是否開案單 [開案]'),
+    B('醫師', '填寫追蹤訪視紀錄單 [訪視成功]', { hint: '可以重複填多次' }),
+    B('醫師', '完成追蹤訪視進度紀錄表'),
+    BE('醫師', '填寫結案訪視紀錄單'),
+    X('通報者', '不會收到結案訊息', { hint: '2026-08-31 決定第三類不發' }),
+    B('醫師', '填寫家屬服務滿意度'),
+    F('通報者', '前往後台填寫服務執行效益追蹤評估表、使用者平台滿意度回饋'),
+  ];
+  const CAT3 = [
+    { id: 'o3-1', title: '開案 → 結案', tag: '主流程', steps: T1 },
+    { id: 'o3-2', title: '無法開案', refs: ['noopen'], steps: [
+      seg('前段：同情況 1 的步驟 1~6'), ...T1.slice(0, 6), seg('從這裡開始與情況 1 不同'),
+      BE('醫師', '填寫是否開案單 [無法開案] [原因]', { ref: 'noopen', hint: '原因選項同第一類情況 2' }),
+      C('醫師', '個案身上只剩「轉介未開案 (優化)」'),
+      C('醫師', '追蹤多一筆「無法開案原因為：…」'),
+      C('醫師', '醫師共照群沒有移出個案', { hint: '第一／二類在這一步會移出' }),
+      X('', '不會發任何 LINE 訊息', { hint: '第一／二類在這一步會通知衛生局與通報者，第三類沒有對應的通知' }),
+    ] },
+    { id: 'o3-3', title: '訪視未遇', note: '同第一類情況 8。', steps: missed() },
+  ];
+
+  // ===== 跨流程 =====
+  const CROSS = [
+    { id: 'x1', title: '已結案個案再次通報',
+      next: { text: '之後照該流程的情況 1 走：', links: ['em1', 'o1-1', 'o2-1', 'o3-1'] }, steps: [
+      S('個案', '已結案（緊急醫療或任一類優化計畫）'),
+      F('通報者', '再填一次通報單或轉介單'),
+      C('', '上一輪的結案標籤都已清掉：結案 (緊醫)、結案 (優化)、不轉介/轉介他院 (優化)、轉介未開案 (優化)'),
+    ] },
+    { id: 'x2', title: '同時在緊急醫療與優化計畫中', steps: [
+      S('個案', '優化計畫進行中（通報中／評估中／追蹤中），同一位醫師也負責這位個案的緊急醫療'),
+      BE('醫師', '填寫緊急醫療處置結果'),
+      C('醫師', '共照群裡還有這位個案（優化計畫還沒結束）'),
+      S('個案', '反過來：緊急醫療進行中'),
+      BE('醫師', '填寫優化計畫的結案訪視紀錄單'),
+      C('醫師', '共照群一樣保留個案'),
+    ] },
+    { id: 'x3', title: '兩條流程都進行中時的指派通知', steps: [
+      S('個案', '第一類優化計畫進行中，已指派給醫師 A'),
+      F('通報者', '對同一位個案填寫緊急醫療通報單'),
+      B('指派者', '把個案指派給醫師 B'),
+      M('醫師 B', '收到緊急醫療的指派通知', { q: '有新的緊急醫療個案已被指派給您' }),
+      M('醫師 B', '收到第一類的指派通知', { q: '有新的第一類優化計畫個案已被指派給您', hint: '指派通知是依個案「目前進行中的流程」發的，看不出這次是為哪一條流程指派，所以兩條都會發' }),
+      X('醫師 A', '不會收到指派通知', { hint: '醫師 A 沒有重新加入共照群' }),
+    ] },
+  ];
+
+  // ===== 參考資料 =====
+  const table = (head, rows) => `<div class="tbl"><table><thead><tr>${head.map((h) => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((d) => `<td>${fmt(d)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+
+  const REFS = {
+    dispose: {
+      title: '處置結果的分支（緊急醫療）', short: '處置結果的分支',
+      html: '<p>通報者收到的結案訊息開頭都是「您通報的緊急醫療個案：XXX 已結案」，後段依選項不同。想涵蓋每一列，可以在情況 1~3 各選不同的處置結果。</p>' + table(['處置結果', '續問', '結案訊息後段'], [
+        ['符合護送就醫', '急診後續處理 = 急診處置後轉院', '符合護送就醫條件／就診醫院／就醫診別／急診處置後轉院／轉院醫院'],
+        ['符合護送就醫', '急診後續處理 = 其他 5 種', '符合護送就醫條件／就診醫院／就醫診別／{急診後續處理}'],
+        ['未符合護送就醫', '轉介其他單位', '未符合護送就醫條件／原因：轉介其他單位／轉介單位名稱'],
+        ['未符合護送就醫', '未符合送醫條件／轉介門診／轉介居家', '未符合護送就醫條件／原因：{選項}'],
+        ['其他', '原因', '個案處置結果說明：{原因}'],
+      ]),
+    },
+    noopen: {
+      title: '無法開案原因與衛生局收到的內容', short: '無法開案原因',
+      html: table(['無法開案原因', '衛生局收到的內容'], [
+        ['其他原因', '無法開案原因 其他：{描述}'],
+        ['住院', '入住醫院名稱、住院原因'],
+        ['門診 / 居家治療', '醫院名稱'],
+        ['拒訪', '於 {日期} 前往，但無法成功接觸個案'],
+        ['拒絕接受服務 (已依拒訪SOP處理)', '同「拒訪」那則，但日期會是空的（已知：字串比對會命中「拒訪」）'],
+        ['搬遷／羈押中／死亡／失聯', '無法開案原因：{選項}'],
+      ]) + '<p>第三類沒有這些通知，只會在追蹤寫一筆「無法開案原因為：…」。</p>',
+    },
+    cat2: {
+      title: '第二類與第一類的差異', short: '第二類與第一類的差異',
+      html: table(['項目', '第一類', '第二類'], [
+        ['表單', '第一類優化計畫_…', '第二類優化計畫_…（轉介單、衛生局回覆單、機構確認單、機構回覆單、訪視紀錄單、結案訪視紀錄單等）'],
+        ['通報者收到的通報訊息', 'XXX 的第一類優化計畫通報', 'XXX 的第二類優化計畫通報'],
+        ['指派後醫師收到的訊息', '有新的第一類優化計畫個案已被指派給您', '有新的第二類優化計畫個案已被指派給您'],
+        ['訊息稱謂', '【通報者通知】／【衛生局通知】第一類優化計畫', '【通報者通知】／【衛生局通知】第二類優化計畫'],
+        ['結案訊息', '…的第一類優化計畫已結案', '…的第二類優化計畫已結案'],
+      ]),
+    },
+    vars: {
+      title: '各情況都可以順便測的變數', short: '可順便測的變數',
+      html: `<ul class="plain">
+        <li><b>風險評分</b>（通報單／轉介單的 A. 危險性、B. 支持系統）：兩項都 ≥ 4 → 高風險；都 ≥ 3 → 中風險；其餘 → 低風險。同一條流程的風險標籤互斥，個案身上只會留最新的那一個。</li>
+        <li><b>是否為陳情關切案</b>：勾「輿情案」／「民代關注案」→ 個案加上同名標籤（兩個都勾就兩個都加）。</li>
+        <li><b>初評表</b>（選填）：填了只多一筆追蹤紀錄，不影響後續步驟（第三類另外會把「通報中」推到「評估中」）。</li>
+        <li><b>滿意度問卷連結</b>：結案後由系統發送給通報者（系統內建，不在腳本裡）。</li>
+        <li><b>結案後 3／6 個月追蹤評估</b>：系統依設定值提醒通報者填寫，要等天數，無法當場測。</li>
+      </ul>`,
+    },
+    docnurse: {
+      title: '醫師、護理師會收到哪些訊息', short: '醫師、護理師的訊息',
+      html: `<ul class="plain">
+        <li><b>指派通知</b>：個案加入醫師或護理師的共照群時，依個案目前<b>進行中的流程</b>各發一則「有新的 XX 個案已被指派給您」。不看「未指派」標籤，所以醫師與護理師分兩次指派，兩位都會收到。
+          <ul>
+            <li>緊急醫療進行中：身上有「通報中／待確認出勤日期／已確認出勤日期／已完成評估 (緊醫)」其中一個</li>
+            <li>第 X 類優化計畫進行中：訪視評估控制 (系統) 有「第 X 類」群組標籤</li>
+          </ul>
+        </li>
+        <li><b>緊急醫療再次通報／通報風險變更</b>：已指派的個案 → 共照群的醫師、護理師收到通知；未指派的不發給任何人。</li>
+      </ul>`,
+    },
+    legend: {
+      title: '符號說明', short: '符號說明',
+      html: `<ul class="plain legend-list">${[
+        ['S', '先把個案準備成這個狀態（例如「已指派、尚未填處置結果」）'],
+        ['F', '在通報前台操作（填通報單、轉介單、滿意度）'],
+        ['B', '在管理後台操作（指派、填表）'],
+        ['M', '打開 LINE，確認收到訊息而且內容符合'],
+        ['C', '到後台看個案的標籤、追蹤紀錄、共照群'],
+        ['X', '確認這件事沒有發生（例如沒有發 LINE）'],
+      ].map(([k, d]) => `<li><span class="kind k-${k}">${KIND[k]}</span><span>${d}</span></li>`).join('')}
+        <li><span class="endtag">結案</span><span>這一步會讓個案結案</span></li>
+        <li><span class="chip">選項</span><span>表單上要選的選項</span></li>
+        <li><span class="ph">欄位</span><span>依實際填寫的內容而定</span></li>
+      </ul>`,
+    },
+  };
+
+  const FLOWS = [
+    { id: 'em', name: '緊急醫療', cases: EM },
+    { id: 'o1', name: '第一類優化計畫', cases: CAT1,
+      intro: '發給通報者與衛生局的訊息，第一行會標明收件身分：通報者（轉介單填寫者）是「<b>【通報者通知】第一類優化計畫</b>」；衛生局（衛生局回覆單填寫者，或衛生局優化計畫進案結案通知群的管理者）是「<b>【衛生局通知】第一類優化計畫</b>」。衛生局自己通報時兩則都會收到，靠這一行分辨（見情況 9）。' },
+    { id: 'o2', name: '第二類優化計畫', cases: CAT2, refs: ['cat2'],
+      intro: '情況與步驟全部同第一類 1~9，這裡已經把表單、訊息與稱謂換成第二類（例如「<b>【通報者通知】第二類優化計畫</b>」）。差異整理在頁尾〈第二類與第一類的差異〉。' },
+    { id: 'o3', name: '第三類優化計畫', cases: CAT3,
+      intro: '第三類是機構自行轉介，沒有衛生局回覆單與機構確認單，所以衛生局不會收到任何訊息。' },
+    { id: 'x', name: '跨流程', cases: CROSS },
+  ];
+
+  const CASES = {}, FLOW_OF = {}, ORDER = [];
+  FLOWS.forEach((f) => f.cases.forEach((c, i) => { c.n = i + 1; CASES[c.id] = c; FLOW_OF[c.id] = f; ORDER.push(c.id); }));
+
+  // ===== 進度（只存在這個瀏覽器）=====
+  const KEY = 'tsghb-flowtest-v1';
+  const state = { cur: ORDER[0], tester: '', cases: {} };
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (p && typeof p === 'object') {
+        if (typeof p.tester === 'string') state.tester = p.tester;
+        if (p.cases && typeof p.cases === 'object') state.cases = p.cases;
+        if (CASES[p.cur]) state.cur = p.cur;
+      }
+    }
+  } catch (e) { /* 讀不到就從頭開始 */ }
+  try {
+    const h = decodeURIComponent(location.hash.slice(1));
+    if (CASES[h]) state.cur = h;
+  } catch (e) { /* 沒有可用的網址片段 */ }
+
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* 存不了就只留在這次 */ } };
+  const norm = (r) => {
+    if (!r.s || typeof r.s !== 'object') r.s = {};
+    if (!r.n || typeof r.n !== 'object') r.n = {};
+    return r;
+  };
+  const rec = (id) => norm(state.cases[id] && typeof state.cases[id] === 'object' ? state.cases[id] : (state.cases[id] = {}));
+  const peek = (id) => (state.cases[id] && typeof state.cases[id] === 'object' ? norm(state.cases[id]) : { s: {}, n: {} });
+
+  const counted = (c) => c.steps.reduce((a, s, i) => { if (s.k !== 'seg') a.push(i); return a; }, []);
+  const STATUS_LABEL = { todo: '未開始', run: '進行中', done: '已完成', fail: '有問題' };
+  function stat(c) {
+    const r = peek(c.id), idx = counted(c);
+    let ok = 0, fail = 0, skip = 0;
+    idx.forEach((i) => {
+      const v = r.s[i];
+      if (v === 'ok') ok++; else if (v === 'fail') fail++; else if (v === 'skip') skip++;
+    });
+    const total = idx.length, marked = ok + fail + skip;
+    const status = fail ? 'fail' : marked === 0 ? 'todo' : marked === total ? 'done' : 'run';
+    return { ok, fail, skip, total, marked, status };
+  }
+  const currentIdx = (c) => { const r = peek(c.id); return counted(c).find((i) => !r.s[i]); };
+  function undoTarget(c) {
+    const r = peek(c.id), cur = currentIdx(c);
+    const marked = counted(c).filter((i) => r.s[i] && (cur === undefined || i < cur));
+    return marked.length ? marked[marked.length - 1] : undefined;
+  }
+
+  // ===== 畫面 =====
+  let failDraft = null;
+  let focusAfter = null;
+  const openRefs = new Set();
+
+  function labels(k, long) {
+    if (k === 'S') return long ? ['已備妥，下一步', '備不出來'] : ['已備妥', '有問題'];
+    if (k === 'F' || k === 'B') return long ? ['完成，下一步', '做不下去／有問題'] : ['完成', '有問題'];
+    if (k === 'M') return long ? ['有收到，內容符合', '沒收到或內容不對'] : ['符合', '不符合'];
+    if (k === 'X') return long ? ['確認沒有發生', '有發生'] : ['沒發生', '有發生'];
+    return ['符合', '不符合'];
+  }
+
+  function stepBody(s, big) {
+    let h = `<div class="meta"><span class="kind k-${s.k}">${KIND[s.k]}</span>${s.who ? `<span class="who">${esc(s.who)}</span>` : ''}${s.end ? '<span class="endtag">結案</span>' : ''}</div>`;
+    h += `<div class="text">${fmt(s.text)}</div>`;
+    if (s.q) {
+      const lines = s.q.split('\n');
+      const titled = lines[0].charAt(0) === '【';
+      h += `<div class="bubble">${lines.map((l, j) => (j === 0 && titled ? `<b>${fmt(l)}</b>` : fmt(l))).join('<br>')}</div>`;
+      if (big) h += `<p class="cap">${titled ? '第一行要和這裡完全一樣；其餘是內容重點，不是逐字稿' : '這是內容重點，不是逐字稿'}</p>`;
+    }
+    const hints = s.hint ? [].concat(s.hint) : [];
+    if (hints.length) h += `<ul class="hints">${hints.map((x) => `<li>${fmt(x)}</li>`).join('')}</ul>`;
+    if (s.warn) h += `<p class="warn"><b>注意</b>${fmt(s.warn)}</p>`;
+    if (s.ref) h += `<button type="button" class="linkish" data-act="ref" data-ref="${s.ref}">見〈${esc(REFS[s.ref].short)}〉</button>`;
+    return h;
+  }
+
+  const caseLabel = (id) => `${esc(FLOW_OF[id].name)} ${CASES[id].n}. ${esc(CASES[id].title)}`;
+  const contBlock = (n) => `<div class="cont"><span>${esc(n.text)}</span>${n.links.map((id) => `<button type="button" class="btn small" data-act="case" data-case="${id}">${caseLabel(id)}</button>`).join('')}</div>`;
+
+  function renderNext(c, cur, nums, total) {
+    const r = peek(c.id);
+    if (failDraft && failDraft.id === c.id) {
+      const i = failDraft.idx, s = c.steps[i];
+      return `<section class="next is-failing" aria-label="記錄問題">
+        <div class="next-top"><span class="next-label">記錄問題</span><span class="next-pos">步驟 ${nums[i]} / ${total}</span></div>
+        ${stepBody(s, true)}
+        <label class="fail-label" for="failNote">實際看到什麼？例如收到的訊息內容、少了哪個標籤、卡在哪個畫面。可以先空著，之後在下方步驟清單補。</label>
+        <textarea id="failNote" rows="3">${esc(r.n[i] || '')}</textarea>
+        <div class="next-acts">
+          <button type="button" class="btn danger" data-act="fail-save" data-idx="${i}">記下問題，繼續下一步</button>
+          <button type="button" class="btn" data-act="fail-cancel">取消</button>
+        </div>
+      </section>`;
+    }
+    const canUndo = undoTarget(c) !== undefined;
+    const undoBtn = `<button type="button" class="btn ghost" data-act="undo"${canUndo ? '' : ' disabled'}>上一步</button>`;
+    if (cur === undefined) {
+      const s = stat(c);
+      const nextId = ORDER[ORDER.indexOf(c.id) + 1];
+      return `<section class="next is-done" aria-live="polite">
+        <div class="next-top"><span class="next-label">這個情況走完了</span></div>
+        <p class="done-sum">符合／完成 <b>${s.ok}</b> 步・有問題 <b class="t-fail">${s.fail}</b> 步・略過 <b>${s.skip}</b> 步</p>
+        ${c.next ? contBlock(c.next) : ''}
+        <div class="next-acts">
+          ${nextId ? `<button type="button" class="btn primary" data-act="case" data-case="${nextId}">下一個情況：${caseLabel(nextId)}</button>` : ''}
+          <button type="button" class="btn" data-act="report">產生測試紀錄</button>
+          <span class="spacer"></span>${undoBtn}
+        </div>
+      </section>`;
+    }
+    const s = c.steps[cur];
+    const [okL, failL] = labels(s.k, true);
+    let look = '';
+    if (isAction(s.k)) {
+      const items = [];
+      for (let j = cur + 1; j < c.steps.length; j++) {
+        const t = c.steps[j];
+        if (t.k === 'seg') continue;
+        if (isAction(t.k)) break;
+        items.push(t);
+      }
+      look = `<div class="look"><h3>做完這一步後要檢查</h3>${items.length
+        ? `<ul>${items.map((t) => `<li><span class="kind k-${t.k}">${KIND[t.k]}</span>${t.who ? `<span class="who">${esc(t.who)}</span>` : ''}<span>${fmt(t.text)}${t.q ? `<span class="qline">「${fmt(t.q.split('\n')[0])}」</span>` : ''}</span></li>`).join('')}</ul>`
+        : '<p class="none">沒有要另外檢查的項目，做完直接按「完成」。</p>'}</div>`;
+    }
+    return `<section class="next" aria-live="polite">
+      <div class="next-top"><span class="next-label">下一步</span><span class="next-pos">步驟 ${nums[cur]} / ${total}</span></div>
+      ${stepBody(s, true)}
+      ${look}
+      <div class="next-acts">
+        <button type="button" class="btn primary" data-act="next-ok" data-idx="${cur}">${okL}</button>
+        <button type="button" class="btn bad" data-act="next-fail" data-idx="${cur}">${failL}</button>
+        <button type="button" class="btn" data-act="next-skip" data-idx="${cur}">略過</button>
+        <span class="spacer"></span>${undoBtn}
+      </div>
+    </section>`;
+  }
+
+  function row(c, i, s, num, r, isCur) {
+    if (s.k === 'seg') {
+      return `<li class="seg"><span class="seg-t">${esc(s.text)}</span>${s.hint ? `<span>${fmt(s.hint)}</span>` : ''}</li>`;
+    }
+    const v = r.s[i];
+    const [okL, failL] = labels(s.k, false);
+    const mark = v === 'ok' ? '✓' : v === 'fail' ? '✗' : v === 'skip' ? '略過' : '';
+    const btn = (val, label, cls) => `<button type="button" class="btn small ${cls}" data-act="mark" data-idx="${i}" data-v="${val}" aria-pressed="${v === val}">${label}</button>`;
+    const noteId = `note-${c.id}-${i}`;
+    return `<li class="step${v ? ' is-' + v : ''}${isCur ? ' is-current' : ''}">
+      <div class="num">${String(num).padStart(2, '0')}${mark ? `<span class="mark">${mark}</span>` : ''}</div>
+      <div class="body">${stepBody(s, false)}${v === 'fail'
+        ? `<div class="note-box"><label for="${noteId}">問題說明</label><textarea id="${noteId}" data-note="${i}" rows="2" placeholder="實際看到什麼？">${esc(r.n[i] || '')}</textarea></div>`
+        : ''}</div>
+      <div class="acts">${btn('ok', okL, 'm-ok')}${btn('fail', failL, 'm-fail')}${btn('skip', '略過', 'm-skip')}</div>
+    </li>`;
+  }
+
+  function renderStats() {
+    const t = { todo: 0, run: 0, done: 0, fail: 0 };
+    ORDER.forEach((id) => { t[stat(CASES[id]).status]++; });
+    $('#stats').innerHTML = `<span class="t-ok">完成 ${t.done}</span><span class="t-fail">有問題 ${t.fail}</span><span>進行中 ${t.run}</span><span>未開始 ${t.todo}</span>`;
+  }
+
+  function renderRail() {
+    $('#rail').innerHTML = FLOWS.map((f) => {
+      const done = f.cases.filter((c) => stat(c).status === 'done').length;
+      return `<section class="flow"><h2><span>${esc(f.name)}</span><span class="fc" title="已完成的情況">${done}/${f.cases.length}</span></h2><ul>${f.cases.map((c) => {
+        const s = stat(c);
+        return `<li><button type="button" class="case-btn st-${s.status}" data-act="case" data-case="${c.id}" aria-current="${c.id === state.cur}"><span class="cn">${c.n}</span><span class="dot" aria-hidden="true"></span><span class="ct">${esc(c.title)}<span class="sr">（${STATUS_LABEL[s.status]}）</span></span><span class="cc">${s.marked}/${s.total}</span></button></li>`;
+      }).join('')}</ul></section>`;
+    }).join('');
+  }
+
+  function renderPicker() {
+    const sel = $('#casePick');
+    sel.innerHTML = FLOWS.map((f) => `<optgroup label="${esc(f.name)}">${f.cases.map((c) => {
+      const s = stat(c);
+      return `<option value="${c.id}">${c.n}. ${esc(c.title)}（${STATUS_LABEL[s.status]} ${s.marked}/${s.total}）</option>`;
+    }).join('')}</optgroup>`).join('');
+    sel.value = state.cur;
+  }
+
+  function renderRunner() {
+    const c = CASES[state.cur], f = FLOW_OF[c.id];
+    const r = peek(c.id), s = stat(c), cur = currentIdx(c);
+    const nums = {};
+    let n = 0;
+    c.steps.forEach((st, i) => { if (st.k !== 'seg') nums[i] = ++n; });
+    const pct = (x) => (s.total ? (x / s.total) * 100 : 0).toFixed(2);
+    let h = `<div class="case-head">
+      <div class="eyebrow"><span>${esc(f.name)}・情況 ${c.n}</span>${c.tag ? `<span class="tag">${esc(c.tag)}</span>` : ''}</div>
+      <h2>${esc(c.title)}</h2>
+      <div class="prog">
+        <div class="bar" role="img" aria-label="已標記 ${s.marked} / ${s.total} 步"><i class="b-ok" style="width:${pct(s.ok)}%"></i><i class="b-fail" style="width:${pct(s.fail)}%"></i><i class="b-skip" style="width:${pct(s.skip)}%"></i></div>
+        <span class="prog-num">${s.marked} / ${s.total} 步${s.fail ? `・<span class="t-fail">${s.fail} 個問題</span>` : ''}</span>
+        <button type="button" class="btn small ghost" data-act="reset" data-arm>重設這個情況</button>
+      </div>
+    </div>`;
+    if (f.intro) h += `<div class="intro">${f.intro}</div>`;
+    if (c.note) h += `<div class="intro">${fmt(c.note)}</div>`;
+    h += renderNext(c, cur, nums, s.total);
+    h += `<h3 class="list-h">全部步驟</h3><ol class="steps">${c.steps.map((st, i) => row(c, i, st, nums[i], r, i === cur)).join('')}</ol>`;
+    if (c.next) h += contBlock(c.next);
+    const refs = [...(c.refs || []), ...(f.refs || []), 'vars', 'docnurse', 'legend'];
+    h += `<h3 class="list-h">參考</h3><div class="refs">${refs.map((k) => `<details class="ref" id="ref-${k}"${openRefs.has(k) ? ' open' : ''}><summary>${esc(REFS[k].title)}</summary>${REFS[k].html}</details>`).join('')}</div>`;
+    $('#runner').innerHTML = h;
+  }
+
+  function render() {
+    renderStats();
+    renderRail();
+    renderPicker();
+    renderRunner();
+    if (focusAfter) {
+      const el = document.getElementById(focusAfter);
+      focusAfter = null;
+      if (el) el.focus({ preventScroll: true });
+    }
+  }
+
+  // ===== 操作 =====
+  function setStatus(id, i, v) {
+    const r = rec(id);
+    if (v) r.s[i] = v; else delete r.s[i];
+    save();
+  }
+
+  function select(id) {
+    if (!CASES[id]) return;
+    state.cur = id;
+    failDraft = null;
+    save();
+    try { history.replaceState(null, '', '#' + id); } catch (e) { /* 預覽環境可能不允許改網址 */ }
+    render();
+    const runner = $('#runner');
+    if (runner.getBoundingClientRect().top < 0) runner.scrollIntoView({ block: 'start' });
+  }
+
+  // 危險的按鈕要按兩次
+  function armed(b) {
+    if (b.dataset.armed === '1') return true;
+    b.dataset.armed = '1';
+    b.dataset.label = b.textContent;
+    b.textContent = '再按一次確認';
+    clearTimeout(b._armTimer);
+    b._armTimer = setTimeout(() => {
+      b.dataset.armed = '';
+      b.textContent = b.dataset.label;
+    }, 3000);
+    return false;
+  }
+
+  function stamp(d) {
+    const p = (x) => String(x).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+
+  function buildReport() {
+    const t = { todo: 0, run: 0, done: 0, fail: 0 };
+    ORDER.forEach((id) => { t[stat(CASES[id]).status]++; });
+    const L = [
+      '通報流程測試紀錄',
+      `測試人員：${state.tester.trim() || '（未填）'}`,
+      `產生時間：${stamp(new Date())}`,
+      `情況：完成 ${t.done}・有問題 ${t.fail}・進行中 ${t.run}・未開始 ${t.todo}（共 ${ORDER.length}）`,
+    ];
+    let any = false;
+    FLOWS.forEach((f) => {
+      const touched = f.cases.filter((c) => stat(c).marked > 0);
+      if (!touched.length) return;
+      any = true;
+      L.push('', `■ ${f.name}`);
+      touched.forEach((c) => {
+        const s = stat(c), r = peek(c.id);
+        L.push(`  [${STATUS_LABEL[s.status]}] 情況 ${c.n}. ${c.title}（${s.marked}/${s.total} 步${s.skip ? `，略過 ${s.skip}` : ''}）`);
+        let n = 0;
+        c.steps.forEach((st, i) => {
+          if (st.k === 'seg') return;
+          n++;
+          if (r.s[i] !== 'fail') return;
+          L.push(`    ✗ 步驟 ${n}｜${KIND[st.k]}${st.who ? '｜' + st.who : ''}：${st.text}${st.q ? `（預期：${st.q.replace(/\n/g, ' ／ ')}）` : ''}`);
+          L.push(`      問題：${(r.n[i] || '').trim() || '（未填說明）'}`);
+        });
+      });
+    });
+    if (!any) L.push('', '（還沒有任何測試紀錄）');
+    return L.join('\n');
+  }
+
+  function openReport() {
+    $('#reportText').value = buildReport();
+    $('#copyMsg').textContent = '';
+    const d = $('#reportDlg');
+    try { d.showModal(); } catch (e) { d.setAttribute('open', ''); }
+  }
+  function closeReport() {
+    const d = $('#reportDlg');
+    try { d.close(); } catch (e) { d.removeAttribute('open'); }
+  }
+  async function copyReport() {
+    const t = $('#reportText'), msg = $('#copyMsg');
+    try {
+      await navigator.clipboard.writeText(t.value);
+      msg.textContent = '已複製，可以直接貼到回報的地方';
+      return;
+    } catch (e) { /* 改用選取的方式 */ }
+    t.focus();
+    t.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    msg.textContent = ok ? '已複製，可以直接貼到回報的地方' : '瀏覽器不讓網頁自動複製，已經幫你全選，請按 Ctrl+C（Mac 按 ⌘C）';
+  }
+
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-act]');
+    if (!b || b.disabled) return;
+    const c = CASES[state.cur];
+    const act = b.dataset.act;
+    if (act === 'case') { select(b.dataset.case); return; }
+    if (act === 'mark') {
+      const i = Number(b.dataset.idx), v = b.dataset.v;
+      const now = peek(c.id).s[i];
+      setStatus(c.id, i, now === v ? null : v);
+      if (v === 'fail' && now !== v) focusAfter = `note-${c.id}-${i}`;
+      if (failDraft && failDraft.idx === i) failDraft = null;
+      render();
+      return;
+    }
+    if (act === 'next-ok' || act === 'next-skip') {
+      setStatus(c.id, Number(b.dataset.idx), act === 'next-ok' ? 'ok' : 'skip');
+      render();
+      return;
+    }
+    if (act === 'next-fail') {
+      failDraft = { id: c.id, idx: Number(b.dataset.idx) };
+      focusAfter = 'failNote';
+      render();
+      return;
+    }
+    if (act === 'fail-save') {
+      const i = Number(b.dataset.idx), r = rec(c.id), t = $('#failNote');
+      const note = t ? t.value.trim() : '';
+      r.s[i] = 'fail';
+      if (note) r.n[i] = note; else delete r.n[i];
+      save();
+      failDraft = null;
+      render();
+      return;
+    }
+    if (act === 'fail-cancel') { failDraft = null; render(); return; }
+    if (act === 'undo') {
+      const i = undoTarget(c);
+      if (i !== undefined) setStatus(c.id, i, null);
+      render();
+      return;
+    }
+    if (act === 'reset') {
+      if (!armed(b)) return;
+      delete state.cases[c.id];
+      failDraft = null;
+      save();
+      render();
+      return;
+    }
+    if (act === 'ref') {
+      const k = b.dataset.ref, d = document.getElementById('ref-' + k);
+      if (d) { d.open = true; openRefs.add(k); d.scrollIntoView({ block: 'start' }); }
+      return;
+    }
+    if (act === 'report') { openReport(); return; }
+    if (act === 'close') { closeReport(); return; }
+    if (act === 'copy') { copyReport(); return; }
+    if (act === 'wipe') {
+      if (!armed(b)) return;
+      state.cases = {};
+      failDraft = null;
+      save();
+      $('#reportText').value = buildReport();
+      render();
+    }
+  });
+
+  document.addEventListener('input', (e) => {
+    const t = e.target;
+    if (t.id === 'tester') { state.tester = t.value; save(); return; }
+    if (t.dataset && t.dataset.note !== undefined) {
+      const r = rec(state.cur);
+      if (t.value.trim()) r.n[t.dataset.note] = t.value; else delete r.n[t.dataset.note];
+      save();
+    }
+  });
+
+  document.addEventListener('change', (e) => {
+    if (e.target.id === 'casePick') select(e.target.value);
+  });
+
+  document.addEventListener('toggle', (e) => {
+    const d = e.target;
+    if (d.matches && d.matches('details.ref')) {
+      const k = d.id.slice(4);
+      if (d.open) openRefs.add(k); else openRefs.delete(k);
+    }
+  }, true);
+
+  $('#tester').value = state.tester;
+  render();
+})();
+</script>
