@@ -24,6 +24,7 @@
     --teal-50:#E8F7FC;--teal-300:#19AAD1;--teal-500:#1285B3;--teal-700:#0C6496;
     --green-50:#F0FBD7;--green-300:#7BC235;--green-700:#478B1A;
     --blue-50:#E6EFFC;--blue-500:#2F6FCF;--blue-700:#1F4F99;
+    --orange-50:#FDF1E4;--orange-400:#E8872E;--orange-700:#A85A12;
     --grey-0:#FFFFFF;--grey-100:#F0F0F0;--grey-200:#E0E0E0;--grey-400:#C4C4C4;
     --grey-600:#818181;--grey-700:#666666;--grey-900:#333333;
     --bg:var(--grey-100);--panel:var(--grey-0);--line:var(--grey-200);
@@ -43,6 +44,7 @@
       --teal-50:#12303b;--teal-700:#7fd3ec;
       --green-50:#223317;--green-700:#b3e07a;
       --blue-50:#1b2a44;--blue-700:#9dbcf0;
+      --orange-50:#3a2816;--orange-700:#f3b77a;
       --shadow-card:0 1px 2px rgba(0,0,0,.4);
       color-scheme:dark;
     }
@@ -74,6 +76,7 @@
   .section-desc{font-size:13px;color:var(--ink-3)}
   .tsghb{--accent:var(--teal-300);--accent-soft:var(--teal-50);--accent-ink:var(--teal-700)}
   .nhri {--accent:var(--green-300);--accent-soft:var(--green-50);--accent-ink:var(--green-700)}
+  .thai {--accent:var(--orange-400);--accent-soft:var(--orange-50);--accent-ink:var(--orange-700)}
   .tools{--accent:var(--blue-500);--accent-soft:var(--blue-50);--accent-ink:var(--blue-700)}
 
   .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
@@ -359,6 +362,36 @@
           <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div class="foot"><code>spec/nhri_elearing/</code></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       泰國
+       ==================================================================== -->
+  <section class="thai" aria-labelledby="h-thai">
+    <div class="section-head">
+      <h2 id="h-thai">泰國</h2>
+      <span class="section-desc">檢驗品質管制（QC）</span>
+    </div>
+    <div class="grid">
+
+      <div class="card">
+        <div class="row">
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M3 6h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 3"/>
+              <path d="M3 13l4-3 4 2 4-5 6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="body">
+            <div class="title"><a class="main" href="./thai/qc-model/">QC 品質管制模組</a><span class="badge">EN / ไทย / 中</span></div>
+            <div class="desc">輸入 QC 標準液測量值，自動畫出 Levey-Jennings 管制圖，並標示超出 ±2SD／±3SD 的紀錄。</div>
+          </div>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="foot"><code>thai/qc-model/</code></div>
       </div>
 
     </div>
