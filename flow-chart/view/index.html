@@ -110,8 +110,8 @@
   <div class="banner" id="banner"></div>
   <div class="empty" id="empty">
     <h2>這個網址沒有帶入流程圖內容</h2>
-    <div>請用 <code>?src=</code> 參數帶入以 base64url 編碼的原始碼，<br>或直接到編輯器產生檢視連結。</div>
-    <code>../view/?src=&lt;編碼後的原始碼&gt;</code>
+    <div>請到編輯器按「複製檢視連結」產生連結，<br>或在網址 # 後面帶入以 base64url 編碼的原始碼。</div>
+    <code>../view/#src=&lt;編碼後的原始碼&gt;</code>
     <a class="btn" href="../edit/">前往編輯器</a>
   </div>
   <div class="float-tools" id="tools">
@@ -134,7 +134,6 @@
   var FS = window.FlowScript;
   var canvas = document.getElementById('canvas');
   var toastEl = document.getElementById('toast');
-  var source = FS.sourceFromLocation();
   var vp = null, current = null;
 
   function toast(msg) {
@@ -144,84 +143,95 @@
     toastEl._t = setTimeout(function () { toastEl.classList.remove('on'); }, 1800);
   }
 
-  if (source == null || !source.trim()) {
-    document.getElementById('empty').classList.add('on');
-    document.getElementById('tools').style.display = 'none';
-  } else {
-    // ?dir=TD|LR：不改原始碼，只覆寫呈現方向
-    var forced = null;
-    try {
-      var q = new URLSearchParams(location.search).get('dir');
-      if (q && /^(TD|TB|LR)$/i.test(q)) forced = q.toUpperCase() === 'LR' ? 'LR' : 'TD';
-    } catch (e) { forced = null; }
+  FS.loadSource().then(show, function () {
+    var empty = document.getElementById('empty');
+    empty.querySelector('h2').textContent = '這個連結的內容無法解讀';
+    empty.querySelector('div').innerHTML = '連結可能在轉貼時被截斷，請跟對方要完整的連結；<br>' +
+      '或是瀏覽器版本太舊，無法解壓縮，請更新後再開一次。';
+    empty.querySelector('code').style.display = 'none';
+    show(null);
+  });
 
-    function render() {
-      current = FS.renderInto(canvas, source, forced ? { direction: forced } : null);
-      vp = FS.attachViewport(current.svg, current.width, current.height);
-      var dir = forced || current.model.direction;
-      dirButtons.forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-dir') === dir); });
-    }
+  function show(source) {
+    if (source == null || !source.trim()) {
+      document.getElementById('empty').classList.add('on');
+      document.getElementById('tools').style.display = 'none';
+    } else {
+      // ?dir=TD|LR：不改原始碼，只覆寫呈現方向
+      var forced = null;
+      try {
+        var q = new URLSearchParams(location.search).get('dir');
+        if (q && /^(TD|TB|LR)$/i.test(q)) forced = q.toUpperCase() === 'LR' ? 'LR' : 'TD';
+      } catch (e) { forced = null; }
 
-    var dirButtons = Array.prototype.slice.call(document.querySelectorAll('#dirSeg button'));
-    dirButtons.forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var dir = btn.getAttribute('data-dir');
-        if ((forced || current.model.direction) === dir) return;
-        forced = dir;
-        render();
-        try {   // 寫回網址，重新整理或分享時保留
-          var url = new URL(location.href);
-          url.searchParams.set('dir', dir);
-          history.replaceState(null, '', url.toString());
-        } catch (e) { /* ignore */ }
-        document.getElementById('btnEdit').href = editHref();
-        toast(dir === 'LR' ? '已切換為橫式' : '已切換為直式');
+      function render() {
+        current = FS.renderInto(canvas, source, forced ? { direction: forced } : null);
+        vp = FS.attachViewport(current.svg, current.width, current.height);
+        var dir = forced || current.model.direction;
+        dirButtons.forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-dir') === dir); });
+      }
+
+      var dirButtons = Array.prototype.slice.call(document.querySelectorAll('#dirSeg button'));
+      dirButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var dir = btn.getAttribute('data-dir');
+          if ((forced || current.model.direction) === dir) return;
+          forced = dir;
+          render();
+          try {   // 寫回網址，重新整理或分享時保留
+            var url = new URL(location.href);
+            url.searchParams.set('dir', dir);
+            history.replaceState(null, '', url.toString());
+          } catch (e) { /* ignore */ }
+          document.getElementById('btnEdit').href = editHref();
+          toast(dir === 'LR' ? '已切換為橫式' : '已切換為直式');
+        });
       });
-    });
 
-    render();
+      render();
 
-    document.getElementById('docTitle').textContent = current.model.title || 'FlowScript';
-    document.getElementById('stat').textContent =
-      current.model.nodes.size + ' 個節點 · ' + current.model.edges.length + ' 條連線';
+      document.getElementById('docTitle').textContent = current.model.title || 'FlowScript';
+      document.getElementById('stat').textContent =
+        current.model.nodes.size + ' 個節點 · ' + current.model.edges.length + ' 條連線';
 
-    var errs = current.errors.filter(function (e) { return !e.warn; });
-    if (errs.length) {
-      var b = document.getElementById('banner');
-      b.classList.add('on');
-      b.innerHTML = '<b>語法有 ' + errs.length + ' 處問題，圖形可能不完整</b>' +
-        errs.slice(0, 5).map(function (e) {
-          return (e.line ? '第 ' + e.line + ' 行：' : '') + e.msg;
-        }).join('<br>');
-    }
+      var errs = current.errors.filter(function (e) { return !e.warn; });
+      if (errs.length) {
+        var b = document.getElementById('banner');
+        b.classList.add('on');
+        b.innerHTML = '<b>語法有 ' + errs.length + ' 處問題，圖形可能不完整</b>' +
+          errs.slice(0, 5).map(function (e) {
+            return (e.line ? '第 ' + e.line + ' 行：' : '') + e.msg;
+          }).join('<br>');
+      }
 
-    // 在編輯器開啟時，把目前看到的方向一併帶過去
-    function editHref() {
-      return FS.buildViewURL(forced ? FS.setDirection(source, forced) : source, '../edit/');
-    }
-    document.getElementById('btnEdit').href = editHref();
-    document.getElementById('btnCopySrc').addEventListener('click', function () {
-      FS.copyText(source).then(function () { toast('原始碼已複製'); },
-        function () { toast('複製失敗'); });
-    });
-
-    var name = (current.model.title || 'flowchart').replace(/[\\/:*?"<>|]/g, '_');
-    document.getElementById('btnSvg').addEventListener('click', function () {
-      var str = FS.toSVGString(current.svg, current.width, current.height);
-      FS.download(new Blob([str], { type: 'image/svg+xml' }), name + '.svg');
-    });
-    document.getElementById('btnPng').addEventListener('click', function () {
-      var str = FS.toSVGString(current.svg, current.width, current.height);
-      FS.toPNGBlob(str, current.width, current.height, 2, function (blob) {
-        if (!blob) { toast('PNG 匯出失敗'); return; }
-        FS.download(blob, name + '.png');
+      // 在編輯器開啟時，把目前看到的方向一併帶過去
+      function editHref() {
+        return FS.buildViewURL(forced ? FS.setDirection(source, forced) : source, '../edit/');
+      }
+      document.getElementById('btnEdit').href = editHref();
+      document.getElementById('btnCopySrc').addEventListener('click', function () {
+        FS.copyText(source).then(function () { toast('原始碼已複製'); },
+          function () { toast('複製失敗'); });
       });
-    });
 
-    document.getElementById('zoomIn').addEventListener('click', function () { vp.zoom(1.2); });
-    document.getElementById('zoomOut').addEventListener('click', function () { vp.zoom(1 / 1.2); });
-    document.getElementById('zoomFit').addEventListener('click', function () { vp.fit(); });
-    window.addEventListener('resize', function () { vp.clamp(); });
+      var name = (current.model.title || 'flowchart').replace(/[\\/:*?"<>|]/g, '_');
+      document.getElementById('btnSvg').addEventListener('click', function () {
+        var str = FS.toSVGString(current.svg, current.width, current.height);
+        FS.download(new Blob([str], { type: 'image/svg+xml' }), name + '.svg');
+      });
+      document.getElementById('btnPng').addEventListener('click', function () {
+        var str = FS.toSVGString(current.svg, current.width, current.height);
+        FS.toPNGBlob(str, current.width, current.height, 2, function (blob) {
+          if (!blob) { toast('PNG 匯出失敗'); return; }
+          FS.download(blob, name + '.png');
+        });
+      });
+
+      document.getElementById('zoomIn').addEventListener('click', function () { vp.zoom(1.2); });
+      document.getElementById('zoomOut').addEventListener('click', function () { vp.zoom(1 / 1.2); });
+      document.getElementById('zoomFit').addEventListener('click', function () { vp.fit(); });
+      window.addEventListener('resize', function () { vp.clamp(); });
+    }
   }
 })();
 </script>

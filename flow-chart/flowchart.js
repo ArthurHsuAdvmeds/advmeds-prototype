@@ -1460,37 +1460,49 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
 
-  function encode(text) {
-    var bytes = new TextEncoder().encode(text);
+  function toBase64url(bytes) {
     var bin = '';
     for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
     return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
 
-  function decode(str) {
+  function fromBase64url(str) {
     var s = String(str).replace(/-/g, '+').replace(/_/g, '/');
     while (s.length % 4) s += '=';
     var bin = atob(s);
     var bytes = new Uint8Array(bin.length);
     for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    return new TextDecoder().decode(bytes);
+    return bytes;
   }
 
-  // 從網址取出原始碼：?src=（base64url）、?text=（URL 編碼）、或 #src=
-  function sourceFromLocation(loc) {
+  function encode(text) { return toBase64url(new TextEncoder().encode(text)); }
+  function decode(str) { return new TextDecoder().decode(fromBase64url(str)); }
+
+  // deflate 壓縮：中文為主的原始碼大約只剩三分之一長
+  function pipeBytes(bytes, stream) {
+    return new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer()
+      .then(function (buf) { return new Uint8Array(buf); });
+  }
+  function zip(text) {
+    return pipeBytes(new TextEncoder().encode(text), new CompressionStream('deflate')).then(toBase64url);
+  }
+  function unzip(str) {
+    return pipeBytes(fromBase64url(str), new DecompressionStream('deflate'))
+      .then(function (bytes) { return new TextDecoder().decode(bytes); });
+  }
+
+  // 從網址取出原始碼，回傳 Promise：
+  //   z=（deflate + base64url）、src=（base64url）、text=（URL 編碼），放在 # 或 ? 之後都可以
+  // 網址沒帶內容時得到 null；內容壞掉（被截斷、瀏覽器不支援解壓縮）時 reject
+  function loadSource(loc) {
     loc = loc || global.location;
-    var out = null;
-    try {
-      var q = new URLSearchParams(loc.search);
-      if (q.get('src')) out = decode(q.get('src'));
-      else if (q.get('text')) out = q.get('text');
-      if (out == null && loc.hash && loc.hash.length > 1) {
-        var h = new URLSearchParams(loc.hash.slice(1));
-        if (h.get('src')) out = decode(h.get('src'));
-        else if (h.get('text')) out = h.get('text');
-      }
-    } catch (err) { return null; }
-    return out;
+    return new Promise(function (resolve) {
+      var p = [loc.search, (loc.hash || '').slice(1)].map(function (s) { return new URLSearchParams(s); })
+        .filter(function (p) { return p.get('z') || p.get('src') || p.get('text'); })[0];
+      if (!p) resolve(null);
+      else if (p.get('z')) resolve(unzip(p.get('z')));
+      else resolve(p.get('src') ? decode(p.get('src')) : p.get('text'));
+    });
   }
 
   // 改寫原始碼裡的 direction（沒有就補一行），讓切換方向後匯出與連結都一致
@@ -1512,9 +1524,21 @@
     return lines.join('\n');
   }
 
+  // 原始碼一律放在 # 之後：# 後面的內容不會送到伺服器，圖再大也不會被 GitHub Pages 擋成 414 URI Too Long
+  function viewBase(base) { return base || new URL('../view/', global.location.href).href; }
+
   function buildViewURL(text, base) {
-    var href = base || new URL('../view/', global.location.href).href;
-    return href + (href.indexOf('?') >= 0 ? '&' : '?') + 'src=' + encode(text);
+    return viewBase(base) + '#src=' + encode(text);
+  }
+
+  // 分享用的短連結（Promise）：瀏覽器支援時先壓縮成 #z=，否則退回 #src=
+  function buildShortViewURL(text, base) {
+    var plain = buildViewURL(text, base);
+    if (typeof CompressionStream !== 'function') return Promise.resolve(plain);
+    return zip(text).then(function (z) {
+      var short = viewBase(base) + '#z=' + z;
+      return short.length < plain.length ? short : plain;
+    }, function () { return plain; });
   }
 
   function copyText(text) {
@@ -1550,9 +1574,10 @@
     download: download,
     encode: encode,
     decode: decode,
-    sourceFromLocation: sourceFromLocation,
+    loadSource: loadSource,
     setDirection: setDirection,
     buildViewURL: buildViewURL,
+    buildShortViewURL: buildShortViewURL,
     copyText: copyText
   };
 })(window);

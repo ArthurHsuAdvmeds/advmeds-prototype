@@ -18,7 +18,7 @@
 ```
 https://arthurhsuadvmeds.github.io/advmeds-prototype/flow-chart/
 https://arthurhsuadvmeds.github.io/advmeds-prototype/flow-chart/edit/
-https://arthurhsuadvmeds.github.io/advmeds-prototype/flow-chart/view/?src=<編碼後的原始碼>
+https://arthurhsuadvmeds.github.io/advmeds-prototype/flow-chart/view/#z=<壓縮後的原始碼>
 ```
 
 ## 檔案結構
@@ -38,12 +38,19 @@ flow-chart/
 
 | 參數 | 說明 |
 | --- | --- |
-| `?src=` | 原始碼經 UTF-8 → base64url 編碼（編輯器的「複製檢視連結」產生的就是這個） |
-| `?text=` | 原始碼直接做 URL 編碼，方便手動組網址或除錯 |
-| `#src=` / `#text=` | 同上，但放在 hash，內容不會進入伺服器記錄 |
+| `#z=` | 原始碼經 UTF-8 → deflate 壓縮 → base64url 編碼（編輯器的「複製檢視連結」產生的就是這個） |
+| `#src=` | 原始碼經 UTF-8 → base64url 編碼，不壓縮（瀏覽器不支援壓縮時，編輯器會改給這個） |
+| `#text=` | 原始碼直接做 URL 編碼，方便手動組網址或除錯 |
 | `?dir=` | `TD` 或 `LR`，覆寫呈現方向（不影響原始碼；右下角的直式／橫式切換就是改這個）|
 
-沒有帶參數時，檢視頁會顯示引導畫面。
+原始碼一律放在 `#` 後面：`#` 之後的內容只留在瀏覽器，不會送到伺服器。
+早期的連結把原始碼放在 `?src=`，整串都會送到 GitHub Pages，圖一大就會被擋成 `414 URI Too Long`。
+`?z=`、`?src=`、`?text=` 仍然讀得懂，舊連結打不開時，把 `?src=` 改成 `#src=` 就能開。
+
+壓縮對中文為主的原始碼很有效：一張 47 個節點、8.4 KB 的圖，`?src=` 連結約 11,300 字元，`#z=` 連結約 3,800 字元。
+解壓縮用的是瀏覽器內建的 `DecompressionStream`（Chrome／Edge 80+、Safari 16.4+、Firefox 113+）。
+
+沒有帶參數時，檢視頁會顯示引導畫面；連結內容無法解讀（例如轉貼時被截斷）時會顯示錯誤說明。
 
 ---
 
@@ -187,5 +194,5 @@ G --> Z(完成):::green
 
 - 沒有子流程 / 泳道 / 群組（subgraph）。
 - 節點無法手動指定座標，一切交給自動排版。
-- 檢視連結把整份原始碼放在網址裡，圖很大時網址會很長（實測 15 個節點約 500 字元）。
+- 檢視連結把整份（壓縮後的）原始碼放在網址裡，圖很大時網址還是會很長；有些通訊軟體轉貼時可能會截斷過長的網址。
 - 匯出 PNG 時使用系統字型繪製，字型可能與畫面上略有差異。

@@ -250,10 +250,26 @@
   }
 
   /* ---------- 初始內容 ---------- */
-  var initial = FS.sourceFromLocation();
-  if (initial == null) { try { initial = localStorage.getItem(STORE_KEY); } catch (e) { initial = null; } }
-  if (initial == null || !initial.trim()) initial = FS.EXAMPLE;
-  ta.value = initial;
+  function start(initial) {
+    if (initial == null) { try { initial = localStorage.getItem(STORE_KEY); } catch (e) { initial = null; } }
+    if (initial == null || !initial.trim()) initial = FS.EXAMPLE;
+    ta.value = initial;
+    draw();
+    vp.fit();
+  }
+
+  /* ---------- 分享連結 ---------- */
+  // 壓縮是非同步的，每次重畫後先算好；還沒算完就先給未壓縮的連結
+  var share = { text: null, url: null };
+  function refreshShare() {
+    var text = ta.value;
+    FS.buildShortViewURL(text).then(function (url) {
+      if (ta.value === text) share = { text: text, url: url };
+    });
+  }
+  function shareURL() {
+    return share.text === ta.value ? share.url : FS.buildViewURL(ta.value);
+  }
 
   /* ---------- 繪製 ---------- */
   function draw() {
@@ -268,6 +284,7 @@
     stat.textContent = '｜' + res.model.nodes.size + ' 個節點 · ' + res.model.edges.length + ' 條連線';
     markDirection(res.model.direction);
     showIssues(res.errors);
+    refreshShare();
     try { localStorage.setItem(STORE_KEY, ta.value); } catch (e) { /* ignore */ }
   }
 
@@ -353,7 +370,7 @@
   document.getElementById('zoomFit').addEventListener('click', function () { vp && vp.fit(); });
 
   document.getElementById('btnShare').addEventListener('click', function () {
-    var url = FS.buildViewURL(ta.value);
+    var url = shareURL();
     FS.copyText(url).then(function () {
       toast('檢視連結已複製（' + url.length + ' 字元）');
     }, function () {
@@ -363,7 +380,7 @@
 
   document.getElementById('viewTab').addEventListener('click', function (e) {
     e.preventDefault();
-    window.open(FS.buildViewURL(ta.value), '_blank');
+    window.open(shareURL(), '_blank');
   });
 
   function fileName(ext) {
@@ -424,8 +441,10 @@
 
   window.addEventListener('resize', function () { if (vp) vp.clamp(); });
 
-  draw();
-  vp.fit();
+  FS.loadSource().then(start, function () {
+    start(null);
+    toast('連結內容無法解讀（可能被截斷），已改為載入上次的內容');
+  });
 })();
 </script>
 </body>
