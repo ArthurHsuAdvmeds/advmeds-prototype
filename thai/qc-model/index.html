@@ -5,22 +5,57 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>QC Module Prototype</title>
 <style>
-:root{--bg:#f5f7fb;--card:#fff;--text:#1f2937;--muted:#6b7280;--line:#d1d5db;--primary:#2563eb;--danger:#dc2626;--warn:#d97706;--ok:#16a34a}
-*{box-sizing:border-box}body{margin:0;font-family:Arial,"Noto Sans Thai","Noto Sans TC","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--text)}
-.wrap{max-width:1180px;margin:28px auto;padding:0 20px 40px}.header{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:22px}
-h1{font-size:28px;margin:0 0 6px}.sub{color:var(--muted)}.lang-box{min-width:170px}.grid{display:grid;grid-template-columns:360px 1fr;gap:20px}
-.card{background:var(--card);border:1px solid #e5e7eb;border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
-.card h2{font-size:18px;margin:0 0 14px}label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}
-input,select{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}button{width:100%;border:0;border-radius:8px;padding:11px 12px;margin-top:12px;font-size:14px;font-weight:700;cursor:pointer}
-.primary{background:var(--primary);color:#fff}.secondary{background:#eef2ff;color:#3730a3}.danger{background:#fee2e2;color:#991b1b}
-.status{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}.badge{padding:7px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#f3f4f6}
-canvas{width:100%;height:430px;background:#fff;border:1px solid #e5e7eb;border-radius:10px}
-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th,td{border-bottom:1px solid #e5e7eb;padding:9px 8px;text-align:left}th{background:#f9fafb}
-.ok{color:var(--ok);font-weight:700}.warning{color:var(--warn);font-weight:700}.out{color:var(--danger);font-weight:700}
-.hint{font-size:12px;color:var(--muted);line-height:1.65;margin-top:12px}.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:#4b5563;margin-top:10px}
-.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;background:#2563eb}.sep{border:none;border-top:1px solid #e5e7eb;margin:18px 0}
-@media(max-width:820px){.header{flex-direction:column}.lang-box{width:100%}.grid{grid-template-columns:1fr}}
+:root{
+  --bg:#f4f7fb;--card:#fff;--text:#1f2937;--muted:#6b7280;--line:#d9dee7;
+  --primary:#2563eb;--primary-soft:#eef4ff;--danger:#dc2626;--warn:#d97706;
+  --ok:#16a34a;--shadow:0 4px 18px rgba(20,30,55,.06)
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,"Noto Sans Thai","Noto Sans TC","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit}
+.wrap{max-width:1240px;margin:26px auto;padding:0 20px 40px}
+.header{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:20px}
+h1{font-size:28px;margin:0 0 6px}.sub{color:var(--muted);font-size:14px}
+.lang-box{min-width:180px}
+label{display:block;font-size:12px;font-weight:700;margin:10px 0 6px}
+select,input{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--text)}
+.card{background:var(--card);border:1px solid #e5e7eb;border-radius:14px;box-shadow:var(--shadow);padding:18px}
+.toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}
+.toolbar h2,.card h2{font-size:18px;margin:0}
+.btn{border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-light{background:#f3f4f6;color:#374151}
+.btn-danger{background:#fee2e2;color:#991b1b}
+.device-table,.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.device-table th,.device-table td,.data-table th,.data-table td{padding:11px 10px;border-bottom:1px solid #e5e7eb;text-align:left}
+.device-table th,.data-table th{background:#f8fafc;color:#4b5563}
+.device-row{cursor:pointer}.device-row:hover{background:#f8fbff}
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:700;background:#f3f4f6}
+.badge.ok{color:var(--ok);background:#ecfdf3}.badge.warn{color:var(--warn);background:#fff7ed}.badge.danger{color:var(--danger);background:#fef2f2}
+.hidden{display:none}
+.breadcrumb{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted);margin-bottom:12px}
+.link-btn{border:0;background:none;color:var(--primary);padding:0;cursor:pointer;font-weight:700}
+.device-head{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+.info-box{background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:12px}
+.info-label{font-size:11px;color:var(--muted);margin-bottom:4px}.info-value{font-size:14px;font-weight:700}
+.layout{display:grid;grid-template-columns:310px 1fr;gap:18px}
+.filter-card{height:max-content}
+.filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.section-title{font-size:14px;font-weight:700;margin:4px 0 10px}
+.chart-card{position:relative}
+.status{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.metric{padding:7px 10px;border-radius:999px;background:#f3f4f6;font-size:12px;font-weight:700}
+canvas{width:100%;height:430px;border:1px solid #e5e7eb;border-radius:10px;background:#fff}
+.legend{display:flex;gap:14px;flex-wrap:wrap;color:#4b5563;font-size:12px;margin-top:10px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--primary);margin-right:5px}
+.tooltip{position:absolute;display:none;min-width:250px;max-width:320px;background:#111827;color:#fff;padding:12px;border-radius:10px;font-size:12px;line-height:1.55;box-shadow:0 10px 25px rgba(0,0,0,.22);pointer-events:none;z-index:5}
+.tooltip strong{font-size:13px}.tooltip .muted{color:#d1d5db}
+.tooltip-grid{display:grid;grid-template-columns:112px 1fr;gap:3px 8px;margin-top:7px}
+.add-form{margin-top:16px;border-top:1px solid #e5e7eb;padding-top:14px}
+.form-actions{display:flex;gap:8px}.form-actions .btn{flex:1}
+.small{font-size:12px;color:var(--muted);line-height:1.55}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.device-head{grid-template-columns:1fr 1fr}.header{flex-direction:column}.lang-box{width:100%}}
+@media(max-width:640px){.device-head,.filter-grid{grid-template-columns:1fr}.toolbar{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 <body>
@@ -28,7 +63,7 @@ table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th,td{b
   <div class="header">
     <div>
       <h1 data-i18n="title">QC Module Prototype</h1>
-      <div class="sub" data-i18n="subtitle">Enter QC results, generate a Levey-Jennings Chart, and review control limits.</div>
+      <div class="sub" data-i18n="subtitle">Manage QC by device and review Levey-Jennings data with consumable traceability.</div>
     </div>
     <div class="lang-box">
       <label data-i18n="language">Language</label>
@@ -40,139 +75,552 @@ table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th,td{b
     </div>
   </div>
 
-  <div class="grid">
+  <section id="deviceListView">
     <div class="card">
-      <h2 data-i18n="qcSettings">QC Settings</h2>
-      <label data-i18n="testItem">Test Item</label>
-      <select id="item">
-        <option data-k="glucose">Glucose QC</option>
-        <option data-k="cholesterol">Total Cholesterol QC</option>
-        <option data-k="hemoglobin">Hemoglobin QC</option>
-        <option data-k="custom">Custom QC Item</option>
-      </select>
-
-      <div class="row">
-        <div><label data-i18n="meanLabel">Target Mean</label><input id="mean" type="number" value="100" step="0.1"></div>
-        <div><label data-i18n="sdLabel">Standard Deviation (SD)</label><input id="sd" type="number" value="3" step="0.1"></div>
+      <div class="toolbar">
+        <div>
+          <h2 data-i18n="deviceList">QC Device List</h2>
+          <div class="small" data-i18n="deviceListHint">Each row represents one physical device. Click a device to open its QC chart.</div>
+        </div>
+        <button class="btn btn-primary" onclick="alert(t('demoAddDevice'))" data-i18n="addDevice">+ Add Device</button>
       </div>
 
-      <hr class="sep">
-
-      <h2 data-i18n="addResult">Add QC Result</h2>
-      <label data-i18n="date">Date</label>
-      <input id="date" type="date">
-      <label data-i18n="qcValue">QC Measurement Value</label>
-      <input id="value" type="number" placeholder="e.g. 102.5" step="0.1">
-
-      <button class="primary" onclick="addQC()" data-i18n="addRecord">Add QC Record</button>
-      <button class="secondary" onclick="loadDemo()" data-i18n="loadDemo">Load Demo Data</button>
-      <button class="danger" onclick="clearData()" data-i18n="clearData">Clear Data</button>
-
-      <div class="hint" data-i18n="hint">This QC example is intended for laboratory or POCT quality control. A control material with a known target value is measured to verify that the instrument or reagent system remains stable.</div>
-    </div>
-
-    <div>
-      <div class="card">
-        <h2>Levey-Jennings Chart</h2>
-        <div class="status">
-          <div class="badge"><span data-i18n="meanShort">Mean</span>: <span id="meanText">100</span></div>
-          <div class="badge">±2SD: <span id="sd2Text">94 ~ 106</span></div>
-          <div class="badge">±3SD: <span id="sd3Text">91 ~ 109</span></div>
-        </div>
-        <canvas id="chart" width="760" height="430"></canvas>
-        <div class="legend">
-          <span><span class="dot"></span><span data-i18n="legendQc">QC measurement</span></span>
-          <span data-i18n="legendMean">Center line: Mean</span>
-          <span data-i18n="legend1">Inner limits: ±1SD</span>
-          <span data-i18n="legend2">Warning limits: ±2SD</span>
-          <span data-i18n="legend3">Control limits: ±3SD</span>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top:20px">
-        <h2 data-i18n="records">QC Records</h2>
-        <table>
-          <thead><tr>
-            <th data-i18n="date">Date</th>
-            <th data-i18n="measurement">Measurement</th>
-            <th data-i18n="deviation">Deviation</th>
+      <table class="device-table">
+        <thead>
+          <tr>
+            <th data-i18n="deviceModel">Device Model</th>
+            <th data-i18n="deviceId">Device ID</th>
+            <th data-i18n="serialNo">Serial No. / Batch No.</th>
+            <th data-i18n="location">Location</th>
+            <th data-i18n="latestQc">Latest QC</th>
             <th data-i18n="status">Status</th>
-          </tr></thead>
-          <tbody id="tbody"></tbody>
-        </table>
+          </tr>
+        </thead>
+        <tbody id="deviceTbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="deviceDetailView" class="hidden">
+    <div class="breadcrumb">
+      <button class="link-btn" onclick="showDeviceList()" data-i18n="backToList">← Back to Device List</button>
+      <span>/</span>
+      <span id="crumbDevice"></span>
+    </div>
+
+    <div class="card" style="margin-bottom:18px">
+      <div class="toolbar">
+        <h2 id="deviceTitle"></h2>
+        <span class="badge ok" data-i18n="active">Active</span>
+      </div>
+      <div class="device-head">
+        <div class="info-box"><div class="info-label" data-i18n="deviceModel">Device Model</div><div class="info-value" id="dModel"></div></div>
+        <div class="info-box"><div class="info-label" data-i18n="deviceId">Device ID</div><div class="info-value" id="dId"></div></div>
+        <div class="info-box"><div class="info-label" data-i18n="serialNo">Serial No. / Batch No.</div><div class="info-value" id="dSerial"></div></div>
+        <div class="info-box"><div class="info-label" data-i18n="location">Location</div><div class="info-value" id="dLocation"></div></div>
       </div>
     </div>
-  </div>
+
+    <div class="layout">
+      <div class="card filter-card">
+        <div class="section-title" data-i18n="chartFilters">Chart Filters</div>
+
+        <label data-i18n="qcLevel">QC Level</label>
+        <select id="filterLevel" onchange="renderDetail()"></select>
+
+        <label data-i18n="consumableLot">Consumable Lot</label>
+        <input id="filterLot" type="text" data-i18n-placeholder="filterLotPlaceholder" placeholder="Enter lot no. or leave blank for all" oninput="renderDetail()">
+
+        <label data-i18n="dateRange">Date Range</label>
+        <select id="filterRange" onchange="renderDetail()">
+          <option value="all" data-i18n-option="allData">All data</option>
+          <option value="7" data-i18n-option="last7">Last 7 points</option>
+          <option value="10" data-i18n-option="last10">Last 10 points</option>
+        </select>
+
+        <div class="add-form">
+          <div class="section-title" data-i18n="levelSettings">QC Level Settings</div>
+
+          <div id="levelSettingsList" style="display:grid;gap:8px;margin-bottom:10px"></div>
+
+          <div class="filter-grid">
+            <div>
+              <label data-i18n="levelName">Level Name</label>
+              <input id="levelName" type="text" placeholder="e.g. Level 1">
+            </div>
+            <div>
+              <label data-i18n="meanShort">Mean</label>
+              <input id="levelMean" type="number" step="0.01" placeholder="100">
+            </div>
+          </div>
+
+          <label data-i18n="sdLabel">Standard Deviation (SD)</label>
+          <input id="levelSd" type="number" step="0.01" placeholder="3">
+
+          <button class="btn btn-light" style="width:100%;margin-top:10px" onclick="saveLevel()" data-i18n="saveLevel">Save / Update Level</button>
+        </div>
+
+        <div class="add-form">
+          <div class="section-title" data-i18n="addQcResult">Add QC Result</div>
+
+          <label data-i18n="date">Date</label>
+          <input id="newDate" type="date">
+
+          <label data-i18n="qcValue">QC Measurement Value</label>
+          <input id="newValue" type="number" step="0.1" placeholder="e.g. 101.5">
+
+          <label data-i18n="qcLevel">QC Level</label>
+          <select id="newLevel"></select>
+
+          <label data-i18n="consumableLot">Consumable Lot</label>
+          <input id="newLot" type="text" data-i18n-placeholder="lotPlaceholder" placeholder="Enter consumable lot no.">
+
+          <label data-i18n="qcLot">QC Material Lot</label>
+          <input id="newQcLot" value="QC260815">
+
+          <label data-i18n="operator">Operator</label>
+          <input id="newOperator" value="Arthur">
+
+          <div class="form-actions">
+            <button class="btn btn-primary" onclick="addPoint()" data-i18n="addRecord">Add Record</button>
+            <button class="btn btn-light" onclick="loadDemoForDevice()" data-i18n="resetDemo">Reset Demo</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card chart-card">
+          <div class="toolbar">
+            <div>
+              <h2>Levey-Jennings Chart</h2>
+              <div class="small" data-i18n="oneChartPerDevice">One LJ Chart per device; filters control which QC dataset is displayed.</div>
+            </div>
+          </div>
+
+          <div class="status">
+            <div class="metric"><span data-i18n="meanShort">Mean</span>: <span id="meanText"></span></div>
+            <div class="metric">±2SD: <span id="sd2Text"></span></div>
+            <div class="metric">±3SD: <span id="sd3Text"></span></div>
+            <div class="metric"><span data-i18n="points">Points</span>: <span id="pointCount"></span></div>
+          </div>
+
+          <canvas id="chart" width="820" height="430"></canvas>
+          <div id="tooltip" class="tooltip"></div>
+
+          <div class="legend">
+            <span><span class="dot"></span><span data-i18n="legendQc">QC measurement</span></span>
+            <span data-i18n="legendMean">Center line: Mean</span>
+            <span data-i18n="legend2">Warning limits: ±2SD</span>
+            <span data-i18n="legend3">Control limits: ±3SD</span>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:18px">
+          <div class="toolbar">
+            <h2 data-i18n="qcRecords">QC Records</h2>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th data-i18n="date">Date</th>
+                <th data-i18n="measurement">Measurement</th>
+                <th data-i18n="qcLevel">QC Level</th>
+                <th data-i18n="consumableLot">Consumable Lot</th>
+                <th data-i18n="qcLot">QC Material Lot</th>
+                <th data-i18n="operator">Operator</th>
+                <th data-i18n="status">Status</th>
+              </tr>
+            </thead>
+            <tbody id="recordTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
 
 <script>
 const I18N={
-en:{title:"QC Module Prototype",subtitle:"Enter QC results, generate a Levey-Jennings Chart, and review control limits.",language:"Language",qcSettings:"QC Settings",testItem:"Test Item",glucose:"Glucose QC",cholesterol:"Total Cholesterol QC",hemoglobin:"Hemoglobin QC",custom:"Custom QC Item",meanLabel:"Target Mean",sdLabel:"Standard Deviation (SD)",addResult:"Add QC Result",date:"Date",qcValue:"QC Measurement Value",placeholder:"e.g. 102.5",addRecord:"Add QC Record",loadDemo:"Load Demo Data",clearData:"Clear Data",hint:"This QC example is intended for laboratory or POCT quality control. A control material with a known target value is measured to verify that the instrument or reagent system remains stable.",meanShort:"Mean",legendQc:"QC measurement",legendMean:"Center line: Mean",legend1:"Inner limits: ±1SD",legend2:"Warning limits: ±2SD",legend3:"Control limits: ±3SD",records:"QC Records",measurement:"Measurement",deviation:"Deviation",status:"Status",within:"Within range",over2:"Outside ±2SD",over3:"Outside ±3SD",empty:"No QC data. Add a record or load demo data.",alertMissing:"Please enter a date and QC measurement value."},
-th:{title:"ต้นแบบโมดูล QC",subtitle:"ป้อนผล QC สร้างกราฟ Levey-Jennings และตรวจสอบขีดจำกัดการควบคุม",language:"ภาษา",qcSettings:"การตั้งค่า QC",testItem:"รายการตรวจ",glucose:"QC น้ำตาลในเลือด",cholesterol:"QC คอเลสเตอรอลรวม",hemoglobin:"QC ฮีโมโกลบิน",custom:"รายการ QC แบบกำหนดเอง",meanLabel:"ค่าเฉลี่ยเป้าหมาย",sdLabel:"ส่วนเบี่ยงเบนมาตรฐาน (SD)",addResult:"เพิ่มผล QC",date:"วันที่",qcValue:"ค่าที่วัดได้ของ QC",placeholder:"เช่น 102.5",addRecord:"เพิ่มบันทึก QC",loadDemo:"โหลดข้อมูลตัวอย่าง",clearData:"ล้างข้อมูล",hint:"ตัวอย่างนี้ใช้สำหรับการควบคุมคุณภาพของห้องปฏิบัติการหรือ POCT โดยใช้วัสดุควบคุมที่มีค่าเป้าหมายทราบอยู่แล้ว เพื่อตรวจสอบว่าเครื่องมือหรือระบบน้ำยายังคงให้ผลที่เสถียร",meanShort:"ค่าเฉลี่ย",legendQc:"ค่าที่วัดได้ของ QC",legendMean:"เส้นกึ่งกลาง: ค่าเฉลี่ย",legend1:"ขีดจำกัดด้านใน: ±1SD",legend2:"ขีดจำกัดเตือน: ±2SD",legend3:"ขีดจำกัดควบคุม: ±3SD",records:"บันทึก QC",measurement:"ค่าที่วัดได้",deviation:"ค่าคลาดเคลื่อน",status:"สถานะ",within:"อยู่ในช่วง",over2:"เกิน ±2SD",over3:"เกิน ±3SD",empty:"ยังไม่มีข้อมูล QC กรุณาเพิ่มข้อมูลหรือโหลดข้อมูลตัวอย่าง",alertMissing:"กรุณากรอกวันที่และค่าที่วัดได้ของ QC"},
-zh:{title:"QC 品質管制模組 Prototype",subtitle:"輸入 QC 結果、產生 Levey-Jennings Chart，並查看管制範圍。",language:"語言",qcSettings:"QC 設定",testItem:"檢驗項目",glucose:"血糖 QC",cholesterol:"總膽固醇 QC",hemoglobin:"血紅素 QC",custom:"自訂 QC 項目",meanLabel:"目標平均值 Mean",sdLabel:"標準差 SD",addResult:"新增 QC 結果",date:"日期",qcValue:"QC 測量值",placeholder:"例如 102.5",addRecord:"新增 QC 紀錄",loadDemo:"載入示範資料",clearData:"清除資料",hint:"此 QC 範例主要用於醫療檢驗或 POCT 品質管制。透過已知目標值的 QC 標準液進行測量，用來確認檢驗設備或試劑系統是否維持穩定。",meanShort:"Mean",legendQc:"QC 測量值",legendMean:"中心線：Mean",legend1:"內圈：±1SD",legend2:"警戒線：±2SD",legend3:"管制界線：±3SD",records:"QC 紀錄",measurement:"測量值",deviation:"偏差",status:"判定",within:"範圍內",over2:"超出 ±2SD",over3:"超出 ±3SD",empty:"尚無 QC 資料，請新增紀錄或載入示範資料。",alertMissing:"請輸入日期與 QC 測量值。"}
+en:{
+title:"QC Module Prototype",subtitle:"Manage QC by device and review Levey-Jennings data with consumable traceability.",
+language:"Language",deviceList:"QC Device List",deviceListHint:"Each row represents one physical device. Click a device to open its QC chart.",
+addDevice:"+ Add Device",deviceModel:"Device Model",deviceId:"Device ID",serialNo:"Serial No. / Batch No.",location:"Location",latestQc:"Latest QC",status:"Status",
+active:"Active",backToList:"← Back to Device List",chartFilters:"Chart Filters",qcLevel:"QC Level",consumableLot:"Consumable Lot",dateRange:"Date Range",
+allData:"All data",last7:"Last 7 points",last10:"Last 10 points",addQcResult:"Add QC Result",date:"Date",qcValue:"QC Measurement Value",
+qcLot:"QC Material Lot",operator:"Operator",addRecord:"Add Record",resetDemo:"Reset Demo",oneChartPerDevice:"One LJ Chart per device; filters control which QC dataset is displayed.",
+meanShort:"Mean",points:"Points",legendQc:"QC measurement",legendMean:"Center line: Mean",legend2:"Warning limits: ±2SD",legend3:"Control limits: ±3SD",
+qcRecords:"QC Records",measurement:"Measurement",within:"Within range",over2:"Outside ±2SD",over3:"Outside ±3SD",allLevels:"All levels",allLots:"All lots",
+expiry:"Expiry",deviation:"Deviation",demoAddDevice:"Add Device is not implemented in this prototype.",missing:"Please enter date and QC measurement value.",filterLotPlaceholder:"Enter lot no. or leave blank for all",lotPlaceholder:"Enter consumable lot no.",levelSettings:"QC Level Settings",levelName:"Level Name",sdLabel:"Standard Deviation (SD)",saveLevel:"Save / Update Level",edit:"Edit",delete:"Delete",levelRequired:"Please enter Level Name, Mean and SD.",levelInUse:"This level is already used by QC records and cannot be deleted in this prototype."
+},
+th:{
+title:"ต้นแบบโมดูล QC",subtitle:"จัดการ QC แยกตามอุปกรณ์ และตรวจสอบกราฟ Levey-Jennings พร้อมข้อมูลย้อนกลับของวัสดุสิ้นเปลือง",
+language:"ภาษา",deviceList:"รายการอุปกรณ์ QC",deviceListHint:"แต่ละแถวคืออุปกรณ์จริงหนึ่งเครื่อง คลิกเพื่อเปิดกราฟ QC ของอุปกรณ์นั้น",
+addDevice:"+ เพิ่มอุปกรณ์",deviceModel:"รุ่นอุปกรณ์",deviceId:"รหัสอุปกรณ์",serialNo:"หมายเลขเครื่อง / หมายเลขล็อต",location:"สถานที่",latestQc:"QC ล่าสุด",status:"สถานะ",
+active:"ใช้งาน",backToList:"← กลับไปที่รายการอุปกรณ์",chartFilters:"ตัวกรองกราฟ",qcLevel:"ระดับ QC",consumableLot:"ล็อตวัสดุสิ้นเปลือง",dateRange:"ช่วงข้อมูล",
+allData:"ข้อมูลทั้งหมด",last7:"7 จุดล่าสุด",last10:"10 จุดล่าสุด",addQcResult:"เพิ่มผล QC",date:"วันที่",qcValue:"ค่าที่วัดได้ของ QC",
+qcLot:"ล็อตวัสดุ QC",operator:"ผู้ปฏิบัติงาน",addRecord:"เพิ่มบันทึก",resetDemo:"รีเซ็ตข้อมูลตัวอย่าง",oneChartPerDevice:"หนึ่งอุปกรณ์มีกราฟ LJ หนึ่งกราฟ โดยใช้ตัวกรองเพื่อเลือกชุดข้อมูล QC",
+meanShort:"ค่าเฉลี่ย",points:"จำนวนจุด",legendQc:"ค่าที่วัดได้ของ QC",legendMean:"เส้นกึ่งกลาง: ค่าเฉลี่ย",legend2:"ขีดจำกัดเตือน: ±2SD",legend3:"ขีดจำกัดควบคุม: ±3SD",
+qcRecords:"บันทึก QC",measurement:"ค่าที่วัดได้",within:"อยู่ในช่วง",over2:"เกิน ±2SD",over3:"เกิน ±3SD",allLevels:"ทุกระดับ",allLots:"ทุกล็อต",
+expiry:"วันหมดอายุ",deviation:"ค่าคลาดเคลื่อน",demoAddDevice:"ฟังก์ชันเพิ่มอุปกรณ์ยังไม่เปิดใช้ในต้นแบบนี้",missing:"กรุณากรอกวันที่และค่าที่วัดได้ของ QC",filterLotPlaceholder:"กรอกหมายเลขล็อต หรือเว้นว่างเพื่อแสดงทั้งหมด",lotPlaceholder:"กรอกหมายเลขล็อตวัสดุสิ้นเปลือง",levelSettings:"การตั้งค่าระดับ QC",levelName:"ชื่อระดับ",sdLabel:"ส่วนเบี่ยงเบนมาตรฐาน (SD)",saveLevel:"บันทึก / อัปเดตระดับ",edit:"แก้ไข",delete:"ลบ",levelRequired:"กรุณากรอกชื่อระดับ ค่าเฉลี่ย และ SD",levelInUse:"ระดับนี้มีการใช้งานในบันทึก QC แล้ว จึงไม่สามารถลบได้ในต้นแบบนี้"
+},
+zh:{
+title:"QC 品質管制模組 Prototype",subtitle:"以設備為核心管理 QC，並在 Levey-Jennings Chart 中追蹤對應耗材資訊。",
+language:"語言",deviceList:"QC 設備清單",deviceListHint:"每一列代表一台實體設備，點擊設備即可進入該設備的 QC 圖表。",
+addDevice:"+ 新增設備",deviceModel:"設備型號",deviceId:"設備識別編號",serialNo:"序號 / 批號",location:"所在位置",latestQc:"最新 QC",status:"狀態",
+active:"啟用中",backToList:"← 返回設備清單",chartFilters:"圖表篩選",qcLevel:"QC Level",consumableLot:"耗材批號",dateRange:"資料範圍",
+allData:"全部資料",last7:"最近 7 筆",last10:"最近 10 筆",addQcResult:"新增 QC 結果",date:"日期",qcValue:"QC 測量值",
+qcLot:"QC 標準品批號",operator:"操作人員",addRecord:"新增紀錄",resetDemo:"重設示範資料",oneChartPerDevice:"每台設備僅有一個 LJ Chart，透過篩選條件切換顯示的 QC Dataset。",
+meanShort:"Mean",points:"資料點",legendQc:"QC 測量值",legendMean:"中心線：Mean",legend2:"警戒線：±2SD",legend3:"管制界線：±3SD",
+qcRecords:"QC 紀錄",measurement:"測量值",within:"範圍內",over2:"超出 ±2SD",over3:"超出 ±3SD",allLevels:"全部 Level",allLots:"全部耗材批號",
+expiry:"效期",deviation:"偏差",demoAddDevice:"此 Prototype 尚未實作新增設備功能。",missing:"請輸入日期與 QC 測量值。",filterLotPlaceholder:"輸入批號篩選，留空顯示全部",lotPlaceholder:"請輸入耗材批號",levelSettings:"QC Level 設定",levelName:"Level 名稱",sdLabel:"標準差 SD",saveLevel:"儲存 / 更新 Level",edit:"編輯",delete:"刪除",levelRequired:"請輸入 Level 名稱、Mean 與 SD。",levelInUse:"此 Level 已有 QC 紀錄使用，本 Prototype 不允許刪除。"
+}
 };
 
 let lang="en";
-const records=[];
+let currentDeviceId=null;
+let hoverPoints=[];
 const $=id=>document.getElementById(id);
-$("date").value=new Date().toISOString().slice(0,10);
-$("mean").addEventListener("input",render);
-$("sd").addEventListener("input",render);
+
+const baseDevices=[
+  {
+    id:"BG001",model:"Glucose Meter BG-200",serial:"SN20260001",location:"Clinic A",
+    configs:{
+      "Level 1":{"mean":100,"sd":3},
+      "Level 2":{"mean":250,"sd":6}
+    },
+    consumables:{
+      "ST260901":{"expiry":"2027-02-28"},
+      "ST261001":{"expiry":"2027-04-30"}
+    },
+    points:[
+      {date:"2026-09-10",value:99,level:"Level 1",lot:"ST260901",qcLot:"QC260815",operator:"Arthur"},
+      {date:"2026-09-11",value:101,level:"Level 1",lot:"ST260901",qcLot:"QC260815",operator:"Arthur"},
+      {date:"2026-09-12",value:102,level:"Level 1",lot:"ST260901",qcLot:"QC260815",operator:"Pon"},
+      {date:"2026-09-13",value:98,level:"Level 1",lot:"ST260901",qcLot:"QC260815",operator:"Pon"},
+      {date:"2026-09-14",value:100,level:"Level 1",lot:"ST260901",qcLot:"QC260815",operator:"Arthur"},
+      {date:"2026-09-15",value:103,level:"Level 1",lot:"ST260901",qcLot:"QC260815",operator:"Arthur"},
+      {date:"2026-09-16",value:104,level:"Level 1",lot:"ST260901",qcLot:"QC260815",operator:"Pon"},
+      {date:"2026-09-17",value:106.5,level:"Level 1",lot:"ST260901",qcLot:"QC260815",operator:"Pon"},
+      {date:"2026-09-18",value:101,level:"Level 1",lot:"ST261001",qcLot:"QC260815",operator:"Arthur"},
+      {date:"2026-09-19",value:100,level:"Level 1",lot:"ST261001",qcLot:"QC260815",operator:"Arthur"},
+      {date:"2026-09-20",value:108.8,level:"Level 1",lot:"ST261001",qcLot:"QC260815",operator:"Pon"},
+      {date:"2026-09-10",value:248,level:"Level 2",lot:"ST260901",qcLot:"QC260815",operator:"Arthur"},
+      {date:"2026-09-12",value:252,level:"Level 2",lot:"ST260901",qcLot:"QC260815",operator:"Pon"},
+      {date:"2026-09-14",value:249,level:"Level 2",lot:"ST260901",qcLot:"QC260815",operator:"Arthur"},
+      {date:"2026-09-16",value:255,level:"Level 2",lot:"ST260901",qcLot:"QC260815",operator:"Pon"},
+      {date:"2026-09-18",value:251,level:"Level 2",lot:"ST261001",qcLot:"QC260815",operator:"Arthur"}
+    ]
+  },
+  {
+    id:"BG002",model:"Glucose Meter BG-200",serial:"SN20260002",location:"Clinic B",
+    configs:{"Level 1":{"mean":100,"sd":3},"Level 2":{"mean":250,"sd":6}},
+    consumables:{"ST260901":{"expiry":"2027-02-28"}},
+    points:[
+      {date:"2026-09-12",value:100,level:"Level 1",lot:"ST260901",qcLot:"QC260815",operator:"Nina"},
+      {date:"2026-09-15",value:101,level:"Level 1",lot:"ST260901",qcLot:"QC260815",operator:"Nina"},
+      {date:"2026-09-18",value:99,level:"Level 1",lot:"ST260901",qcLot:"QC260815",operator:"Nina"}
+    ]
+  },
+  {
+    id:"A1C001",model:"HbA1c Analyzer A1C-10",serial:"SN889201",location:"Main Lab",
+    configs:{"Level 1":{"mean":5.5,"sd":0.15},"Level 2":{"mean":9.8,"sd":0.2}},
+    consumables:{"A1CR2609":{"expiry":"2027-01-31"}},
+    points:[
+      {date:"2026-09-14",value:5.48,level:"Level 1",lot:"A1CR2609",qcLot:"A1CQC2607",operator:"May"},
+      {date:"2026-09-17",value:5.56,level:"Level 1",lot:"A1CR2609",qcLot:"A1CQC2607",operator:"May"},
+      {date:"2026-09-20",value:5.61,level:"Level 1",lot:"A1CR2609",qcLot:"A1CQC2607",operator:"May"}
+    ]
+  }
+];
+
+let devices=JSON.parse(JSON.stringify(baseDevices));
 
 function t(k){return I18N[lang][k]||k}
+
 function setLanguage(v){
   lang=v;
   document.documentElement.lang=v==="zh"?"zh-Hant":v;
   document.querySelectorAll("[data-i18n]").forEach(el=>el.textContent=t(el.dataset.i18n));
-  document.querySelectorAll("#item option").forEach(o=>o.textContent=t(o.dataset.k));
-  $("value").placeholder=t("placeholder");
-  render();
+  document.querySelectorAll("[data-i18n-option]").forEach(el=>el.textContent=t(el.dataset.i18nOption));
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>el.placeholder=t(el.dataset.i18nPlaceholder));
+  renderDeviceList();
+  if(currentDeviceId){ renderLevelSettings(); renderDetail(); }
 }
-function addQC(){
-  const date=$("date").value,value=parseFloat($("value").value);
-  if(!date||Number.isNaN(value)){alert(t("alertMissing"));return}
-  records.push({date,value});records.sort((a,b)=>a.date.localeCompare(b.date));$("value").value="";render()
+
+function renderDeviceList(){
+  const tb=$("deviceTbody");tb.innerHTML="";
+  devices.forEach(d=>{
+    const latest=[...d.points].sort((a,b)=>a.date.localeCompare(b.date)).at(-1);
+    let latestStatus={label:"-",cls:""};
+    if(latest){
+      const cfg=d.configs[latest.level];
+      latestStatus=getStatus(latest.value,cfg.mean,cfg.sd);
+    }
+    const tr=document.createElement("tr");
+    tr.className="device-row";
+    tr.onclick=()=>openDevice(d.id);
+    tr.innerHTML=`
+      <td><strong>${d.model}</strong></td>
+      <td>${d.id}</td>
+      <td>${d.serial}</td>
+      <td>${d.location}</td>
+      <td>${latest?latest.date+" / "+latest.value:"-"}</td>
+      <td><span class="badge ${latestStatus.cls}">${latest?latestStatus.label:"-"}</span></td>`;
+    tb.appendChild(tr)
+  })
 }
-function loadDemo(){
-  records.length=0;
-  [99,101,102,98,100,103,104,105,107,102,100,109.5].forEach((v,i)=>{
-    const d=new Date();d.setDate(d.getDate()-(11-i));records.push({date:d.toISOString().slice(0,10),value:v})
-  });render()
+
+function showDeviceList(){
+  currentDeviceId=null;
+  $("deviceDetailView").classList.add("hidden");
+  $("deviceListView").classList.remove("hidden");
+  $("tooltip").style.display="none";
 }
-function clearData(){records.length=0;render()}
+
+function openDevice(id){
+  currentDeviceId=id;
+  $("deviceListView").classList.add("hidden");
+  $("deviceDetailView").classList.remove("hidden");
+  const d=getDevice();
+  $("deviceTitle").textContent=d.model+" · "+d.id;
+  $("crumbDevice").textContent=d.id;
+  $("dModel").textContent=d.model;$("dId").textContent=d.id;$("dSerial").textContent=d.serial;$("dLocation").textContent=d.location;
+
+  fillSelectors();
+  renderLevelSettings();
+  renderDetail();
+}
+
+function getDevice(){return devices.find(d=>d.id===currentDeviceId)}
+
+function fillSelectors(){
+  const d=getDevice();
+  const levels=Object.keys(d.configs);
+  const prevFilter=$("filterLevel").value;
+  const prevNew=$("newLevel").value;
+
+  fillSelect($("filterLevel"),[{value:"all",label:t("allLevels")},...levels.map(x=>({value:x,label:x}))]);
+  fillSelect($("newLevel"),levels.map(x=>({value:x,label:x})));
+
+  $("filterLevel").value=(prevFilter==="all"||levels.includes(prevFilter))?prevFilter:(levels[0]||"all");
+  $("newLevel").value=levels.includes(prevNew)?prevNew:(levels[0]||"");
+
+  if(!$("newDate").value) $("newDate").value="2026-09-21";
+}
+
+function fillSelect(el,items){
+  el.innerHTML="";
+  items.forEach(it=>{const o=document.createElement("option");o.value=it.value;o.textContent=it.label;el.appendChild(o)})
+}
+
+
+function renderLevelSettings(){
+  if(!currentDeviceId)return;
+  const d=getDevice();
+  const box=$("levelSettingsList");
+  box.innerHTML="";
+  Object.entries(d.configs).forEach(([name,cfg])=>{
+    const row=document.createElement("div");
+    row.style.cssText="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:9px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#f8fafc";
+    row.innerHTML=`
+      <div>
+        <div style="font-weight:700;font-size:13px">${name}</div>
+        <div class="small">Mean: ${cfg.mean} · SD: ${cfg.sd}</div>
+      </div>
+      <button class="btn btn-light" style="padding:7px 10px" onclick="editLevel('${name.replace(/'/g,"\\'")}')">${t("edit")}</button>
+      <button class="btn btn-danger" style="padding:7px 10px" onclick="deleteLevel('${name.replace(/'/g,"\\'")}')">${t("delete")}</button>`;
+    box.appendChild(row);
+  });
+}
+
+function editLevel(name){
+  const d=getDevice(),cfg=d.configs[name];
+  if(!cfg)return;
+  $("levelName").value=name;
+  $("levelMean").value=cfg.mean;
+  $("levelSd").value=cfg.sd;
+  $("levelName").dataset.original=name;
+}
+
+function saveLevel(){
+  const d=getDevice();
+  const name=$("levelName").value.trim();
+  const mean=parseFloat($("levelMean").value);
+  const sd=parseFloat($("levelSd").value);
+  if(!name||Number.isNaN(mean)||Number.isNaN(sd)||sd<=0){alert(t("levelRequired"));return;}
+
+  const original=$("levelName").dataset.original||"";
+  if(original && original!==name){
+    d.configs[name]={mean,sd};
+    delete d.configs[original];
+    d.points.forEach(p=>{if(p.level===original)p.level=name});
+  }else{
+    d.configs[name]={mean,sd};
+  }
+
+  $("levelName").value="";
+  $("levelMean").value="";
+  $("levelSd").value="";
+  delete $("levelName").dataset.original;
+
+  const currentFilter=$("filterLevel").value;
+  fillSelectors();
+  if(d.configs[currentFilter]) $("filterLevel").value=currentFilter;
+  renderLevelSettings();
+  renderDetail();
+}
+
+function deleteLevel(name){
+  const d=getDevice();
+  if(d.points.some(p=>p.level===name)){alert(t("levelInUse"));return;}
+  delete d.configs[name];
+  fillSelectors();
+  renderLevelSettings();
+  renderDetail();
+}
+
+function getFilteredPoints(){
+  const d=getDevice();
+  const level=$("filterLevel").value;
+  const lot=$("filterLot").value.trim().toLowerCase();
+  const range=$("filterRange").value;
+  let pts=d.points.filter(p=>(level==="all"||p.level===level)&&(!lot||String(p.lot).toLowerCase().includes(lot)))
+                  .sort((a,b)=>a.date.localeCompare(b.date));
+  if(range!=="all") pts=pts.slice(-parseInt(range,10));
+  return pts;
+}
+
+function configForChart(points){
+  const d=getDevice();
+  let level=$("filterLevel").value;
+  if(level==="all"){
+    level=points[0]?.level||Object.keys(d.configs)[0];
+  }
+  const cfg=d.configs[level]||{mean:0,sd:1};
+  return {level,...cfg};
+}
+
 function getStatus(v,m,sd){
   const z=Math.abs(v-m)/sd;
-  if(z>3)return{label:t("over3"),cls:"out"};
-  if(z>2)return{label:t("over2"),cls:"warning"};
-  return{label:t("within"),cls:"ok"};
+  if(z>3)return{label:t("over3"),cls:"danger"};
+  if(z>2)return{label:t("over2"),cls:"warn"};
+  return{label:t("within"),cls:"ok"}
 }
-function render(){
-  const m=parseFloat($("mean").value)||0,sd=Math.max(parseFloat($("sd").value)||1,0.0001);
-  $("meanText").textContent=m.toFixed(1);$("sd2Text").textContent=`${(m-2*sd).toFixed(1)} ~ ${(m+2*sd).toFixed(1)}`;$("sd3Text").textContent=`${(m-3*sd).toFixed(1)} ~ ${(m+3*sd).toFixed(1)}`;
-  $("tbody").innerHTML="";
-  records.forEach(r=>{
-    const s=getStatus(r.value,m,sd),tr=document.createElement("tr");
-    tr.innerHTML=`<td>${r.date}</td><td>${r.value.toFixed(1)}</td><td>${r.value-m>=0?"+":""}${(r.value-m).toFixed(1)}</td><td class="${s.cls}">${s.label}</td>`;
-    $("tbody").appendChild(tr)
-  });
-  draw(m,sd)
+
+function renderDetail(){
+  if(!currentDeviceId)return;
+  const pts=getFilteredPoints();
+  const cfg=configForChart(pts);
+  $("meanText").textContent=cfg.mean;
+  $("sd2Text").textContent=`${(cfg.mean-2*cfg.sd).toFixed(2)} ~ ${(cfg.mean+2*cfg.sd).toFixed(2)}`;
+  $("sd3Text").textContent=`${(cfg.mean-3*cfg.sd).toFixed(2)} ~ ${(cfg.mean+3*cfg.sd).toFixed(2)}`;
+  $("pointCount").textContent=pts.length;
+  renderRecordTable(pts,cfg);
+  drawChart(pts,cfg);
 }
-function draw(m,sd){
-  const c=$("chart"),ctx=c.getContext("2d"),W=c.width,H=c.height,left=70,right=24,top=30,bottom=52,cw=W-left-right,ch=H-top-bottom,ymin=m-4*sd,ymax=m+4*sd;
-  const y=v=>top+(ymax-v)/(ymax-ymin)*ch,x=i=>records.length<=1?left+cw/2:left+i*cw/(records.length-1);
-  ctx.clearRect(0,0,W,H);ctx.font="12px Arial";ctx.textAlign="right";ctx.textBaseline="middle";
-  [{k:3,l:"+3SD"},{k:2,l:"+2SD"},{k:1,l:"+1SD"},{k:0,l:"Mean"},{k:-1,l:"-1SD"},{k:-2,l:"-2SD"},{k:-3,l:"-3SD"}].forEach(L=>{
-    const yy=y(m+L.k*sd);ctx.beginPath();ctx.setLineDash(L.k===0?[]:[6,5]);ctx.lineWidth=L.k===0?2:1;ctx.strokeStyle=L.k===0?"#111827":Math.abs(L.k)===3?"#dc2626":Math.abs(L.k)===2?"#d97706":"#cbd5e1";ctx.moveTo(left,yy);ctx.lineTo(W-right,yy);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle="#4b5563";ctx.fillText(`${L.l}  ${(m+L.k*sd).toFixed(1)}`,left-8,yy)
+
+function renderRecordTable(pts,cfg){
+  const tb=$("recordTbody");tb.innerHTML="";
+  pts.forEach(p=>{
+    const pcfg=getDevice().configs[p.level]||cfg;
+    const s=getStatus(p.value,pcfg.mean,pcfg.sd);
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${p.date}</td>
+      <td>${p.value}</td>
+      <td>${p.level}</td>
+      <td>${p.lot}</td>
+      <td>${p.qcLot}</td>
+      <td>${p.operator}</td>
+      <td><span class="badge ${s.cls}">${s.label}</span></td>`;
+    tb.appendChild(tr)
+  })
+}
+
+function drawChart(pts,cfg){
+  const c=$("chart"),ctx=c.getContext("2d"),W=c.width,H=c.height,left=76,right=24,top=30,bottom=56,cw=W-left-right,ch=H-top-bottom;
+  const ymin=cfg.mean-4*cfg.sd,ymax=cfg.mean+4*cfg.sd;
+  const y=v=>top+(ymax-v)/(ymax-ymin)*ch;
+  const x=i=>pts.length<=1?left+cw/2:left+i*cw/(pts.length-1);
+
+  ctx.clearRect(0,0,W,H);
+  ctx.font="12px Arial";ctx.textAlign="right";ctx.textBaseline="middle";
+  const lines=[{k:3,l:"+3SD"},{k:2,l:"+2SD"},{k:1,l:"+1SD"},{k:0,l:"Mean"},{k:-1,l:"-1SD"},{k:-2,l:"-2SD"},{k:-3,l:"-3SD"}];
+
+  lines.forEach(L=>{
+    const yy=y(cfg.mean+L.k*cfg.sd);
+    ctx.beginPath();ctx.setLineDash(L.k===0?[]:[6,5]);ctx.lineWidth=L.k===0?2:1;
+    ctx.strokeStyle=L.k===0?"#111827":Math.abs(L.k)===3?"#dc2626":Math.abs(L.k)===2?"#d97706":"#cbd5e1";
+    ctx.moveTo(left,yy);ctx.lineTo(W-right,yy);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle="#4b5563";ctx.fillText(`${L.l} ${(cfg.mean+L.k*cfg.sd).toFixed(2)}`,left-8,yy)
   });
+
   ctx.strokeStyle="#9ca3af";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(left,top);ctx.lineTo(left,H-bottom);ctx.lineTo(W-right,H-bottom);ctx.stroke();
-  if(records.length){
-    ctx.strokeStyle="#2563eb";ctx.lineWidth=2;ctx.beginPath();records.forEach((r,i)=>{i?ctx.lineTo(x(i),y(r.value)):ctx.moveTo(x(i),y(r.value))});ctx.stroke();
-    records.forEach((r,i)=>{const s=getStatus(r.value,m,sd),xx=x(i),yy=y(r.value);ctx.beginPath();ctx.arc(xx,yy,5,0,Math.PI*2);ctx.fillStyle=s.cls==="out"?"#dc2626":s.cls==="warning"?"#d97706":"#2563eb";ctx.fill();ctx.fillStyle="#4b5563";ctx.textAlign="center";ctx.textBaseline="top";ctx.fillText(r.date.slice(5),xx,H-bottom+10)})
+
+  hoverPoints=[];
+  if(pts.length){
+    ctx.strokeStyle="#2563eb";ctx.lineWidth=2;ctx.beginPath();
+    pts.forEach((p,i)=>{const xx=x(i),yy=y(p.value);i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy)});
+    ctx.stroke();
+
+    pts.forEach((p,i)=>{
+      const pcfg=getDevice().configs[p.level]||cfg,s=getStatus(p.value,pcfg.mean,pcfg.sd),xx=x(i),yy=y(p.value);
+      ctx.beginPath();ctx.arc(xx,yy,6,0,Math.PI*2);
+      ctx.fillStyle=s.cls==="danger"?"#dc2626":s.cls==="warn"?"#d97706":"#2563eb";ctx.fill();
+      ctx.fillStyle="#4b5563";ctx.textAlign="center";ctx.textBaseline="top";ctx.fillText(p.date.slice(5),xx,H-bottom+11);
+      hoverPoints.push({x:xx,y:yy,p,status:s,cfg:pcfg})
+    })
   }else{
-    ctx.fillStyle="#9ca3af";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="15px Arial";ctx.fillText(t("empty"),left+cw/2,top+ch/2)
+    ctx.fillStyle="#9ca3af";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="15px Arial";ctx.fillText("No data",left+cw/2,top+ch/2)
   }
 }
-setLanguage("en");loadDemo();
+
+$("chart").addEventListener("mousemove",e=>{
+  const c=$("chart"),rect=c.getBoundingClientRect(),scaleX=c.width/rect.width,scaleY=c.height/rect.height;
+  const mx=(e.clientX-rect.left)*scaleX,my=(e.clientY-rect.top)*scaleY;
+  let hit=null,min=18;
+  hoverPoints.forEach(h=>{const dist=Math.hypot(mx-h.x,my-h.y);if(dist<min){min=dist;hit=h}});
+  const tip=$("tooltip");
+  if(!hit){tip.style.display="none";return}
+  const d=getDevice(),cons=d.consumables[hit.p.lot]||{};
+  tip.innerHTML=`
+    <strong>${hit.p.date} · ${hit.p.value}</strong>
+    <div class="tooltip-grid">
+      <span class="muted">${t("status")}</span><span>${hit.status.label}</span>
+      <span class="muted">${t("qcLevel")}</span><span>${hit.p.level}</span>
+      <span class="muted">${t("consumableLot")}</span><span>${hit.p.lot}</span>
+      <span class="muted">${t("expiry")}</span><span>${cons.expiry||"-"}</span>
+      <span class="muted">${t("qcLot")}</span><span>${hit.p.qcLot}</span>
+      <span class="muted">${t("operator")}</span><span>${hit.p.operator}</span>
+      <span class="muted">${t("meanShort")}</span><span>${hit.cfg.mean}</span>
+      <span class="muted">SD</span><span>${hit.cfg.sd}</span>
+    </div>`;
+  tip.style.display="block";
+  tip.style.left=Math.min(e.offsetX+18,c.clientWidth-280)+"px";
+  tip.style.top=Math.max(10,e.offsetY-20)+"px";
+});
+$("chart").addEventListener("mouseleave",()=>{$("tooltip").style.display="none"});
+
+function addPoint(){
+  const d=getDevice(),date=$("newDate").value,value=parseFloat($("newValue").value),level=$("newLevel").value,lot=$("newLot").value.trim()||"-";
+  if(!date||Number.isNaN(value)){alert(t("missing"));return}
+  d.points.push({date,value,level,lot,qcLot:$("newQcLot").value||"-",operator:$("newOperator").value||"-"});
+  $("newValue").value="";
+  $("filterLevel").value=level;
+  $("filterLot").value=lot==="-"?"":lot;
+  renderDetail();
+  renderDeviceList();
+}
+
+function loadDemoForDevice(){
+  devices=JSON.parse(JSON.stringify(baseDevices));
+  const id=currentDeviceId;
+  openDevice(id);
+  renderDeviceList();
+}
+
+renderDeviceList();
+setLanguage("en");
 </script>
 </body>
 </html>
