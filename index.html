@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Advmeds 原型總覽</title>
+<meta name="robots" content="noindex">
+
+<!--
+  ============================================================================
+  根目錄總覽頁：列出 repo 內所有原型網站的入口
+  ----------------------------------------------------------------------------
+  新增原型時：在對應的 <section> 裡複製一張 .card，改標題、說明與路徑即可。
+  頁首的「N 個原型」會自動計算 .card 數量，不必手動改。
+
+  網址一律用相對路徑（./xxx/），GitHub Pages 子路徑
+  （/advmeds-prototype/）和本機 file:// 直接開都能運作。
+  ============================================================================
+-->
+
+<style>
+  :root{
+    /* 與各原型入口頁共用的設計 token */
+    --teal-50:#E8F7FC;--teal-300:#19AAD1;--teal-500:#1285B3;--teal-700:#0C6496;
+    --green-50:#F0FBD7;--green-300:#7BC235;--green-700:#478B1A;
+    --blue-50:#E6EFFC;--blue-500:#2F6FCF;--blue-700:#1F4F99;
+    --grey-0:#FFFFFF;--grey-100:#F0F0F0;--grey-200:#E0E0E0;--grey-400:#C4C4C4;
+    --grey-600:#818181;--grey-700:#666666;--grey-900:#333333;
+    --bg:var(--grey-100);--panel:var(--grey-0);--line:var(--grey-200);
+    --ink:var(--grey-900);--ink-2:var(--grey-700);--ink-3:var(--grey-600);
+    --chip-bg:var(--grey-100);
+    --radius-md:4px;--radius-lg:5px;
+    --shadow-card:0px 4px 6px -4px rgba(0,0,0,.1),0px 10px 15px -3px rgba(0,0,0,.1);
+    --font-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#16191d;--panel:#1f2328;--line:#30363d;
+      --ink:#e6e8ea;--ink-2:#a8b0b8;--ink-3:#7d8590;
+      --chip-bg:#2a2f36;
+      --teal-50:#12303b;--teal-700:#7fd3ec;
+      --green-50:#223317;--green-700:#b3e07a;
+      --blue-50:#1b2a44;--blue-700:#9dbcf0;
+      --shadow-card:0 1px 2px rgba(0,0,0,.4);
+      color-scheme:dark;
+    }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;min-height:100vh;padding:56px 20px 64px;
+    background:var(--bg);color:var(--ink);font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:960px;margin:0 auto}
+
+  header{margin-bottom:12px}
+  h1{margin:0 0 8px;font-size:26px;font-weight:700}
+  .sub{font-size:14px;color:var(--ink-2);line-height:1.7;max-width:640px}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .tag{
+    display:inline-block;padding:4px 12px;border-radius:100px;
+    background:var(--panel);box-shadow:inset 0 0 0 1px var(--line);
+    color:var(--ink-2);font-size:12px;font-weight:700;
+  }
+  .tag:empty{display:none}
+
+  /* ---------- 客戶分區 ---------- */
+  section{margin-top:40px}
+  .section-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;margin-bottom:14px}
+  h2{margin:0;font-size:17px;font-weight:700;display:flex;align-items:center;gap:10px}
+  h2::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--accent)}
+  .section-desc{font-size:13px;color:var(--ink-3)}
+  .tsghb{--accent:var(--teal-300);--accent-soft:var(--teal-50);--accent-ink:var(--teal-700)}
+  .nhri {--accent:var(--green-300);--accent-soft:var(--green-50);--accent-ink:var(--green-700)}
+  .tools{--accent:var(--blue-500);--accent-soft:var(--blue-50);--accent-ink:var(--blue-700)}
+
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  @media (max-width:720px){ .grid{grid-template-columns:1fr} }
+
+  /* ---------- 卡片 ----------
+     整張卡片可點（.main 的 ::after 撐滿卡片），
+     子頁連結（.chips a）疊在上層可各自點選，避免 <a> 巢狀。 */
+  .card{
+    position:relative;display:flex;flex-direction:column;
+    background:var(--panel);border-radius:var(--radius-lg);
+    box-shadow:inset 0 0 0 1px var(--line),var(--shadow-card);
+    padding:20px 22px;transition:box-shadow .15s,transform .15s;
+  }
+  .card:hover{box-shadow:inset 0 0 0 1px var(--accent),var(--shadow-card);transform:translateY(-1px)}
+  .card:focus-within{box-shadow:inset 0 0 0 1px var(--accent),var(--shadow-card)}
+  .card.legacy{opacity:.72}
+  .card.legacy:hover,.card.legacy:focus-within{opacity:1}
+
+  .row{display:flex;align-items:flex-start;gap:14px}
+  .icon{
+    flex-shrink:0;width:40px;height:40px;border-radius:var(--radius-lg);
+    display:flex;align-items:center;justify-content:center;
+    background:var(--accent-soft);color:var(--accent-ink);
+  }
+  .body{flex:1;min-width:0}
+  .title{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;margin-bottom:4px}
+  .main{font-size:16px;font-weight:700;color:inherit;text-decoration:none}
+  .main::after{content:"";position:absolute;inset:0;border-radius:var(--radius-lg)}
+  .main:focus-visible{outline:none}
+  .main:focus-visible::after{outline:2px solid var(--accent);outline-offset:2px}
+  .badge{
+    font-size:11px;font-weight:700;line-height:1;padding:4px 7px;border-radius:100px;
+    background:var(--chip-bg);color:var(--ink-3);
+  }
+  .desc{font-size:13px;color:var(--ink-2);line-height:1.65}
+  .chev{flex-shrink:0;margin-top:10px;color:var(--grey-400);transition:transform .15s,color .15s}
+  .card:hover .chev{color:var(--accent);transform:translateX(2px)}
+
+  .foot{
+    margin-top:auto;padding-top:14px;
+    display:flex;align-items:center;flex-wrap:wrap;gap:8px;
+  }
+  .foot code{margin-right:auto}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chips a{
+    position:relative;z-index:1;
+    font-size:12px;font-weight:500;line-height:1;padding:6px 10px;border-radius:100px;
+    background:var(--chip-bg);color:var(--ink-2);text-decoration:none;
+    transition:background .15s,color .15s;
+  }
+  .chips a:hover{background:var(--accent-soft);color:var(--accent-ink)}
+  .chips a:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+  code{
+    font-family:var(--font-mono);font-size:12px;color:var(--ink-3);
+    background:var(--chip-bg);padding:2px 6px;border-radius:var(--radius-md);
+  }
+  footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-3);line-height:1.9}
+  footer a{color:var(--ink-2)}
+
+  @media (prefers-reduced-motion:reduce){
+    .card,.chev{transition:none}
+    .card:hover{transform:none}
+    .card:hover .chev{transform:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Advmeds 原型總覽</h1>
+    <div class="sub">這個 repo 裡所有原型網站的入口，依客戶分組。每個原型都是可獨立開啟的靜態 HTML，推上 <code>main</code> 後由 GitHub Pages 自動部署。</div>
+    <div class="tags">
+      <span class="tag" id="count"></span>
+      <span class="tag">GitHub Pages</span>
+    </div>
+  </header>
+
+  <!-- ====================================================================
+       三軍總醫院北投分院
+       ==================================================================== -->
+  <section class="tsghb" aria-labelledby="h-tsghb">
+    <div class="section-head">
+      <h2 id="h-tsghb">三軍總醫院北投分院</h2>
+      <span class="section-desc">精神醫療快速應變平台</span>
+    </div>
+    <div class="grid">
+
+      <div class="card">
+        <div class="row">
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="3" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="2"/>
+              <rect x="14" y="3" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="2"/>
+              <rect x="14" y="12" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="2"/>
+              <rect x="3" y="16" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <div class="body">
+            <div class="title"><a class="main" href="./tsghb-dashboard/">管理儀表板</a></div>
+            <div class="desc">精神健康個案通報管理儀表板。入口會自動導向最新版本，舊版仍可個別開啟。</div>
+          </div>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="foot">
+          <code>tsghb-dashboard/</code>
+          <nav class="chips" aria-label="管理儀表板版本">
+            <a href="./tsghb-dashboard/v3/">v3</a>
+            <a href="./tsghb-dashboard/v2/">v2</a>
+            <a href="./tsghb-dashboard/v1/">v1</a>
+          </nav>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1v-8.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="body">
+            <div class="title"><a class="main" href="./tsghb-landing-page/">角色入口頁（Landing page）</a></div>
+            <div class="desc">各角色登入後看到的入口頁，並提供各頁素材與 Spec 的下載包。</div>
+          </div>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="foot">
+          <code>tsghb-landing-page/</code>
+          <nav class="chips" aria-label="角色入口頁">
+            <a href="./tsghb-landing-page/doctor/">醫師</a>
+            <a href="./tsghb-landing-page/orgMag/">機構管理者</a>
+          </nav>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M9 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-3" stroke="currentColor" stroke-width="2"/>
+              <rect x="9" y="3" width="6" height="4" rx="1" stroke="currentColor" stroke-width="2"/>
+              <path d="M9 13l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="body">
+            <div class="title"><a class="main" href="./tsghb-flow-test/">通報流程測試導引</a></div>
+            <div class="desc">緊急醫療、第一／二／三類優化計畫與跨流程的測試情境清單，可逐項記錄並產出測試紀錄。</div>
+          </div>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="foot"><code>tsghb-flow-test/</code></div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="12" rx="1.5" stroke="currentColor" stroke-width="2"/>
+              <path d="M8 20h8M12 16v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M9 10h6M13 8l2 2-2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="body">
+            <div class="title"><a class="main" href="./tsghb-middleware/">HIS 整合</a></div>
+            <div class="desc">模擬 HIS 門診醫囑作業畫面，示範從 HIS 直接開啟個案紀錄（個管 SOAP、訪視紀錄）的客製化網頁。</div>
+          </div>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="foot"><code>tsghb-middleware/</code></div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="12" rx="1.5" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 16v4M8 21l4-1 4 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M7 12l3-3 2 2 5-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="body">
+            <div class="title"><a class="main" href="./tsghb-ppt/">平台簡報</a></div>
+            <div class="desc">核心價值與平台願景、通報流程、中繼站台、數據儀錶板的網頁版簡報。</div>
+          </div>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="foot">
+          <code>tsghb-ppt/</code>
+          <nav class="chips" aria-label="相關檔案">
+            <a href="./精神醫療通報平台-醫師院會demo簡報0907.pdf" target="_blank" rel="noopener">醫師院會 demo 簡報 PDF</a>
+          </nav>
+        </div>
+      </div>
+
+      <div class="card legacy">
+        <div class="row">
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M3 12a9 9 0 1 0 3-6.7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M3 4v5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 8v4l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="body">
+            <div class="title"><a class="main" href="./tsghb-doctor-landing-page/">醫師入口頁</a><span class="badge">舊版</span></div>
+            <div class="desc">已移至「角色入口頁 › 醫師」，此處保留舊版供對照。</div>
+          </div>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="foot"><code>tsghb-doctor-landing-page/</code></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       國家衛生研究院
+       ==================================================================== -->
+  <section class="nhri" aria-labelledby="h-nhri">
+    <div class="section-head">
+      <h2 id="h-nhri">國家衛生研究院</h2>
+      <span class="section-desc">肌少症評估與 ICOPE 衛教</span>
+    </div>
+    <div class="grid">
+
+      <div class="card">
+        <div class="row">
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="5" r="2" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 8v6M8 10.5l4-1.5 4 1.5M9 21l3-7 3 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="body">
+            <div class="title"><a class="main" href="./spec/nhri_ms/">肌少症評估量表</a></div>
+            <div class="desc">依 AWGS 2025 共識實作，輸入身體量測後即時計算 SMI、ASM/BMI 並判定肌少症風險。</div>
+          </div>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="foot">
+          <code>spec/nhri_ms/</code>
+          <nav class="chips" aria-label="肌少症評估量表頁面">
+            <a href="./spec/nhri_ms/write/">填寫頁</a>
+            <a href="./spec/nhri_ms/result/">結果頁</a>
+          </nav>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M2 8l10-4 10 4-10 4-10-4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M6 10v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5M22 8v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="body">
+            <div class="title"><a class="main" href="./spec/nhri_elearing_room/">ICOPE 學習小教室</a></div>
+            <div class="desc">選擇長者的衰弱等級與 ICOPE 異常項目，立即產生專屬的衛教學習清單。</div>
+          </div>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="foot"><code>spec/nhri_elearing_room/</code></div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="3" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2"/>
+              <rect x="15" y="3" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2"/>
+              <rect x="9" y="15" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2"/>
+              <path d="M6 9v2a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9M12 13v2" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <div class="body">
+            <div class="title"><a class="main" href="./spec/nhri_elearing/">ICOPE 衛教推播邏輯一覽</a></div>
+            <div class="desc">給 PM 對照「ICOPE 哪一項異常 × 衰弱／失能條件」該推播哪些衛教包。</div>
+          </div>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="foot"><code>spec/nhri_elearing/</code></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       工具與其他
+       ==================================================================== -->
+  <section class="tools" aria-labelledby="h-tools">
+    <div class="section-head">
+      <h2 id="h-tools">工具與其他</h2>
+      <span class="section-desc">內部工具與非醫療專案</span>
+    </div>
+    <div class="grid">
+
+      <div class="card">
+        <div class="row">
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="3" width="7" height="5" rx="1" stroke="currentColor" stroke-width="2"/>
+              <rect x="14" y="16" width="7" height="5" rx="1" stroke="currentColor" stroke-width="2"/>
+              <path d="M6.5 8v4a2 2 0 0 0 2 2h7a2 2 0 0 1 2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="body">
+            <div class="title"><a class="main" href="./flow-chart/">FlowScript 流程圖</a></div>
+            <div class="desc">用極簡的文字語法描述流程並即時畫成流程圖，可匯出 SVG / PNG 或分享唯讀檢視連結。</div>
+          </div>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="foot">
+          <code>flow-chart/</code>
+          <nav class="chips" aria-label="FlowScript 頁面">
+            <a href="./flow-chart/edit/">編輯</a>
+            <a href="./flow-chart/view/">檢視</a>
+          </nav>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 3h9l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M9 11h6M9 15h6M9 7h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="body">
+            <div class="title"><a class="main" href="./mjk/">魔術道具報價單</a></div>
+            <div class="desc">報價單產生器：選擇品項、確認明細與金額試算，產出可列印的報價單。</div>
+          </div>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="foot"><code>mjk/</code></div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>
+    新增原型：在根目錄開一個新資料夾並放入 <code>index.html</code>，推上 <code>main</code> 後別忘了回這頁補一張卡片。<br>
+    部署方式與網址規則請見 <a href="https://github.com/ArthurHsuAdvmeds/advmeds-prototype#readme" target="_blank" rel="noopener">README</a>。頁面內的資料皆為展示用虛構資料。
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // 頁首顯示原型數量，新增卡片時不必手動改數字
+  var n = document.querySelectorAll(".card").length;
+  document.getElementById("count").textContent = n + " 個原型";
+
+  // file:// 下瀏覽器不會自動載入目錄裡的 index.html，只會列出檔案，
+  // 所以本機直接開檔時，把結尾是 / 的相對連結補上 index.html
+  if (location.protocol === "file:") {
+    document.querySelectorAll('a[href^="./"]').forEach(function (a) {
+      var href = a.getAttribute("href");
+      if (href.slice(-1) === "/") a.setAttribute("href", href + "index.html");
+    });
+  }
+})();
+</script>
+</body>
+</html>

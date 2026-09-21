@@ -26,7 +26,7 @@ https://arthurhsuadvmeds.github.io/advmeds-prototype/{專案資料夾}/{子資�
 
 - 資料夾網址結尾請保留 `/`，該層必須有 `index.html` 才能正常開啟。
 - 網址**區分大小寫**，資料夾請一律用小寫。
-- 根目錄（`.../advmeds-prototype/`）沒有 `index.html`，直接開會是 404，請從子路徑進入。
+- 根目錄（`.../advmeds-prototype/`）是所有原型的總覽頁（`index.html`），新增原型後請記得在這頁補一張卡片。
 
 # 建議專案架構
 
