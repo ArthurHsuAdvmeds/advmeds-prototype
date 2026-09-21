@@ -626,10 +626,23 @@
         pinOffset: (k % 2 ? -1 : 1) * (0.22 + 0.08 * Math.floor(k / 2))
       };
       itemOf.set(n.id, item);
-      var layer = layers[item.layer];
-      var at = layer.indexOf(itemOf.get(anchorId));
-      if (at < 0) layer.push(item); else layer.splice(at + 1, 0, item);
+      seatNote(layers[item.layer], item);
     });
+
+    // 把旁註塞回錨點旁邊：pinOffset 為正放右邊、為負放左邊，同一側已有旁註就往外排。
+    // 一開始建層時也要用這個規則，否則排序若沒有更好的一輪，左側旁註會卡在錨點右邊。
+    function seatNote(list, note) {
+      var anchor = itemOf.get(note.pinAnchor);
+      var at = anchor ? list.indexOf(anchor) : -1;
+      if (at < 0) { list.push(note); return; }
+      var k;
+      if (note.pinOffset >= 0) {
+        for (k = at + 1; k < list.length && list[k].pinAnchor === note.pinAnchor; k++) { /* skip */ }
+      } else {
+        for (k = at; k > 0 && list[k - 1].pinAnchor === note.pinAnchor; k--) { /* skip */ }
+      }
+      list.splice(k, 0, note);
+    }
 
     var upNb = new Map(), downNb = new Map();
     function connect(a, b) { // a、b 位於相鄰層
@@ -683,22 +696,12 @@
         return d || (a.pos - b.pos);
       });
 
-      var out = free;
-      pinned.forEach(function (note) {
-        var anchor = itemOf.get(note.pinAnchor);
-        var at = anchor ? out.indexOf(anchor) : -1;
-        if (at < 0) { out.push(note); return; }
-        var k;
-        if (note.pinOffset >= 0) {   // 同一個錨點的旁註往外側排
-          for (k = at + 1; k < out.length && out[k].pinAnchor === note.pinAnchor; k++) { /* skip */ }
-        } else {
-          for (k = at; k > 0 && out[k - 1].pinAnchor === note.pinAnchor; k--) { /* skip */ }
-        }
-        out.splice(k, 0, note);
-      });
+      // 由內往外塞，同一側的第二則旁註才會排在第一則的外面，不會每一輪對調一次
+      pinned.sort(function (a, b) { return Math.abs(a.pinOffset) - Math.abs(b.pinOffset); });
+      pinned.forEach(function (note) { seatNote(free, note); });
 
       layer.length = 0;
-      Array.prototype.push.apply(layer, out);
+      Array.prototype.push.apply(layer, free);
       setPos(layer);
     }
 
@@ -719,7 +722,8 @@
     function buildBlocks(layer) {
       var blocks = [], byKey = {};
       layer.forEach(function (it) {
-        var key = it.pinAnchor ? it.pinAnchor : (it.kind === 'node' ? it.node.id : it.id);
+        // 轉折點的 key 加上冒號前綴（id 不能含冒號），避免跟 id 剛好叫 d0 之類的節點撞在一起
+        var key = it.pinAnchor ? it.pinAnchor : (it.kind === 'node' ? it.node.id : ':' + it.id);
         if (byKey[key]) { byKey[key].items.push(it); return; }
         byKey[key] = { items: [it] };
         blocks.push(byKey[key]);
@@ -804,53 +808,78 @@
       if (!e.label) { e.labelW = 0; e.labelH = 0; return; }
       e.labelW = Math.round(textWidth(e.label, 12, 500)) + 12;
       e.labelH = 20;
-      var pad = (dir === 'TD' ? e.labelW : e.labelH) * 0.35;
+      var span = dir === 'TD' ? e.labelW : e.labelH;
+      // 旁註的線是橫的（LR 時是直的），標籤就夾在錨點與旁註中間，只要把這段距離撐開
+      var noteId = sideOf.has(e.from) ? e.from : (sideOf.has(e.to) ? e.to : null);
+      if (noteId) { itemOf.get(noteId).pinGap = Math.max(NODE_GAP, span + 16); return; }
       [itemOf.get(e.from), itemOf.get(e.to)].forEach(function (item) {
-        if (item) item.labelPad = Math.max(item.labelPad || 0, pad);
+        if (item) item.labelPad = Math.max(item.labelPad || 0, span * 0.35);
       });
     });
     function halfCross(item) { return cross(item) / 2 + (item.labelPad || 0); }
 
+    // 相鄰兩個項目中心之間的最小距離。
+    // 錨點跟自己的旁註之間不用替分流標籤留位子，否則旁註會被推得離錨點很遠。
+    function groupOf(item) { return item.pinAnchor || (item.kind === 'node' ? item.node.id : null); }
+    function sep(u, v) {
+      var g = groupOf(u);
+      if (g != null && g === groupOf(v)) {
+        return cross(u) / 2 + cross(v) / 2 + Math.max(u.pinGap || NODE_GAP, v.pinGap || NODE_GAP);
+      }
+      return halfCross(u) + halfCross(v) + NODE_GAP;
+    }
+
     layers.forEach(function (layer) {
-      var x = 0;
-      layer.forEach(function (item) {
-        x += halfCross(item);
-        item.c = x;
-        x += halfCross(item) + NODE_GAP;
+      layer.forEach(function (item, i) {
+        item.c = i ? layer[i - 1].c + sep(layer[i - 1], item) : halfCross(item);
       });
     });
 
     function refine(layer, nbr) {
       if (!layer.length) return;
       var want = layer.map(function (item) {
-        if (item.pinAnchor) {
-          var anchor = itemOf.get(item.pinAnchor);
-          // 就貼在錨點旁邊，位移量用實際尺寸算
-          if (anchor) {
-            return anchor.c + (item.pinOffset >= 0 ? 1 : -1) *
-              (halfCross(anchor) + NODE_GAP + halfCross(item));
-          }
-        }
+        if (item.pinAnchor) return null;
         var ns = nbr.get(item);
         if (!ns || !ns.length) return item.c;
         var sum = 0;
         ns.forEach(function (n) { sum += n.c; });
         return sum / ns.length;
       });
-      var i;
-      for (i = 1; i < layer.length; i++) {
-        var minC = want[i - 1] + halfCross(layer[i - 1]) + halfCross(layer[i]) + NODE_GAP;
-        if (want[i] < minC) want[i] = minC;
-      }
-      for (i = layer.length - 2; i >= 0; i--) {
-        var maxC = want[i + 1] - halfCross(layer[i + 1]) - halfCross(layer[i]) - NODE_GAP;
-        if (want[i] > maxC) want[i] = maxC;
-      }
-      for (i = 1; i < layer.length; i++) {
-        var minC2 = want[i - 1] + halfCross(layer[i - 1]) + halfCross(layer[i]) + NODE_GAP;
-        if (want[i] < minC2) want[i] = minC2;
-      }
-      layer.forEach(function (item, k) { item.c = want[k]; });
+
+      // 旁註接在錨點「這一輪要去的位置」旁邊。
+      // 不能用錨點上一輪的位置，否則錨點一移動，旁註就落後一整輪。
+      layer.forEach(function (item, i) {
+        if (item.pinAnchor || item.kind !== 'node') return;
+        var id = item.node.id, k;
+        for (k = i + 1; k < layer.length && layer[k].pinAnchor === id; k++) {
+          want[k] = want[k - 1] + sep(layer[k - 1], layer[k]);
+        }
+        for (k = i - 1; k >= 0 && layer[k].pinAnchor === id; k--) {
+          want[k] = want[k + 1] - sep(layer[k], layer[k + 1]);
+        }
+      });
+      layer.forEach(function (item, i) { if (want[i] == null) want[i] = item.c; });
+
+      // 在不重疊的前提下，讓每個項目離想去的位置越近越好（加權最小平方）。
+      // 做法是 pool adjacent violators：由左往右，相鄰兩群擠在一起就合併、改用整群的加權平均。
+      // 以前只會單向往右推，整張圖每一輪都往右漂，左側的旁註就被甩在後面。
+      var off = [0], i;
+      for (i = 1; i < layer.length; i++) off[i] = off[i - 1] + sep(layer[i - 1], layer[i]);
+      var groups = [];
+      layer.forEach(function (item, k) {
+        var w = item.pinAnchor ? 0.25 : 1;   // 旁註只是跟著錨點走，不該把整群拉過去
+        groups.push({ sum: (want[k] - off[k]) * w, wt: w, from: k, to: k });
+        while (groups.length > 1) {
+          var b = groups[groups.length - 1], a = groups[groups.length - 2];
+          if (a.sum / a.wt <= b.sum / b.wt) break;
+          a.sum += b.sum; a.wt += b.wt; a.to = b.to;
+          groups.pop();
+        }
+      });
+      groups.forEach(function (g) {
+        var base = g.sum / g.wt;
+        for (var k = g.from; k <= g.to; k++) layer[k].c = base + off[k];
+      });
     }
 
     for (var p = 0; p < 8; p++) {
@@ -871,11 +900,12 @@
       }
     });
 
-    var acc = 0;
+    var acc = 0, band = [];
     layers.forEach(function (layer, r) {
       var thick = 1;
       layer.forEach(function (item) { thick = Math.max(thick, along(item)); });
       layer.forEach(function (item) { item.a = acc + thick / 2; });
+      band[r] = { lo: acc, hi: acc + thick };
       acc += thick + (gapAfter[r] || RANK_GAP);
     });
 
@@ -888,11 +918,32 @@
     });
 
     /* --- 4-6 邊的座標 --- */
+    // 線只在「層與層之間的空隙」轉彎：穿過一層時先直直走到這層的邊界再彎。
+    // 同一層若有很高的旁註，它會凸出到比較矮的節點上下方，線若在層內就開始斜走，會從旁註後面穿過去。
+    function bandPoint(item, a) { return dir === 'TD' ? { x: item.x, y: a } : { x: a, y: item.y }; }
+    function routeChain(chain) {
+      var pts = [];
+      chain.forEach(function (item, i) {
+        var b = band[item.layer], half = along(item) / 2;
+        var prev = chain[i - 1], next = chain[i + 1];
+        if (prev && prev.layer !== item.layer) {
+          var inA = prev.layer < item.layer ? b.lo : b.hi;
+          if (Math.abs(inA - item.a) > half + 4) pts.push(bandPoint(item, inA));
+        }
+        pts.push({ x: item.x, y: item.y });
+        if (next && next.layer !== item.layer) {
+          var outA = next.layer > item.layer ? b.hi : b.lo;
+          if (Math.abs(outA - item.a) > half + 4) pts.push(bandPoint(item, outA));
+        }
+      });
+      return pts;
+    }
+
     var outEdges = [];
     linkEdges.forEach(function (e) {
       var chain = e.chain;
       if (!chain) return;
-      var pts = chain.map(function (item) { return { x: item.x, y: item.y }; });
+      var pts = routeChain(chain);
       var a = byId.get(e.from), b = byId.get(e.to);
       pts[0] = clipToNode(a, pts[0], pts[1]);
       pts[pts.length - 1] = clipToNode(b, pts[pts.length - 1], pts[pts.length - 2]);
@@ -1114,21 +1165,22 @@
 
       var fallback = polyMid(ed.pts);
       var best = null, freeOfLabels = null;
-      for (var oi = 0; oi < LABEL_OFFSET.length && !best; oi++) {
-        for (var ti = 0; ti < LABEL_T.length; ti++) {
-          var p = pointAlong(ed.pts, LABEL_T[ti]);
-          var c = { x: p.x + p.nx * LABEL_OFFSET[oi], y: p.y + p.ny * LABEL_OFFSET[oi] };
-          var box = boxAt(c);
-          var k, bad = false;
-          for (k = 0; k < placed.length; k++) if (boxHit(box, placed[k], 4)) { bad = true; break; }
-          if (bad) continue;
-          if (!freeOfLabels) freeOfLabels = { c: c, box: box };
-          for (k = 0; k < nodeBoxes.length; k++) if (boxHit(box, nodeBoxes[k], 0)) { bad = true; break; }
-          if (bad) continue;
-          best = { c: c, box: box };
-          break;
-        }
+      function tryAt(t, offset) {
+        var p = pointAlong(ed.pts, t);
+        var c = { x: p.x + p.nx * offset, y: p.y + p.ny * offset };
+        var box = boxAt(c);
+        var k;
+        for (k = 0; k < placed.length; k++) if (boxHit(box, placed[k], 4)) return false;
+        if (!freeOfLabels) freeOfLabels = { c: c, box: box };
+        for (k = 0; k < nodeBoxes.length; k++) if (boxHit(box, nodeBoxes[k], 0)) return false;
+        best = { c: c, box: box };
+        return true;
       }
+      for (var oi = 0; oi < LABEL_OFFSET.length && !best; oi++) {
+        for (var ti = 0; ti < LABEL_T.length; ti++) if (tryAt(LABEL_T[ti], LABEL_OFFSET[oi])) break;
+      }
+      // 常用的位置都被佔了（例如外側旁註的線，大半段藏在內側旁註後面），就沿整條線細掃一次
+      for (var ft = 0.05; ft < 0.96 && !best; ft += 0.025) tryAt(ft, 0);
 
       var chosen = best || freeOfLabels || { c: fallback, box: boxAt(fallback) };
       ed.labelPos = chosen.c;
