@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ICOPE 學習小教室</title>
+<style>
+:root{--ink:#16324a;--muted:#6d7d8b;--line:#dfe8ee;--bg:#f5f8fa;--panel:#fff;--a:#2f9e73;--a-soft:#eaf7f1;--b:#d49324;--b-soft:#fff6df;--c:#c55b5b;--c-soft:#fff0f0;--accent:#147d92;--accent-soft:#e9f4f7;}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.6}
+.page{max-width:1080px;margin:0 auto;padding:26px 22px 60px}
+a{color:#13768a}
+
+/* ---------- hero ---------- */
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:20px}
+.hero h1{font-size:30px;line-height:1.2;margin:0 0 8px;letter-spacing:.02em}
+.hero p{margin:0;color:var(--muted);font-size:15px}
+.source-badge{flex:none;background:var(--accent-soft);color:#17697b;border:1px solid #c7e2e8;padding:8px 12px;border-radius:999px;font-size:13px;font-weight:700}
+.formula-line{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;background:#edf7f8;color:#17697b;font-weight:800;font-size:13.5px;padding:9px 13px;border-radius:12px;margin-top:12px}
+
+/* ---------- steps ---------- */
+.step-panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px 20px 20px;margin-bottom:14px;box-shadow:0 8px 24px rgba(22,50,74,.05)}
+.step-head{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+.step-num{width:32px;height:32px;border-radius:50%;background:var(--accent-soft);color:#146f82;display:grid;place-items:center;font-weight:800;flex:none;font-size:15px}
+.step-head h2{font-size:17px;margin:0}
+.step-head span{color:var(--muted);font-size:13px;margin-left:auto;text-align:right}
+
+.level-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.level-opt{text-align:left;border:2px solid var(--line);background:#fff;border-radius:16px;padding:14px 15px;cursor:pointer;transition:.15s ease;font:inherit;color:inherit}
+.level-opt:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(22,50,74,.08)}
+.level-opt .lv-top{display:flex;align-items:center;gap:11px;margin-bottom:8px}
+.level-pill{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:17px;font-weight:900;color:#fff;background:#b8c6ce;flex:none}
+.level-opt strong{display:block;font-size:16px}
+.level-opt em{display:block;font-style:normal;font-size:12.5px;color:var(--muted)}
+.level-opt p{margin:0;font-size:13px;color:#4a6274;line-height:1.55}
+.level-opt.lv-a[aria-pressed="true"]{border-color:var(--a);background:var(--a-soft)}
+.level-opt.lv-b[aria-pressed="true"]{border-color:var(--b);background:var(--b-soft)}
+.level-opt.lv-c[aria-pressed="true"]{border-color:var(--c);background:var(--c-soft)}
+.level-opt.lv-a[aria-pressed="true"] .level-pill{background:var(--a)}
+.level-opt.lv-b[aria-pressed="true"] .level-pill{background:var(--b)}
+.level-opt.lv-c[aria-pressed="true"] .level-pill{background:var(--c)}
+
+.chip-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:10px}
+.chip{display:flex;align-items:center;gap:11px;border:2px solid var(--line);background:#fff;border-radius:14px;padding:10px 12px;cursor:pointer;text-align:left;font:inherit;color:inherit;transition:.14s ease}
+.chip:hover{border-color:#bcd3db}
+.chip-icon{width:36px;height:36px;border-radius:11px;background:#eef4f6;color:#456979;display:grid;place-items:center;font-weight:900;flex:none}
+.chip strong{display:block;font-size:14.5px}
+.chip .chip-sub{display:block;font-size:12px;color:var(--muted)}
+.chip-check{margin-left:auto;width:22px;height:22px;border-radius:7px;border:2px solid #cdd9df;display:grid;place-items:center;color:#fff;font-size:13px;flex:none}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.chip[aria-pressed="true"] .chip-icon{background:var(--accent);color:#fff}
+.chip[aria-pressed="true"] .chip-check{background:var(--accent);border-color:var(--accent)}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+.btn{border:1px solid #cfdde3;background:#fff;color:#2b586a;font:inherit;font-size:13.5px;font-weight:700;padding:8px 13px;border-radius:10px;cursor:pointer}
+.btn:hover{background:#f2f8fa}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:#11697b}
+.switch{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:13.5px;color:#41606f;cursor:pointer}
+.toast{font-size:13px;color:var(--a);font-weight:700;opacity:0;transition:.2s;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* ---------- summary ---------- */
+.summary{background:linear-gradient(135deg,#17697b,#2a8fa3);color:#fff;border-radius:18px;padding:18px 20px;margin:22px 0 14px;display:flex;flex-wrap:wrap;gap:18px;align-items:center;box-shadow:0 10px 26px rgba(20,125,146,.22)}
+.summary h2{margin:0 0 4px;font-size:19px}
+.summary .sum-sub{font-size:13px;opacity:.88}
+.sum-nums{display:flex;gap:22px;margin-left:auto;flex-wrap:wrap}
+.sum-num b{display:block;font-size:26px;line-height:1.1;font-weight:900}
+.sum-num span{font-size:12px;opacity:.85}
+.sum-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.sum-tag{background:rgba(255,255,255,.18);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700}
+.prog-wrap{width:100%;display:flex;align-items:center;gap:10px;font-size:12.5px}
+.prog{flex:1;height:9px;border-radius:99px;background:rgba(255,255,255,.28);overflow:hidden}
+.prog>i{display:block;height:100%;background:#ffe2a0;border-radius:99px;transition:width .25s}
+
+/* ---------- packs ---------- */
+.pack{background:var(--panel);border:1px solid var(--line);border-radius:18px;margin-bottom:14px;overflow:hidden;box-shadow:0 8px 24px rgba(22,50,74,.04)}
+.pack-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);background:#fbfcfd}
+.pack-icon{width:40px;height:40px;border-radius:12px;background:#edf3f5;color:#456979;display:grid;place-items:center;font-weight:900;flex:none;font-size:17px}
+.pack-head strong{display:block;font-size:16px}
+.pack-head .pack-sub{display:block;font-size:12.5px;color:var(--muted)}
+.pack-count{margin-left:auto;text-align:right;flex:none}
+.pack-count b{font-size:20px;font-weight:900;color:var(--accent)}
+.pack-count small{font-size:11.5px;color:var(--muted);display:block}
+.pack.base .pack-icon{background:var(--accent);color:#fff}
+.pack-body{padding:6px 18px 14px}
+.group-title{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:800;color:#2f6172;margin:14px 0 2px;padding-top:10px;border-top:1px solid #eef2f4}
+.pack-body>.group-title:first-child{border-top:0;padding-top:2px;margin-top:6px}
+.group-title small{font-weight:600;color:var(--muted)}
+
+.res{display:grid;grid-template-columns:30px auto 1fr auto;gap:11px;align-items:center;padding:10px 0;border-bottom:1px dashed #eaeff2}
+.res:last-child{border-bottom:0}
+.res-n{font-size:11.5px;font-weight:800;color:#8ba0ab;text-align:right}
+.res-type{font-size:11px;font-weight:800;border-radius:8px;padding:5px 7px;white-space:nowrap}
+.t-video{background:#fdeeee;color:#b4504f}.t-web{background:#eaf3f7;color:#2c6f84}.t-pdf{background:#fff4e2;color:#a2701a}
+.res-main{min-width:0}
+.res-main strong{display:block;font-size:14.5px;line-height:1.5;font-weight:700}
+.res-main small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dup{font-size:10.5px;font-weight:800;color:#8a7440;background:#fdf3dd;border-radius:6px;padding:2px 5px;margin-left:6px;white-space:nowrap}
+.res-act{display:flex;align-items:center;gap:10px;flex:none}
+.res-act a{font-size:12.5px;text-decoration:none;color:#13768a;background:#eaf6f8;padding:7px 11px;border-radius:9px;font-weight:800;white-space:nowrap}
+.res-act a:hover{background:#d9eef2}
+.done-lab{display:flex;align-items:center;gap:5px;font-size:12px;color:#6d8391;cursor:pointer;white-space:nowrap}
+.done-lab input{width:17px;height:17px;accent-color:var(--a);cursor:pointer}
+.res.is-done .res-main strong{color:#94a7b1;text-decoration:line-through}
+.pack-empty{padding:18px 4px;color:var(--muted);font-size:13.5px;text-align:center;background:#fbfcfd;border-radius:12px;margin:10px 0 6px}
+
+.help{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 18px;margin-top:20px;font-size:13.5px}
+.help summary{cursor:pointer;font-weight:800;color:#2f6172}
+.help code{background:#f1f5f7;border-radius:6px;padding:2px 6px;font-size:12.5px;word-break:break-all}
+.help table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12.5px}
+.help th,.help td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.8}
+.help th{color:var(--muted);font-weight:700;white-space:nowrap}
+.note{display:flex;gap:10px;align-items:flex-start;margin-top:14px;color:var(--muted);font-size:12.5px;line-height:1.65}
+.note-dot{width:18px;height:18px;border-radius:5px;background:var(--accent-soft);color:#287589;display:grid;place-items:center;font-weight:900;flex:none;font-size:11px}
+
+@media (max-width:820px){
+  .page{padding:18px 14px 44px}
+  .hero{flex-direction:column;align-items:flex-start}
+  .level-grid{grid-template-columns:1fr}
+  .chip-grid{grid-template-columns:1fr}
+  .sum-nums{margin-left:0;gap:16px}
+  .res{grid-template-columns:auto 1fr;row-gap:6px}
+  .res-n{display:none}
+  .res-act{grid-column:1 / -1;justify-content:flex-end}
+  .switch{margin-left:0}
+}
+@media print{
+  body{background:#fff}
+  .page{max-width:none;padding:6px}
+  .step-panel,.toolbar,.help,.switch,.done-lab,.res-act a{display:none!important}
+  .summary{background:#fff;color:var(--ink);box-shadow:none;border:1px solid var(--line)}
+  .sum-tag{background:#eef4f6;color:var(--ink)}
+  .prog>i{background:#9fc9d3}
+  .pack{break-inside:avoid;box-shadow:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="hero">
+    <div>
+      <h1>ICOPE 學習小教室</h1>
+      <p>選擇長者的「衰弱等級」與「ICOPE 異常項目」，立即產生專屬的衛教學習清單。</p>
+      <div class="formula-line">學習清單 ＝ 基礎衛教包（依衰弱等級） ＋ 各異常項目專屬衛教包</div>
+    </div>
+    <div class="source-badge">依行銷 Final Excel · 165 條規則</div>
+  </header>
+
+  <section class="step-panel" aria-labelledby="s1">
+    <div class="step-head"><span class="step-num">1</span><h2 id="s1">選擇衰弱等級</h2><span>沿用 Final Excel 的 A／B／C 條件</span></div>
+    <div class="level-grid" id="levelGrid"></div>
+  </section>
+
+  <section class="step-panel" aria-labelledby="s2">
+    <div class="step-head"><span class="step-num">2</span><h2 id="s2">勾選 ICOPE 異常項目</h2><span>可複選；沒有異常就全部不勾</span></div>
+    <div class="chip-grid" id="chipGrid"></div>
+    <div class="toolbar">
+      <button type="button" class="btn" id="selAll">全部勾選</button>
+      <button type="button" class="btn" id="selNone">全部正常（清空）</button>
+      <button type="button" class="btn primary" id="copyLink">複製本頁連結</button>
+      <button type="button" class="btn" id="printBtn">列印／存成 PDF</button>
+      <button type="button" class="btn" id="resetDone">清除完成紀錄</button>
+      <span class="toast" id="toast"></span>
+      <label class="switch"><input type="checkbox" id="videoOnly"> 只看影片課程</label>
+    </div>
+  </section>
+
+  <section class="summary" id="summary" aria-live="polite"></section>
+
+  <div id="packs"></div>
+
+  <details class="help">
+    <summary>用網址參數直接帶入結果（給系統串接／推播連結使用）</summary>
+    <p style="margin:10px 0 0">範例：<code>index.html?level=B&amp;abnormal=mobility,swallow</code>　／　<code>index.html?level=C&amp;abnormal=all</code>　／　中文亦可：<code>?level=B&amp;abnormal=行動功能,吞嚥測試</code></p>
+    <table>
+      <tr><th>level</th><td><code>A</code>／<code>B</code>／<code>C</code>（也接受小寫與 <code>1</code>／<code>2</code>／<code>3</code>）。別名：<code>lv</code>、<code>grade</code>、<code>衰弱等級</code></td></tr>
+      <tr><th>abnormal</th><td>以逗號分隔的異常項目代碼；<code>all</code>＝全部異常、<code>none</code>＝全部正常。別名：<code>abn</code>、<code>items</code>、<code>domains</code>、<code>icope</code>、<code>異常</code></td></tr>
+      <tr><th>代碼對照</th><td id="slugHelp"></td></tr>
+      <tr><th>單項寫法</th><td>也接受 <code>?level=B&amp;mobility=1&amp;swallow=1</code> 這種一項一個參數的寫法</td></tr>
+      <tr><th>其他</th><td><code>video=1</code>＝只顯示影片課程</td></tr>
+    </table>
+    <p style="margin:10px 0 0;color:var(--muted)">頁面上的操作會即時寫回網址，直接複製網址列或按「複製本頁連結」就能分享同一份清單。</p>
+  </details>
+
+  <div class="note"><span class="note-dot">i</span><span>本頁保留 Excel 原始 A／B／C 條件，不另行推定醫學分級；「健康促進／功能強化／功能維持」僅為方便理解三個等級的用途，實際系統判讀仍以專案定義的 A／B／C 規則為準。「已完成」勾選只存在本機瀏覽器，不會上傳。</span></div>
+</div>
+
+<script>
+const DATA={"base": {"A": [{"name": "高雄市政府社區資源平台", "url": "https://healthmap.kchb.gov.tw/", "level": "A", "domain": null}, {"name": "【國語版】長者活力體能訓練 D級(健康者)", "url": "https://www.youtube.com/watch?v=eJhtVhSga_Q", "level": "A", "domain": null}, {"name": "【國語版】長者活力體能訓練 C級(衰弱前期者)", "url": "https://www.youtube.com/watch?v=pwu4uGDn2Nc", "level": "A", "domain": null}, {"name": "衛生福利部國民健康署-健康九九 ----- 營養", "url": "https://health99.hpa.gov.tw/health99/Contents?siteId=1&nodeId=262", "level": "A", "domain": null}], "B": [{"name": "高雄市政府社區資源平台", "url": "https://healthmap.kchb.gov.tw/", "level": "B", "domain": null}, {"name": "【國語版】長者活力體能訓練 B級(衰弱者)", "url": "https://www.youtube.com/watch?v=11x5X6dDbvc", "level": "B", "domain": null}, {"name": "衛生福利部國民健康署-健康九九 ----- 營養", "url": "https://health99.hpa.gov.tw/health99/Contents?siteId=1&nodeId=262", "level": "B", "domain": null}], "C": [{"name": "【國語版】長者活力體能訓練A級(失能者)", "url": "https://www.youtube.com/watch?v=mUPqkDisQDI", "level": "C", "domain": null}]}, "domains": {"認知功能": {"A": [{"name": "微電影-認知篇", "url": "https://youtu.be/CB0aeb0qV2w", "level": "A", "domain": "認知功能"}, {"name": "失智是什麼", "url": "https://youtu.be/ozOZelRVC7I", "level": "A", "domain": "認知功能"}], "B": [{"name": "失智友善溝通技巧", "url": "https://www.youtube.com/watch?v=byByJVjOutg", "level": "B", "domain": "認知功能"}, {"name": "高醫失智共照中心(高醫網站)", "url": "https://www.kmuh.org.tw/web/kmuhdept/ad/組織簡介.aspx", "level": "B", "domain": "認知功能"}, {"name": "高醫咀嚼吞嚥衛教", "url": "https://www.kmuh.org.tw/KMUHInterWeb/News/NewHealthEdu/1150522001", "level": "B", "domain": "認知功能"}, {"name": "高醫長者防跌專區", "url": "https://www.kmuh.org.tw/KMUHInterWeb/News/HealthEducation/1120320001", "level": "B", "domain": "認知功能"}, {"name": "微電影-認知篇", "url": "https://youtu.be/CB0aeb0qV2w", "level": "B", "domain": "認知功能"}, {"name": "失智是什麼", "url": "https://youtu.be/ozOZelRVC7I", "level": "B", "domain": "認知功能"}], "C": [{"name": "高醫咀嚼吞嚥衛教", "url": "https://www.kmuh.org.tw/KMUHInterWeb/News/NewHealthEdu/1150522001", "level": "C", "domain": "認知功能"}]}, "行動功能": {"A": [{"name": "PAR-Q身體活動簡易自我評量表", "url": "https://www.hpa.gov.tw/571/9777/n", "level": "A", "domain": "行動功能"}, {"name": "高醫防跌衛教專區", "url": "https://www.kmuh.org.tw/KMUHInterWeb/News/HealthEducation/1120320001", "level": "A", "domain": "行動功能"}, {"name": "高醫1966長照專區", "url": "https://www.kmuh.org.tw/KMUHInterWeb/News/HealthEducation/1120919001", "level": "A", "domain": "行動功能"}, {"name": "高醫樂齡大學", "url": "https://dtextpro.kmu.edu.tw/index.php/課程列表/樂齡大學-研究苑", "level": "A", "domain": "行動功能"}, {"name": "微電影-行動篇", "url": "https://youtu.be/PG5b_wOl-I0", "level": "A", "domain": "行動功能"}, {"name": "高齡健康操", "url": "https://www.youtube.com/watch?v=5UeEvBezQv8", "level": "A", "domain": "行動功能"}, {"name": "Type A 健康促進-A1肌力與核心控制-A1-01動態全身暖身", "url": "https://mphr.docloop.pro/course/1283/view-detail/18bd10a1-93f4-4ea0-917f-08df0f233ccf?c=NKAG", "level": "A", "domain": "行動功能"}, {"name": "Type A 健康促進-A1肌力與核心控制-A1-02坐姿胸推訓練", "url": "https://mphr.docloop.pro/course/1283/view-detail/ee9037a5-94d9-4ad5-9180-08df0f233ccf?c=NKAG", "level": "A", "domain": "行動功能"}, {"name": "Type A 健康促進-A1肌力與核心控制-A1-03坐姿划船拉背", "url": "https://mphr.docloop.pro/course/1283/view-detail/d747f65d-de41-4f93-9181-08df0f233ccf?c=NKAG", "level": "A", "domain": "行動功能"}, {"name": "Type A 健康促進-A1肌力與核心控制-A1-04雙腿推蹬訓練", "url": "https://mphr.docloop.pro/course/1283/view-detail/5d2f24e8-5293-46dd-9182-08df0f233ccf?c=NKAG", "level": "A", "domain": "行動功能"}, {"name": "Type A 健康促進-A1肌力與核心控制-A1-05核心死蟲式/棒式", "url": "https://mphr.docloop.pro/course/1283/view-detail/033f7221-38dd-4779-9183-08df0f233ccf?c=NKAG", "level": "A", "domain": "行動功能"}, {"name": "Type A 健康促進-A1肌力與核心控制-A1-06上下肢靜態收操", "url": "https://mphr.docloop.pro/course/1283/view-detail/e5f861f6-aae1-49e2-9184-08df0f233ccf?c=NKAG", "level": "A", "domain": "行動功能"}, {"name": "Type A 健康促進-A2平衡與動態控制-A2-01單腳靜態平衡", "url": "https://mphr.docloop.pro/course/1283/view-detail/e4f7e1a9-1037-4639-9185-08df0f233ccf?c=NKAG", "level": "A", "domain": "行動功能"}, {"name": "Type A 健康促進-A2平衡與動態控制-A2-02動態站立平衡", "url": "https://mphr.docloop.pro/course/1283/view-detail/612bd04e-c634-4f5f-9186-08df0f233ccf?c=NKAG", "level": "A", "domain": "行動功能"}, {"name": "Type A 健康促進-A2平衡與動態控制-A2-03多方向重心轉移", "url": "https://mphr.docloop.pro/course/1283/view-detail/e8f87cba-5112-4f0d-9187-08df0f233ccf?c=NKAG", "level": "A", "domain": "行動功能"}, {"name": "Type A 健康促進-A2平衡與動態控制-A2-04側向側步移動", "url": "https://mphr.docloop.pro/course/1283/view-detail/f58b1357-79c8-4551-9188-08df0f233ccf?c=NKAG", "level": "A", "domain": "行動功能"}, {"name": "Type A 健康促進-A2平衡與動態控制-A2-05多方向動態跨步", "url": "https://mphr.docloop.pro/course/1283/view-detail/1074db39-376e-4e66-9189-08df0f233ccf?c=NKAG", "level": "A", "domain": "行動功能"}, {"name": "Type A 健康促進-A2平衡與動態控制-A2-06下肢與髖關節伸展", "url": "https://mphr.docloop.pro/course/1283/view-detail/301e8ff8-b86d-425a-918a-08df0f233ccf?c=NKAG", "level": "A", "domain": "行動功能"}, {"name": "Type A 健康促進-A3有氧耐力與功能性活動-A3-01固定式腳踏車有氧", "url": "https://mphr.docloop.pro/course/1283/view-detail/afd29b2c-5e2a-44fb-918b-08df0f233ccf?c=NKAG", "level": "A", "domain": "行動功能"}, {"name": "Type A 健康促進-A3有氧耐力與功能性活動-A3-02功能性步態訓練", "url": "https://mphr.docloop.pro/course/1283/view-detail/2192e562-696c-4bc8-918c-08df0f233ccf?c=NKAG", "level": "A", "domain": "行動功能"}, {"name": "Type A 健康促進-A3有氧耐力與功能性活動-A3-03徒手標準深蹲", "url": "https://mphr.docloop.pro/course/1283/view-detail/b71293cd-ad54-482d-918d-08df0f233ccf?c=NKAG", "level": "A", "domain": "行動功能"}, {"name": "Type A 健康促進-A3有氧耐力與功能性活動-A3-04原地/前進弓箭步", "url": "https://mphr.docloop.pro/course/1283/view-detail/027f12f7-c6db-495f-918e-08df0f233ccf?c=NKAG", "level": "A", "domain": "行動功能"}, {"name": "Type A 健康促進-A3有氧耐力與功能性活動-A3-05敏捷梯多向步伐", "url": "https://mphr.docloop.pro/course/1283/view-detail/f658c176-3b2f-4ec0-918f-08df0f233ccf?c=NKAG", "level": "A", "domain": "行動功能"}, {"name": "Type A 健康促進-A3有氧耐力與功能性活動-A3-06全身性放鬆與呼吸", "url": "https://mphr.docloop.pro/course/1283/view-detail/79cea009-053b-4e6c-9190-08df0f233ccf?c=NKAG", "level": "A", "domain": "行動功能"}], "B": [{"name": "高醫防跌衛教專區", "url": "https://www.kmuh.org.tw/KMUHInterWeb/News/HealthEducation/1120320001", "level": "B", "domain": "行動功能"}, {"name": "高醫樂齡大學", "url": "https://dtextpro.kmu.edu.tw/index.php/課程列表/樂齡大學-研究苑", "level": "B", "domain": "行動功能"}, {"name": "微電影-行動篇", "url": "https://youtu.be/PG5b_wOl-I0", "level": "B", "domain": "行動功能"}, {"name": "高齡健康操", "url": "https://www.youtube.com/watch?v=5UeEvBezQv8", "level": "B", "domain": "行動功能"}, {"name": "Type B 功能強化-B1肌力重建-B1-01動態坐姿暖身", "url": "https://mphr.docloop.pro/course/1283/view-detail/0eea7d46-1abd-499b-9191-08df0f233ccf?c=NKAG", "level": "B", "domain": "行動功能"}, {"name": "Type B 功能強化-B1肌力重建-B1-02椅子坐站轉移(Sit-to-Stand)", "url": "https://mphr.docloop.pro/course/1283/view-detail/c88291f1-680f-4920-9192-08df0f233ccf?c=NKAG", "level": "B", "domain": "行動功能"}, {"name": "Type B 功能強化-B1肌力重建-B1-03彈力帶坐姿划船/推胸", "url": "https://mphr.docloop.pro/course/1283/view-detail/6f1fccc8-9a20-437c-9193-08df0f233ccf?c=NKAG", "level": "B", "domain": "行動功能"}, {"name": "Type B 功能強化-B1肌力重建-B1-04輔助雙腿推蹬", "url": "https://mphr.docloop.pro/course/1283/view-detail/cef4d109-b80f-423e-9194-08df0f233ccf?c=NKAG", "level": "B", "domain": "行動功能"}, {"name": "Type B 功能強化-B1肌力重建-B1-05坐姿核心腹部控制", "url": "https://mphr.docloop.pro/course/1283/view-detail/c96e5c21-eb6e-4a92-9195-08df0f233ccf?c=NKAG", "level": "B", "domain": "行動功能"}, {"name": "Type B 功能強化-B1肌力重建-B1-06坐姿下肢靜態收操", "url": "http://mphr.docloop.pro/course/1283/view-detail/979ed455-259a-4caa-9196-08df0f233ccf?c=NKAG", "level": "B", "domain": "行動功能"}, {"name": "Type B 功能強化-B2平衡防跌-B2-01站姿雙腳重心控制", "url": "https://mphr.docloop.pro/course/1283/view-detail/b75657ee-1537-4a99-9197-08df0f233ccf?c=NKAG", "level": "B", "domain": "行動功能"}, {"name": "Type B 功能強化-B2平衡防跌-B2-02直線接踵步態(Tandem Walk)", "url": "https://mphr.docloop.pro/course/1283/view-detail/d850ea95-f351-4ff4-9198-08df0f233ccf?c=NKAG", "level": "B", "domain": "行動功能"}, {"name": "Type B 功能強化-B2平衡防跌-B2-03雙向動態障礙跨越", "url": "https://mphr.docloop.pro/course/1283/view-detail/9a73c9ba-7bd3-4683-9199-08df0f233ccf?c=NKAG", "level": "B", "domain": "行動功能"}, {"name": "Type B 功能強化-B2平衡防跌-B2-04防跌反應側向跨步", "url": "https://mphr.docloop.pro/course/1283/view-detail/2b343d7c-130a-4ec4-919a-08df0f233ccf?c=NKAG", "level": "B", "domain": "行動功能"}, {"name": "Type B 功能強化-B2平衡防跌-B2-05原地/繞錐轉身控制", "url": "https://mphr.docloop.pro/course/1283/view-detail/f947571c-1b70-43d2-919b-08df0f233ccf?c=NKAG", "level": "B", "domain": "行動功能"}, {"name": "Type B 功能強化-B2平衡防跌-B2-06站姿小腿與髖部伸展", "url": "https://mphr.docloop.pro/course/1283/view-detail/b29f7a85-b24f-4458-919c-08df0f233ccf?c=NKAG", "level": "B", "domain": "行動功能"}, {"name": "Type B 功能強化-B3日常功能重建-B3-01台階上下樓梯訓練", "url": "https://mphr.docloop.pro/course/1283/view-detail/36180cba-ea73-43c4-919d-08df0f233ccf?c=NKAG", "level": "B", "domain": "行動功能"}, {"name": "Type B 功能強化-B3日常功能重建-B3-02多角度彎腰取物模擬", "url": "https://mphr.docloop.pro/course/1283/view-detail/ef346f0a-2181-404e-919e-08df0f233ccf?c=NKAG", "level": "B", "domain": "行動功能"}, {"name": "Type B 功能強化-B3日常功能重建-B3-03連續功能性坐站", "url": "https://mphr.docloop.pro/course/1283/view-detail/c0452331-5629-40a7-919f-08df0f233ccf?c=NKAG", "level": "B", "domain": "行動功能"}, {"name": "Type B 功能強化-B3日常功能重建-B3-04輕度循環有氧耐力", "url": "https://mphr.docloop.pro/course/1283/view-detail/29988c79-c3a0-4f6b-91a0-08df0f233ccf?c=NKAG", "level": "B", "domain": "行動功能"}, {"name": "Type B 功能強化-B3日常功能重建-B3-05脊椎與軀幹柔軟度活動", "url": "https://mphr.docloop.pro/course/1283/view-detail/d4e53c2d-0895-402a-91a1-08df0f233ccf?c=NKAG", "level": "B", "domain": "行動功能"}, {"name": "Type B 功能強化-B3日常功能重建-B3-06墊上緩和放鬆", "url": "https://mphr.docloop.pro/course/1283/view-detail/8005ad31-c50b-41ec-91a2-08df0f233ccf?c=NKAG", "level": "B", "domain": "行動功能"}], "C": [{"name": "Type C 功能維持-C1關節活動與柔軟度-C1-01坐姿全身關節暖身", "url": "https://mphr.docloop.pro/course/1283/view-detail/e9621d8f-50f0-4167-91a3-08df0f233ccf?c=NKAG", "level": "C", "domain": "行動功能"}, {"name": "Type C 功能維持-C1關節活動與柔軟度-C1-02肩部與胸腔活動度", "url": "https://mphr.docloop.pro/course/1283/view-detail/41e40fc9-d2b4-46ab-91a4-08df0f233ccf?c=NKAG", "level": "C", "domain": "行動功能"}, {"name": "Type C 功能維持-C1關節活動與柔軟度-C1-03髖與膝關節活動", "url": "https://mphr.docloop.pro/course/1283/view-detail/33320271-1567-409c-91a5-08df0f233ccf?c=NKAG", "level": "C", "domain": "行動功能"}, {"name": "Type C 功能維持-C1關節活動與柔軟度-C1-04踝關節活動與小腿幫浦", "url": "https://mphr.docloop.pro/course/1283/view-detail/ba7f41ff-4417-4ec1-91a6-08df0f233ccf?c=NKAG", "level": "C", "domain": "行動功能"}, {"name": "Type C 功能維持-C1關節活動與柔軟度-C1-05坐姿呼吸調節與擴胸", "url": "https://mphr.docloop.pro/course/1283/view-detail/3b490bd5-17de-49f0-91a7-08df0f233ccf?c=NKAG", "level": "C", "domain": "行動功能"}, {"name": "Type C 功能維持-C1關節活動與柔軟度-C1-06坐姿上身緩和收操", "url": "https://mphr.docloop.pro/course/1283/view-detail/db5962fa-dc1d-4be5-91a8-08df0f233ccf?c=NKAG", "level": "C", "domain": "行動功能"}, {"name": "Type C 功能維持-C2坐姿肌力與姿勢控制-C2-01坐姿彈力帶上肢肌力", "url": "https://mphr.docloop.pro/course/1283/view-detail/d3424e1a-075b-43c6-91a9-08df0f233ccf?c=NKAG", "level": "C", "domain": "行動功能"}, {"name": "Type C 功能維持-C2坐姿肌力與姿勢控制-C2-02坐姿下肢抗阻推蹬", "url": "https://mphr.docloop.pro/course/1283/view-detail/e9890319-452b-4cc8-91aa-08df0f233ccf?c=NKAG", "level": "C", "domain": "行動功能"}, {"name": "Type C 功能維持-C2坐姿肌力與姿勢控制-C2-03握力球擠壓與手部控制", "url": "https://mphr.docloop.pro/course/1283/view-detail/9a5acf1d-870d-443c-91ab-08df0f233ccf?c=NKAG", "level": "C", "domain": "行動功能"}, {"name": "Type C 功能維持-C2坐姿肌力與姿勢控制-C2-04坐姿脊椎抗中立延伸", "url": "https://mphr.docloop.pro/course/1283/view-detail/e2315cc8-1431-454c-91ac-08df0f233ccf?c=NKAG", "level": "C", "domain": "行動功能"}, {"name": "Type C 功能維持-C2坐姿肌力與姿勢控制-C2-05坐姿側向平衡穩定", "url": "https://mphr.docloop.pro/course/1283/view-detail/9a3e23bb-dfc6-4e08-91ad-08df0f233ccf?c=NKAG", "level": "C", "domain": "行動功能"}, {"name": "Type C 功能維持-C2坐姿肌力與姿勢控制-C2-06坐姿軀幹旋轉伸展", "url": "https://mphr.docloop.pro/course/1283/view-detail/ec552ff9-8408-47fd-91ae-08df0f233ccf?c=NKAG", "level": "C", "domain": "行動功能"}, {"name": "Type C 功能維持-C3日常生活功能-C3-01輔助扶手椅上起立", "url": "https://mphr.docloop.pro/course/1283/view-detail/496efc87-0eda-48a9-91af-08df0f233ccf?c=NKAG", "level": "C", "domain": "行動功能"}, {"name": "Type C 功能維持-C3日常生活功能-C3-02慢速控制坐下緩衝", "url": "https://mphr.docloop.pro/course/1283/view-detail/ceefc4cd-8aa2-456e-91b0-08df0f233ccf?c=NKAG", "level": "C", "domain": "行動功能"}, {"name": "Type C 功能維持-C3日常生活功能-C3-03坐姿安全視線轉身", "url": "https://mphr.docloop.pro/course/1283/view-detail/1c5d1ed9-7e3d-48c4-91b1-08df0f233ccf?c=NKAG", "level": "C", "domain": "行動功能"}, {"name": "Type C 功能維持-C3日常生活功能-C3-04坐姿多方向安全取物", "url": "https://mphr.docloop.pro/course/1283/view-detail/b8871abd-fa66-4114-91b2-08df0f233ccf?c=NKAG", "level": "C", "domain": "行動功能"}, {"name": "Type C 功能維持-C3日常生活功能-C3-05坐姿腳踏/低阻踏步機", "url": "https://mphr.docloop.pro/course/1283/view-detail/3d21a3e5-d9c6-415d-91b3-08df0f233ccf?c=NKAG", "level": "C", "domain": "行動功能"}, {"name": "Type C 功能維持-C3日常生活功能-C3-06全身深呼吸調息放鬆", "url": "https://mphr.docloop.pro/course/1283/view-detail/d2846d40-2a2f-41a8-91b4-08df0f233ccf?c=NKAG", "level": "C", "domain": "行動功能"}]}, "營養功能": {"A": [{"name": "高醫營養部網站衛教資源", "url": "https://www.kmuh.org.tw/www/nutri/welcome.htm", "level": "A", "domain": "營養功能"}, {"name": "微電影-營養篇", "url": "https://youtu.be/DyCnx4dXBG4", "level": "A", "domain": "營養功能"}, {"name": "均衡飲食帶動跳", "url": "https://www.youtube.com/watch?v=Jh2do-GeFlE", "level": "A", "domain": "營養功能"}], "B": [{"name": "高醫營養部網站衛教資源", "url": "https://www.kmuh.org.tw/www/nutri/welcome.htm", "level": "B", "domain": "營養功能"}, {"name": "微電影-營養篇", "url": "https://youtu.be/DyCnx4dXBG4", "level": "B", "domain": "營養功能"}, {"name": "均衡飲食帶動跳", "url": "https://www.youtube.com/watch?v=Jh2do-GeFlE", "level": "B", "domain": "營養功能"}], "C": []}, "視力測試": {"A": [{"name": "長者健康整合式評估(ICOPE)視力篇", "url": "https://www.youtube.com/watch?v=qN7LipFXChg", "level": "A", "domain": "視力測試"}, {"name": "高齡友善的居家環境顏色的使用", "url": "https://health99.hpa.gov.tw/article/18201", "level": "A", "domain": "視力測試"}, {"name": "糖尿病視網膜病變衛教影片", "url": "https://www.youtube.com/watch?v=rtXxf258QTI", "level": "A", "domain": "視力測試"}, {"name": "年未四十,而視茫茫-談白內障與身體疾病之相關性", "url": "https://www.kmuh.org.tw/www/kmcj/data/11204/18.htm", "level": "A", "domain": "視力測試"}, {"name": "阿姆斯勒方格表(AMSLER GRID)-黃斑部病變的自我檢測方法", "url": "https://health99.hpa.gov.tw/onlineQuiz/amsler", "level": "A", "domain": "視力測試"}, {"name": "微電影-視力篇", "url": "https://youtu.be/qN7LipFXChg", "level": "A", "domain": "視力測試"}], "B": [{"name": "長者健康整合式評估(ICOPE)視力篇", "url": "https://www.youtube.com/watch?v=qN7LipFXChg", "level": "B", "domain": "視力測試"}, {"name": "高齡友善的居家環境顏色的使用", "url": "https://health99.hpa.gov.tw/article/18201", "level": "B", "domain": "視力測試"}, {"name": "糖尿病視網膜病變衛教影片", "url": "https://www.youtube.com/watch?v=rtXxf258QTI", "level": "B", "domain": "視力測試"}, {"name": "年未四十,而視茫茫-談白內障與身體疾病之相關性", "url": "https://www.kmuh.org.tw/www/kmcj/data/11204/18.htm", "level": "B", "domain": "視力測試"}, {"name": "阿姆斯勒方格表(AMSLER GRID)-黃斑部病變的自我檢測方法", "url": "https://health99.hpa.gov.tw/onlineQuiz/amsler", "level": "B", "domain": "視力測試"}, {"name": "微電影-視力篇", "url": "https://youtu.be/qN7LipFXChg", "level": "B", "domain": "視力測試"}], "C": []}, "聽力測試": {"A": [{"name": "聽力小宇宙-老年聽力退化,耐心對待助溝通", "url": "https://www.youtube.com/watch?v=x2z_pgiE2M8", "level": "A", "domain": "聽力測試"}, {"name": "聽力的損失與保健", "url": "https://www.youtube.com/watch?v=8CUIUuM6eo8", "level": "A", "domain": "聽力測試"}, {"name": "長者健康整合式評估(ICOPE)聽力篇", "url": "https://www.youtube.com/watch?v=Jm-nysLPkKU", "level": "A", "domain": "聽力測試"}, {"name": "耳朵勿亂掏,以免導致耳膜穿孔", "url": "https://health.ettoday.net/news/246460", "level": "A", "domain": "聽力測試"}, {"name": "微電影-聽力篇", "url": "https://youtu.be/Jm-nysLPkKU", "level": "A", "domain": "聽力測試"}], "B": [{"name": "聽力小宇宙-老年聽力退化,耐心對待助溝通", "url": "https://www.youtube.com/watch?v=x2z_pgiE2M8", "level": "B", "domain": "聽力測試"}, {"name": "聽力的損失與保健", "url": "https://www.youtube.com/watch?v=8CUIUuM6eo8", "level": "B", "domain": "聽力測試"}, {"name": "長者健康整合式評估(ICOPE)聽力篇", "url": "https://www.youtube.com/watch?v=Jm-nysLPkKU", "level": "B", "domain": "聽力測試"}, {"name": "微電影-聽力篇", "url": "https://youtu.be/Jm-nysLPkKU", "level": "B", "domain": "聽力測試"}], "C": []}, "吞嚥測試": {"A": [{"name": "咀嚼吞嚥的重要", "url": "https://www.youtube.com/watch?v=TiiyC48nMTw", "level": "A", "domain": "吞嚥測試"}, {"name": "呷百二吞嚥健康操（國語版）", "url": "https://www.youtube.com/watch?v=ACFX7q8VQRU", "level": "A", "domain": "吞嚥測試"}, {"name": "呷百二吞嚥健康操（台語版）", "url": "https://www.youtube.com/watch?v=ZYgjKHwyA4g", "level": "A", "domain": "吞嚥測試"}, {"name": "強化吞嚥功能口腔運動衛教單", "url": "https://www.kmuh.org.tw/Web/KMUHDept/Portals/health_education/340011325.pdf", "level": "A", "domain": "吞嚥測試"}, {"name": "咀嚼吞嚥困難飲食質地 IDDSI 0-7 級介紹", "url": "https://www.kmuh.org.tw/www/nutri/edu/吞嚥困難飲食質地1-7級介紹-2024-.pdf", "level": "A", "domain": "吞嚥測試"}], "B": [{"name": "吞嚥障礙衛教單", "url": "https://www.kmuh.org.tw/Web/KMUHDept/Portals/health_education/340011326.pdf", "level": "B", "domain": "吞嚥測試"}, {"name": "總是卡卡的｜吞嚥障礙", "url": "https://www.youtube.com/watch?v=PE1VNhPvI1M", "level": "B", "domain": "吞嚥測試"}, {"name": "咀嚼吞嚥的重要", "url": "https://www.youtube.com/watch?v=TiiyC48nMTw", "level": "B", "domain": "吞嚥測試"}, {"name": "呷百二吞嚥健康操（國語版）", "url": "https://www.youtube.com/watch?v=ACFX7q8VQRU", "level": "B", "domain": "吞嚥測試"}, {"name": "呷百二吞嚥健康操（台語版）", "url": "https://www.youtube.com/watch?v=ZYgjKHwyA4g", "level": "B", "domain": "吞嚥測試"}, {"name": "強化吞嚥功能口腔運動衛教單", "url": "https://www.kmuh.org.tw/Web/KMUHDept/Portals/health_education/340011325.pdf", "level": "B", "domain": "吞嚥測試"}, {"name": "吞嚥困難餵食原則", "url": "https://www.kmuh.org.tw/www/nutri/edu/高齡友善專區衛教單/吞嚥困難餵食原則.pdf", "level": "B", "domain": "吞嚥測試"}, {"name": "咀嚼吞嚥障礙的護理指導", "url": "https://www.kmuh.org.tw/www/nurse/education/護理-衛教-2-014.pdf", "level": "B", "domain": "吞嚥測試"}, {"name": "咀嚼吞嚥困難飲食質地 IDDSI 0-7 級介紹", "url": "https://www.kmuh.org.tw/www/nutri/edu/吞嚥困難飲食質地1-7級介紹-2024-.pdf", "level": "B", "domain": "吞嚥測試"}, {"name": "長照 2.0 復能照護服務 進食與吞嚥照護營養照護", "url": "https://www.youtube.com/watch?v=9n6jC4he3eU", "level": "B", "domain": "吞嚥測試"}, {"name": "失智者的吞嚥照護", "url": "https://www.youtube.com/watch?v=diZACBD3aHc", "level": "B", "domain": "吞嚥測試"}], "C": [{"name": "吞嚥障礙衛教單", "url": "https://www.kmuh.org.tw/Web/KMUHDept/Portals/health_education/340011326.pdf", "level": "C", "domain": "吞嚥測試"}, {"name": "總是卡卡的｜吞嚥障礙", "url": "https://www.youtube.com/watch?v=PE1VNhPvI1M", "level": "C", "domain": "吞嚥測試"}, {"name": "咀嚼吞嚥的重要", "url": "https://www.youtube.com/watch?v=TiiyC48nMTw", "level": "C", "domain": "吞嚥測試"}, {"name": "呷百二吞嚥健康操（國語版）", "url": "https://www.youtube.com/watch?v=ACFX7q8VQRU", "level": "C", "domain": "吞嚥測試"}, {"name": "呷百二吞嚥健康操（台語版）", "url": "https://www.youtube.com/watch?v=ZYgjKHwyA4g", "level": "C", "domain": "吞嚥測試"}, {"name": "強化吞嚥功能口腔運動衛教單", "url": "https://www.kmuh.org.tw/Web/KMUHDept/Portals/health_education/340011325.pdf", "level": "C", "domain": "吞嚥測試"}, {"name": "吞嚥困難餵食原則", "url": "https://www.kmuh.org.tw/www/nutri/edu/高齡友善專區衛教單/吞嚥困難餵食原則.pdf", "level": "C", "domain": "吞嚥測試"}, {"name": "咀嚼吞嚥障礙的護理指導", "url": "https://www.kmuh.org.tw/www/nurse/education/護理-衛教-2-014.pdf", "level": "C", "domain": "吞嚥測試"}, {"name": "咀嚼吞嚥困難飲食質地 IDDSI 0-7 級介紹", "url": "https://www.kmuh.org.tw/www/nutri/edu/吞嚥困難飲食質地1-7級介紹-2024-.pdf", "level": "C", "domain": "吞嚥測試"}, {"name": "長照 2.0 復能照護服務 進食與吞嚥照護營養照護", "url": "https://www.youtube.com/watch?v=9n6jC4he3eU", "level": "C", "domain": "吞嚥測試"}, {"name": "失智者的吞嚥照護", "url": "https://www.youtube.com/watch?v=diZACBD3aHc", "level": "C", "domain": "吞嚥測試"}]}, "憂鬱情緒": {"A": [{"name": "社團法人臺灣憂鬱症防治協會", "url": "https://www.depression.org.tw/index.asp", "level": "A", "domain": "憂鬱情緒"}, {"name": "董氏基金會華文心理健康網", "url": "https://www.etmh.org/", "level": "A", "domain": "憂鬱情緒"}, {"name": "衛生福利部安心專線 1925（依舊愛我）", "url": "https://dep.mohw.gov.tw/DOMHAOH/cp-4906-54077-107.html", "level": "A", "domain": "憂鬱情緒"}, {"name": "社團法人國際生命線台灣總會1995（要救救我）協助專線", "url": "https://www.life1995.org.tw/?aid=2&iid=2", "level": "A", "domain": "憂鬱情緒"}, {"name": "台灣正念工坊", "url": "https://www.mindfulnesscenter.tw/", "level": "A", "domain": "憂鬱情緒"}, {"name": "微電影-憂鬱篇", "url": "https://youtu.be/rwo7CqsbSlQ", "level": "A", "domain": "憂鬱情緒"}, {"name": "認識老年憂鬱症", "url": "https://youtu.be/oYRPsgXvf30", "level": "A", "domain": "憂鬱情緒"}], "B": [{"name": "社團法人臺灣憂鬱症防治協會", "url": "https://www.depression.org.tw/index.asp", "level": "B", "domain": "憂鬱情緒"}, {"name": "董氏基金會華文心理健康網", "url": "https://www.etmh.org/", "level": "B", "domain": "憂鬱情緒"}, {"name": "衛生福利部安心專線 1925（依舊愛我）", "url": "https://dep.mohw.gov.tw/DOMHAOH/cp-4906-54077-107.html", "level": "B", "domain": "憂鬱情緒"}, {"name": "社團法人國際生命線台灣總會1995（要救救我）協助專線", "url": "https://www.life1995.org.tw/?aid=2&iid=2", "level": "B", "domain": "憂鬱情緒"}, {"name": "台灣正念工坊", "url": "https://www.mindfulnesscenter.tw/", "level": "B", "domain": "憂鬱情緒"}, {"name": "微電影-憂鬱篇", "url": "https://youtu.be/rwo7CqsbSlQ", "level": "B", "domain": "憂鬱情緒"}, {"name": "認識老年憂鬱症", "url": "https://youtu.be/oYRPsgXvf30", "level": "B", "domain": "憂鬱情緒"}], "C": []}, "多重用藥": {"A": [{"name": "用藥不重複，健康我來顧", "url": "https://www.youtube.com/watch?v=A9muHoIg0J4&feature=youtu.be", "level": "A", "domain": "多重用藥"}, {"name": "吃藥遵醫囑，身體我做主", "url": "https://www.youtube.com/watch?v=IYshQ644BS8", "level": "A", "domain": "多重用藥"}, {"name": "用藥有五「不」，安全攏總Good", "url": "https://www.youtube.com/watch?v=TyrhLEVIo3o&feature=youtu.be", "level": "A", "domain": "多重用藥"}, {"name": "老年用藥安全", "url": "https://www.youtube.com/watch?v=TvfraZmXMu0", "level": "A", "domain": "多重用藥"}, {"name": "高齡者用藥五大核心能力", "url": "https://www.youtube.com/watch?v=1bY8lJkNYS0", "level": "A", "domain": "多重用藥"}, {"name": "雲端藥歷要同意整合門診守護你", "url": "https://www.youtube.com/watch?v=qaVsOZXNIuk", "level": "A", "domain": "多重用藥"}, {"name": "老人用藥安全講座", "url": "https://www.youtube.com/watch?v=ebSCgtDZXQs", "level": "A", "domain": "多重用藥"}], "B": [{"name": "用藥不重複，健康我來顧", "url": "https://www.youtube.com/watch?v=A9muHoIg0J4&feature=youtu.be", "level": "B", "domain": "多重用藥"}, {"name": "吃藥遵醫囑，身體我做主", "url": "https://www.youtube.com/watch?v=IYshQ644BS8", "level": "B", "domain": "多重用藥"}, {"name": "用藥有五「不」，安全攏總Good", "url": "https://www.youtube.com/watch?v=TyrhLEVIo3o&feature=youtu.be", "level": "B", "domain": "多重用藥"}, {"name": "老年用藥安全", "url": "https://www.youtube.com/watch?v=TvfraZmXMu0", "level": "B", "domain": "多重用藥"}, {"name": "高齡者用藥五大核心能力", "url": "https://www.youtube.com/watch?v=1bY8lJkNYS0", "level": "B", "domain": "多重用藥"}, {"name": "雲端藥歷要同意整合門診守護你", "url": "https://www.youtube.com/watch?v=qaVsOZXNIuk", "level": "B", "domain": "多重用藥"}, {"name": "老人用藥安全講座", "url": "https://www.youtube.com/watch?v=ebSCgtDZXQs", "level": "B", "domain": "多重用藥"}], "C": []}, "社會性照護與支持": {"A": [{"name": "衛生福利部1957福利諮詢專線", "url": "https://1957.mohw.gov.tw/", "level": "A", "domain": "社會性照護與支持"}], "B": [{"name": "衛生福利部1957福利諮詢專線", "url": "https://1957.mohw.gov.tw/", "level": "B", "domain": "社會性照護與支持"}], "C": []}}};
+
+const LEVELS=[
+  {key:'A',name:'健康促進',tag:'較輕度',desc:'體能狀況較好、可自主活動，以預防衰弱與健康促進為主。'},
+  {key:'B',name:'功能強化',tag:'衰弱',desc:'已出現衰弱情形，需加強肌力、平衡與日常功能訓練。'},
+  {key:'C',name:'功能維持',tag:'失能',desc:'行動受限或已失能，以坐姿活動與維持現有功能為主。'}
+];
+const DOMAINS=[
+  {key:'認知功能',slug:'cognition',icon:'腦',desc:'記憶與思考',alias:['cog','cognitive','認知']},
+  {key:'行動功能',slug:'mobility',icon:'行',desc:'肌力、平衡、步行',alias:['mob','move','motion','行動']},
+  {key:'營養功能',slug:'nutrition',icon:'營',desc:'食慾與體重',alias:['nut','nutri','營養']},
+  {key:'視力測試',slug:'vision',icon:'視',desc:'看得清楚',alias:['eye','sight','視力']},
+  {key:'聽力測試',slug:'hearing',icon:'聽',desc:'聽得清楚',alias:['ear','hear','聽力']},
+  {key:'吞嚥測試',slug:'swallow',icon:'吞',desc:'吃得安全',alias:['swallowing','oral','吞嚥']},
+  {key:'憂鬱情緒',slug:'mood',icon:'心',desc:'心情與情緒',alias:['depression','dep','emotion','憂鬱']},
+  {key:'多重用藥',slug:'medication',icon:'藥',desc:'用藥安全',alias:['med','drug','meds','用藥']},
+  {key:'社會性照護與支持',slug:'social',icon:'援',desc:'社會資源與支持',alias:['support','care','社會','社會支持']}
+];
+const STORE_KEY='nhri_room_done_v1';
+const TYPE_LABEL={video:'影片',web:'網站',pdf:'PDF'};
+
+const state={level:'A',picked:new Set(),videoOnly:false};
+let done=loadDone();
+
+function loadDone(){
+  try{const raw=localStorage.getItem(STORE_KEY);return new Set(raw?JSON.parse(raw):[]);}catch(e){return new Set();}
+}
+function saveDone(){
+  try{localStorage.setItem(STORE_KEY,JSON.stringify([...done]));}catch(e){}
+}
+
+/* ---------- 網址參數 ---------- */
+function readParams(){
+  const q=new URLSearchParams(location.search);
+  const get=(...names)=>{for(const n of names){const v=q.get(n);if(v!==null&&v!=='')return v;}return null;};
+  const lv=get('level','lv','grade','衰弱等級','等級');
+  if(lv){
+    const map={'1':'A','2':'B','3':'C','A':'A','B':'B','C':'C'};
+    const key=String(lv).trim().toUpperCase();
+    if(Object.prototype.hasOwnProperty.call(map,key))state.level=map[key];
+  }
+  const ab=get('abnormal','abn','items','domains','icope','異常','異常項目');
+  if(ab!==null){
+    const raw=String(ab).trim();
+    const low=raw.toLowerCase();
+    if(low==='all'||raw==='全部'){DOMAINS.forEach(d=>state.picked.add(d.key));}
+    else if(low==='none'||raw==='無'||low==='0'){/* 全部正常，保持空集合 */}
+    else{
+      raw.split(/[,、，|+\s]+/).filter(Boolean).forEach(tok=>{
+        const k=resolveDomain(tok);
+        if(k)state.picked.add(k);
+      });
+    }
+  }
+  DOMAINS.forEach(d=>{
+    const v=q.get(d.slug);
+    if(v!==null&&v!=='0'&&v.toLowerCase()!=='false')state.picked.add(d.key);
+  });
+  const vd=get('video','videoOnly');
+  if(vd&&vd!=='0'&&vd.toLowerCase()!=='false')state.videoOnly=true;
+}
+function resolveDomain(token){
+  const t=String(token).trim();
+  if(!t)return null;
+  const low=t.toLowerCase();
+  for(const d of DOMAINS){
+    if(t===d.key||low===d.slug||d.alias.some(a=>a.toLowerCase()===low))return d.key;
+  }
+  for(const d of DOMAINS){
+    if(d.key.indexOf(t)===0||t.indexOf(d.key)===0)return d.key;
+  }
+  return null;
+}
+function buildQuery(){
+  const q=new URLSearchParams();
+  q.set('level',state.level);
+  const picked=DOMAINS.filter(d=>state.picked.has(d.key)).map(d=>d.slug);
+  q.set('abnormal',picked.length?picked.join(','):'none');
+  if(state.videoOnly)q.set('video','1');
+  return q.toString();
+}
+function buildUrl(){
+  const base=(location.origin&&location.origin!=='null')?location.origin+location.pathname:location.href.split(/[?#]/)[0];
+  return base+'?'+buildQuery();
+}
+function syncUrl(){
+  try{history.replaceState(null,'','?'+buildQuery());}catch(e){}
+}
+
+/* ---------- 小工具 ---------- */
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function itemsOf(domainKey,level){
+  const d=DATA.domains[domainKey];
+  return (d&&d[level])?d[level]:[];
+}
+function mediaType(url){
+  if(!url)return 'web';
+  if(/youtube\.com|youtu\.be|vimeo\.com/i.test(url))return 'video';
+  if(/\.pdf($|\?)/i.test(url))return 'pdf';
+  return 'web';
+}
+function hostOf(url){
+  if(!url)return '';
+  try{return new URL(url).hostname.replace(/^www\./,'');}catch(e){return url;}
+}
+function idOf(item){return item.url||item.name;}
+
+/* 行動功能的運動處方名稱：Type A 健康促進-A1肌力與核心控制-A1-01動態全身暖身 */
+const RX_EXERCISE=/^Type\s+([ABC])\s+([^-]+)-([ABC][0-9])([^-]+)-([ABC][0-9]-[0-9]{2})(.+)$/;
+function groupItems(items){
+  const groups=[];const index={};
+  const push=(title,sub,item)=>{
+    if(!index[title]){index[title]={title:title,sub:sub,items:[]};groups.push(index[title]);}
+    index[title].items.push(item);
+  };
+  items.forEach(item=>{
+    const m=RX_EXERCISE.exec(item.name);
+    if(m){
+      push(m[3]+'　'+m[4],'Type '+m[1]+' '+m[2],Object.assign({},item,{display:m[5]+'　'+m[6]}));
+    }else{
+      push('通用衛教資源','不分處方，共同觀看',Object.assign({},item,{display:item.name}));
+    }
+  });
+  groups.sort((x,y)=>(x.title==='通用衛教資源'?-1:y.title==='通用衛教資源'?1:0));
+  return groups;
+}
+
+/* ---------- 畫選項 ---------- */
+function renderLevels(){
+  document.getElementById('levelGrid').innerHTML=LEVELS.map(l=>
+    '<button type="button" class="level-opt lv-'+l.key.toLowerCase()+'" data-level="'+l.key+'" aria-pressed="'+(state.level===l.key)+'">'+
+      '<div class="lv-top"><span class="level-pill">'+l.key+'</span><div><strong>條件 '+l.key+'・'+l.name+'</strong>'+
+      '<em>'+l.tag+'　基礎衛教 '+DATA.base[l.key].length+' 則</em></div></div>'+
+      '<p>'+l.desc+'</p></button>'
+  ).join('');
+}
+function renderChips(){
+  document.getElementById('chipGrid').innerHTML=DOMAINS.map(d=>{
+    const n=itemsOf(d.key,state.level).length;
+    const sub=n?d.desc+'・'+n+' 則':d.desc+'・此等級無專屬';
+    return '<button type="button" class="chip" data-domain="'+esc(d.key)+'" aria-pressed="'+state.picked.has(d.key)+'">'+
+      '<span class="chip-icon">'+d.icon+'</span>'+
+      '<span><strong>'+esc(d.key)+'</strong><span class="chip-sub">'+esc(sub)+'</span></span>'+
+      '<span class="chip-check">✓</span></button>';
+  }).join('');
+}
+
+/* ---------- 畫結果 ---------- */
+function collectPacks(){
+  const packs=[{
+    type:'base',icon:'★',title:'基礎衛教包',
+    sub:'條件 '+state.level+'・每位長者都要看，與異常項目無關',
+    items:DATA.base[state.level].map(i=>Object.assign({},i,{display:i.name}))
+  }];
+  DOMAINS.filter(d=>state.picked.has(d.key)).forEach(d=>{
+    packs.push({
+      type:'domain',icon:d.icon,title:d.key+' 專屬衛教包',
+      sub:d.key+' ICOPE 異常 × 條件 '+state.level,
+      domain:d.key,
+      items:itemsOf(d.key,state.level).map(i=>Object.assign({},i,{display:i.name}))
+    });
+  });
+  return packs;
+}
+function renderResult(){
+  const packs=collectPacks();
+  const seen=new Set();
+  let total=0,uniq=0,doneCount=0;
+  const html=packs.map(pack=>{
+    let items=pack.items;
+    if(state.videoOnly)items=items.filter(i=>mediaType(i.url)==='video');
+    total+=items.length;
+    const groups=pack.domain==='行動功能'?groupItems(items):[{title:null,sub:null,items:items}];
+    let n=0;
+    const body=items.length?groups.map(g=>{
+      const rows=g.items.map(item=>{
+        n++;
+        const id=idOf(item);
+        const isDup=seen.has(id);
+        seen.add(id);
+        const isDone=done.has(id);
+        if(!isDup){uniq++;if(isDone)doneCount++;}
+        const t=mediaType(item.url);
+        return '<div class="res'+(isDone?' is-done':'')+'">'+
+          '<span class="res-n">'+String(n).padStart(2,'0')+'</span>'+
+          '<span class="res-type t-'+t+'">'+TYPE_LABEL[t]+'</span>'+
+          '<span class="res-main"><strong>'+esc(item.display||item.name)+(isDup?'<span class="dup">前面已出現</span>':'')+'</strong>'+
+          '<small>'+esc(hostOf(item.url))+'</small></span>'+
+          '<span class="res-act">'+
+            (item.url?'<a href="'+esc(item.url)+'" target="_blank" rel="noopener">開啟課程</a>':'')+
+            '<label class="done-lab"><input type="checkbox" data-id="'+esc(id)+'"'+(isDone?' checked':'')+'> 已完成</label>'+
+          '</span></div>';
+      }).join('');
+      const head=g.title?'<div class="group-title">'+esc(g.title)+(g.sub?' <small>'+esc(g.sub)+'</small>':'')+
+        '<small style="margin-left:auto">'+g.items.length+' 則</small></div>':'';
+      return head+rows;
+    }).join(''):'<div class="pack-empty">'+(state.videoOnly?
+      '目前條件下這個單元沒有影片課程，可關閉「只看影片課程」查看其他資源。':
+      '此等級沒有設定專屬衛教內容，依基礎衛教包安排即可。')+'</div>';
+    return '<section class="pack'+(pack.type==='base'?' base':'')+'">'+
+      '<div class="pack-head"><span class="pack-icon">'+pack.icon+'</span>'+
+      '<div><strong>'+esc(pack.title)+'</strong><span class="pack-sub">'+esc(pack.sub)+'</span></div>'+
+      '<div class="pack-count"><b>'+items.length+'</b><small>則課程</small></div></div>'+
+      '<div class="pack-body">'+body+'</div></section>';
+  }).join('');
+  document.getElementById('packs').innerHTML=html;
+
+  const lv=LEVELS.find(l=>l.key===state.level);
+  const tags=DOMAINS.filter(d=>state.picked.has(d.key));
+  const pct=uniq?Math.round(doneCount/uniq*100):0;
+  document.getElementById('summary').innerHTML=
+    '<div><h2>我的學習清單</h2>'+
+    '<div class="sum-sub">條件 '+lv.key+'・'+lv.name+'（'+lv.tag+'）　'+
+    (tags.length?'ICOPE 異常 '+tags.length+' 項':'目前沒有勾選異常項目，只需完成基礎衛教')+'</div>'+
+    '<div class="sum-tags"><span class="sum-tag">★　基礎衛教</span>'+
+    tags.map(d=>'<span class="sum-tag">'+d.icon+'　'+esc(d.key)+'</span>').join('')+'</div></div>'+
+    '<div class="sum-nums">'+
+      '<div class="sum-num"><b>'+total+'</b><span>總課程數</span></div>'+
+      '<div class="sum-num"><b>'+uniq+'</b><span>不重複課程</span></div>'+
+      '<div class="sum-num"><b>'+doneCount+'</b><span>已完成</span></div>'+
+    '</div>'+
+    '<div class="prog-wrap"><span>學習進度</span><span class="prog"><i style="width:'+pct+'%"></i></span><span>'+pct+'%</span></div>';
+}
+function renderAll(){renderChips();renderResult();}
+
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t=setTimeout(()=>el.classList.remove('show'),2200);
+}
+
+/* ---------- 事件 ---------- */
+document.getElementById('levelGrid').addEventListener('click',e=>{
+  const btn=e.target.closest('[data-level]');
+  if(!btn)return;
+  state.level=btn.dataset.level;
+  renderLevels();renderAll();syncUrl();
+});
+document.getElementById('chipGrid').addEventListener('click',e=>{
+  const btn=e.target.closest('[data-domain]');
+  if(!btn)return;
+  const k=btn.dataset.domain;
+  if(state.picked.has(k))state.picked.delete(k);else state.picked.add(k);
+  renderAll();syncUrl();
+});
+document.getElementById('packs').addEventListener('change',e=>{
+  const cb=e.target.closest('input[type=checkbox][data-id]');
+  if(!cb)return;
+  if(cb.checked)done.add(cb.dataset.id);else done.delete(cb.dataset.id);
+  saveDone();renderResult();
+});
+document.getElementById('selAll').addEventListener('click',()=>{DOMAINS.forEach(d=>state.picked.add(d.key));renderAll();syncUrl();});
+document.getElementById('selNone').addEventListener('click',()=>{state.picked.clear();renderAll();syncUrl();});
+document.getElementById('videoOnly').addEventListener('change',e=>{state.videoOnly=e.target.checked;renderResult();syncUrl();});
+document.getElementById('printBtn').addEventListener('click',()=>window.print());
+document.getElementById('resetDone').addEventListener('click',()=>{done.clear();saveDone();renderResult();toast('已清除完成紀錄');});
+document.getElementById('copyLink').addEventListener('click',()=>{
+  const url=buildUrl();
+  const fallback=()=>{
+    const ta=document.createElement('textarea');
+    ta.value=url;document.body.appendChild(ta);ta.select();
+    let ok=false;
+    try{ok=document.execCommand('copy');}catch(err){ok=false;}
+    document.body.removeChild(ta);
+    toast(ok?'已複製連結':url);
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(()=>toast('已複製連結'),fallback);
+  }else{fallback();}
+});
+
+/* ---------- 啟動 ---------- */
+readParams();
+document.getElementById('videoOnly').checked=state.videoOnly;
+document.getElementById('slugHelp').innerHTML=DOMAINS.map(d=>'<code>'+d.slug+'</code> ＝ '+esc(d.key)).join('；');
+renderLevels();renderAll();syncUrl();
+</script>
+</body>
+</html>
