@@ -2611,47 +2611,21 @@
 </style>
 </helmet>
 <div style="min-height:100vh;background:var(--grey-100);font-family:var(--font-body);color:var(--grey-900);padding:0 0 0">
-  <div class="ds-header" style="margin-bottom:32px">
-    <x-import component-from-global-scope="MPHRDesignSystem_2916f2.HeaderFooter" property1="user_default" dc-props="{{ footerProps }}" hint-size="100%,60px"></x-import>
-  </div>
-  
-
   <div style="padding:0 20px 56px">
   <div style="max-width: 840px; margin: 0 auto; position: relative; top: auto">
-
-    
-
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 0 24px">
-      
-      
-    <h1 style="margin:0;font-size:26px;font-weight:700;color:var(--grey-900)">肌少症評估結果</h1></div>
-    <div class="fld" style="max-width:200px;margin-bottom:20px">
-      
-      
-    </div>
-
-    <!-- Tab -->
-    
 
     <!-- RESULT CARD -->
     <div style="background: var(--grey-0); border-radius: var(--radius-lg); box-shadow: inset 0 0 0 1px var(--grey-200),var(--shadow-card); padding: 28px 32px; padding-top: 24px; padding-bottom: 24px; padding-left: 24px; padding-right: 24px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:12px">
           <h2 style="margin: 0; font-size: 17px; font-weight: 700; color: var(--color-primary)">評估結果</h2>
+          <span style="font-size:12px;color:var(--grey-600)">肌力以手握力測試評估</span>
           <div style="display:flex;flex-wrap:wrap;gap:6px">
             <sc-for list="{{ tags }}" as="tag" hint-placeholder-count="1">
               <span style="{{ tag.style }}">{{ tag.text }}</span>
             </sc-for>
           </div>
         </div>
-        <button sc-camel-on-click="{{ openDialog }}" style="display: flex; align-items: center; gap: 7px; font-family: inherit; font-size: 14px; font-weight: 700; color: var(--grey-0); border: none; border-radius: var(--radius-md); height: 32px; padding: 0 18px; cursor: pointer; background-color: var(--teal-300)" style-hover="background:var(--teal-500)" style-active="background:var(--teal-700)" type="button">
-          <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" style="flex-shrink:0">
-            <rect x="6" y="3" width="12" height="4" rx="1.5" stroke="currentColor" stroke-width="2"></rect>
-            <path d="M6 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1" stroke="currentColor" stroke-width="2"></path>
-            <path d="M8 12l2.5 2.5L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-          </svg>
-          判定標準
-        </button>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
@@ -2659,19 +2633,16 @@
           <div style="{{ tileAsmName }}">四肢 ASM 總量</div>
           <div style="{{ tileAsmVal }}">{{ asmStr }}</div>
           <div style="font-size:11px;color:var(--grey-500);margin-top:6px">kg</div>
-          <div style="font-size:11px;color:var(--grey-600);margin-top:8px">{{ asmSource }}</div>
         </div>
         <div style="{{ tileSmi }}">
-          <div style="{{ tileSmiName }}">SMI</div>
+          <div style="{{ tileSmiName }}">指標一</div>
           <div style="{{ tileSmiVal }}">{{ smiStr }}</div>
           <div style="font-size:11px;color:var(--grey-500);margin-top:6px">kg/m²</div>
-          <div style="font-size:11px;color:var(--grey-500);margin-top:2px">四肢 ASM 總量 ÷ 身高²</div>
           <div style="font-size:11px;color:var(--grey-600);margin-top:8px">{{ refSmi }}</div>
         </div>
         <div style="{{ tileRatio }}">
-          <div style="{{ tileRatioName }}">ASM / BMI</div>
+          <div style="{{ tileRatioName }}">指標二</div>
           <div style="{{ tileRatioVal }}">{{ asmBmiStr }}</div>
-          <div style="font-size:11px;color:var(--grey-500);margin-top:6px">ratio</div>
           <div style="font-size:11px;color:var(--grey-600);margin-top:8px">{{ refAsmBmi }}</div>
         </div>
       </div>
@@ -2679,172 +2650,12 @@
       <sc-if value="{{ hasResult }}" hint-placeholder-val="{{ true }}">
         <div style="{{ bannerStyle }}">
           <div style="{{ bannerTitleStyle }}">{{ bannerTitle }}</div>
-          <div style="font-size:13px;line-height:1.6;color:var(--grey-800)">{{ bannerDetail }}</div>
         </div>
       </sc-if>
-    </div>
-
-    <!-- FORM CARD -->
-    <div style="background: var(--grey-0); border-radius: var(--radius-lg); box-shadow: inset 0 0 0 1px var(--grey-200),var(--shadow-card); padding: 28px 32px 32px; position: relative; margin-top: 24px; padding-top: 24px; top: 0px; padding-right: 24px; padding-bottom: 24px; padding-left: 24px">
-
-      
-
-      <h2 style="margin: 0 0 20px; font-size: 17px; font-weight: 700; color: var(--color-primary); padding-bottom: 4px; border-bottom: 1px solid var(--grey-200)">基本資料</h2>
-
-      <div class="fld">
-        <label>姓名</label>
-        <div class="mphr-field ro-field" style="width: 200px"><span>{{ name }}</span></div>
-      </div>
-
-      <div class="fld">
-        <label>性別</label>
-        <div class="mphr-field ro-field" style="width: 200px"><span>{{ sexLabel }}</span></div>
-      </div>
-
-      <div class="fld">
-        <label>身分證字號</label>
-        <div class="mphr-field ro-field" style="width: 200px"><span>{{ pid }}</span></div>
-      </div>
-
-      <div class="two-col">
-        <div class="fld">
-          <label>年齡（歲）</label>
-          <div class="mphr-field ro-field" style="width: 200px"><span>{{ age }}</span></div>
-          <div class="hint">年齡分組：<b style="color:var(--grey-900)">{{ ageGroup }}</b></div>
-        </div>
-      </div>
-
-      <h2 style="margin: 8px 0 20px; font-size: 17px; font-weight: 700; color: var(--color-primary); padding-bottom: 4px; border-bottom: 1px solid var(--grey-200)">身體量測</h2>
-
-      <div class="two-col">
-        <div class="fld">
-          <label>身高（cm）</label>
-          <div class="mphr-field ro-field"><span>{{ height }}</span></div>
-        </div>
-        <div class="fld">
-          <label>體重（kg）</label>
-          <div class="mphr-field ro-field"><span>{{ weight }}</span></div>
-        </div>
-        <div class="fld">
-          <label style="{{ lblBmi }}">BMI（kg/m²）</label>
-          <div class="mphr-field ro-field" style="{{ boxBmi }}"><span style="{{ valBmi }}">{{ bmiStr }}</span></div>
-          <div class="hint">{{ refBmi }}</div>
-        </div>
-        <div class="fld">
-          <label style="{{ lblWaist }}">腰圍（cm）</label>
-          <div class="mphr-field ro-field" style="{{ boxWaist }}"><span style="{{ valWaist }}">{{ waist }}</span></div>
-          <div class="hint">{{ refWaist }}</div>
-        </div>
-        <div class="fld">
-          <label style="{{ lblGrip }}">握力（較佳值，kg）</label>
-          <div class="mphr-field ro-field" style="{{ boxGrip }}"><span style="{{ valGrip }}">{{ grip }}</span></div>
-          <div class="hint">{{ refGrip }}</div>
-        </div>
-        <div class="fld">
-          <label style="{{ lblCalfL }}">左小腿圍（cm）</label>
-          <div class="mphr-field ro-field" style="{{ boxCalfL }}"><span style="{{ valCalfL }}">{{ calfL }}</span></div>
-          <div class="hint">{{ refCalf }}</div>
-        </div>
-        <div class="fld">
-          <label style="{{ lblCalfR }}">右小腿圍（cm）</label>
-          <div class="mphr-field ro-field" style="{{ boxCalfR }}"><span style="{{ valCalfR }}">{{ calfR }}</span></div>
-          <div class="hint">{{ refCalf }}</div>
-        </div>
-        <div class="fld">
-          <label style="{{ lblWaistCalf }}">腰腿比</label>
-          <div class="mphr-field ro-field" style="{{ boxWaistCalf }}"><span style="{{ valWaistCalf }}">{{ waistCalfStr }}</span></div>
-          <div class="hint">腰圍 ÷ 較粗小腿圍（{{ thickCalfLabel }}）；{{ refWaistCalf }}</div>
-        </div>
-      </div>
-
-      <h2 style="margin: 8px 0 20px; font-size: 17px; font-weight: 700; color: var(--color-primary); padding-bottom: 4px; border-bottom: 1px solid var(--grey-200)">肌肉量資料</h2>
-
-      <div class="fld" style="max-width:calc(50% - 10px)">
-        <label>輸入方式</label>
-        <div class="mphr-field ro-field"><span>{{ asmModeLabel }}</span></div>
-      </div>
-
-      <sc-if value="{{ modeAsm }}" hint-placeholder-val="{{ true }}">
-        <div class="two-col">
-          <div class="fld">
-            <label>右上肢 ASM（kg）</label>
-            <div class="mphr-field ro-field"><span>{{ asmRU }}</span></div>
-          </div>
-          <div class="fld">
-            <label>左上肢 ASM（kg）</label>
-            <div class="mphr-field ro-field"><span>{{ asmLU }}</span></div>
-          </div>
-          <div class="fld">
-            <label>右下肢 ASM（kg）</label>
-            <div class="mphr-field ro-field"><span>{{ asmRL }}</span></div>
-          </div>
-          <div class="fld">
-            <label>左下肢 ASM（kg）</label>
-            <div class="mphr-field ro-field"><span>{{ asmLL }}</span></div>
-          </div>
-        </div>
-      </sc-if>
-
-      <sc-if value="{{ modeMass }}" hint-placeholder-val="{{ false }}">
-        <div class="two-col">
-          <div class="fld">
-            <label>ASM（kg）</label>
-            <div class="mphr-field ro-field"><span>{{ asmDirect }}</span></div>
-          </div>
-        </div>
-      </sc-if>
-
-      <sc-if value="{{ modeSmi }}" hint-placeholder-val="{{ false }}">
-        <div class="two-col">
-          <div class="fld">
-            <label>SMI（kg/m²）</label>
-            <div class="mphr-field ro-field"><span>{{ smiDirect }}</span></div>
-          </div>
-        </div>
-      </sc-if>
-
     </div>
 
   </div>
-  </div><div>
-    <x-import component-from-global-scope="MPHRDesignSystem_2916f2.HeaderFooter" property1="regular" dc-props="{{ footerProps }}" hint-size="100%,60px"></x-import>
   </div>
-
-  <!-- DIALOG -->
-  <sc-if value="{{ dialogOpen }}" hint-placeholder-val="{{ false }}">
-    <div sc-camel-on-click="{{ closeDialog }}" style="position:fixed;inset:0;background:rgba(51,51,51,.45);display:flex;align-items:center;justify-content:center;padding:24px;z-index:50">
-      <div sc-camel-on-click="{{ stop }}" style="background:var(--grey-0);border-radius:var(--radius-lg);box-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1);max-width:560px;width:100%;max-height:85vh;overflow:auto">
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 22px 28px; border-bottom: 1px solid var(--grey-200); position: sticky; top: 0; background: var(--grey-0); border-style: none; padding-top: 16px; padding-bottom: 8px; padding-left: 24px; padding-right: 24px">
-          <h2 style="margin:0;font-size:18px;font-weight:700">判定標準</h2>
-          
-        </div>
-        <div style="padding: 8px 28px 28px; padding-bottom: 24px; padding-top: 12px; padding-right: 24px; padding-left: 24px">
-          <div style="padding: 18px 0; padding-top: 8px; padding-bottom: 8px">
-            <div style="box-sizing: border-box; display: flex; flex-direction: column; gap: 4px"><div style="font-size: 15px; font-weight: 700; margin-bottom: 8px">① 低肌肉量（BIA，任一指標）</div><div style="font-size: 13px; color: var(--grey-700); line-height: 1.8">SMI ＝ ASM ÷ 身高²；或 ASM/BMI。<br>50–64 歲 — 男：<b style="color:var(--grey-900)">SMI &lt; 7.6</b> 或 <b style="color:var(--grey-900)">ASM/BMI &lt; 0.90</b>；女：<b style="color:var(--grey-900)">SMI &lt; 5.7</b> 或 <b style="color:var(--grey-900)">ASM/BMI &lt; 0.63</b><br>≥65 歲 — 男：<b style="color:var(--grey-900)">SMI &lt; 7.0</b> 或 <b style="color:var(--grey-900)">ASM/BMI &lt; 0.83</b>；女：<b style="color:var(--grey-900)">SMI &lt; 5.7</b> 或 <b style="color:var(--grey-900)">ASM/BMI &lt; 0.57</b></div></div>
-            
-          </div>
-          <div style="padding: 18px 0; border-bottom: 1px solid var(--grey-200); border-style: none; margin-bottom: 8px; padding-top: 8px; padding-bottom: 8px">
-            <div style="box-sizing: border-box; display: flex; flex-direction: column; gap: 4px"><div style="font-size: 15px; font-weight: 700; margin-bottom: 8px">② 低肌力（握力）</div><div style="font-size: 13px; color: var(--grey-700); line-height: 1.8">握力取左右手較佳值。<br>50–64 歲 — 男：<b style="color:var(--grey-900)">&lt; 34 kg</b>　女：<b style="color:var(--grey-900)">&lt; 20 kg</b><br>≥65 歲 — 男：<b style="color:var(--grey-900)">&lt; 28 kg</b>　女：<b style="color:var(--grey-900)">&lt; 18 kg</b></div></div>
-            
-          </div>
-          
-            <div style="box-sizing: border-box; display: flex; flex-direction: column; gap: 4px"><div style="font-size: 15px; font-weight: 700; margin-bottom: 8px">③ 小腿圍風險篩檢</div><div style="font-size: 13px; color: var(--grey-700); line-height: 1.8">男性：<b style="color:var(--grey-900)">&lt; 34 cm</b>　女性：<b style="color:var(--grey-900)">&lt; 33 cm</b><br>任一側低於門檻即提示風險，但小腿圍不是確診條件。</div></div>
-            
-          
-          <div style="box-sizing: border-box; display: flex; flex-direction: column; gap: 4px; margin-top: 8px"><div style="font-size: 15px; font-weight: 700; margin-bottom: 8px">④ 肥胖型肌少症風險（腰腿比）</div><div style="font-size: 13px; color: var(--grey-700); line-height: 1.8">腰腿比 ＝ 腰圍 ÷ 較粗小腿圍。<br>男性：<b style="color:var(--grey-900)">&gt; 2.6</b>　女性：<b style="color:var(--grey-900)">&gt; 2.4</b> 即標注風險。</div></div>
-          <div style="padding: 18px 0 0; margin-top: 12px; padding-top: 8px">
-            <div style="box-sizing: border-box; display: flex; flex-direction: column; gap: 4px; position: static"><div style="font-size: 15px; font-weight: 700; margin-bottom: 8px">AWGS 2025 肌少症</div><div style="font-size: 13px; color: var(--grey-700); line-height: 1.8"><b style="color:var(--grey-900)">低肌肉量 + 低肌力</b> 即判定為肌少症。<br>2025 共識已將步行速度、5 次坐站、SPPB 改列為「結果指標」，不再作為診斷條件；亦移除「嚴重肌少症」分級。</div></div>
-            
-          </div>
-          <p style="margin: 20px 0 0; border-top: 1px solid var(--grey-200); font-size: 12px; color: var(--grey-600); line-height: 1.8; border-style: none; margin-top: 16px">門檻依 AWGS 2025 共識（BIA），依年齡分為 50–64 歲與 ≥65 歲（&lt;50 歲以 50–64 歲門檻作為參考）。低肌肉量可由 SMI 或 ASM/BMI 任一達標。小腿圍為篩檢工具，不作為確診條件。</p>
-          <div style="box-sizing: border-box; display: flex; flex-direction: column; gap: 4px; margin-top: 16px"><div style="font-size: 15px; font-weight: 700; margin-bottom: 8px">肥胖型肌少症風險</div><div style="font-size: 13px; color: var(--grey-700); line-height: 1.8">此指標之臨床切點源自國際大型高齡與長壽流行病學研究（如 Longevity Check-Up 8+ 國際研究項目）。在人體組成學中，腰圍反映腹部內臟脂肪堆積，小腿圍則代表下肢肌肉儲備。腰腿比（WCR）完美融合這兩項構面，能精準反映「脂肪過多、肌肉過少」的身體組成失衡。醫學統計顯示，健康族群的腰腿比平均值在 2.4 以下，當數值跨越臨界值時，受測者罹患肥胖型肌少症（Sarcopenic Obesity）、胰島素阻抗、糖尿病前期與心血管疾病的風險將顯著飆升。</div></div>
-        </div>
-        <div style="display:flex;justify-content:flex-end;padding:16px 24px;position:sticky;bottom:0;background:var(--grey-0)">
-          <button sc-camel-on-click="{{ closeDialog }}" style="font-family:inherit;font-size:14px;font-weight:700;color:var(--grey-0);background:var(--green-300);border:none;border-radius:var(--radius-md);height:32px;padding:0 30px;cursor:pointer" style-hover="background:var(--green-500)">關閉</button>
-        </div>
-      </div>
-    </div>
-  </sc-if>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script="">
@@ -2856,7 +2667,6 @@ class Component extends DCLogic {
     asmMode: "asm",
     asmRU: "1.8", asmLU: "1.7", asmRL: "5.1", asmLL: "5",
     asmDirect: "", smiDirect: "",
-    dialogOpen: false,
   };
 
   renderVals() {
@@ -2924,15 +2734,7 @@ class Component extends DCLogic {
     // 臨床流程只有兩種結果文字，標題依指定內容呈現、不可改動；
     // 肌肉量或握力未填時尚無結果，整塊不顯示（不另設中間狀態）
     const hasResult = (smi != null || asmBmi != null) && grip != null;
-    let bannerTitle, bannerDetail;
-    if (isSarc) {
-      bannerTitle = "符合肌少症診斷";
-      const massMsg = lowMassSmi ? `SMI ${smi.toFixed(2)} kg/m² 低於 ${massT.toFixed(1)}` : `ASM/BMI ${asmBmi.toFixed(2)} 低於 ${asmBmiT.toFixed(2)}`;
-      bannerDetail = `${massMsg}，且握力 ${grip.toFixed(1)} kg 低於 ${strT.toFixed(1)} kg，已同時符合低肌肉量與低肌力。`;
-    } else {
-      bannerTitle = "未符合肌少症診斷";
-      bannerDetail = "AWGS 2025 需同時符合低肌肉量與低肌力，目前未同時符合。";
-    }
+    const bannerTitle = isSarc ? "有肌少症" : "未有肌少症";
     const tc = isSarc
       ? { bg: "var(--red-50)", bd: "var(--red-100)", tx: "var(--red-500)" }
       : { bg: "var(--green-50)", bd: "var(--green-100)", tx: "var(--green-700)" };
@@ -2943,17 +2745,16 @@ class Component extends DCLogic {
 
     const chip = (bg, tx) => ({ fontSize: 12, fontWeight: 700, padding: "5px 12px", borderRadius: 100, background: bg, color: tx, whiteSpace: "nowrap" });
     const obese = waistCalf != null && waistCalf > waistCalfT;
-    // 臨床流程只使用三種標籤
-    const tags = [];
-    if (isSarc) tags.push({ text: "符合肌少症診斷", style: chip("var(--red-50)", "var(--red-500)") });
-    if (lowStrength) tags.push({ text: "肌力低下", style: chip("var(--orange-50)", "var(--orange-500)") });
-    if (lowMass) tags.push({ text: "肌肉質量不足", style: chip("var(--red-50)", "var(--red-500)") });
+    const hasAbnormality = lowMass || lowStrength;
+    const tags = [{
+      text: !hasResult ? "資料不足" : hasAbnormality ? "有異常" : "未見異常",
+      style: chip(!hasResult ? "var(--grey-100)" : hasAbnormality ? "var(--red-50)" : "var(--green-50)",
+        !hasResult ? "var(--grey-600)" : hasAbnormality ? "var(--red-500)" : "var(--green-700)"),
+    }];
 
     // 評估結果三個指標：ASM 總量無門檻，SMI 與 ASM/BMI 顯示門檻與超標樣式
-    const asmSource = s.asmMode === "asm" ? "右上肢 + 左上肢 + 右下肢 + 左下肢"
-      : s.asmMode === "mass" ? "直接輸入" : "SMI × 身高²";
-    const refSmi = `正常 ≥ ${massT.toFixed(1)} kg/m²`;
-    const refAsmBmi = `門檻 ≥ ${asmBmiT.toFixed(2)}`;
+    const refSmi = `標準值 ≥ ${massT.toFixed(1)} kg/m²`;
+    const refAsmBmi = `標準值 ≥ ${asmBmiT.toFixed(2)}`;
     const tileBox = (bad) => ({
       borderRadius: "var(--radius-lg)", padding: "16px",
       background: bad ? "var(--red-50)" : "transparent",
@@ -2964,7 +2765,7 @@ class Component extends DCLogic {
       color: bad ? "var(--red-500)" : "var(--grey-600)",
     });
     const tileVal = (bad) => ({
-      fontSize: "26px", fontWeight: "700", lineHeight: "1",
+      fontSize: "28px", fontWeight: "800", lineHeight: "1",
       color: bad ? "var(--red-500)" : "var(--grey-900)",
     });
 
@@ -2996,18 +2797,14 @@ class Component extends DCLogic {
       refBmi, refWaist, refGrip, refCalf, refWaistCalf,
       ...fieldStyles,
       bmiStr: fmt(bmi, 1), asmStr: fmt(asm, 2), smiStr: fmt(smi, 2), asmBmiStr: fmt(asmBmi, 3),
-      hasResult, bannerStyle, bannerTitle, bannerDetail,
-      bannerTitleStyle: { fontSize: 15, fontWeight: 700, marginBottom: 8, color: tc.tx },
+      hasResult, bannerStyle, bannerTitle,
+      bannerTitleStyle: { fontSize: 15, fontWeight: 700, color: tc.tx },
       tags,
-      asmSource, refSmi, refAsmBmi,
+      refSmi, refAsmBmi,
       tileAsm: tileBox(false), tileAsmName: tileName(false), tileAsmVal: tileVal(false),
       tileSmi: tileBox(lowMassSmi), tileSmiName: tileName(lowMassSmi), tileSmiVal: tileVal(lowMassSmi),
       tileRatio: tileBox(lowMassBmi), tileRatioName: tileName(lowMassBmi), tileRatioVal: tileVal(lowMassBmi),
       modeAsm: s.asmMode === "asm", modeMass: s.asmMode === "mass", modeSmi: s.asmMode === "smi",
-      footerProps: { style: { width: "100%" } },
-      openDialog: () => this.setState({ dialogOpen: true }),
-      closeDialog: () => this.setState({ dialogOpen: false }),
-      stop: (e) => e.stopPropagation(),
     };
   }
 }
