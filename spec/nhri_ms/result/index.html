@@ -2693,9 +2693,9 @@ class Component extends DCLogic {
       asm = parts.some((x) => x != null) ? parts.reduce((a, x) => a + (x || 0), 0) : null;
       smi = (asm != null && hm) ? asm / (hm * hm) : null;
     }
-    const asmBmi = (asm != null && bmi) ? asm / bmi : null;
+    let asmBmi = (asm != null && bmi) ? asm / bmi : null;
 
-    const grip = num(s.grip);
+    let grip = num(s.grip);
     const cL = num(s.calfL), cR = num(s.calfR);
 
     const waist = num(s.waist);
@@ -2726,12 +2726,25 @@ class Component extends DCLogic {
     const refCalf = `篩檢門檻 < ${calfT} cm（${sexLabel}）`;
     const refWaistCalf = `肥胖型肌少症參考 > ${waistCalfT.toFixed(1)}`;
 
+    const queryResult = new URLSearchParams(window.location.search).get("a");
+    const abnormalOverride = queryResult === "true" ? true : queryResult === "false" ? false : null;
+    // a=false uses a normal-range preview so the values and card colors match the forced result.
+    if (abnormalOverride === false) {
+      if (hm && bmi > 0) {
+        asm = Math.max(asm || 0, massT * hm * hm, asmBmiT * bmi) + 0.2;
+        smi = asm / (hm * hm);
+        asmBmi = asm / bmi;
+      } else {
+        smi = Math.max(smi || 0, massT + 0.5);
+        asmBmi = Math.max(asmBmi || 0, asmBmiT + 0.05);
+      }
+      grip = Math.max(grip || 0, strT) + 2;
+    }
+
     const lowMassSmi = smi != null && smi < massT;
     const lowMassBmi = asmBmi != null && asmBmi < asmBmiT;
     const lowMass = lowMassSmi || lowMassBmi;
     const lowStrength = grip != null && grip < strT;
-    const queryResult = new URLSearchParams(window.location.search).get("a");
-    const abnormalOverride = queryResult === "true" ? true : queryResult === "false" ? false : null;
     const isSarc = abnormalOverride ?? (lowMass && lowStrength);
 
     // 臨床流程只有兩種結果文字，標題依指定內容呈現、不可改動；
@@ -2748,12 +2761,10 @@ class Component extends DCLogic {
 
     const chip = (bg, tx) => ({ fontSize: 12, fontWeight: 700, padding: "5px 12px", borderRadius: 100, background: bg, color: tx, whiteSpace: "nowrap" });
     const obese = waistCalf != null && waistCalf > waistCalfT;
-    const hasAbnormality = abnormalOverride ?? (lowMass || lowStrength);
-    const tags = [{
-      text: !hasResult ? "資料不足" : hasAbnormality ? "有異常" : "未見異常",
-      style: chip(!hasResult ? "var(--grey-100)" : hasAbnormality ? "var(--red-50)" : "var(--green-50)",
-        !hasResult ? "var(--grey-600)" : hasAbnormality ? "var(--red-500)" : "var(--green-700)"),
-    }];
+    const tags = [];
+    if (isSarc) tags.push({ text: "符合肌少症診斷", style: chip("var(--red-50)", "var(--red-500)") });
+    if (lowStrength) tags.push({ text: "肌力低下", style: chip("var(--orange-50)", "var(--orange-500)") });
+    if (lowMass) tags.push({ text: "肌肉質量不足", style: chip("var(--orange-50)", "var(--orange-500)") });
 
     // 評估結果三個指標：ASM 總量無門檻，SMI 與 ASM/BMI 顯示門檻與超標樣式
     const refSmi = `標準值 ≥ ${massT.toFixed(1)} kg/m²`;

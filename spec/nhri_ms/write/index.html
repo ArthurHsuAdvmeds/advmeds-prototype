@@ -2971,7 +2971,7 @@ class Component extends DCLogic {
     const tags = [];
     if (isSarc) tags.push({ text: "符合肌少症診斷", style: chip("var(--red-50)", "var(--red-500)") });
     if (lowStrength) tags.push({ text: "肌力低下", style: chip("var(--orange-50)", "var(--orange-500)") });
-    if (lowMass) tags.push({ text: "肌肉質量不足", style: chip("var(--red-50)", "var(--red-500)") });
+    if (lowMass) tags.push({ text: "肌肉質量不足", style: chip("var(--orange-50)", "var(--orange-500)") });
 
     // 評估結果三個指標：ASM 總量無門檻，SMI 與 ASM/BMI 顯示門檻與超標樣式
     const asmSource = s.asmMode === "asm" ? "右上肢 + 左上肢 + 右下肢 + 左下肢"
