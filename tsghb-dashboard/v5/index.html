@@ -13611,40 +13611,22 @@
         </div>
       </div>
 
-      <div class="command-compare-grid">
-        <article class="command-compare-card compare-total-card">
-          <div class="command-compare-card-head">
-            <div>
-              <h3>平台總通報件數</h3>
-              <p id="commandCompareTotalSubtitle">各年度 1/1－9/25 累計通報案件</p>
-            </div>
-            <span class="command-compare-unit">件</span>
-          </div>
-
-          <div class="command-compare-total-chart" id="commandCompareTotalChart">
-            <div class="compare-yaxis">
-              <span>450</span><span>300</span><span>150</span><span>0</span>
-            </div>
-            <div class="compare-total-plot" id="compareTotalPlot"></div>
-          </div>
-        </article>
-
-        <article class="command-compare-card compare-risk-card">
-          <div class="command-compare-card-head">
-            <div>
-              <h3>通報案件風險分佈</h3>
-              <p id="commandCompareRiskSubtitle">各年度同期通報案件之低／中／高風險占比</p>
-            </div>
-            <div class="compare-risk-legend">
-              <span><i class="low"></i>低風險</span>
-              <span><i class="medium"></i>中風險</span>
-              <span><i class="high"></i>高風險</span>
-            </div>
-          </div>
-
-          <div class="compare-risk-body" id="compareRiskBody"></div>
-        </article>
+      <!-- v5：同期比較改為比較「案件處理效率指標」，並可依通報類別篩選 -->
+      <div class="analysis-filter-row command-compare-filter-row">
+        <span class="analysis-filter-label">通報類別分析</span>
+        <div class="risk-filter" id="commandCompareTypeFilter">
+          <button type="button" class="risk-filter-btn active" data-compare-type="all">全部</button>
+          <button type="button" class="risk-filter-btn" data-compare-type="emergency">緊急醫療</button>
+          <button type="button" class="risk-filter-btn" data-compare-type="optimization">優化計畫</button>
+        </div>
+        <span class="command-compare-legend">
+          <i class="better"></i>較去年改善
+          <i class="worse"></i>較去年退步
+          <i class="neutral"></i>僅供參考（占比類）
+        </span>
       </div>
+
+      <div class="command-compare-metrics" id="commandCompareMetrics"></div>
     </div>
   </section>
 </div>
@@ -23494,4 +23476,293 @@ document.addEventListener('click',event=>{
 #hospitalUnableDialog .hospital-unable-table td{ font-size:15px !important; padding:11px 12px !important; }
 #hospitalUnableDialog .hospital-unable-table th button{ font-size:15px !important; }
 #hospitalUnableDialog .hospital-unable-foot{ margin-top:10px !important; padding:0 !important; border:0 !important; font-size:14px !important; }
+</style>
+
+
+<script id="v5-command-compare-efficiency">
+/* =========================================================================
+   v5 — 指揮儀表板「同期比較」改為比較案件處理效率指標
+   -------------------------------------------------------------------------
+   指標與分組對齊「案件處理效率指標」四個頁籤；2026 年數值 = 效率頁本年度數值，
+   2024、2025 為原型推算的同期數值（固定種子，重新整理不會跳動）。
+   上方「同月比較／同期累計／其他月份比較」沿用原本的切換，
+   新增「全部／緊急醫療／優化計畫」篩選：緊急醫療只顯示總覽＋緊急醫療，
+   優化計畫只顯示總覽＋醫院端＋衛生局；總覽的風險處理時間依類別換算。
+   better：'high' 越高越好、'low' 越低越好、'neutral' 占比類不判斷好壞。
+   ========================================================================= */
+(()=>{
+  const GROUPS=[
+    {id:'overview',title:'總覽｜不同風險個案處理時間（平均）',types:['all','emergency','optimization'],rows:[
+      {key:'riskHigh',name:'高風險個案處理時間',unit:'天',base:1.6,better:'low'},
+      {key:'riskMedium',name:'中風險個案處理時間',unit:'天',base:3.4,better:'low'},
+      {key:'riskLow',name:'低風險個案處理時間',unit:'天',base:5.8,better:'low'}
+    ]},
+    {id:'emergency',title:'緊急醫療處置效率',types:['all','emergency'],rows:[
+      {key:'emergencyClose',name:'緊醫案件結案率',unit:'%',base:88.4,better:'high'},
+      {key:'phoneRate',name:'緊醫電話處置率',unit:'%',base:61.7,better:'neutral'},
+      {key:'dispatchRate',name:'緊醫出勤處置率',unit:'%',base:38.3,better:'neutral'},
+      {key:'emergencyAssign',name:'緊醫通報後派案時間',unit:'小時',base:.3,better:'low'},
+      {key:'emergencyAssess',name:'緊醫首次專業評估時間',unit:'小時',base:.7,better:'low'},
+      {key:'emergencyPrepare',name:'緊醫出勤準備時間',unit:'小時',base:1.5,better:'low'},
+      {key:'emergencyPhoneTotal',name:'緊醫電話受理總反應時間',unit:'小時',base:1.0,better:'low'},
+      {key:'emergencyTotal',name:'緊醫出勤總反應時間',unit:'小時',base:2.5,better:'low'}
+    ]},
+    {id:'hospital',title:'優化計畫醫院端處置效率',types:['all','optimization'],rows:[
+      {key:'hospitalOpen',name:'衛生局轉介案件開案率',unit:'%',base:82.6,better:'high'},
+      {key:'reviewAgree',name:'暫不轉介覆核同意率',unit:'%',base:74.1,better:'neutral'},
+      {key:'reviewReject',name:'暫不轉介覆核駁回率',unit:'%',base:25.9,better:'neutral'},
+      {key:'nonReferralIntervention',name:'暫不轉介案件醫療介入率',unit:'%',base:18.7,better:'high'},
+      {key:'reviewTime',name:'暫不轉介案件覆核時間',unit:'天',base:.6,better:'low'},
+      {key:'referralAssign',name:'轉介案件派案時間',unit:'小時',base:.3,better:'low'},
+      {key:'referralContact',name:'轉介案件首次聯繫時間',unit:'小時',base:4.2,better:'low'},
+      {key:'afterAssignContact',name:'派案後首次聯繫時間',unit:'小時',base:3.1,better:'low'},
+      {key:'firstProfessional',name:'首次專業評估時間',unit:'天',base:1.2,better:'low'},
+      {key:'replyBureau',name:'回覆衛生局時間',unit:'天',base:1.5,better:'low'}
+    ]},
+    {id:'bureau',title:'優化計畫衛生局處置效率',types:['all','optimization'],rows:[
+      {key:'bureauReferral',name:'衛生局醫療轉介率',unit:'%',base:58.2,better:'high'},
+      {key:'bureauToHospital',name:'衛生局轉介本院率',unit:'%',base:41.6,better:'high'},
+      {key:'hospitalShare',name:'本院醫療轉介占率',unit:'%',base:71.5,better:'high'},
+      {key:'nonReferralRate',name:'衛生局暫不轉介率',unit:'%',base:41.8,better:'low'},
+      {key:'bureauVisit',name:'衛生局訪視時間',unit:'天',base:1.8,better:'low'},
+      {key:'bureauDecision',name:'衛生局分流決策時間',unit:'天',base:.9,better:'low'},
+      {key:'bureauReply',name:'衛生局回覆通報時間',unit:'天',base:1.1,better:'low'}
+    ]}
+  ];
+  const YEARS=[{year:2024,roc:'民國113年'},{year:2025,roc:'民國114年'},{year:2026,roc:'民國115年'}];
+  const CURRENT_MONTH=9, CURRENT_DAY=25;
+  /* 總覽的風險處理時間依通報類別換算（緊急醫療以小時級完成受理，優化計畫以首次訪視計） */
+  const RISK_TYPE_FACTOR={all:1,emergency:.35,optimization:1.15};
+
+  let compareType='all';
+
+  /* 字串雜湊 → 0~1，讓推算值固定 */
+  function hash(str){
+    let h=2166136261;
+    for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); }
+    return ((h>>>0)%10000)/10000;
+  }
+  const isRate=row=>row.unit==='%';
+  const round1=v=>Math.round(v*10)/10;
+  const clampRate=v=>Math.max(.1,Math.min(99.9,v));
+
+  /* 由 2026 往回推 2025、2024：rate 以百分點、時間以倍率退回 */
+  function yearValues(row,mode,month){
+    const base=row.key.startsWith('risk') ? row.base*RISK_TYPE_FACTOR[compareType] : row.base;
+    const h1=hash(row.key+'a'), h2=hash(row.key+'b');
+    let v2025, v2024;
+    if(isRate(row)){
+      const step1=1.5+3.5*h1, step2=1+3*h2;
+      const dir=row.better==='low' ? 1 : row.better==='high' ? -1 : (h1<.5?-1:1);
+      v2025=clampRate(base+dir*step1);
+      v2024=clampRate(v2025+dir*step2);
+    }else{
+      v2025=base*(1.08+.18*h1);
+      v2024=v2025*(1.05+.15*h2);
+    }
+    const values=[v2024,v2025,base];
+    /* 同月比較／其他月份：各年度依月份小幅波動 */
+    if(mode!=='ytd'){
+      const tag=mode==='customMonth'?`m${month}`:'month';
+      values.forEach((v,i)=>{
+        const j=(hash(row.key+tag+i)-.5)*(isRate(row)?6:.16);
+        values[i]=isRate(row)?clampRate(v+j):v*(1+j);
+      });
+    }
+    return values.map(round1);
+  }
+
+  function fmt(v,row){ return v==null ? '—' : (isRate(row)||v>=10 ? v.toFixed(1) : v.toFixed(1)); }
+
+  function changeCell(row,prev,cur){
+    if(prev==null||cur==null) return `<td class="cmp-change none">—</td>`;
+    const d=round1(cur-prev);
+    if(Math.abs(d)<.05) return `<td class="cmp-change flat">持平</td>`;
+    const up=d>0;
+    let cls='neutral';
+    if(row.better==='high') cls=up?'better':'worse';
+    if(row.better==='low') cls=up?'worse':'better';
+    const unit=isRate(row)?'個百分點':row.unit;
+    return `<td class="cmp-change ${cls}"><b>${up?'▲':'▼'} ${Math.abs(d).toFixed(1)}</b><small>${unit}</small></td>`;
+  }
+
+  function render(){
+    const box=document.getElementById('commandCompareMetrics');
+    if(!box) return;
+    const modeBtn=document.querySelector('#commandCompareMode button.active');
+    const mode=modeBtn?.dataset.mode || 'ytd';
+    const month=Number(document.getElementById('commandCompareMonth')?.value || CURRENT_MONTH);
+    const future=mode==='customMonth' && month>CURRENT_MONTH;
+    const partial=mode==='ytd' || mode==='month' || (mode==='customMonth' && month===CURRENT_MONTH);
+    const currentNote=future?'尚未發生':(partial?`截至 ${CURRENT_MONTH}/${CURRENT_DAY}`:'整月');
+
+    const head=`<thead><tr><th class="cmp-name">指標</th>`
+      +YEARS.map(y=>`<th class="cmp-year${y.year===2026?' current':''}">${y.year}<small>${y.year===2026?currentNote:y.roc}</small></th>`).join('')
+      +`<th class="cmp-change-head">較去年</th></tr></thead>`;
+
+    const groups=GROUPS.filter(g=>g.types.includes(compareType));
+    const html=groups.map(g=>{
+      const rows=g.rows.map(row=>{
+        const vals=yearValues(row,mode,month);
+        if(future) vals[2]=null;
+        const max=Math.max(...vals.filter(v=>v!=null),.0001);
+        const cells=vals.map((v,i)=>`<td class="cmp-val${i===2?' current':''}${v==null?' no-data':''}">`
+          +`<span><b>${fmt(v,row)}</b>${v==null?'':`<em>${row.unit}</em>`}</span>`
+          +`<i class="cmp-bar"><i style="width:${v==null?0:(v/max*100).toFixed(1)}%"></i></i></td>`).join('');
+        return `<tr><th class="cmp-name" scope="row">${row.name}</th>${cells}${changeCell(row,vals[1],vals[2])}</tr>`;
+      }).join('');
+      return `<section class="cmp-group cmp-${g.id}"><h4>${g.title}</h4><div class="cmp-table-wrap"><table class="cmp-table">${head}<tbody>${rows}</tbody></table></div></section>`;
+    });
+    /* 四組長度差很多（3～10 列），依序放進目前較短的一欄，兩欄高度才接近 */
+    const cols=[{h:0,html:''},{h:0,html:''}];
+    groups.forEach((g,i)=>{
+      const col=cols[0].h<=cols[1].h?cols[0]:cols[1];
+      col.h+=g.rows.length+2;
+      col.html+=html[i];
+    });
+    box.innerHTML=cols.map(c=>`<div class="cmp-col">${c.html}</div>`).join('');
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    const filter=document.getElementById('commandCompareTypeFilter');
+    filter?.addEventListener('click',e=>{
+      const btn=e.target.closest('.risk-filter-btn');
+      if(!btn) return;
+      filter.querySelectorAll('.risk-filter-btn').forEach(b=>b.classList.toggle('active',b===btn));
+      compareType=btn.dataset.compareType;
+      render();
+    });
+    document.getElementById('commandCompareMode')?.addEventListener('click',e=>{ if(e.target.closest('button')) setTimeout(render,0); });
+    document.getElementById('commandCompareMonth')?.addEventListener('change',()=>setTimeout(render,0));
+    render();
+  });
+})();
+</script>
+
+<style id="v5-command-compare-efficiency-style">
+/* ---------- 同期比較：版面（工具列／篩選列／指標區） ---------- */
+.dashboard #command #commandComparisonView.active{
+  display:grid !important;
+  grid-template-rows:auto auto minmax(0,1fr) !important;
+  gap:10px !important;
+}
+@media (max-width:1199px){
+  .dashboard #command #commandComparisonView.active{ display:block !important; height:auto !important; }
+  .dashboard #command #commandComparisonView.active > * + *{ margin-top:10px !important; }
+}
+
+/* 篩選列：與其他頁的「通報類別分析」相同樣式 */
+#command .command-compare-filter-row{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px 12px;
+  min-height:34px;
+  margin:0;
+}
+#command .command-compare-filter-row .analysis-filter-label{
+  color:var(--ui-text,#344054);
+  font-size:var(--v5-t5,13px);
+  font-weight:800;
+  white-space:nowrap;
+}
+#command .command-compare-filter-row .risk-filter{ display:flex; align-items:center; gap:6px; margin:0; }
+#command .command-compare-filter-row .risk-filter-btn{
+  min-width:88px;
+  height:var(--ui-control-h,32px);
+  padding:0 13px;
+  border:1px solid #cfcfcf;
+  border-radius:4px;
+  background:#fff;
+  color:#555;
+  font-size:var(--v5-t4,12px);
+  font-weight:500;
+  cursor:pointer;
+}
+#command .command-compare-filter-row .risk-filter-btn:hover{ border-color:var(--ui-primary,#218fee); color:var(--ui-primary,#218fee); background:#f7fbff; }
+#command .command-compare-filter-row .risk-filter-btn.active{ border-color:var(--ui-primary,#218fee); background:var(--ui-primary,#218fee); color:#fff; font-weight:700; }
+#command .command-compare-legend{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:4px 6px;
+  color:#667085;
+  font-size:var(--v5-t3,12px);
+}
+#command .command-compare-legend i{ width:10px; height:10px; border-radius:3px; margin-left:8px; }
+#command .command-compare-legend i.better{ background:#16a37f; }
+#command .command-compare-legend i.worse{ background:#e5484d; }
+#command .command-compare-legend i.neutral{ background:#98a2b3; }
+
+/* ---------- 指標區：四組表格，桌機兩欄、區內捲動 ---------- */
+#command .command-compare-metrics{
+  min-height:0;
+  overflow:auto;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  align-content:start;
+  gap:12px;
+  padding-bottom:4px;
+}
+@media (max-width:1199px){ #command .command-compare-metrics{ grid-template-columns:1fr; overflow:visible; } }
+#command .cmp-col{ min-width:0; display:flex; flex-direction:column; gap:12px; }
+#command .cmp-col:empty{ display:none; }
+#command .cmp-group{
+  min-width:0;
+  border:1px solid #dfe5ec;
+  border-radius:10px;
+  background:#fff;
+  padding:12px 14px 6px;
+}
+#command .cmp-group h4{ margin:0 0 8px; color:#27364a; font-size:var(--v5-t5,15px); font-weight:800; }
+#command .cmp-overview h4{ color:#344054; }
+#command .cmp-emergency{ border-top:3px solid #218fee; }
+#command .cmp-hospital{ border-top:3px solid #16a37f; }
+#command .cmp-bureau{ border-top:3px solid #6974cd; }
+#command .cmp-overview{ border-top:3px solid #98a2b3; }
+#command .cmp-table-wrap{ overflow-x:auto; }
+#command .cmp-table{ width:100%; border-collapse:collapse; table-layout:fixed; min-width:560px; }
+#command .cmp-table th,
+#command .cmp-table td{ padding:7px 6px; border-bottom:1px solid #eef1f4; text-align:right; vertical-align:middle; }
+#command .cmp-table tbody tr:last-child > *{ border-bottom:0; }
+#command .cmp-table thead th{ color:#667085; font-size:var(--v5-t3,12px); font-weight:700; line-height:1.2; white-space:nowrap; }
+#command .cmp-table thead th small{ display:block; margin-top:2px; color:#98a2b3; font-size:var(--v5-t1,11px); font-weight:500; }
+#command .cmp-table thead th.current{ color:#218fee; }
+#command .cmp-table .cmp-name{ width:34%; text-align:left; color:#344054; font-size:var(--v5-t4,13px); font-weight:700; line-height:1.35; }
+#command .cmp-table thead .cmp-name{ color:#667085; font-size:var(--v5-t3,12px); }
+#command .cmp-table .cmp-change-head{ width:15%; }
+#command .cmp-val span{ display:block; white-space:nowrap; }
+#command .cmp-val b{ color:#475467; font-size:var(--v5-t5,15px); font-weight:700; }
+#command .cmp-val em{ margin-left:2px; color:#98a2b3; font-size:var(--v5-t1,11px); font-style:normal; }
+#command .cmp-val.current b{ color:#218fee; font-size:calc(var(--v5-t5,15px) + 2px); }
+#command .cmp-val.no-data b{ color:#c0c7d0; }
+#command .cmp-bar{ display:block; height:4px; margin-top:4px; width:100%; border-radius:999px; background:#eef1f4; overflow:hidden; }
+#command .cmp-bar > i{ display:block; height:100%; border-radius:999px; background:#c3cfdb; }
+#command .cmp-val.current .cmp-bar > i{ background:#218fee; }
+#command .cmp-change{ white-space:nowrap; font-size:var(--v5-t3,12px); }
+#command .cmp-change b{ font-weight:800; }
+#command .cmp-change small{ display:block; margin-top:1px; font-size:var(--v5-t1,11px); opacity:.85; }
+#command .cmp-change.better{ color:#16a37f; }
+#command .cmp-change.worse{ color:#e5484d; }
+#command .cmp-change.neutral,
+#command .cmp-change.flat,
+#command .cmp-change.none{ color:#98a2b3; }
+
+/* 窄螢幕：取消兩欄分組，回到 總覽 → 緊急醫療 → 醫院端 → 衛生局 的原順序 */
+@media (max-width:1199px){
+  #command .cmp-col{ display:contents; }
+  #command .cmp-overview{ order:1; } #command .cmp-emergency{ order:2; }
+  #command .cmp-hospital{ order:3; } #command .cmp-bureau{ order:4; }
+}
+/* 手機：不左右捲動，省略 2024 欄與長條，保留 2025、2026 與較去年 */
+@media (max-width:599px){
+  #command .cmp-table{ min-width:0; }
+  #command .cmp-table tr > :nth-child(2){ display:none; }
+  #command .cmp-table .cmp-name{ width:40%; }
+  #command .cmp-table .cmp-change-head{ width:22%; }
+  #command .cmp-bar{ display:none; }
+  #command .cmp-group{ padding:10px 10px 4px; }
+  #command .cmp-table th, #command .cmp-table td{ padding:7px 4px; }
+}
 </style>
