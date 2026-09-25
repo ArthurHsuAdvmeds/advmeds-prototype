@@ -12963,40 +12963,6 @@
     </div>
 
     <div class="hospital-split-layout" id="hospitalSplitLayout">
-      <!-- Left: Unable to intake -->
-      <article class="hospital-card hospital-unable-card hospital-unable-full" data-hospital-kind="optimization">
-        <div class="hospital-card-head hospital-unable-head">
-          <div>
-            <h3>優化計畫無法收案</h3>
-          </div>
-          <div class="hospital-unable-total">
-            <span>總無法收案</span>
-            <strong id="hospitalUnableTotal">60</strong>
-          </div>
-        </div>
-
-        <div class="hospital-unable-table-wrap hospital-unable-table-full">
-          <table class="hospital-unable-table">
-            <thead>
-              <tr>
-                <th>無法收案原因</th>
-                <th class="count-col">
-                  <button type="button" id="hospitalUnableSort">
-                    人數 <span id="hospitalUnableSortIcon">↓</span>
-                  </button>
-                </th>
-                <th>百分比</th>
-              </tr>
-            </thead>
-            <tbody id="hospitalUnableTbody"></tbody>
-          </table>
-        </div>
-
-        <div class="hospital-unable-foot">
-          百分比＝各原因無法收案數量 ÷ 總無法收案數量
-        </div>
-      </article>
-
       <!-- Right: HIS outcome indicators -->
       <section class="hospital-his-section hospital-his-right">
         <div class="hospital-his-head">
@@ -13051,9 +13017,63 @@
             <div class="hospital-his-bar"><i style="width:72.9%"></i></div>
             <small>平台個案轉介至三總北投居家、門診或住院數 ÷ 已結案個案數</small>
           </article>
+
+          <article class="hospital-his-card unable-summary" data-hospital-kind="optimization" id="hospitalUnableCard" role="button" tabindex="0" aria-haspopup="dialog">
+            <div class="hospital-his-label">優化計畫無法收案</div>
+            <strong><span id="hospitalUnableCardTotal">60</span> <em>件</em></strong>
+            <ol class="hospital-unable-top" id="hospitalUnableTop"></ol>
+            <span class="hospital-unable-open">查看全部無法收案原因 <i aria-hidden="true">›</i></span>
+          </article>
         </div>
       </section>
     </div>
+
+    <!-- v5：左側「優化計畫無法收案」收成右側一張卡片，點擊後以 dialog 顯示完整原因表 -->
+    <dialog class="v5-dialog hospital-unable-dialog" id="hospitalUnableDialog" aria-labelledby="hospitalUnableDialogTitle">
+      <div class="v5-dialog-shell">
+        <div class="v5-dialog-head">
+          <div>
+            <span class="v5-dialog-eyebrow">醫療機構端處理成效分析</span>
+            <h3 id="hospitalUnableDialogTitle">優化計畫無法收案原因</h3>
+          </div>
+          <button type="button" class="v5-dialog-close" data-close-dialog aria-label="關閉">×</button>
+        </div>
+        <div class="v5-dialog-body">
+          <article class="hospital-card hospital-unable-card hospital-unable-full" data-hospital-kind="optimization">
+            <div class="hospital-card-head hospital-unable-head">
+              <div>
+                <h3>優化計畫無法收案</h3>
+              </div>
+              <div class="hospital-unable-total">
+                <span>總無法收案</span>
+                <strong id="hospitalUnableTotal">60</strong>
+              </div>
+            </div>
+
+            <div class="hospital-unable-table-wrap hospital-unable-table-full">
+              <table class="hospital-unable-table">
+                <thead>
+                  <tr>
+                    <th>無法收案原因</th>
+                    <th class="count-col">
+                      <button type="button" id="hospitalUnableSort">
+                        人數 <span id="hospitalUnableSortIcon">↓</span>
+                      </button>
+                    </th>
+                    <th>百分比</th>
+                  </tr>
+                </thead>
+                <tbody id="hospitalUnableTbody"></tbody>
+              </table>
+            </div>
+
+            <div class="hospital-unable-foot">
+              百分比＝各原因無法收案數量 ÷ 總無法收案數量
+            </div>
+          </article>
+        </div>
+      </div>
+    </dialog>
   </section>
 
   <!-- 8: Hospital internal control indicators -->
@@ -13139,9 +13159,7 @@
             <div class="snq-card-title">緊急醫療結案後轉介至本院醫療系統比例</div>
             <div class="snq-card-value"><strong>68.4%</strong><span>104 / 152 件</span></div>
             <div class="snq-progress"><i style="width:68.4%"></i></div>
-            <button type="button" class="snq-expand-toggle" aria-expanded="false">
-              <span>查看各項轉介比例（門診／居家／住院）</span><i aria-hidden="true">▾</i>
-            </button>
+            <span class="snq-open-hint">點擊查看門診／居家／住院各自比例 <i aria-hidden="true">›</i></span>
             <div class="snq-breakdown" hidden>
               <div class="snq-breakdown-grid">
                 <div class="snq-sub opd" data-snq-sub-base="62.5" title="(於結案日後在 HIS 系統有門診就醫紀錄之個案數/總通報個案數)*100%">
@@ -13176,9 +13194,7 @@
             <div class="snq-card-title">優化計劃結案後轉介至本院醫療系統比例</div>
             <div class="snq-card-value"><strong>54.8%</strong><span>121 / 221 件</span></div>
             <div class="snq-progress"><i style="width:54.8%"></i></div>
-            <button type="button" class="snq-expand-toggle" aria-expanded="false">
-              <span>查看各項轉介比例（門診／居家／住院）</span><i aria-hidden="true">▾</i>
-            </button>
+            <span class="snq-open-hint">點擊查看門診／居家／住院各自比例 <i aria-hidden="true">›</i></span>
             <div class="snq-breakdown" hidden>
               <div class="snq-breakdown-grid">
                 <div class="snq-sub opd" data-snq-sub-base="54.3" title="(於結案日後在 HIS 系統有門診就醫紀錄之個案數/總通報個案數)*100%">
@@ -13211,6 +13227,26 @@
         </div>
       </section>
     </div>
+
+    <!-- v5：點擊「結案後轉介至本院醫療系統比例」卡片開啟 -->
+    <dialog class="v5-dialog snq-referral-dialog" id="snqReferralDialog" aria-labelledby="snqReferralDialogTitle">
+      <div class="v5-dialog-shell">
+        <div class="v5-dialog-head">
+          <div>
+            <span class="v5-dialog-eyebrow">醫院內控指標(SNQ)｜轉介去向</span>
+            <h3 id="snqReferralDialogTitle">結案後轉介至本院醫療系統比例</h3>
+          </div>
+          <button type="button" class="v5-dialog-close" data-close-dialog aria-label="關閉">×</button>
+        </div>
+        <div class="v5-dialog-body">
+          <div class="snq-dialog-summary">
+            <div><span>任一項（門診、居家或住院）</span><strong id="snqReferralDialogValue">68.4%</strong></div>
+            <em id="snqReferralDialogCount">104 / 152 件</em>
+          </div>
+          <div class="snq-dialog-breakdown" id="snqReferralDialogBody"></div>
+        </div>
+      </div>
+    </dialog>
   </section>
 
   <!-- 9 -->
@@ -16081,6 +16117,27 @@ document.addEventListener('DOMContentLoaded', () => {
       if(icon) icon.textContent = hospitalUnableSortDesc ? '↓' : '↑';
       const totalEl=document.getElementById('hospitalUnableTotal');
       if(totalEl) totalEl.textContent=total;
+      /* v5：右側摘要卡片顯示總數與前三大原因（固定由多到少，不受表格排序影響） */
+      const cardTotal=document.getElementById('hospitalUnableCardTotal');
+      if(cardTotal) cardTotal.textContent=total;
+      const top=document.getElementById('hospitalUnableTop');
+      if(top){
+        top.innerHTML=[...hospitalUnableRows].sort((a,b)=>b.count-a.count).slice(0,3).map(r=>
+          `<li><span>${r.reason}</span><b>${r.count} 件</b><em>${(r.count/total*100).toFixed(1)}%</em></li>`
+        ).join('');
+      }
+    }
+
+    /* v5：點擊摘要卡片開啟完整原因表 */
+    const hospitalUnableCard=document.getElementById('hospitalUnableCard');
+    const hospitalUnableDialog=document.getElementById('hospitalUnableDialog');
+    if(hospitalUnableCard && hospitalUnableDialog){
+      const openUnable=()=>{
+        if(typeof hospitalUnableDialog.showModal==='function') hospitalUnableDialog.showModal();
+        else hospitalUnableDialog.setAttribute('open','');
+      };
+      hospitalUnableCard.addEventListener('click',openUnable);
+      hospitalUnableCard.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openUnable(); } });
     }
 
     const hospitalUnableSortBtn=document.getElementById('hospitalUnableSort');
@@ -17179,6 +17236,9 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(unable) unable.hidden=state.type==='emergency';
     if(emergency) emergency.hidden=state.type==='optimization';
     if(optimization) optimization.hidden=state.type==='emergency';
+    /* v5：無法收案摘要卡片只屬於優化計畫 */
+    const unableCard=document.getElementById('hospitalUnableCard');
+    if(unableCard) unableCard.hidden=state.type==='emergency';
     split?.classList.toggle('hospital-single-column',state.type==='emergency');
 
     // Light date-sensitive mock values, preserving the current prototype scale.
@@ -17232,24 +17292,22 @@ document.addEventListener('DOMContentLoaded',()=>{
     wireFilter('hospital','data-hospital-type',updateHospital);
     wireFilter('snq','data-snq-type',updateSnq);
 
-    /* v5：點擊「結案後轉介至本院醫療系統比例」卡片，展開門診／居家／住院各自的比例 */
-    const snqDashboard=document.querySelector('#snq .snq-dashboard');
+    /* v5：點擊「結案後轉介至本院醫療系統比例」卡片，以 dialog 顯示門診／居家／住院各自的比例。
+       卡片內隱藏的 .snq-breakdown 由 updateSnq 隨篩選更新，開啟時複製到 dialog。 */
+    const snqDialog=document.getElementById('snqReferralDialog');
+    const openSnqDialog=card=>{
+      if(!snqDialog) return;
+      snqDialog.querySelector('#snqReferralDialogTitle').textContent=card.querySelector('.snq-card-title').textContent;
+      snqDialog.querySelector('#snqReferralDialogValue').textContent=card.querySelector('.snq-card-value strong').textContent;
+      snqDialog.querySelector('#snqReferralDialogCount').textContent=card.querySelector('.snq-card-value span').textContent;
+      snqDialog.querySelector('#snqReferralDialogBody').innerHTML=card.querySelector('.snq-breakdown').innerHTML;
+      if(typeof snqDialog.showModal==='function') snqDialog.showModal(); else snqDialog.setAttribute('open','');
+    };
     document.querySelectorAll('#snq .snq-card-referral').forEach(card=>{
-      const toggle=card.querySelector('.snq-expand-toggle');
-      const panel=card.querySelector('.snq-breakdown');
-      if(!toggle || !panel) return;
-      const setOpen=open=>{
-        card.classList.toggle('expanded',open);
-        toggle.setAttribute('aria-expanded',open?'true':'false');
-        toggle.querySelector('span').textContent=open?'收合各項轉介比例':'查看各項轉介比例（門診／居家／住院）';
-        panel.hidden=!open;
-        snqDashboard?.classList.toggle('referral-expanded',!!document.querySelector('#snq .snq-card-referral.expanded'));
-      };
-      card.addEventListener('click',event=>{
-        if(window.getSelection && String(window.getSelection())) return;
-        if(event.target.closest('.snq-breakdown')) return;
-        setOpen(!card.classList.contains('expanded'));
-      });
+      card.setAttribute('role','button');
+      card.setAttribute('tabindex','0');
+      card.addEventListener('click',()=>{ if(!(window.getSelection && String(window.getSelection()))) openSnqDialog(card); });
+      card.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openSnqDialog(card); } });
     });
   });
 })();
@@ -23022,91 +23080,150 @@ img{ max-width:100%; height:auto; }
 
 <style id="v5-snq-referral-breakdown">
 /* =========================================================================
-   v5 — 院內 SNQ：結案後轉介至本院醫療系統比例，點擊展開門診／居家／住院
+   v5 — 院內 SNQ：點擊「結案後轉介至本院醫療系統比例」卡片，以 dialog 顯示門診／居家／住院
    -------------------------------------------------------------------------
    各項分母同為總通報個案數；同一個案可同時有多種就醫紀錄，
    所以三項相加會超過卡片上的總比例（任一項）。
-   展開時把下方區塊的列高放大，上方四張卡原本就留有大量空白。
+   卡片內的 .snq-breakdown 永遠隱藏，只當作 updateSnq 更新數字的資料來源。
    ========================================================================= */
 #snq .snq-card-referral{ cursor:pointer; transition:border-color .15s ease, box-shadow .15s ease; }
-#snq .snq-card-referral:hover{ border-color:#b9d8f5; }
-#snq .snq-card-referral.expanded{ border-color:#8cc3f2; box-shadow:0 0 0 2px rgba(33,143,238,.08); background:#fff; }
-#snq .snq-expand-toggle{
+#snq .snq-card-referral:hover,
+#snq .snq-card-referral:focus-visible{ border-color:#8cc3f2; box-shadow:0 0 0 2px rgba(33,143,238,.10); outline:none; }
+#snq .snq-card-referral .snq-breakdown{ display:none !important; }
+#snq .snq-open-hint{
   align-self:flex-start;
   display:inline-flex;
   align-items:center;
   gap:6px;
   margin-top:10px;
-  padding:5px 11px;
+  padding:5px 12px;
   border:1px solid #cfe3f6;
   border-radius:999px;
   background:#f3f9ff;
   color:#1f7fd6;
-  font:inherit;
-  font-size:12.5px;
+  font-size:13px;
   font-weight:700;
   line-height:1.2;
-  cursor:pointer;
 }
-#snq .snq-expand-toggle:hover{ background:#e7f2fe; border-color:#9fcaf1; }
-#snq .snq-expand-toggle i{ font-style:normal; transition:transform .15s ease; }
-#snq .snq-card-referral.expanded .snq-expand-toggle i{ transform:rotate(180deg); }
-#snq .snq-breakdown{ margin-top:10px; cursor:default; }
-#snq .snq-breakdown[hidden]{ display:none; }
-#snq .snq-breakdown-grid{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:8px;
+#snq .snq-open-hint i{ font-style:normal; font-size:15px; }
+#snq .snq-card-referral:hover .snq-open-hint{ background:#e7f2fe; border-color:#9fcaf1; }
+
+/* ---------- dialog 內容 ---------- */
+#snqReferralDialog .snq-dialog-summary{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px 16px;
+  border:1px solid #e3e9ef;
+  border-radius:10px;
+  background:#f8fbfe;
 }
-#snq .snq-sub{
+#snqReferralDialog .snq-dialog-summary span{ display:block; color:#667085; font-size:14px; font-weight:700; }
+#snqReferralDialog .snq-dialog-summary strong{ display:block; margin-top:4px; color:#218fee; font-size:38px; line-height:1; font-weight:700; }
+#snqReferralDialog .snq-dialog-summary em{ color:#7d8898; font-size:15px; font-style:normal; white-space:nowrap; }
+#snqReferralDialog .snq-dialog-breakdown{ margin-top:14px; }
+#snqReferralDialog .snq-breakdown-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+#snqReferralDialog .snq-sub{
   min-width:0;
   display:grid;
   grid-template-columns:auto 1fr;
   grid-template-areas:"label count" "value value" "bar bar";
   align-items:baseline;
-  row-gap:4px;
-  padding:9px 11px 10px;
+  row-gap:6px;
+  padding:13px 14px 14px;
   border:1px solid #e3e9ef;
-  border-radius:8px;
-  background:#f8fbfe;
+  border-radius:10px;
+  background:#fff;
 }
-#snq .snq-sub-label{ grid-area:label; color:#344054; font-size:13px; font-weight:800; }
-#snq .snq-sub em{ grid-area:count; justify-self:end; color:#7d8898; font-size:12px; font-style:normal; white-space:nowrap; }
-#snq .snq-sub strong{ grid-area:value; font-size:24px; line-height:1.1; font-weight:700; letter-spacing:-.3px; }
-#snq .snq-sub-bar{ grid-area:bar; height:6px; border-radius:999px; background:#e8eef5; overflow:hidden; }
-#snq .snq-sub-bar i{ display:block; height:100%; border-radius:999px; transition:width .2s ease; }
-#snq .snq-sub.opd strong{ color:#218fee; }       #snq .snq-sub.opd .snq-sub-bar i{ background:#218fee; }
-#snq .snq-sub.home strong{ color:#16a37f; }      #snq .snq-sub.home .snq-sub-bar i{ background:#16a37f; }
-#snq .snq-sub.inpatient strong{ color:#7a5af0; } #snq .snq-sub.inpatient .snq-sub-bar i{ background:#7a5af0; }
-#snq .snq-breakdown-note{
+#snqReferralDialog .snq-sub-label{ grid-area:label; color:#344054; font-size:16px; font-weight:800; }
+#snqReferralDialog .snq-sub em{ grid-area:count; justify-self:end; color:#7d8898; font-size:14px; font-style:normal; white-space:nowrap; }
+#snqReferralDialog .snq-sub strong{ grid-area:value; font-size:32px; line-height:1.1; font-weight:700; }
+#snqReferralDialog .snq-sub-bar{ grid-area:bar; height:8px; border-radius:999px; background:#e8eef5; overflow:hidden; }
+#snqReferralDialog .snq-sub-bar i{ display:block; height:100%; border-radius:999px; }
+#snqReferralDialog .snq-sub.opd strong{ color:#218fee; }       #snqReferralDialog .snq-sub.opd .snq-sub-bar i{ background:#218fee; }
+#snqReferralDialog .snq-sub.home strong{ color:#16a37f; }      #snqReferralDialog .snq-sub.home .snq-sub-bar i{ background:#16a37f; }
+#snqReferralDialog .snq-sub.inpatient strong{ color:#7a5af0; } #snqReferralDialog .snq-sub.inpatient .snq-sub-bar i{ background:#7a5af0; }
+#snqReferralDialog .snq-breakdown-note{
   display:flex;
   flex-wrap:wrap;
   align-items:center;
   justify-content:space-between;
-  gap:4px 12px;
-  margin-top:8px;
-  padding:7px 10px;
-  border-radius:7px;
+  gap:6px 14px;
+  margin-top:12px;
+  padding:10px 14px;
+  border-radius:8px;
   background:#fff7ed;
   color:#b45309;
-  font-size:12.5px;
-  line-height:1.45;
+  font-size:15px;
+  line-height:1.5;
 }
-#snq .snq-breakdown-note b{ font-weight:700; }
-#snq .snq-breakdown-sum{ color:#7c4a12; white-space:nowrap; }
-#snq .snq-breakdown-sum em{ font-style:normal; font-weight:800; }
-#snq .snq-breakdown-formula{ margin-top:6px; color:#7d8898; font-size:12px; line-height:1.45; }
-/* 展開時卡片說明文字不要再用 margin-top:auto 推到最底 */
-#snq .snq-card-referral.expanded > p{ margin-top:8px; }
-/* 桌機一頁式版面：展開時下方區塊拿較多高度，上方四張卡本來就有空白 */
-@media (min-width:1200px){
-  #snq .snq-dashboard.referral-expanded{ grid-template-rows:minmax(0,.8fr) minmax(0,1.35fr); }
-  #snq .snq-dashboard.referral-expanded .snq-card-referral{ overflow:auto; }
-}
+#snqReferralDialog .snq-breakdown-note b{ font-weight:700; }
+#snqReferralDialog .snq-breakdown-sum{ color:#7c4a12; white-space:nowrap; }
+#snqReferralDialog .snq-breakdown-sum em{ font-style:normal; font-weight:800; }
+#snqReferralDialog .snq-breakdown-formula{ margin-top:10px; color:#667085; font-size:14px; line-height:1.55; }
 @media (max-width:620px){
-  #snq .snq-breakdown-grid{ grid-template-columns:1fr; }
+  #snqReferralDialog .snq-breakdown-grid{ grid-template-columns:1fr; }
+  #snqReferralDialog .snq-dialog-summary strong{ font-size:30px; }
 }
 </style>
+
+<style id="v5-dialog">
+/* v5 新增的 dialog（SNQ 轉介去向、醫療機構端無法收案原因）共用外框 */
+dialog.v5-dialog{
+  width:min(860px,calc(100vw - 32px));
+  max-height:calc(100vh - 48px);
+  padding:0;
+  border:0;
+  border-radius:14px;
+  background:#fff;
+  color:#27364a;
+  box-shadow:0 24px 70px rgba(15,32,56,.28);
+  overflow:hidden;
+}
+dialog.v5-dialog::backdrop{ background:rgba(15,23,42,.42); }
+dialog.v5-dialog .v5-dialog-shell{ display:flex; flex-direction:column; max-height:calc(100vh - 48px); }
+dialog.v5-dialog .v5-dialog-head{
+  flex:0 0 auto;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  padding:18px 22px 14px;
+  border-bottom:1px solid #edf1f4;
+}
+dialog.v5-dialog .v5-dialog-eyebrow{ display:block; color:#218fee; font-size:13px; font-weight:700; }
+dialog.v5-dialog .v5-dialog-head h3{ margin:4px 0 0; color:#1f2a3a; font-size:21px; font-weight:800; line-height:1.35; }
+dialog.v5-dialog .v5-dialog-close{
+  flex:0 0 auto;
+  width:36px;
+  height:36px;
+  border:1px solid #dfe5ec;
+  border-radius:9px;
+  background:#fff;
+  color:#475467;
+  font-size:22px;
+  line-height:1;
+  cursor:pointer;
+}
+dialog.v5-dialog .v5-dialog-close:hover{ background:#f3f6f9; }
+dialog.v5-dialog .v5-dialog-body{ flex:1 1 auto; min-height:0; overflow:auto; padding:18px 22px 22px; }
+@media (max-width:599px){
+  dialog.v5-dialog{ width:100vw; max-width:100vw; max-height:100vh; border-radius:0; }
+  dialog.v5-dialog .v5-dialog-shell{ max-height:100vh; }
+  dialog.v5-dialog .v5-dialog-head{ padding:14px 16px 12px; }
+  dialog.v5-dialog .v5-dialog-body{ padding:14px 16px 18px; }
+}
+</style>
+
+<script id="v5-dialog-behavior">
+/* v5 dialog：× 按鈕與點擊背景關閉 */
+document.addEventListener('click',event=>{
+  const closeBtn=event.target.closest('dialog.v5-dialog [data-close-dialog]');
+  if(closeBtn){ closeBtn.closest('dialog').close(); return; }
+  if(event.target.matches && event.target.matches('dialog.v5-dialog[open]')) event.target.close();
+});
+</script>
 
 
 <style id="v5-typography-1920">
@@ -23117,23 +23234,23 @@ img{ max-width:100%; height:auto; }
    難以閱讀，而卡片內其實還有很多留白。本層只處理「≥1200px 的桌機滿版」
    版面（v84 的 kiosk 斷點），平板／手機的響應式規則完全不動。
 
-   字級分五級，全部用 vw 夾值：1920 寬時達到上限，視窗越窄越接近原字級，
-   所以 1366、1440 等較小的桌機不會因此擠爆。
-       --v5-t1  原 7.5–8.5px   → 1920 時 11.5px
-       --v5-t2  原 9–9.8px     → 12.5px
-       --v5-t3  原 10–10.9px   → 13px
-       --v5-t4  原 11–11.5px   → 13.5px
-       --v5-t5  原 12–13px     → 14.5px
+   字級分五級。Windows 常見的 125% 顯示縮放下，1920×1080 螢幕的瀏覽器視窗只有
+   約 1536px 寬，所以上限在 ≈1500px 就達到，下限一律 ≥ 原字級（1366 也會放大）。
+       --v5-t1  原 7.5–8.5px   → 11–12px
+       --v5-t2  原 9–9.8px     → 11.5–13px
+       --v5-t3  原 10–10.9px   → 12–13.5px
+       --v5-t4  原 11–11.5px   → 12.5–14px
+       --v5-t5  原 12–13px     → 13.5–15px
    權重：舊層最高到 `.dashboard .page:is(#…) :is(.x)` (1,3,0) + !important，
    本層一律以 `.dashboard .page.active:is(#…)`（或單頁 `.dashboard #x.page.active`）
    開頭，再加上元件 class，權重 ≥ (1,4,0)。
    ========================================================================= */
 :root{
-  --v5-t1:clamp(9px,.6vw,11.5px);
-  --v5-t2:clamp(9.5px,.65vw,12.5px);
-  --v5-t3:clamp(10.5px,.68vw,13px);
-  --v5-t4:clamp(11px,.7vw,13.5px);
-  --v5-t5:clamp(12px,.755vw,14.5px);
+  --v5-t1:clamp(11px,.78vw,12px);
+  --v5-t2:clamp(11.5px,.83vw,13px);
+  --v5-t3:clamp(12px,.88vw,13.5px);
+  --v5-t4:clamp(12.5px,.93vw,14px);
+  --v5-t5:clamp(13.5px,1vw,15px);
 }
 
 @media (min-width:1200px){
@@ -23259,6 +23376,15 @@ img{ max-width:100%; height:auto; }
     font-size:var(--v5-t4) !important;
   }
 }
+
+/* 較矮的桌機視窗（例如 125% 縮放下的 1536×730）：圖表內部空間很小，
+   座標軸、圓環中心與圖例改用較小的一級，避免文字互相擠壓或被切掉 */
+@media (min-width:1200px) and (max-height:800px){
+  .dashboard #outcome.page.active .outcome-center span{ font-size:11px !important; line-height:1.2 !important; }
+  .dashboard #reporter.page.active :is(.reporter-y-axis span,.reporter-y-title){ font-size:var(--v5-t2) !important; }
+  .dashboard #reporter.page.active .reporter-pie-legend span,
+  .dashboard #reporter.page.active .reporter-pie-card .reporter-legend span{ font-size:var(--v5-t2) !important; }
+}
 </style>
 
 
@@ -23297,4 +23423,121 @@ img{ max-width:100%; height:auto; }
     grid-row:auto !important;
   }
 }
+</style>
+
+
+<style id="v5-hospital-unable-card">
+/* =========================================================================
+   v5 — 醫療機構端處理成效分析：左側「優化計畫無法收案」原因表收成右側一張摘要卡片
+   -------------------------------------------------------------------------
+   原本左右分欄（左：原因表／右：六張 HIS 指標卡）。改為單欄，
+   摘要卡片放在指標格線最右一欄、跨兩列；點擊後以 dialog 顯示完整原因表（可排序）。
+   ========================================================================= */
+.dashboard #hospital.page #hospitalSplitLayout{
+  grid-template-columns:minmax(0,1fr) !important;
+  grid-template-areas:none !important;
+}
+.dashboard #hospital.page #hospitalSplitLayout > .hospital-his-section{
+  grid-column:1 / -1 !important;
+  width:auto !important;
+  max-width:none !important;
+}
+.dashboard #hospital.page .hospital-his-card[hidden]{ display:none !important; }
+
+@media (min-width:1200px){
+  .dashboard #hospital.page .hospital-his-grid.hospital-his-grid-right{
+    grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.05fr) !important;
+    grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+  }
+  .dashboard #hospital.page .hospital-his-grid.hospital-his-grid-right #hospitalUnableCard{
+    grid-column:4 !important;
+    grid-row:1 / 3 !important;
+  }
+  /* 卡片原本鎖在 220px 高，底下留一大片空白；改為兩列平分區塊高度 */
+  .dashboard #hospital.page.active .hospital-his-section.hospital-his-right{
+    grid-template-rows:62px minmax(0,1fr) !important;
+  }
+  .dashboard #hospital.page.active .hospital-his-grid.hospital-his-grid-right{
+    height:100% !important;
+    min-height:0 !important;
+    align-content:stretch !important;
+  }
+  .dashboard #hospital.page.active .hospital-his-grid.hospital-his-grid-right .hospital-his-card{
+    height:auto !important;
+    max-height:none !important;
+    min-height:0 !important;
+  }
+  /* 選「緊急醫療」時摘要卡片隱藏，回到三欄 */
+  .dashboard #hospital.page .hospital-his-grid.hospital-his-grid-right:has(#hospitalUnableCard[hidden]){
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  }
+}
+
+/* ---------- 摘要卡片 ---------- */
+#hospital #hospitalUnableCard{
+  cursor:pointer;
+  display:flex !important;
+  flex-direction:column;
+  border-top:3px solid #e5764e;
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+#hospital #hospitalUnableCard[hidden]{ display:none !important; }
+#hospital #hospitalUnableCard:hover,
+#hospital #hospitalUnableCard:focus-visible{ box-shadow:0 0 0 2px rgba(229,118,78,.18); outline:none; }
+#hospital #hospitalUnableCard > strong{ color:#e5764e; }
+#hospital #hospitalUnableCard > strong em{ font-style:normal; }
+#hospital .hospital-unable-top{
+  list-style:none;
+  margin:12px 0 0;
+  padding:0;
+  display:grid;
+  gap:8px;
+}
+#hospital .hospital-unable-top li{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  align-items:baseline;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:8px;
+  background:#fff6f1;
+  font-size:14px;
+  line-height:1.35;
+}
+#hospital .hospital-unable-top li span{ color:#344054; font-weight:700; min-width:0; }
+#hospital .hospital-unable-top li b{ color:#c85a33; white-space:nowrap; }
+#hospital .hospital-unable-top li em{ color:#8a95a5; font-style:normal; white-space:nowrap; font-size:13px; }
+#hospital .hospital-unable-open{
+  align-self:flex-start;
+  margin-top:auto;
+  padding:6px 13px;
+  border:1px solid #f3c9b6;
+  border-radius:999px;
+  background:#fff6f1;
+  color:#c85a33;
+  font-size:13px;
+  font-weight:700;
+}
+#hospital #hospitalUnableCard .hospital-unable-top + .hospital-unable-open{ margin-top:auto; }
+#hospital #hospitalUnableCard:hover .hospital-unable-open{ background:#ffece2; }
+
+/* ---------- dialog 內的原因表：解除原本頁面版面的高度鎖定 ---------- */
+#hospitalUnableDialog .hospital-unable-full{
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  border:0 !important;
+  box-shadow:none !important;
+  padding:0 !important;
+  background:transparent !important;
+  display:block !important;
+}
+#hospitalUnableDialog .hospital-unable-full[hidden]{ display:block !important; }
+#hospitalUnableDialog .hospital-unable-head{ padding:0 0 12px !important; border:0 !important; }
+#hospitalUnableDialog .hospital-unable-head h3{ display:none !important; }
+#hospitalUnableDialog .hospital-unable-table-wrap{ height:auto !important; max-height:none !important; overflow:visible !important; }
+#hospitalUnableDialog .hospital-unable-table th,
+#hospitalUnableDialog .hospital-unable-table td{ font-size:15px !important; padding:11px 12px !important; }
+#hospitalUnableDialog .hospital-unable-table th button{ font-size:15px !important; }
+#hospitalUnableDialog .hospital-unable-foot{ margin-top:10px !important; padding:0 !important; border:0 !important; font-size:14px !important; }
 </style>

@@ -327,7 +327,7 @@ footer{
     </div>
     <p class="release-summary">
       以 V4 為基礎：區域分布圖點位加大並合併同址通報、全站字級以 1920×1080 為基準放大、
-      模擬資料補到 2026/09/25，院內 SNQ 的結案後轉介比例可展開看門診／居家／住院。頁面架構未更動。
+      模擬資料補到 2026/09/25，院內 SNQ 的結案後轉介比例可點開 dialog 看門診／居家／住院，醫療機構端的無法收案原因表收成卡片＋dialog。頁面架構未更動。
     </p>
 
     <div class="group">
@@ -387,10 +387,10 @@ footer{
         <li class="item">
           <div class="item-head">
             <span class="item-no">3</span>
-            <h3>結案後轉介至本院醫療系統比例可展開門診／居家／住院<span class="tag new">新增</span></h3>
+            <h3>結案後轉介至本院醫療系統比例：點擊開啟門診／居家／住院明細<span class="tag new">新增</span></h3>
           </div>
           <p>
-            點擊「緊急醫療結案後轉介至本院醫療系統比例」或「優化計劃結案後轉介至本院醫療系統比例」卡片，展開三項各自的比例，每項皆為（於結案日後在 HIS 系統有該項就醫紀錄之個案數／總通報個案數）×100%，並附註「單一個案可能會有重複醫療處置，所以三項比例相加會超過100%」與三項合計。日期與通報類別篩選會同步換算。
+            點擊「緊急醫療結案後轉介至本院醫療系統比例」或「優化計劃結案後轉介至本院醫療系統比例」卡片，開啟 dialog 顯示三項各自的比例，每項皆為（於結案日後在 HIS 系統有該項就醫紀錄之個案數／總通報個案數）×100%，並附註「單一個案可能會有重複醫療處置，所以三項比例相加會超過100%」與三項合計。日期與通報類別篩選會同步換算。
           </p>
           <div class="detail">
             <ul>
@@ -404,22 +404,44 @@ footer{
             <span class="sep">›</span>
             <span class="crumb">通報結案後醫療銜接</span>
             <span class="sep">›</span>
-            <span class="crumb tab">查看各項轉介比例</span>
+            <span class="crumb tab">點擊卡片</span>
           </div>
         </li>
       </ul>
     </div>
 
     <div class="group">
-      <h3 class="group-title">全站</h3>
+      <h3 class="group-title">醫療機構端處理成效分析</h3>
       <ul class="items">
         <li class="item">
           <div class="item-head">
             <span class="item-no">4</span>
+            <h3>「優化計畫無法收案」原因表收成一張卡片，點擊開啟 dialog<span class="tag move">位置調整</span></h3>
+          </div>
+          <p>
+            原本頁面左側整欄是無法收案原因表。V5 改為右側「結案後醫療資源使用分析」格線最右一欄的摘要卡片（跨兩列），
+            顯示總無法收案 60 件與前三大原因；點擊卡片開啟 dialog，內含完整原因表（人數欄仍可排序）。
+            選「緊急醫療」時此卡片隱藏。其餘六張指標卡改為撐滿整個區塊高度。
+          </p>
+          <div class="path">
+            <span class="path-label">點選路徑</span>
+            <span class="crumb nav">醫療機構端處理成效分析</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">優化計畫無法收案</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div class="group">
+      <h3 class="group-title">全站</h3>
+      <ul class="items">
+        <li class="item">
+          <div class="item-head">
+            <span class="item-no">5</span>
             <h3>字級以 1920×1080 為基準放大<span class="tag fix">版面</span></h3>
           </div>
           <p>
-            V4 桌機版有大量 8–11px 的說明文字、座標軸與按鈕。V5 在寬度 ≥1200px 的桌機版面，把這些文字依 1920 寬放大到約 11.5–14.5px（隨視窗寬度縮放，1366 等較小桌機接近原字級）；平板與手機的響應式版面不變。
+            V4 桌機版有大量 8–11px 的說明文字、座標軸與按鈕。V5 在寬度 ≥1200px 的桌機版面，把這些文字放大到約 12–15px。Windows 常見的 125% 顯示縮放下，1920×1080 螢幕的瀏覽器視窗只有約 1536px 寬，所以字級在約 1500px 寬就達到上限，1366 等較小桌機也一併放大；較矮的視窗（高 ≤800px）圖表內文字自動小一級避免擠壓。平板與手機的響應式版面不變。
           </p>
           <div class="path">
             <span class="path-label">點選路徑</span>
@@ -429,7 +451,7 @@ footer{
 
         <li class="item">
           <div class="item-head">
-            <span class="item-no">5</span>
+            <span class="item-no">6</span>
             <h3>修正既有爆版<span class="tag fix">修正</span></h3>
           </div>
           <p>
@@ -445,7 +467,7 @@ footer{
 
         <li class="item">
           <div class="item-head">
-            <span class="item-no">6</span>
+            <span class="item-no">7</span>
             <h3>模擬資料補到 2026/09/25<span class="tag fix">資料</span></h3>
           </div>
           <p>
