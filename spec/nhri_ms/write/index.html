@@ -2952,10 +2952,10 @@ class Component extends DCLogic {
     if (isSarc) {
       bannerTitle = "符合肌少症診斷";
       const massMsg = lowMassSmi ? `SMI ${smi.toFixed(2)} kg/m² 低於 ${massT.toFixed(1)}` : `ASM/BMI ${asmBmi.toFixed(2)} 低於 ${asmBmiT.toFixed(2)}`;
-      bannerDetail = `${massMsg}，且握力 ${grip.toFixed(1)} kg 低於 ${strT.toFixed(1)} kg，已同時符合低肌肉量與低肌力。`;
+      bannerDetail = `建議掛老年醫學科門診接受進一步診治。`;
     } else {
-      bannerTitle = "未符合肌少症診斷";
-      bannerDetail = "AWGS 2025 需同時符合低肌肉量與低肌力，目前未同時符合。";
+      bannerTitle = "未有肌少症";
+      bannerDetail = "恭喜你!請繼續維持良好的運動與營養習慣，享受健康人生!";
     }
     const tc = isSarc
       ? { bg: "var(--red-50)", bd: "var(--red-100)", tx: "var(--red-500)" }
