@@ -2977,7 +2977,7 @@ class Component extends DCLogic {
     const asmSource = s.asmMode === "asm" ? "右上肢 + 左上肢 + 右下肢 + 左下肢"
       : s.asmMode === "mass" ? "直接輸入" : "SMI × 身高²";
     const refSmi = `正常 ≥ ${massT.toFixed(1)} kg/m²`;
-    const refAsmBmi = `門檻 ≥ ${asmBmiT.toFixed(2)}`;
+    const refAsmBmi = `標準值 ≥ ${asmBmiT.toFixed(2)}`;
     const tileBox = (bad) => ({
       borderRadius: "var(--radius-lg)", padding: "16px",
       background: bad ? "var(--red-50)" : "transparent",
