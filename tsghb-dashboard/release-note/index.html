@@ -284,6 +284,9 @@ footer{
   .item h3{font-size:15px}
   .path{font-size:12px}
 }
+
+/* 同一項變更有第二條路徑時，共用上方的分隔線 */
+.path + .path{margin-top:6px;padding-top:0;border-top:0}
 </style>
 </head>
 <body>
@@ -298,10 +301,10 @@ footer{
     </p>
 
     <nav class="entries" aria-label="版本入口">
-      <a class="entry current" href="../v4/"><b>V4</b><span>2026-09-25｜目前版本</span></a>
-      <a class="entry" href="../v3/"><b>V3</b><span>2026-09-06 ～ 09-08</span></a>
-      <a class="entry" href="../v2/"><b>V2</b><span>2026-09-06｜基準版本</span></a>
-      <a class="entry" href="../"><b>入口頁</b><span>自動導向最新版</span></a>
+      <a class="entry current" href="../v4/index.html"><b>V4</b><span>2026-09-25｜目前版本</span></a>
+      <a class="entry" href="../v3/index.html"><b>V3</b><span>2026-09-06 ～ 09-08</span></a>
+      <a class="entry" href="../v2/index.html"><b>V2</b><span>2026-09-06｜基準版本</span></a>
+      <a class="entry" href="../index.html"><b>入口頁</b><span>自動導向最新版</span></a>
     </nav>
   </div>
 </header>
@@ -310,7 +313,7 @@ footer{
 
   <div class="howto">
     <strong>怎麼看「點選路徑」：</strong>
-    深色標籤是左側主選單的頁面名稱，橘色標籤是該頁面內的頁籤或按鈕，灰色標籤是卡片或區塊名稱。
+    深色標籤是頁首下方主選單的頁面名稱，橘色標籤是頁面內的子頁籤或按鈕，灰色標籤是卡片或區塊名稱。
     依序點下去就會看到該項變更。
   </div>
 
@@ -336,11 +339,14 @@ footer{
             <span class="item-no">1</span>
             <h3>緊醫處理流程依受理方式拆成兩張表<span class="tag new">新增</span></h3>
           </div>
-          <p>原本一條時間軸把電話案件與出勤案件混在一起，平均時間會被出勤準備時間拉長。V4 改為兩個獨立流程區塊。</p>
+          <p>
+            原本只有一條時間軸，從「完成通報」一路畫到「實際出勤」，總反應時間 2.5 小時；
+            但電話受理的案件不會出勤，這個時間對它們並不成立。V4 改為兩個獨立的流程區塊。
+          </p>
           <div class="detail">
             <ul>
-              <li><b>① 電話（電話或平台受理）</b>：完成通報 → 完成派案 → 完成受理方式（電話諮詢結案），佔 61.7%</li>
-              <li><b>② 電話＋出勤</b>：在上述流程後再延伸到「實際出勤」，佔 38.3%</li>
+              <li><b>① 電話（電話或平台受理）</b>：完成通報 → 完成派案 → 完成受理方式（電話諮詢結案），占 61.7%（電話處置率）</li>
+              <li><b>② 電話＋出勤</b>：在上述流程後再延伸到「實際出勤」，占 38.3%（出勤處置率），總反應時間 2.5 小時</li>
               <li>電話路徑另列一個總反應時間 1.0 小時（派案 0.3 ＋ 首次專業評估 0.7），此為推算值，詳見本版「待確認事項」</li>
             </ul>
           </div>
@@ -357,20 +363,28 @@ footer{
         <li class="item">
           <div class="item-head">
             <span class="item-no">2</span>
-            <h3>「醫院端」與「衛生局處置效率」兩個頁籤對調位置<span class="tag move">位置調整</span></h3>
+            <h3>「優化計畫醫院端」與「優化計畫衛生局」兩個頁籤對調位置<span class="tag move">位置調整</span></h3>
           </div>
           <p>
             頁籤順序由
-            <em>總覽 → 緊急醫療處置效率 → 衛生局 → 醫院端</em>
+            <em>總覽 → 緊急醫療 → 衛生局 → 醫院端</em>
             改為
-            <em>總覽 → 緊急醫療處置效率 → 醫院端 → 衛生局</em>。
-            總覽頁下方的四張跳轉卡片也同步換位，避免兩處順序不一致。
+            <em>總覽 → 緊急醫療 → 醫院端 → 衛生局</em>（醫院端在左、衛生局在右）。
+            總覽頁下方「各處置面向重點」的三張跳轉卡片中，醫院端與衛生局兩張也同步對調，與頁籤順序一致。
           </p>
           <div class="path">
             <span class="path-label">點選路徑</span>
             <span class="crumb nav">案件處理效率指標</span>
             <span class="sep">›</span>
-            <span class="crumb">頁籤列</span>
+            <span class="crumb">子頁籤列</span>
+          </div>
+          <div class="path">
+            <span class="path-label">另見</span>
+            <span class="crumb nav">案件處理效率指標</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">總覽</span>
+            <span class="sep">›</span>
+            <span class="crumb">各處置面向重點</span>
           </div>
         </li>
 
@@ -380,8 +394,9 @@ footer{
             <h3>「本院醫療轉介占率」定義對齊官方指標清單<span class="tag fix">定義修正</span></h3>
           </div>
           <p>
-            分母文字原本展開成「轉介三總北投 ＋ 轉介他院案件數」，改為官方清單的用字
-            「衛生局轉介醫療機構案件數」。兩者數值相同（291 件），修正是為了避免日後對帳時被當成兩個不同指標。
+            分母原本寫成「轉介三總北投 ＋ 轉介他院案件數」，改為官方清單的用字「衛生局轉介醫療機構案件數」，
+            卡片小字與指標定義彈窗都已更新。兩者其實是同一群案件（轉介三總北投 208 ＋ 轉介他院 83 ＝ 291 件），
+            占率 71.5% 不變；修正是為了避免日後對帳時被當成兩個不同指標。
           </p>
           <div class="path">
             <span class="path-label">點選路徑</span>
@@ -391,7 +406,7 @@ footer{
             <span class="sep">›</span>
             <span class="crumb">本院醫療轉介占率</span>
             <span class="sep">›</span>
-            <span class="crumb">指標定義「i」</span>
+            <span class="crumb tab">「i」指標定義</span>
           </div>
         </li>
 
@@ -405,15 +420,17 @@ footer{
         <li class="item">
           <div class="item-head">
             <span class="item-no">4</span>
-            <h3>追蹤量表「可追蹤率」與「回收率」上下對調<span class="tag move">位置調整</span></h3>
+            <h3>追蹤量表「可追蹤率」與「回收率」主從對調<span class="tag move">位置調整</span></h3>
           </div>
           <p>
-            「可追蹤率」是會議認定較重要的指標，升到主要區塊（含三個月／六個月的進度條），
-            原本佔主位的「回收率」移到下方次要區塊。
+            會議紀錄在「可追蹤率」旁標註「重要」，因此「結案後 3 個月」與「結案後 6 個月」兩張卡都改為：
+            可追蹤率在上方主要區塊（大字＋進度條），原本在主位的「回收率」移到下方，與「無法填答率」並列。
           </p>
           <div class="path">
             <span class="path-label">點選路徑</span>
             <span class="crumb nav">精神症狀改善成效指標</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">評估表填寫狀況</span>
             <span class="sep">›</span>
             <span class="crumb">結案後 3 個月／6 個月</span>
           </div>
@@ -428,12 +445,19 @@ footer{
         <li class="item">
           <div class="item-head">
             <span class="item-no">5</span>
-            <h3>「轉介人所屬單位占比」圓餅圖改為依件數由多到少排序<span class="tag fix">調整</span></h3>
+            <h3>「轉介人所屬單位占比」圓餅圖依占比由大到小排列<span class="tag fix">調整</span></h3>
           </div>
-          <p>原本依資料原始順序排列，改為由大到小；件數相同時以名稱排序，確保每次開啟順序一致。</p>
+          <p>扇形（由 12 點鐘方向順時針）與右側圖例都改為依占比由大到小；占比相同時依單位名稱排序，確保每次開啟順序一致。</p>
+          <p>
+            <b>注意：</b>預設的「全部」資料原本就剛好由大到小，直接看不出差異。
+            請把「通報類別分析」切到「緊急醫療」或「優化計畫」比較 —— 例如緊急醫療下，V3 仍把社政排第一，
+            V4 會正確把占比最高的警察（23.8%）排第一。
+          </p>
           <div class="path">
             <span class="path-label">點選路徑</span>
             <span class="crumb nav">通報者基本資料分析</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">通報類別分析「緊急醫療」</span>
             <span class="sep">›</span>
             <span class="crumb">轉介人所屬單位占比</span>
           </div>
@@ -444,22 +468,22 @@ footer{
             <span class="item-no">6</span>
             <h3>「滿意度調查分數」與「調查回收率」上下對調<span class="tag move">位置調整</span></h3>
           </div>
-          <p>滿意度分數移到上方、調查回收率移到下方；寬螢幕與窄螢幕兩種排版都已同步。</p>
+          <p>滿意度分數移到上方、調查回收率移到下方（寬螢幕為右側上下兩張；窄螢幕單欄時，分數同樣排在回收率之前）。</p>
           <div class="path">
             <span class="path-label">點選路徑</span>
             <span class="crumb nav">通報者基本資料分析</span>
             <span class="sep">›</span>
-            <span class="crumb">平台使用者滿意度調查</span>
+            <span class="crumb">平台使用者滿意度調查分數／回收率</span>
           </div>
         </li>
 
         <li class="item">
           <div class="item-head">
             <span class="item-no">7</span>
-            <h3>滿意度分數改用綠色系色階<span class="tag fix">配色</span></h3>
+            <h3>滿意度分數改用綠色系<span class="tag fix">配色</span></h3>
           </div>
           <p>
-            分數長條由原配色改為深綠到淺綠的七階色票。
+            分數長條改為深綠到淺綠的七階色（分數最高的單位最深），與回收率的暖色系區分開來。
             <b>注意：</b>只有「滿意度分數」改綠色，「調查回收率」仍維持原暖色系 —— 若兩張都要改綠，請告知。
           </p>
           <div class="path">
@@ -479,16 +503,16 @@ footer{
         <li class="item">
           <div class="item-head">
             <span class="item-no">8</span>
-            <h3>年度結案周期改為最新年度在上<span class="tag move">位置調整</span></h3>
+            <h3>年度結案率趨勢改為最新年度在上<span class="tag move">位置調整</span></h3>
           </div>
-          <p>歷年比較的排列由 2023 → 2026 反轉為 <b>2026 → 2025 → 2024 → 2023</b>。</p>
+          <p>會議紀錄中的「年度結案周期」即此圖。年份排列由 2023 → 2026 反轉為 <b>2026 → 2025 → 2024 → 2023</b>，本年度置頂。</p>
           <div class="path">
             <span class="path-label">點選路徑</span>
             <span class="crumb nav">指揮儀表板</span>
             <span class="sep">›</span>
-            <span class="crumb">結案率</span>
+            <span class="crumb tab">結案率</span>
             <span class="sep">›</span>
-            <span class="crumb">歷年比較</span>
+            <span class="crumb">年度結案率趨勢</span>
           </div>
         </li>
 
@@ -498,14 +522,16 @@ footer{
             <h3>結案率整頁字體放大<span class="tag fix">排版</span></h3>
           </div>
           <p>
-            標題、數字、標籤整體放大約 25–30%，投影時後排可讀。
-            <b>注意：</b>目前只套用在「結案率」這一頁 —— 若「整頁字體＋大」指的是整個指揮儀表板，請告知再擴大範圍。
+            原本部分文字只有 8–10 px，投影時看不清楚。桌機寬度（1200 px 以上）的字級普遍放大，
+            以 1600×900 實測約放大 20–45%：中央結案率數字 42 → 61 px、卡片標題 17 → 21 px、各年份與比率 13–15 → 16–20 px。
+            視窗高度較矮時放大幅度會自動收斂，避免擠出卡片。
           </p>
+          <p><b>注意：</b>目前只套用在「結案率」這一頁 —— 若「整頁字體＋大」指的是整個指揮儀表板，請告知再擴大範圍。</p>
           <div class="path">
             <span class="path-label">點選路徑</span>
             <span class="crumb nav">指揮儀表板</span>
             <span class="sep">›</span>
-            <span class="crumb">結案率</span>
+            <span class="crumb tab">結案率</span>
           </div>
         </li>
 
@@ -514,12 +540,14 @@ footer{
             <span class="item-no">10</span>
             <h3>「總通報件數」更名為「平台總通報件數」<span class="tag rename">更名</span></h3>
           </div>
-          <p>明確區分平台收到的通報量與其他來源的案件量。</p>
+          <p>同期比較頁左側長條圖的卡片標題；「同月比較／同期累計／其他月份比較」三種模式共用此標題。</p>
           <div class="path">
             <span class="path-label">點選路徑</span>
             <span class="crumb nav">指揮儀表板</span>
             <span class="sep">›</span>
-            <span class="crumb">同期比較</span>
+            <span class="crumb tab">同期比較</span>
+            <span class="sep">›</span>
+            <span class="crumb">平台總通報件數</span>
           </div>
         </li>
       </ul>
@@ -535,12 +563,13 @@ footer{
             <h3>區域分布圖新增初評風險等級過濾開關<span class="tag new">新增</span></h3>
           </div>
           <p>
-            地圖工具列新增「全部／高風險／中風險／低風險」四段開關，只在下探到臺北市的點位模式出現。
+            地圖工具列新增「全部／高風險／中風險／低風險」四段開關。開啟地圖即為臺北市點位圖，開關就在工具列右側；
+            切回「全臺」層級時開關會自動隱藏。
           </p>
           <div class="detail">
             <ul>
               <li>切換只改點位顯示，不重繪地圖，目前的縮放與平移位置會保留</li>
-              <li>頂部件數、側欄案件數、行政區排行同步換算成篩選後的數字（高 46／中 234／低 140，合計 420）</li>
+              <li>頂部件數、側欄案件數、行政區排行，以及滑過行政區時的提示框，都會同步換算成篩選後的數字（本年度：高 46／中 234／低 140，合計 420）</li>
               <li>單一等級時排行長條改為與最高值比較的長度條（堆疊條在單一等級下永遠是 100%，沒有資訊量）</li>
               <li>圖例會把未選取的等級淡出，兼作「現在看到什麼」的狀態提示</li>
             </ul>
@@ -549,11 +578,11 @@ footer{
             <span class="path-label">點選路徑</span>
             <span class="crumb nav">基本資料</span>
             <span class="sep">›</span>
+            <span class="crumb">臺北市各行政區通報案件數</span>
+            <span class="sep">›</span>
             <span class="crumb tab">查看熱點地圖 ↗</span>
             <span class="sep">›</span>
-            <span class="crumb">下探臺北市</span>
-            <span class="sep">›</span>
-            <span class="crumb">工具列「初評風險」</span>
+            <span class="crumb tab">工具列「初評風險」</span>
           </div>
         </li>
       </ul>
@@ -563,7 +592,7 @@ footer{
     <div class="group">
       <h3 class="group-title">本版待確認事項</h3>
       <div class="open-questions">
-        <h3>以下四點需要需求端回覆後才能定案</h3>
+        <h3>以下五點需要需求端回覆後才能定案</h3>
         <ol>
           <li>
             <b>中風險／低風險個案處理時間的公式。</b>
@@ -579,11 +608,17 @@ footer{
           </li>
           <li>
             <b>院內追蹤「以年計算」的作法。</b>
-            是要（a）把目前的「Ｘ年」佔位換成實際統計年度、（b）加一個年度選擇器，還是（c）改變計算基準本身？
+            「醫院內控指標(SNQ) › 院內追蹤與再住院指標」的定義文字目前寫「在Ｘ年中每年均穩定…」。
+            是要（a）把「Ｘ年」換成實際統計年度、（b）加一個年度選擇器，還是（c）改變計算基準本身？
           </li>
           <li>
             <b>「醫師後台＋緊醫通報（補填已處理完案件）」的範圍。</b>
             看起來屬於醫師後台的功能而非本儀表板。是要在醫師後台實作，還是儀表板上也要有對應呈現？
+          </li>
+          <li>
+            <b>「最新年分在上」是否也套用到同期比較。</b>
+            V4 只反轉了會議點名的年度結案率趨勢；同一個指揮儀表板的「同期比較 › 通報案件風險分佈」
+            仍是 2024 在上、2026 在下，兩張圖的年份方向相反。要一起改嗎？
           </li>
         </ol>
       </div>
@@ -599,7 +634,7 @@ footer{
     </div>
     <p class="release-summary">
       本版改動幅度最大：「案件處理效率指標」整頁重做並改為四頁籤、全站補上響應式與手機版排版、
-      區域分布圖由行政區面量圖改為個案 GPS 點位圖，同時把單檔大小壓到 V2 的三分之一。
+      區域分布圖由行政區面量圖改為個案 GPS 點位圖，同時把單檔大小壓到不到 V2 的三成。
     </p>
 
     <div class="group">
@@ -612,14 +647,15 @@ footer{
           </div>
           <p>
             V2 的這一頁只有「轉介後處理率／平台使用率／首次通報個案介入達成率／首次醫療介入時間（平均）」
-            四張卡片，加上一個「依初評風險下探」。V3 改為依處置主體分頁呈現。
+            四張卡片、一個「依初評風險下探」，以及「全部／緊急醫療／優化計畫」類別切換。
+            V3 依指標清單的歸屬，改為依處置主體分頁呈現。
           </p>
           <div class="detail">
             <ul>
-              <li><b>總覽</b>：不同風險個案處理時間比較 ＋ 各處置面向重點摘要卡（可點擊跳頁）</li>
+              <li><b>總覽</b>：不同風險個案處理時間（平均）＋ 各處置面向重點摘要卡（可點擊跳頁）</li>
               <li><b>緊急醫療處置效率</b>：處置結果與反應時間、緊醫處理流程時間軸</li>
               <li><b>優化計畫衛生局處置效率</b>：衛生局回覆與轉介、暫不轉介原因分布、衛生局處理時間</li>
-              <li><b>優化計畫醫院端處置效率</b>：開案／覆核／醫療介入、本院處理時效</li>
+              <li><b>優化計畫醫院端處置效率</b>：開案、覆核與醫療介入、本院處理時效</li>
               <li>每個指標都加上「指標定義」彈窗，說明分子分母與資料來源</li>
             </ul>
           </div>
@@ -634,7 +670,7 @@ footer{
             <span class="item-no">2</span>
             <h3>修正頁面標題爆版<span class="tag fix">修正</span></h3>
           </div>
-          <p>該頁的眉標文字在部分視窗尺寸下會被切掉，已重新配置格線高度。</p>
+          <p>頁籤列改版後格線高度沒有跟著調整，篩選列壓住下方面板、蓋掉頁面眉標小字；已改為依內容自動決定高度。</p>
           <div class="path">
             <span class="path-label">點選路徑</span>
             <span class="crumb nav">案件處理效率指標</span>
@@ -654,15 +690,16 @@ footer{
             <h3>響應式與手機版排版<span class="tag new">新增</span></h3>
           </div>
           <p>
-            V2 在非預期的視窗尺寸下會爆版，也沒有手機版。V3 補上完整的響應式基礎。
+            V2 在不同視窗大小下版面會跑掉，也缺乏手機版排版。V3 補上一套統一的響應式規則：
+            桌機（1200 px 以上）維持原本「一頁塞滿、不需捲動」的看板設計，較窄的螢幕改為正常上下捲動。
           </p>
           <div class="detail">
             <ul>
-              <li>導覽列在窄螢幕改為可收合／橫向捲動</li>
-              <li>篩選列自動換行，不再把按鈕擠出畫面</li>
-              <li>寬表格與流程圖改為可橫向捲動，不壓縮到看不清</li>
-              <li>多欄版面在窄螢幕降為單欄</li>
-              <li>所有彈窗改為隨視窗縮放、內容可捲動</li>
+              <li>平板以下（1199 px 以下）解除固定高度，內容不再被裁切，改為上下捲動</li>
+              <li>手機（899 px 以下）主選單由 2 欄 × 5 列改為單列、可左右滑動並固定在畫面頂端</li>
+              <li>篩選列改為上下堆疊，按鈕不再被擠出畫面</li>
+              <li>多欄版面收為單欄；過寬的表格與圖表改為在卡片內左右滑動，整頁不會橫向捲動</li>
+              <li>彈窗在手機（599 px 以下）改為全螢幕顯示</li>
             </ul>
           </div>
           <div class="path">
@@ -676,19 +713,20 @@ footer{
         <li class="item">
           <div class="item-head">
             <span class="item-no">4</span>
-            <h3>單檔大小由 2.6 MB 壓到 796 KB<span class="tag fix">效能</span></h3>
+            <h3>單檔大小由 2.7 MB 壓到 791 KB<span class="tag fix">效能</span></h3>
           </div>
           <p>
-            院徽原本是 2.07 MB 的 PNG（以 base64 內嵌），改為 49.7 KB 的無損 WebP，畫質不變，
-            整份檔案縮小約 69%，在行動網路下開啟明顯變快。
+            主因是院徽：原圖為 2047×2047 px 的 PNG（1.55 MB，內嵌進檔案後占 2.07 MB），但畫面上只顯示約 55 px。
+            V3 改為 192×192 px 的無損 WebP（37 KB，內嵌後 49.7 KB，足夠 3 倍高解析螢幕），畫面上看不出差異；
+            整份檔案縮小約 71%，在行動網路下開啟明顯變快。
           </p>
           <div class="detail">
-            補充：先前曾建議改成 SVG，實際比對後發現院徽有金色漸層環與書法字，
-            描繪成 SVG 反而會更大且失真，因此改用無損 WebP。
+            補充：先前曾建議改成 SVG，實際比對後發現院徽是全彩細節圖（金色漸層外環、中英文書法字、雙蛇杖等），
+            描繪成 SVG 反而會更大且失真，因此改用 WebP。
           </div>
           <div class="path">
             <span class="path-label">怎麼確認</span>
-            <span class="crumb">頁面左上角院徽</span>
+            <span class="crumb">頁首院徽</span>
           </div>
         </li>
 
@@ -698,9 +736,9 @@ footer{
             <h3>入口頁自動導向最新版本<span class="tag new">新增</span></h3>
           </div>
           <p>
-            <code>tsghb-dashboard/index.html</code> 原本是 V2 的完整複本（2.7 MB）。
-            改為 3.9 KB 的導向頁：開啟後會自動往後探測有沒有更新的版本資料夾並跳轉，
-            所以固定用這個連結就永遠會停在最新版。目前會落在 V4。
+            <code>tsghb-dashboard/</code> 入口原本是 V2 的完整複本（2.7 MB），每次發版都要整份覆蓋。
+            改為 4.3 KB 的導向頁：開啟後會自動探測是否有更新的版本資料夾並跳轉，
+            所以固定用這個連結就會停在最新版。目前會落在 V4。
           </p>
           <div class="path">
             <span class="path-label">怎麼確認</span>
@@ -720,24 +758,25 @@ footer{
           </div>
           <p>
             V2 是以行政區為單位、依案件數深淺上色的面量圖。V3 改為每一筆通報個案依其地址座標落一個點，
-            顏色代表<b>初評風險</b>（高＝紅／中＝橘／低＝黃），與風險分析頁的色票一致。
+            顏色代表<b>初評風險</b>（高＝紅／中＝橘／低＝黃），與「通報案件風險分析」頁的色票一致。
           </p>
           <div class="detail">
             <ul>
               <li>底圖在點位模式改為中性淺色，只留行政區輪廓，避免面量色干擾點位判讀</li>
-              <li>右側行政區排行的長條改為「初評風險組成」堆疊條</li>
-              <li>點位滑過可看個案編號、行政區、初評風險與座標</li>
-              <li>縮放時點的半徑會反向補償，維持固定的螢幕大小</li>
-              <li>原型階段尚無真實地址，點位以各行政區的實際邊界多邊形取樣產生，接上真實資料後只需替換資料來源</li>
+              <li>右側行政區排行的長條改為「初評風險組成」堆疊條；圖例改為三級風險並顯示各級件數</li>
+              <li>點位滑過可看個案編號、行政區、初評風險與座標；點選行政區時，其他區的點位會淡出</li>
+              <li>縮放時點的大小維持固定，放大後不會糊成一團</li>
+              <li>全臺層級仍為縣市熱度圖；點位只在臺北市層級顯示（開啟地圖時即直接進入臺北市）</li>
+              <li>原型階段尚無真實地址，點位以各行政區的實際邊界取樣產生；接上真實資料後只需替換資料來源</li>
             </ul>
           </div>
           <div class="path">
             <span class="path-label">點選路徑</span>
             <span class="crumb nav">基本資料</span>
             <span class="sep">›</span>
-            <span class="crumb tab">查看熱點地圖 ↗</span>
+            <span class="crumb">臺北市各行政區通報案件數</span>
             <span class="sep">›</span>
-            <span class="crumb">下探臺北市</span>
+            <span class="crumb tab">查看熱點地圖 ↗</span>
           </div>
         </li>
       </ul>
@@ -749,12 +788,16 @@ footer{
         <li class="item">
           <div class="item-head">
             <span class="item-no">7</span>
-            <h3>「高風險」更名為「風險減傷評估」<span class="tag rename">更名</span></h3>
+            <h3>「高風險」量表更名為「風險減傷評估」<span class="tag rename">更名</span></h3>
           </div>
-          <p>該頁四項量表中的「高風險」一律改稱「風險減傷評估」，與臨床用語一致。</p>
+          <p>改善情況頁籤的四項評估量表（BSRS-5、CGI-S、GAF、高風險）中，最後一項更名為「風險減傷評估」，三個月、六個月兩張卡都已更新。</p>
           <div class="path">
             <span class="path-label">點選路徑</span>
             <span class="crumb nav">精神症狀改善成效指標</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">改善情況</span>
+            <span class="sep">›</span>
+            <span class="crumb">風險減傷評估 三個月／六個月</span>
           </div>
         </li>
       </ul>
@@ -776,12 +819,12 @@ footer{
       <ul class="items">
         <li class="item">
           <p>
-            基本資料｜通報案件風險分析｜案件處理效率指標｜精神症狀改善成效指標｜AI 模型預測準確率｜
-            通報者基本資料分析｜醫療機構端處理成效分析｜醫院內控指標（SNQ）｜指揮儀表板
+            基本資料｜通報案件風險分析｜案件處理效率指標｜精神症狀改善成效指標｜AI模型預測準確率｜
+            通報者基本資料分析｜醫療機構端處理成效分析｜醫院內控指標(SNQ)｜指揮儀表板
           </p>
           <div class="path">
             <span class="path-label">點選路徑</span>
-            <span class="crumb">左側主選單</span>
+            <span class="crumb">頁首下方主選單</span>
           </div>
         </li>
       </ul>
