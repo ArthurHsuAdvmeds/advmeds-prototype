@@ -2611,6 +2611,9 @@
 </style>
 </helmet>
 <div style="min-height:100vh;background:var(--grey-100);font-family:var(--font-body);color:var(--grey-900);padding:0 0 0">
+  <div class="ds-header" style="margin-bottom:32px">
+    <x-import component-from-global-scope="MPHRDesignSystem_2916f2.HeaderFooter" property1="user_default" dc-props="{{ footerProps }}" hint-size="100%,60px"></x-import>
+  </div>
   <div style="padding:0 20px 56px">
   <div style="max-width: 840px; margin: 0 auto; position: relative; top: auto">
 
@@ -2655,6 +2658,9 @@
     </div>
 
   </div>
+  </div>
+  <div>
+    <x-import component-from-global-scope="MPHRDesignSystem_2916f2.HeaderFooter" property1="regular" dc-props="{{ footerProps }}" hint-size="100%,60px"></x-import>
   </div>
 </div>
 </x-dc>
@@ -2819,6 +2825,7 @@ class Component extends DCLogic {
       tileSmi: tileBox(lowMassSmi), tileSmiName: tileName(lowMassSmi), tileSmiVal: tileVal(lowMassSmi),
       tileRatio: tileBox(lowMassBmi), tileRatioName: tileName(lowMassBmi), tileRatioVal: tileVal(lowMassBmi),
       modeAsm: s.asmMode === "asm", modeMass: s.asmMode === "mass", modeSmi: s.asmMode === "smi",
+      footerProps: { style: { width: "100%" } },
     };
   }
 }
