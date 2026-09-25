@@ -12427,7 +12427,7 @@
       <div class="eff-v83-bureau-rate-grid eff-v86-bureau-rate-4">
         <article class="eff-v86-flagged"><span>衛生局醫療轉介率</span><strong data-eff-value="bureauReferral">58.2</strong><em>%</em><small>轉介醫療機構 ÷ 已完成回覆單<b class="eff-v86-flag" title="分母定義待確認，詳見指標說明">定義待確認</b></small><button class="eff-v79-info" data-metric="衛生局醫療轉介率">i</button></article>
         <article><span>衛生局轉介本院率</span><strong data-eff-value="bureauToHospital">41.6</strong><em>%</em><small>轉介北投 ÷ 已完成回覆單</small><button class="eff-v79-info" data-metric="衛生局轉介本院率">i</button></article>
-        <article><span>本院醫療轉介占率</span><strong data-eff-value="hospitalShare">71.5</strong><em>%</em><small>轉介北投 ÷（轉介北投＋轉介他院）</small><button class="eff-v79-info" data-metric="本院醫療轉介占率">i</button></article>
+        <article><span>本院醫療轉介占率</span><strong data-eff-value="hospitalShare">71.5</strong><em>%</em><small>轉介北投 ÷ 衛生局轉介醫療機構案件數</small><button class="eff-v79-info" data-metric="本院醫療轉介占率">i</button></article>
         <article><span>衛生局暫不轉介率</span><strong data-eff-value="nonReferralRate">41.8</strong><em>%</em><small>暫不轉介 ÷ 已完成回覆單</small><button class="eff-v79-info" data-metric="衛生局暫不轉介率">i</button></article>
       </div>
 
@@ -17007,7 +17007,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       '緊醫出勤總反應時間':'醫療實際出勤時間（「出勤單」中填寫的出勤年、月、日、時間），減掉「系統」網絡通報完成時間。',
       '衛生局醫療轉介率':'轉介醫療機構案件數（即衛生局優化計畫回覆單中勾選「轉介」的案件數） / 衛生局完成回覆單案件數。　※ 定義待確認：分母若採「所有轉介案」，依此公式算出來會固定是 100%，需與需求端確認分母應為「衛生局完成回覆單案件數」或「所有轉介案」。目前畫面以前者計算。',
       '衛生局轉介本院率':'轉介三總北投案件數（即衛生局優化計畫回覆單中勾選「轉介三總北投」的案件數） / 衛生局完成回覆單案件數。',
-      '本院醫療轉介占率':'轉介三總北投案件數 /（轉介三總北投案件數 + 轉介他院案件數）。',
+      '本院醫療轉介占率':'轉介三總北投案件數（即衛生局優化計畫回覆單中勾選「轉介三總北投」的案件數） / 衛生局轉介醫療機構案件數。',
       '衛生局暫不轉介率':'暫不轉介案件數（衛生局優化計畫回覆單勾選「暫不轉介」） / 衛生局完成回覆單案件數。',
       '暫不轉介原因分布':'各暫不轉介原因案件數 / 衛生局暫不轉介案件數。原因包含：社區心衛中心個管服務對象、已住院/門診/居家治療、另行收案、非衛生機關之服務項目、不符合轉介目的、拒訪、資料不足、其他原因。',
       '衛生局訪視時間':'衛生局填寫在優化計畫「回覆單」中的「訪視日期」，減掉「系統」網絡完成通報時間。',
