@@ -14324,7 +14324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('geoFocusName').textContent=geoLevel==='nation'?'全臺':geoCountyName;
     document.getElementById('geoFocusLevel').textContent=geoLevel==='nation'?'縣市':'行政區';
     /* 點位模式且有套用風險篩選時，頂部與側欄的件數要跟著換算成篩選後的數字，
-       否則地圖上只剩 89 個點、旁邊卻還寫 800 件，看起來像壞掉。
+       否則地圖上只剩 46 個高風險點、旁邊卻還寫 420 件，看起來像壞掉。
        taipeiDistrictData 的總和等於 basicActiveTotal，所以兩者可以直接互換。 */
     const riskFiltered = geoPointsMode && geoRiskFilter!=='all';
     const riskLabelShort = { high:'高風險', medium:'中風險', low:'低風險' };
@@ -14391,8 +14391,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function showGeoTooltip(event,feature){
     const name=geoName(feature), value=geoValue(feature); const stageRect=geoStage.getBoundingClientRect();
-    geoTooltip.innerHTML=`<div class="geo-tip-title">${name}</div><div class="geo-tip-row"><span>通報案件</span><strong>${value==null?'尚無資料':value+' 件'}</strong></div><div class="geo-tip-row"><span>層級</span><strong>${geoLevel==='nation'?'縣市':'行政區'}</strong></div><div class="geo-tip-hint">${geoLevel==='nation'?'點擊下探行政區':'點擊可固定選取'}</div>`;
-    geoTooltip.hidden=false; let x=event.clientX-stageRect.left+14, y=event.clientY-stageRect.top+14; const w=190,h=100; if(x+w>stageRect.width)x-=w+28;if(y+h>stageRect.height)y-=h+28;geoTooltip.style.left=`${Math.max(8,x)}px`;geoTooltip.style.top=`${Math.max(8,y)}px`;
+    /* v4：有套用初評風險篩選時，先列該等級件數（與右側排行一致），全部件數放下一列對照 */
+    const riskRow=geoPointsMode && geoRiskFilter!=='all' && value!=null
+      ? `<div class="geo-tip-row"><span>${GEO_RISK_LABEL[geoRiskFilter]}</span><strong>${geoFilteredCount(name)} 件</strong></div>`
+      : '';
+    geoTooltip.innerHTML=`<div class="geo-tip-title">${name}</div>${riskRow}<div class="geo-tip-row"><span>${riskRow?'全部通報':'通報案件'}</span><strong>${value==null?'尚無資料':value+' 件'}</strong></div><div class="geo-tip-row"><span>層級</span><strong>${geoLevel==='nation'?'縣市':'行政區'}</strong></div><div class="geo-tip-hint">${geoLevel==='nation'?'點擊下探行政區':'點擊可固定選取'}</div>`;
+    geoTooltip.hidden=false; let x=event.clientX-stageRect.left+14, y=event.clientY-stageRect.top+14; const w=190,h=riskRow?124:100; if(x+w>stageRect.width)x-=w+28;if(y+h>stageRect.height)y-=h+28;geoTooltip.style.left=`${Math.max(8,x)}px`;geoTooltip.style.top=`${Math.max(8,y)}px`;
   }
   function hideGeoTooltip(){ geoTooltip.hidden=true; }
 
@@ -16164,6 +16168,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    /* v4：舊版滿意度切換頁籤的殘留程式。satTabs 從未宣告，載入時會拋 ReferenceError；
+       對應的 #reporterSatTabs／#reporterSatBars 已不在頁面上（現行圖表由 renderSatisfactionCharts 繪製），
+       補上宣告讓這段安全略過（renderBars 遇到不存在的容器會直接 return）。 */
+    const satTabs=document.getElementById('reporterSatTabs');
     if(satTabs){
       satTabs.querySelectorAll('.reporter-sat-tab').forEach(btn=>{
         btn.replaceWith(btn.cloneNode(true));
@@ -22414,6 +22422,13 @@ img{ max-width:100%; height:auto; }
   .dashboard #command .closure-v74-year strong{ font-size:14.5px !important; }
   .dashboard #command .closure-v74-head h3{ font-size:clamp(19px,1.2vw,22px) !important; }
 }
+
+/* 舊層在視窗高 ≤880px 時把「已結案／總通報」件數列鎖成 44px，
+   字體放大後塞不下，底部會被卡片的 overflow:hidden 切掉（821–880px 高度切掉約 4px）。
+   改由內容決定高度，上方甜甜圈區（minmax(0,1fr)）會自動讓出這幾 px。 */
+@media (min-width:1200px) and (max-height:880px){
+  .dashboard #command .closure-v74-counts{ height:auto !important; min-height:44px !important; }
+}
 </style>
 
 
@@ -22550,8 +22565,9 @@ img{ max-width:100%; height:auto; }
    （下探到臺北市）出現。未選中的等級用 .risk-off 隱藏，不重繪地圖，
    所以切換時使用者目前的縮放與平移位置會保留。
 
-   按鈕的 active 色與點位、圖例、排行條共用同一組色票：
-       高 #e4573f ／ 中 #f29a3a ／ 低 #f2c94c（低風險底色淺，文字改用深色）
+   按鈕的 active 色沿用點位、圖例、排行條的色票：
+       高 #e4573f ／ 中 #f29a3a（按鈕底色加深為 #e08a26，白字才讀得清楚）／
+       低 #f2c94c（底色淺，文字改用深色）
    ========================================================================= */
 
 /* ---------- 被篩掉的點位 ---------- */
