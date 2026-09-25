@@ -2950,7 +2950,7 @@ class Component extends DCLogic {
     const hasResult = (smi != null || asmBmi != null) && grip != null;
     let bannerTitle, bannerDetail;
     if (isSarc) {
-      bannerTitle = "符合肌少症診斷";
+      bannerTitle = "確診為肌少症";
       const massMsg = lowMassSmi ? `SMI ${smi.toFixed(2)} kg/m² 低於 ${massT.toFixed(1)}` : `ASM/BMI ${asmBmi.toFixed(2)} 低於 ${asmBmiT.toFixed(2)}`;
       bannerDetail = `建議掛老年醫學科門診接受進一步診治。`;
     } else {
