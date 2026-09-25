@@ -301,7 +301,8 @@ footer{
     </p>
 
     <nav class="entries" aria-label="版本入口">
-      <a class="entry current" href="../v4/index.html"><b>V4</b><span>2026-09-25｜目前版本</span></a>
+      <a class="entry current" href="../v5/index.html"><b>V5</b><span>2026-09-25｜目前版本</span></a>
+      <a class="entry" href="../v4/index.html"><b>V4</b><span>2026-09-25</span></a>
       <a class="entry" href="../v3/index.html"><b>V3</b><span>2026-09-06 ～ 09-08</span></a>
       <a class="entry" href="../v2/index.html"><b>V2</b><span>2026-09-06｜基準版本</span></a>
       <a class="entry" href="../index.html"><b>入口頁</b><span>自動導向最新版</span></a>
@@ -316,6 +317,165 @@ footer{
     深色標籤是頁首下方主選單的頁面名稱，橘色標籤是頁面內的子頁籤或按鈕，灰色標籤是卡片或區塊名稱。
     依序點下去就會看到該項變更。
   </div>
+
+  <!-- ===================== V5 ===================== -->
+  <section class="release" id="v5">
+    <div class="release-head">
+      <h2 class="release-ver">V5</h2>
+      <span class="release-date">2026-09-25</span>
+      <span class="release-vs">相較 V4</span>
+    </div>
+    <p class="release-summary">
+      以 V4 為基礎：區域分布圖點位加大並合併同址通報、全站字級以 1920×1080 為基準放大、
+      模擬資料補到 2026/09/25，院內 SNQ 的結案後轉介比例可展開看門診／居家／住院。頁面架構未更動。
+    </p>
+
+    <div class="group">
+      <h3 class="group-title">基本資料 › 通報案件區域分布</h3>
+      <ul class="items">
+        <li class="item">
+          <div class="item-head">
+            <span class="item-no">1</span>
+            <h3>個案點位加大，放大地圖時點位跟著變大<span class="tag new">調整</span></h3>
+          </div>
+          <p>
+            單一通報的點位由直徑約 6px 加大到約 11px；放大地圖時點位會以縮放倍率的平方根成長（放大 4 倍時約為 2 倍大），不再維持固定的小點。縮放上限由 500% 提高到 800%，密集區可以再拉近分開。行政區名稱也改為只小幅放大，不會蓋住點位。
+          </p>
+          <div class="path">
+            <span class="path-label">點選路徑</span>
+            <span class="crumb nav">基本資料</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">查看熱點地圖</span>
+            <span class="sep">›</span>
+            <span class="crumb">臺北市</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">＋ 放大</span>
+          </div>
+        </li>
+
+        <li class="item">
+          <div class="item-head">
+            <span class="item-no">2</span>
+            <h3>同一地址的多筆通報合併為一個點位<span class="tag new">新增</span></h3>
+          </div>
+          <p>
+            同一組座標有多筆通報時，合併成一個較大的點位，圓內數字為件數，顏色取該址最高的初評風險等級。滑過點位會列出該地址的每一筆通報（編號、通報日期、初評風險）。套用「初評風險」篩選時，件數與顏色會依篩選後的個案重算。
+          </p>
+          <div class="detail">
+            <ul>
+              <li>模擬資料中約 2 成個案與同區既有通報同址，目前臺北市 420 件落在 347 個地址，其中 59 個地址有 2 件以上</li>
+              <li>圖例新增「同址多筆通報」示意</li>
+            </ul>
+          </div>
+          <div class="path">
+            <span class="path-label">點選路徑</span>
+            <span class="crumb nav">基本資料</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">查看熱點地圖</span>
+            <span class="sep">›</span>
+            <span class="crumb">臺北市</span>
+            <span class="sep">›</span>
+            <span class="crumb">點位</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="group">
+      <h3 class="group-title">醫院內控指標(SNQ)</h3>
+      <ul class="items">
+        <li class="item">
+          <div class="item-head">
+            <span class="item-no">3</span>
+            <h3>結案後轉介至本院醫療系統比例可展開門診／居家／住院<span class="tag new">新增</span></h3>
+          </div>
+          <p>
+            點擊「緊急醫療結案後轉介至本院醫療系統比例」或「優化計劃結案後轉介至本院醫療系統比例」卡片，展開三項各自的比例，每項皆為（於結案日後在 HIS 系統有該項就醫紀錄之個案數／總通報個案數）×100%，並附註「單一個案可能會有重複醫療處置，所以三項比例相加會超過100%」與三項合計。日期與通報類別篩選會同步換算。
+          </p>
+          <div class="detail">
+            <ul>
+              <li>緊急醫療（本年度）：門診 62.5%、居家 21.1%、住院 27.6%，合計 111.2%（任一項 68.4%）</li>
+              <li>優化計劃（本年度）：門診 54.3%、居家 30.8%、住院 27.1%，合計 112.2%（任一項 54.8%）</li>
+            </ul>
+          </div>
+          <div class="path">
+            <span class="path-label">點選路徑</span>
+            <span class="crumb nav">醫院內控指標(SNQ)</span>
+            <span class="sep">›</span>
+            <span class="crumb">通報結案後醫療銜接</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">查看各項轉介比例</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="group">
+      <h3 class="group-title">全站</h3>
+      <ul class="items">
+        <li class="item">
+          <div class="item-head">
+            <span class="item-no">4</span>
+            <h3>字級以 1920×1080 為基準放大<span class="tag fix">版面</span></h3>
+          </div>
+          <p>
+            V4 桌機版有大量 8–11px 的說明文字、座標軸與按鈕。V5 在寬度 ≥1200px 的桌機版面，把這些文字依 1920 寬放大到約 11.5–14.5px（隨視窗寬度縮放，1366 等較小桌機接近原字級）；平板與手機的響應式版面不變。
+          </p>
+          <div class="path">
+            <span class="path-label">點選路徑</span>
+            <span class="crumb nav">各頁</span>
+          </div>
+        </li>
+
+        <li class="item">
+          <div class="item-head">
+            <span class="item-no">5</span>
+            <h3>修正既有爆版<span class="tag fix">修正</span></h3>
+          </div>
+          <p>
+            （1）1280×720 等較矮視窗，「衛生局處理時間」最後一列被切掉；1200–1250 寬時「本院處理時效」第三列被切掉，改為至少容納內容、放不下時卡片內捲動。（2）平板寬度（≤899px）「通報者基本資料分析」第一欄被擠成約 30px，圓餅圖與圖例全擠在一起，改為依序單欄排列。（3）手機寬度「基本資料」頁可以左右晃動 17px（年齡長條最右一根的提示框超出畫面），已修正。
+          </p>
+          <div class="path">
+            <span class="path-label">點選路徑</span>
+            <span class="crumb nav">案件處理效率指標</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">優化計畫衛生局處置效率</span>
+          </div>
+        </li>
+
+        <li class="item">
+          <div class="item-head">
+            <span class="item-no">6</span>
+            <h3>模擬資料補到 2026/09/25<span class="tag fix">資料</span></h3>
+          </div>
+          <p>
+            所有頁面的資料截止日、日期選擇器上限與「本日／本月／本季／本年度」區間由 2026/09/04（指揮儀表板為 09/01）改為 2026/09/25。本月（9/1–9/25）通報 36 件、本季 114 件、本日 2 件；指揮儀表板同期比較的 9 月數字同步更新。
+          </p>
+          <div class="path">
+            <span class="path-label">點選路徑</span>
+            <span class="crumb nav">指揮儀表板</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">同期比較</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="open-questions">
+      <h3>待確認事項</h3>
+      <ol>
+        <li>
+          <b>本年度總數仍維持 420 件。</b>
+          補資料時只延長了截止日並更新 9 月（本月、本季、本日）的數字；本年度 420 件被多頁指標引用
+          （結案率 100/420、風險 46/234/140、七大網絡 420 件等），若要改成含 9/5–9/25 新增案件的總數，需要全站一起重算。
+        </li>
+        <li>
+          <b>門診／居家／住院三項比例為模擬值。</b>
+          為符合「三項相加會超過 100%」的說明，模擬資料設定每位有就醫紀錄的個案平均約有 1.6–2 種處置；正式資料接上後以實際比例為準。
+        </li>
+      </ol>
+    </div>
+  </section>
 
   <!-- ===================== V4 ===================== -->
   <section class="release" id="v4">

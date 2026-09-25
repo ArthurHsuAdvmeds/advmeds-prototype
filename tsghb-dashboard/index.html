@@ -5,19 +5,19 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>三軍總醫院北投分院｜精神健康個案通報管理儀表板</title>
 <meta name="robots" content="noindex">
-<link rel="canonical" href="v4/">
+<link rel="canonical" href="v5/">
 
 <!--
   ============================================================================
   轉址頁：/tsghb-dashboard/ → 最新版儀表板
   ----------------------------------------------------------------------------
   這個檔案本身沒有內容，只負責把訪客導到最新版本目錄。
-  各版本仍可獨立直接開啟：  v1/  v2/  v3/  v4/
+  各版本仍可獨立直接開啟：  v1/  v2/  v3/  v4/  v5/
 
   GitHub Pages 是純靜態託管，沒有伺服器端 rewrite，
   所以只能用「前端轉址」，三層保險：
 
-    1. JS 自動偵測：從 LATEST 往後探測 v5、v6…，
+    1. JS 自動偵測：從 LATEST 往後探測 v6、v7…，
        有就跳最新的那一版 → 發佈新版時這個檔案通常不必改
     2. 逾時保底：偵測若沒在 TIMEOUT_MS 內完成，直接跳 LATEST
     3. <noscript> meta refresh：完全沒有 JS 時仍會轉址
@@ -26,13 +26,13 @@
   （/advmeds-prototype/tsghb-dashboard/）和本機 file:// 直接開都能運作。
 
   發佈新版時：
-    建好 v5/ 目錄後就會被自動偵測到，不需要改這裡。
-    若想省掉那一次探測請求，把下面的 LATEST 改成 5，並把 canonical、<noscript>、手動連結的 v4 一起改掉。
+    建好 v6/ 目錄後就會被自動偵測到，不需要改這裡。
+    若想省掉那一次探測請求，把下面的 LATEST 改成 6，並把 canonical、<noscript>、手動連結的 v5 一起改掉。
   ============================================================================
 -->
 
-<!-- 寫成 v4/index.html 而非 v4/：file:// 下目錄網址只會開出檔案列表 -->
-<noscript><meta http-equiv="refresh" content="0; url=v4/index.html"></noscript>
+<!-- 寫成 v5/index.html 而非 v5/：file:// 下目錄網址只會開出檔案列表 -->
+<noscript><meta http-equiv="refresh" content="0; url=v5/index.html"></noscript>
 
 <style>
   :root{ color-scheme: light dark; }
@@ -68,18 +68,18 @@
   <div class="wrap">
     <div class="spinner" role="status" aria-label="載入中"></div>
     <p>正在前往最新版儀表板…</p>
-    <p class="fallback">沒有自動跳轉？<a id="manual" href="v4/index.html">請點此進入</a></p>
+    <p class="fallback">沒有自動跳轉？<a id="manual" href="v5/index.html">請點此進入</a></p>
   </div>
 
 <script>
 (function(){
   "use strict";
 
-  var LATEST      = 4;    /* 目前已知的最新版本號 */
-  var PROBE_AHEAD = 3;    /* 往後最多探測幾版（v5、v6、v7） */
+  var LATEST      = 5;    /* 目前已知的最新版本號 */
+  var PROBE_AHEAD = 3;    /* 往後最多探測幾版（v6、v7、v8） */
   var TIMEOUT_MS  = 1200; /* 偵測逾時就直接跳 LATEST，避免卡在這頁 */
 
-  /* http(s) 下用乾淨的目錄網址（v4/）；
+  /* http(s) 下用乾淨的目錄網址（v5/）；
      file:// 下瀏覽器不會自動載入目錄裡的 index.html，只會列出檔案，
      所以本機直接開檔時必須補上完整檔名。 */
   var SUFFIX = (location.protocol === "file:") ? "index.html" : "";
