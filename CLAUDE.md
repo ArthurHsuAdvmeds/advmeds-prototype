@@ -83,6 +83,8 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
   - 長條圖橫向：各圖表只寫行內 `height:%`，由 `v6-mobile-rwd-behavior` 同步成 CSS 變數 `--v6-bar`（MutationObserver 監看 `#basic`、`#reporter`）；
     新增直條圖時要把長條元素加進腳本的 `BAR_SELECTOR`，否則手機上長條寬度會是 0。
   - ≤899px 的規則一律以 `html body .dashboard #頁面.page …` 起頭，才壓得過舊層的 `.dashboard .page:is(#…) :is(.…)`＋`!important`。
+  - `<style id="v6-mobile-dialogs">`：熱點地圖彈窗改為標題固定、`.geo-body` 捲動；地圖未放大時單指觸控不交給 d3（`geoZoomBehavior.filter`）好讓手指捲動彈窗。
+    注意 `v84-responsive-release` 在 ≤1199px 用 `[class*="-shell"]` 把頁面內所有 *-shell 的 max-height 清成 none，會波及放在頁面裡的彈窗外框；新彈窗的外框避免用 `-shell` 結尾，或比照補回。
 - v5（以 v4 為基礎）：區域分布圖點位加大並合併同址通報、字級以 1920×1080 為基準放大、
   模擬資料補到 2026/09/25、SNQ 結案後轉介比例點擊開 dialog 看門診／居家／住院、
   醫療機構端無法收案原因表收成右側卡片 + dialog、指揮儀表板同期比較改為比較案件處理效率指標並可依通報類別篩選。

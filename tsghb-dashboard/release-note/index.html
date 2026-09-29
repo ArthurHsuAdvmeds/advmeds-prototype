@@ -328,8 +328,8 @@ footer{
     </div>
     <p class="release-summary">
       以 V5 為基礎，針對手機版（螢幕寬度 899 px 以下）進行 RWD 優化：主選單改為下拉、第二層頁籤自動換行、
-      長條圖改為橫向、指揮板改為直式、案件熱點地圖支援觸控操作。另外「優化計畫無法收案」等可點擊卡片的提示
-      改為明顯的按鈕（桌機同步調整）。其餘桌機版面、各頁內容與資料均未更動。
+      長條圖改為橫向、指揮板改為直式、案件熱點地圖支援觸控操作並可捲動、彈窗內表格與 AI 圖表不必左右滑。
+      另外「優化計畫無法收案」等可點擊卡片的提示改為明顯的按鈕（桌機同步調整）。其餘桌機版面、各頁內容與資料均未更動。
     </p>
 
     <div class="group">
@@ -460,6 +460,7 @@ footer{
               <li>觸控：雙指縮放、放大後單指拖曳、雙擊放大、點行政區選取、點點位看明細；拖曳時提示框自動收起</li>
               <li>未放大時地圖固定不動，不會被拖出畫面（桌機用滑鼠拖曳同樣適用）</li>
               <li>旋轉手機或視窗大小改變時，地圖依新比例重畫，已選取的行政區會保留</li>
+              <li>彈窗可以往下捲動，看完地圖下方的「目前範圍」與行政區排行（原本整個彈窗無法捲動，排行看不到）；地圖未放大時，手指在地圖上上下滑動也會捲動彈窗，放大後才改為拖曳地圖</li>
             </ul>
           </div>
           <div class="path">
@@ -498,6 +499,59 @@ footer{
             <span class="crumb nav">AI模型預測準確率</span>
             <span class="sep">›</span>
             <span class="crumb">預測吻合程度</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="group">
+      <h3 class="group-title">彈窗與 AI 圖表（手機版）</h3>
+      <ul class="items">
+        <li class="item">
+          <div class="item-head">
+            <span class="item-no">7</span>
+            <h3>「優化計畫無法收案原因」等彈窗的表格不用左右滑<span class="tag fix">排版</span></h3>
+          </div>
+          <p>
+            原本手機上這張表的原因、人數、百分比三欄被撐寬，要在彈窗裡左右滑才看得到。
+            改為三欄直接排進螢幕寬度，較長的原因自動換行，320 px 的小手機也不用左右滑。
+          </p>
+          <p>「精神症狀改善成效指標」點圓環開啟的「個案明細」表格同樣處理。</p>
+          <div class="path">
+            <span class="path-label">點選路徑</span>
+            <span class="crumb nav">醫療機構端處理成效分析</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">優化計畫無法收案</span>
+          </div>
+          <div class="path">
+            <span class="path-label">另見</span>
+            <span class="crumb nav">精神症狀改善成效指標</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">任一圓環</span>
+          </div>
+        </li>
+
+        <li class="item">
+          <div class="item-head">
+            <span class="item-no">8</span>
+            <h3>AI 回歸線圖在手機縮進螢幕寬度<span class="tag fix">排版</span></h3>
+          </div>
+          <p>
+            回歸線圖原本在手機上要左右滑才看得到右半部，改為整張縮進螢幕寬度，
+            座標數字、軸標題與線條依縮放比例放大，縮小後仍清楚可讀。
+            「點擊查看變化」開啟的吻合程度歷程圖同樣處理。
+          </p>
+          <div class="path">
+            <span class="path-label">點選路徑</span>
+            <span class="crumb nav">AI模型預測準確率</span>
+            <span class="sep">›</span>
+            <span class="crumb">AI 預測與專業評估有多接近</span>
+          </div>
+          <div class="path">
+            <span class="path-label">另見</span>
+            <span class="crumb nav">AI模型預測準確率</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">點擊查看變化</span>
           </div>
         </li>
       </ul>

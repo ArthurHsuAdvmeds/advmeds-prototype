@@ -14665,6 +14665,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const t=event.changedTouches && event.changedTouches[0];
     geoSvg.transition().duration(220).call(geoZoomBehavior.scaleBy, 2, t ? d3.pointer(t,this) : undefined);
   });
+  /* v6：手機上地圖未放大時，單指觸控不交給地圖，讓手指可以直接上下滑動彈窗
+     （地圖在 100% 時本來就不能拖曳，否則地圖佔滿畫面時會完全滑不動彈窗）；
+     雙指縮放、放大後的單指拖曳仍由地圖處理。搭配 CSS：未放大時 touch-action:pan-y。 */
+  geoZoomBehavior.filter(function(event){
+    if(event.type==='touchstart' && GEO_COMPACT_MQ.matches && event.touches && event.touches.length<2 && (geoZoom.k||1)<=1.001) return false;
+    return (!event.ctrlKey || event.type==='wheel') && !event.button;   /* d3 預設的 filter */
+  });
+  /* 上面的單指觸控不經過 d3，未放大時的「點兩下放大」改由這裡偵測；放大後交回 d3 處理 */
+  (function(){
+    const svgNode=geoSvg.node();
+    let start=null, lastTap=null;
+    svgNode.addEventListener('touchstart',e=>{
+      start = e.touches.length===1 ? { x:e.touches[0].clientX, y:e.touches[0].clientY } : null;
+    },{passive:true});
+    svgNode.addEventListener('touchend',e=>{
+      if(!GEO_COMPACT_MQ.matches || (geoZoom.k||1)>1.001 || !start || e.touches.length || e.changedTouches.length!==1){ lastTap=null; return; }
+      const t=e.changedTouches[0];
+      if(Math.hypot(t.clientX-start.x, t.clientY-start.y)>10){ lastTap=null; return; }   /* 滑動不算點擊 */
+      const now=Date.now();
+      if(lastTap && now-lastTap.time<320 && Math.hypot(t.clientX-lastTap.x, t.clientY-lastTap.y)<24){
+        lastTap=null;
+        e.preventDefault();   /* 第二下不再觸發點選 */
+        hideGeoTooltip();
+        geoSvg.transition().duration(220).call(geoZoomBehavior.scaleBy, 2, d3.pointer(t, svgNode));
+      }else{
+        lastTap={ time:now, x:t.clientX, y:t.clientY };
+      }
+    },{passive:false});
+  })();
   /* v6：旋轉手機或視窗跨過 899px 時地圖框比例改變，重畫縣市地圖讓畫布維持同比例（保留已選取的行政區） */
   let geoResizeTimer=null;
   window.addEventListener('resize',()=>{
@@ -24427,3 +24456,171 @@ document.addEventListener('click',event=>{
   else boot();
 })();
 </script>
+
+
+<style id="v6-mobile-dialogs">
+/* =========================================================================
+   v6 — 手機版彈窗與 AI 圖表（會議意見第二輪）
+   1. 熱點地圖彈窗：彈窗本身 overflow:hidden、.geo-body 又被撐成內容高度，整個彈窗無法捲動，
+      下方的排行完全看不到（V3 做手機全螢幕彈窗時就存在）。改為標題列固定、其餘在 .geo-body 內捲動；
+      地圖未放大時讓出單指上下滑動（手勢判斷見地圖模組 v6 註解）。
+   2. 「優化計畫無法收案原因」「成效個案明細」彈窗的表格只有 3 欄，卻被 520／650px 最小寬度撐出螢幕。
+   3. AI 頁回歸線圖、「吻合程度變化」歷程圖：解除 680px 最小寬度，整張縮進螢幕寬度，
+      圖內字級與線條依縮小倍率放大，縮小後仍清楚可讀。
+   ========================================================================= */
+@media (max-width:899px){
+  /* ---------- 1. 熱點地圖彈窗可捲動 ---------- */
+  #districtMapDialog .geo-shell{
+    display:flex !important;
+    flex-direction:column !important;
+    height:100% !important;
+    max-height:100% !important;
+    min-height:0 !important;
+    overflow:hidden !important;
+  }
+  #districtMapDialog .geo-header{ flex:none !important; }
+  #districtMapDialog .geo-body{
+    flex:1 1 auto !important;
+    min-height:0 !important;
+    height:auto !important;
+    max-height:none !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  /* .geo-body 原本是兩列 grid，會把可用高度對半分給地圖卡與右側面板（地圖卡被壓扁、面板自己捲動）；
+     改為由上往下自然堆疊，整體在 .geo-body 內捲動 */
+  #districtMapDialog .geo-body{
+    display:flex !important;
+    flex-direction:column !important;
+    grid-template-rows:none !important;
+  }
+  #districtMapDialog :is(.geo-map-card,.geo-side){ flex:none !important; }
+  /* 右側面板與行政區排行原本各自限高捲動，放在可捲動的彈窗內會變成多層捲動，改為全部展開 */
+  #districtMapDialog .geo-side{ height:auto !important; max-height:none !important; overflow:visible !important; }
+  #districtMapDialog .geo-ranking{ max-height:none !important; overflow:visible !important; }
+  /* 地圖未放大時單指上下滑動交給彈窗；放大後（.draggable）地圖才接手單指拖曳 */
+  #districtMapDialog .geo-svg{ touch-action:pan-y !important; }
+  #districtMapDialog .geo-stage.draggable .geo-svg{ touch-action:none !important; }
+
+  /* ---------- 2. 彈窗內表格不用左右滑 ---------- */
+  html body .dashboard #hospital.page #hospitalUnableDialog .hospital-unable-table,
+  html body #outcomeDetailDialog .outcome-table{
+    width:100% !important;
+    min-width:0 !important;
+  }
+  html body .dashboard #hospital.page #hospitalUnableDialog .hospital-unable-table-wrap,
+  html body #outcomeDetailDialog .outcome-table-wrap{ overflow-x:hidden !important; }
+  html body .dashboard #hospital.page #hospitalUnableDialog .hospital-unable-table :is(th,td),
+  html body #outcomeDetailDialog .outcome-table :is(th,td){
+    padding:9px 8px !important;
+    font-size:14px !important;
+    line-height:1.35 !important;
+  }
+  /* 第一欄（原因／通報類別）可換行，數字欄不換行 */
+  html body .dashboard #hospital.page #hospitalUnableDialog .hospital-unable-table :is(th,td):first-child,
+  html body #outcomeDetailDialog .outcome-table :is(th,td):first-child{ white-space:normal !important; }
+  html body .dashboard #hospital.page #hospitalUnableDialog .hospital-unable-table :is(th,td):not(:first-child),
+  html body #outcomeDetailDialog .outcome-table :is(th,td):not(:first-child){ white-space:nowrap !important; width:1%; }
+  html body .dashboard #hospital.page #hospitalUnableDialog .hospital-unable-table th button,
+  html body #outcomeDetailDialog .outcome-table th button{ font-size:14px !important; white-space:nowrap !important; }
+  /* 成效明細前兩欄的標題是排序按鈕（本身有約 14px 內距），資料列補同樣的左側留白才會上下對齊 */
+  html body #outcomeDetailDialog .outcome-table td:nth-child(-n+2){ padding-left:22px !important; }
+  /* 這張表是固定表格版面（table-layout:fixed），上面的 width:1% 會真的變成 1%，
+     人數欄只剩約 37px、「人數 ↓」的箭頭被擠到隔壁欄底下；數字欄改給明確寬度，其餘給原因欄 */
+  html body .dashboard #hospital.page #hospitalUnableDialog .hospital-unable-table :is(th,td):nth-child(2){ width:66px !important; }
+  html body .dashboard #hospital.page #hospitalUnableDialog .hospital-unable-table :is(th,td):nth-child(3){ width:64px !important; }
+
+  /* ---------- 3. AI 回歸線圖、吻合程度歷程圖：整張縮進螢幕寬度 ---------- */
+  html body .dashboard #ai.page .ai-scatter-wrap{
+    height:auto !important;
+    min-height:0 !important;
+    overflow:visible !important;
+  }
+  html body .dashboard #ai.page .ai-scatter-svg{
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+    height:auto !important;
+    aspect-ratio:820 / 620;
+  }
+  #aiCorrelationDialog .ai-history-body{ min-width:0 !important; overflow-x:hidden !important; }
+  #aiCorrelationDialog .ai-history-chart-wrap{
+    width:100% !important;
+    min-width:0 !important;
+    height:auto !important;
+    min-height:0 !important;
+    overflow:visible !important;
+  }
+  #aiCorrelationDialog .ai-history-svg{
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+    height:auto !important;
+    aspect-ratio:940 / 500;
+  }
+  /* 大手機／直式平板：縮放約 0.7～1 倍 */
+  html body .dashboard #ai.page .ai-axis-text{ font-size:15px !important; }
+  html body .dashboard #ai.page .ai-axis-title{ font-size:16px !important; }
+  #aiCorrelationDialog .ai-history-axis-text,
+  #aiCorrelationDialog .ai-history-value{ font-size:17px !important; }
+  #aiCorrelationDialog .ai-history-axis-title{ font-size:18px !important; }
+}
+/* ---------- 4. 其他彈窗：內容超過螢幕高度時可以捲動 ----------
+   v84-responsive-release 在 ≤1199px 用 [class*="-shell"] 把頁面內所有 *-shell 的 max-height 改成 none
+   （原意是解除頁面版面的高度鎖定），連放在頁面裡的彈窗外框也被波及，內容超過螢幕高度時內文區不會捲動。
+   權重需高過該規則的 (1,4,0)。 */
+@media (max-width:1199px){
+  html body .dashboard .page.active :is(#hospitalUnableDialog,#snqReferralDialog) .v5-dialog-shell{
+    max-height:calc(100vh - 48px) !important;
+  }
+}
+@media (max-width:599px){
+  html body .dashboard .page.active :is(#hospitalUnableDialog,#snqReferralDialog) .v5-dialog-shell{
+    max-height:100vh !important;
+    max-height:100dvh !important;
+  }
+}
+@media (max-width:899px){
+  /* AI、效率指標彈窗：標題固定，內文區捲動 */
+  html body .dashboard .page.active #aiCorrelationDialog .ai-history-shell,
+  html body .dashboard .page.active #effV79MetricDialog .eff-v79-dialog-shell{
+    display:flex !important;
+    flex-direction:column !important;
+    height:100% !important;
+    max-height:100% !important;
+    min-height:0 !important;
+    overflow:hidden !important;
+  }
+  html body .dashboard .page.active #aiCorrelationDialog .ai-history-body,
+  html body .dashboard .page.active #effV79MetricDialog .eff-v79-dialog-body{
+    flex:1 1 auto !important;
+    min-height:0 !important;
+    overflow-y:auto !important;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+}
+
+/* 大手機／直式平板：熱點地圖彈窗只有 max-height、沒有明確高度，裡層 height:100% 會失效，給明確高度 */
+@media (min-width:600px) and (max-width:899px){
+  #districtMapDialog{
+    height:calc(100vh - 24px) !important;
+    height:calc(100dvh - 24px) !important;
+  }
+}
+/* 手機：820／940 寬的畫布縮到約 0.4 倍，圖內字級、線條、點位放大到縮小後仍清楚 */
+@media (max-width:599px){
+  html body .dashboard #ai.page .ai-axis-text{ font-size:25px !important; }
+  html body .dashboard #ai.page .ai-axis-title{ font-size:26px !important; }
+  html body .dashboard #ai.page :is(.ai-regression-line,.ai-baseline-line){ stroke-width:6px !important; }
+  #aiCorrelationDialog .ai-history-axis-text,
+  #aiCorrelationDialog .ai-history-value{ font-size:27px !important; }
+  #aiCorrelationDialog .ai-history-axis-title{ font-size:28px !important; }
+  #aiCorrelationDialog .ai-history-line{ stroke-width:6px !important; }
+  #aiCorrelationDialog .ai-history-point{ r:12px; }
+  /* 直排的「吻合程度」與刻度數字太擠；圖下方已有「Y 軸：吻合程度」說明，手機上隱藏 */
+  #aiCorrelationDialog .ai-history-axis-title[transform]{ display:none; }
+}
+</style>
