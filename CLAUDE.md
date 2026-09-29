@@ -72,16 +72,20 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
 
 ---
 
-## 3. 目前狀況（2026-09-25）
+## 3. 目前狀況（2026-09-29）
 
-- **`tsghb-dashboard` 最新版是 `v5/`**（以 v4 為基礎：區域分布圖點位加大並合併同址通報、字級以 1920×1080 為基準放大、
+- **`tsghb-dashboard` 最新版是 `v6/`**（以 v5 為基礎：手機版 ≤899px 的主選單由橫向捲動 pill 改為黏頂下拉選單，其餘同 v5）。
+  入口轉址頁 `LATEST = 6`，canonical、`<noscript>`、手動連結都指向 `v6/`。
+- v6 只新增主選單後的 `.v6-nav-select` 容器與檔尾 `<style id="v6-mobile-nav-select">`／`<script id="v6-mobile-nav-select-behavior">`：
+  選項由 `.tabs` 內的按鈕自動產生，切頁一律觸發對應 `.tab` 的 click（沿用既有切頁與指揮儀表板重畫邏輯）。
+  新增的控制項**不可帶 `tab` class**，否則會被 `querySelectorAll('.tab')` 當成頁籤綁上切頁事件。
+- v5（以 v4 為基礎）：區域分布圖點位加大並合併同址通報、字級以 1920×1080 為基準放大、
   模擬資料補到 2026/09/25、SNQ 結案後轉介比例點擊開 dialog 看門診／居家／住院、
-  醫療機構端無法收案原因表收成右側卡片 + dialog、指揮儀表板同期比較改為比較案件處理效率指標並可依通報類別篩選）。
-  入口轉址頁 `LATEST = 5`，canonical、`<noscript>`、手動連結都指向 `v5/`。
+  醫療機構端無法收案原因表收成右側卡片 + dialog、指揮儀表板同期比較改為比較案件處理效率指標並可依通報類別篩選。
 - v5 的修改都集中在檔尾的 `<style id="v5-…">` 區塊（字級層 `v5-typography-1920` 只在 ≥1200px 生效，以 125% 縮放的 1536px 視窗為主要驗證尺寸）與地圖、SNQ 的 JS；
   模擬資料的「今天」是 2026-09-25，本年度總數仍為 420 件（只更新了 9 月的本月／本季／本日數字）。
 - `tsghb-dashboard/release-note/` 記錄 V2 以後各版差異與點選路徑。
-- **發佈新版（v6…）時要一起做**：更新版本說明頁、在根目錄總覽頁儀表板卡片加版本 chip、
+- **發佈新版（v7…）時要一起做**：更新版本說明頁、在根目錄總覽頁儀表板卡片加版本 chip、
   更新轉址頁的 `LATEST` / canonical / `<noscript>` / 手動連結。
 - `tsghb-dashboard/test_data.json` 為測試資料，目前沒有頁面引用。
 - Landing page 已全部移到 `tsghb-landing-page/<role>/`；該處頁面、規格或插圖有改動時要**重新產生對應的 zip 下載包**（做法見其 CLAUDE.md 第 4 節）。
