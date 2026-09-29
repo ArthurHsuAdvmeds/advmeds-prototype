@@ -12770,7 +12770,8 @@
           <button type="button" class="ai-kpi-card ai-kpi-clickable" id="openAiCorrelationDialog">
             <span>預測吻合程度</span>
             <strong id="aiCorrelation">—</strong>
-            <small>越接近 1，整體越一致｜點擊查看變化</small>
+            <small>越接近 1，整體越一致</small>
+            <span class="v6-open-hint">點擊查看變化 <i aria-hidden="true">›</i></span>
           </button>
           <article class="ai-kpi-card">
             <span>累積比對資料</span>
@@ -13031,7 +13032,7 @@
             <div class="hospital-his-label">優化計畫無法收案</div>
             <strong><span id="hospitalUnableCardTotal">60</span> <em>件</em></strong>
             <div class="hospital-his-detail" id="hospitalUnableTop">最多：住院 12 件（20.0%）</div>
-            <small>點擊查看各無法收案原因人數與占比</small>
+            <span class="v6-open-hint">點擊查看各無法收案原因人數與占比 <i aria-hidden="true">›</i></span>
           </article>
         </div>
       </section>
@@ -14345,8 +14346,36 @@ document.addEventListener('DOMContentLoaded', () => {
     return d3.geoMercator().fitExtent([[pad,pad],[width-pad,height-pad]], {type:'FeatureCollection',features});
   }
 
+  /* ===== v6：手機版（≤899px）地圖 RWD =====
+     桌機維持 900×650 畫布；手機的地圖框是直式的，若仍用橫式畫布，
+     臺北市（直長形）只會畫在中間一小塊。改用與地圖框同比例的畫布（寬固定 900、高依比例），
+     並把點位與行政區名稱放大到手指點得到、看得清楚的螢幕尺寸。 */
+  const GEO_COMPACT_MQ = window.matchMedia('(max-width:899px)');
+  function geoCanvasBox(){
+    const svgEl = geoSvg.node();
+    const r = svgEl ? svgEl.getBoundingClientRect() : null;
+    if(!GEO_COMPACT_MQ.matches || !r || !r.width || !r.height) return { w:900, h:650, pad:55 };
+    return { w:900, h:Math.round(Math.min(1600, Math.max(520, 900*r.height/r.width))), pad:36 };
+  }
+  /* 每個畫布單位在螢幕上是幾 px（畫布與地圖框同比例，所以用寬度算即可） */
+  function geoScreenScale(){
+    const svgEl = geoSvg.node();
+    const vb = svgEl && svgEl.viewBox && svgEl.viewBox.baseVal;
+    const w = svgEl ? svgEl.getBoundingClientRect().width : 0;
+    return (vb && vb.width && w) ? w/vb.width : 1;
+  }
+  /* 手機上點位半徑約 4.2px、行政區名稱約 9.5px；桌機一律為 1（不變） */
+  function geoCompactFactors(){
+    if(!GEO_COMPACT_MQ.matches) return { point:1, label:1 };
+    const s = geoScreenScale();
+    return { point:Math.max(1, 4.2/(GEO_SITE_R*s)), label:Math.max(1, 9.5/(11*s)) };
+  }
+
   function renderNationMap(){
     geoLevel='nation'; geoCountyCode=null; geoCountyName=null; geoSelectedCode=null;
+    /* v6：全臺層級（含離島框）沿用固定的 900×650 畫布 */
+    geoSvg.attr('viewBox','0 0 900 650');
+    geoZoomBehavior.translateExtent([[0,0],[900,650]]);
     /* 全臺層級不畫個案點位，回到縣市熱度圖 */
     geoPointsMode=false; geoSvg.node().classList.remove('points-mode');
     const mainFeatures=geoCountyFeatures.filter(f=>!offshoreNames.has(f.properties.COUNTYNAME));
@@ -14440,7 +14469,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const features=geoTownFeatures.filter(f=>String(f.properties.COUNTYCODE)===geoCountyCode);
     geoViewport.selectAll('*').remove();
     if(!features.length){ updateGeoUi([]); return; }
-    const projection=fitProjection(features,900,650,55); const path=d3.geoPath(projection); const values=features.map(townValue);
+    /* v6：畫布比例跟著地圖框走（手機為直式），並限制拖曳範圍不超出地圖 */
+    const box=geoCanvasBox();
+    geoSvg.attr('viewBox',`0 0 ${box.w} ${box.h}`);
+    geoZoomBehavior.translateExtent([[0,0],[box.w,box.h]]);
+    const projection=fitProjection(features,box.w,box.h,box.pad); const path=d3.geoPath(projection); const values=features.map(townValue);
     geoViewport.selectAll('path').data(features).join('path')
       .attr('class',d=>`geo-region ${geoColorClass(townValue(d),values)}`)
       .attr('data-code',d=>String(d.properties.TOWNCODE))
@@ -14609,20 +14642,45 @@ document.addEventListener('DOMContentLoaded', () => {
   function applyCasePointScale(){
     if(!geoPointsMode) return;
     const k=geoZoom.k||1;
-    const f=Math.pow(k,0.5)/k;
+    const cf=geoCompactFactors();   /* v6：手機放大點位與行政區名稱；桌機兩者皆為 1 */
+    const f=Math.pow(k,0.5)/k*cf.point;
     geoViewport.selectAll('.geo-site')
       .attr('transform',d=>`translate(${d.x},${d.y}) scale(${f})`);
     /* 行政區名稱原本會跟著地圖等比放大、蓋住點位；改為只小幅成長 */
     geoViewport.selectAll('.geo-label')
-      .style('font-size',`${11*Math.pow(k,0.3)/k}px`)
-      .style('stroke-width',`${2.6/k}px`);
+      .style('font-size',`${11*cf.label*Math.pow(k,0.3)/k}px`)
+      .style('stroke-width',`${2.6*cf.label/k}px`);
   }
 
   const geoZoomBehavior=d3.zoom().scaleExtent([1,8]).on('zoom',event=>{
     geoZoom=event.transform; geoViewport.attr('transform',geoZoom); geoStage.classList.toggle('draggable',geoZoom.k>1); document.getElementById('geoZoomReset').textContent=`${Math.round(geoZoom.k*100)}%`;
+    /* v6：拖曳／縮放時收起提示框（觸控裝置沒有「滑鼠移開」事件，提示框會停在舊位置） */
+    if(event.sourceEvent) hideGeoTooltip();
     applyCasePointScale();
   });
-  geoSvg.call(geoZoomBehavior).on('dblclick.zoom',null);
+  /* 滑鼠雙擊維持停用（避免與點選行政區衝突）；觸控雙擊則以點擊處為中心放大 2 倍。
+     d3 會把觸控雙擊轉給 dblclick.zoom 的 handler，此時 event 為 touchend。 */
+  geoSvg.call(geoZoomBehavior).on('dblclick.zoom',function(event){
+    if(!event || event.type!=='touchend') return;
+    const t=event.changedTouches && event.changedTouches[0];
+    geoSvg.transition().duration(220).call(geoZoomBehavior.scaleBy, 2, t ? d3.pointer(t,this) : undefined);
+  });
+  /* v6：旋轉手機或視窗跨過 899px 時地圖框比例改變，重畫縣市地圖讓畫布維持同比例（保留已選取的行政區） */
+  let geoResizeTimer=null;
+  window.addEventListener('resize',()=>{
+    clearTimeout(geoResizeTimer);
+    geoResizeTimer=setTimeout(()=>{
+      if(!geoDialog || !geoDialog.open || geoLevel!=='county' || !geoTownFeatures.length) return;
+      const vb=geoSvg.node().viewBox.baseVal, box=geoCanvasBox();
+      if(Math.abs(vb.height-box.h)/box.h>0.06){
+        const keep=geoSelectedCode;
+        renderCountyMap();
+        if(keep){ geoSelectedCode=null; selectGeoRegion(keep); }
+      }else{
+        applyCasePointScale();
+      }
+    },200);
+  });
   function resetGeoZoom(){ geoSvg.transition().duration(180).call(geoZoomBehavior.transform,d3.zoomIdentity); }
   if(geoZoomIn) geoZoomIn.addEventListener('click',()=>geoSvg.transition().duration(160).call(geoZoomBehavior.scaleBy,1.35));
   if(geoZoomOut) geoZoomOut.addEventListener('click',()=>geoSvg.transition().duration(160).call(geoZoomBehavior.scaleBy,1/1.35));
@@ -23904,5 +23962,468 @@ document.addEventListener('click',event=>{
   /* 本段位於檔尾，主選單與下拉此時都已解析完成，直接初始化可避免 pill 列先閃一下 */
   if(document.getElementById("v6NavSelect")) boot();
   else document.addEventListener("DOMContentLoaded", boot, { once:true });
+})();
+</script>
+
+
+<style id="v6-mobile-rwd">
+/* =========================================================================
+   v6 — 手機 RWD 優化（會議意見）
+   1. 可點擊卡片的提示改為明顯的按鈕樣式（所有尺寸）
+   2. 第二層頁籤過長時換行（≤899px）
+   3. 長條圖在 ≤899px 改為橫向；風險分析的堆疊條貼齊卡片寬度
+   4. 指揮板流程卡片在 ≤899px 改為直式
+   5. 案件熱點地圖（≤899px）：直式畫布、圖例移到地圖下方、說明可換行、縮放鈕加大
+      （觸控手勢與畫布比例見地圖模組內的 v6 註解）
+   權重：舊層大量使用 `.dashboard .page:is(#…) :is(.…)`（1,3,0）＋ !important，
+   這裡一律以 `html body .dashboard #頁面.page …` 起頭壓過。
+   ========================================================================= */
+
+/* ---------- 1. 可點擊卡片提示（所有尺寸，樣式與 SNQ 的「點擊查看…」一致） ---------- */
+.dashboard .v6-open-hint{
+  align-self:flex-start;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  width:auto;
+  max-width:100%;
+  margin-top:10px;
+  padding:6px 13px;
+  border:1px solid #cfe3f6;
+  border-radius:999px;
+  background:#f3f9ff;
+  color:#1f7fd6;
+  font-size:13px;
+  font-weight:700;
+  line-height:1.25;
+  text-align:left;
+  white-space:normal;
+  transition:background-color .15s ease,border-color .15s ease;
+}
+.dashboard .v6-open-hint i{ font-style:normal; font-size:16px; line-height:1; }
+#hospital #hospitalUnableCard,
+#ai #openAiCorrelationDialog{ cursor:pointer; }
+#hospital #hospitalUnableCard:hover .v6-open-hint,
+#hospital #hospitalUnableCard:focus-visible .v6-open-hint,
+#ai #openAiCorrelationDialog:hover .v6-open-hint,
+#ai #openAiCorrelationDialog:focus-visible .v6-open-hint{
+  background:#e7f2fe;
+  border-color:#9fcaf1;
+}
+#hospital #hospitalUnableCard:active,
+#ai #openAiCorrelationDialog:active{ transform:translateY(1px); }
+/* AI 頁的指標卡把卡片內 span 放大到 15px，按鈕要固定字級；桌機卡片較矮（1920×1080 約 138px），收緊留白 */
+#ai #openAiCorrelationDialog .v6-open-hint{ font-size:13px !important; line-height:1.25 !important; }
+@media (min-width:1200px){
+  #ai #openAiCorrelationDialog .v6-open-hint{ margin-top:2px !important; padding:3px 10px !important; }
+  #ai #openAiCorrelationDialog > strong{ margin-top:6px !important; margin-bottom:3px !important; }
+}
+
+/* ---------- 2. 第二層頁籤：過長時換行，改為膠囊按鈕（≤899px） ---------- */
+@media (max-width:899px){
+  html body .dashboard .page:is(#efficiency,#outcome,#command) :is(.eff-v79-tabs,.outcome-v62-tabs,.command-view-tabs){
+    flex-wrap:wrap !important;
+    overflow:visible !important;
+    height:auto !important;
+    min-height:0 !important;
+    gap:6px !important;
+    padding:2px 0 4px !important;
+    border-bottom:0 !important;
+  }
+  html body .dashboard .page:is(#efficiency,#outcome,#command) :is(.eff-v79-tab,.outcome-v62-tab,.command-view-tab){
+    flex:0 1 auto !important;
+    width:auto !important;
+    height:auto !important;
+    min-height:36px !important;
+    padding:7px 14px !important;
+    border:1px solid #dce5ef !important;
+    border-radius:999px !important;
+    background:#fff !important;
+    color:#596579 !important;
+    box-shadow:none !important;
+    font-size:13px !important;
+    line-height:1.3 !important;
+    white-space:normal !important;
+    text-align:center !important;
+  }
+  html body .dashboard .page:is(#efficiency,#outcome,#command) :is(.eff-v79-tab,.outcome-v62-tab,.command-view-tab).active{
+    background:#218fee !important;
+    border-color:#218fee !important;
+    color:#fff !important;
+  }
+}
+
+/* ---------- 3. 長條圖改橫向（≤899px） ----------
+   直條在手機只看得到 3～5 根、其餘要在卡片內左右滑；改為「標籤｜長條｜數值」一列一筆。
+   長條寬度＝原本的高度百分比，由 v6-mobile-rwd-behavior 同步成 --v6-bar。 */
+@media (max-width:899px){
+  html body .dashboard #basic.page :is(.district-bar-chart,.age-chart),
+  html body .dashboard #reporter.page .reporter-bar-chart{
+    display:block !important;
+    height:auto !important;
+    min-height:0 !important;
+    overflow:visible !important;
+    padding:6px 0 2px !important;
+  }
+  html body .dashboard #basic.page :is(.district-y-axis,.age-chart .y-axis),
+  html body .dashboard #basic.page :is(.district-chart-card,.basic-chart-card) .axis-title,
+  html body .dashboard #reporter.page .reporter-y-axis{ display:none !important; }
+  html body .dashboard #basic.page .age-chart::before{ display:none !important; }
+
+  html body .dashboard #basic.page :is(.district-bars,.age-chart .bars),
+  html body .dashboard #reporter.page .reporter-bars-area{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;   /* 原本直條貼底用 flex-end，直向排列時會變成靠右縮寬 */
+    justify-content:flex-start !important;
+    gap:8px !important;
+    width:auto !important;
+    min-width:0 !important;
+    height:auto !important;
+    padding:0 !important;
+    border:0 !important;
+    background:none !important;
+  }
+  html body .dashboard #basic.page :is(.district-bar-col,.age-chart .bar-col),
+  html body .dashboard #reporter.page .reporter-bar-col{
+    position:relative !important;
+    display:grid !important;
+    grid-template-columns:52px minmax(0,1fr) 46px !important;
+    align-items:center !important;
+    column-gap:10px !important;
+    align-self:stretch !important;
+    justify-content:stretch !important;
+    width:auto !important;
+    min-width:0 !important;
+    max-width:none !important;   /* 直條時每根柱子有寬度上限（例如 76px），橫向時要解除 */
+    height:22px !important;
+    min-height:0 !important;
+    flex:none !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
+  /* 底色軌道 */
+  html body .dashboard #basic.page :is(.district-bar-col,.age-chart .bar-col)::before,
+  html body .dashboard #reporter.page .reporter-bar-col::before{
+    content:"" !important;
+    display:block !important;
+    grid-column:2 !important;
+    grid-row:1 !important;
+    position:static !important;
+    height:12px !important;
+    border-radius:6px !important;
+    background:#edf2f7 !important;
+  }
+  /* 標籤：左欄 */
+  html body .dashboard #basic.page :is(.district-bar-col > span,.age-chart .bar-col > span),
+  html body .dashboard #reporter.page .reporter-bar-label{
+    grid-column:1 !important;
+    grid-row:1 !important;
+    position:static !important;
+    transform:none !important;
+    width:auto !important;
+    margin:0 !important;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap !important;
+    text-align:right !important;
+    color:#475467 !important;
+    font-size:13px !important;
+    line-height:1.2 !important;
+  }
+  /* 長條：中欄 */
+  html body .dashboard #basic.page :is(.district-vbar,.age-chart .vbar),
+  html body .dashboard #reporter.page .reporter-bar{
+    grid-column:2 !important;
+    grid-row:1 !important;
+    justify-self:start !important;
+    align-self:center !important;
+    position:relative !important;
+    z-index:1;
+    top:auto !important;
+    bottom:auto !important;
+    width:var(--v6-bar,0%) !important;
+    min-width:2px !important;
+    max-width:100% !important;
+    height:12px !important;
+    min-height:0 !important;
+    max-height:none !important;
+    margin:0 !important;
+    border-radius:6px !important;
+    transform:none !important;
+  }
+  /* 數值：右欄 */
+  html body .dashboard #basic.page .district-bar-col > b,
+  html body .dashboard #reporter.page .reporter-bar-value{
+    grid-column:3 !important;
+    grid-row:1 !important;
+    position:static !important;
+    transform:none !important;
+    margin:0 !important;
+    white-space:nowrap !important;
+    text-align:left !important;
+    color:#344054 !important;
+    font-size:13px !important;
+    font-weight:700 !important;
+  }
+  /* 年齡圖原本滑過才出現的提示框（::after）改成常駐數值 */
+  html body .dashboard #basic.page .age-chart .bar-col::after{
+    content:attr(data-v6-value) !important;
+    grid-column:3 !important;
+    grid-row:1 !important;
+    position:static !important;
+    transform:none !important;
+    opacity:1 !important;
+    visibility:visible !important;
+    min-width:0 !important;
+    padding:0 !important;
+    background:none !important;
+    box-shadow:none !important;
+    white-space:nowrap !important;
+    text-align:left !important;
+    color:#344054 !important;
+    font-size:13px !important;
+    font-weight:700 !important;
+  }
+
+  /* 通報案件風險分析：堆疊條貼齊卡片寬度（原本 560px 最小寬度會超出卡片） */
+  html body .dashboard #risk.page .risk-chart{ width:auto !important; min-width:0 !important; }
+  html body .dashboard #risk.page .risk-row{ grid-template-columns:78px minmax(0,1fr) !important; column-gap:8px !important; }
+  html body .dashboard #risk.page .risk-row-name{ width:auto !important; font-size:12px !important; line-height:1.25 !important; white-space:normal !important; }
+  html body .dashboard #risk.page .risk-stack{ width:auto !important; min-width:0 !important; }
+  html body .dashboard #risk.page .risk-axis-labels{ width:auto !important; margin-left:86px !important; }
+  html body .dashboard #risk.page .risk-chart::before{ left:86px !important; }
+  /* 過窄的區段放不下百分比文字（例如只露出「.1%」），寬度不足 36px 時隱藏文字，滑過仍有 title 提示 */
+  html body .dashboard #risk.page .risk-seg{ container-type:inline-size; }
+  @container (max-width:36px){
+    .risk-seg > span{ visibility:hidden; }
+  }
+}
+
+/* ---------- 4. 指揮板流程卡片（≤899px）：改為直式 ----------
+   桌機是「類別 × 案件狀態」矩陣＋連線，手機上右側矩陣整個跑到畫面外。
+   改為：總通報大卡＋四個總體狀態 2×2 → 各類別一張卡、其四個狀態 2×2 排在下方。
+   點擊總通報／類別卡片收合的行為不變；依座標繪製的連線在直式排列下無意義，隱藏。 */
+@media (max-width:899px){
+  html body .dashboard #command.page .interactive-flow-board{
+    overflow:visible !important;
+    height:auto !important;
+    min-height:0 !important;
+  }
+  html body .dashboard #command.page .interactive-flow-stage{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+    justify-content:flex-start !important;
+    gap:16px !important;
+    width:auto !important;
+    min-width:0 !important;
+    height:auto !important;
+    min-height:0 !important;
+    padding:8px 0 4px !important;
+    container-type:normal !important;
+    overflow:visible !important;
+  }
+  html body .dashboard #command.page .interactive-flow-svg{ display:none !important; }
+
+  html body .dashboard #command.page .interactive-overall-column,
+  html body .dashboard #command.page .interactive-detail-group{
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    grid-template-rows:none !important;   /* 桌機是 5 列固定列高，2×2 排列時會留下空列 */
+    grid-auto-rows:auto !important;
+    gap:8px !important;
+    width:auto !important;
+    max-width:none !important;
+    height:auto !important;
+    min-height:0 !important;
+    position:static !important;
+    transform:none !important;
+    opacity:1 !important;
+    visibility:visible !important;
+  }
+  html body .dashboard #command.page .interactive-total-card{ grid-column:1 / -1 !important; }
+  html body .dashboard #command.page .interactive-detail-group:not(.is-open){ display:none !important; }
+
+  html body .dashboard #command.page .interactive-category-column{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:10px !important;
+    width:auto !important;
+    height:auto !important;
+    min-height:0 !important;
+    position:static !important;
+    transform:none !important;
+    opacity:1 !important;
+    visibility:visible !important;
+  }
+  html body .dashboard #command.page .interactive-category-column:not(.is-open){ display:none !important; }
+  html body .dashboard #command.page .interactive-category-column::before{
+    content:"依通報類別（點類別卡片可收合明細）";
+    display:block;
+    margin:0 2px -2px;
+    color:#667085;
+    font-size:12.5px;
+    font-weight:700;
+  }
+  html body .dashboard #command.page .interactive-category-row{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:8px !important;
+    width:auto !important;
+    height:auto !important;
+    min-height:0 !important;
+    padding:10px !important;
+    border:1px solid #e4eaf2 !important;
+    border-radius:14px !important;
+    background:#fbfcfe !important;
+    position:static !important;
+    transform:none !important;
+  }
+
+  /* 卡片改自動高度、字級固定（原本依容器高度縮放） */
+  html body .dashboard #command.page .interactive-flow-card{
+    position:relative !important;
+    top:auto !important;
+    left:auto !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:2px !important;
+    width:auto !important;
+    min-width:0 !important;       /* 明細卡在桌機有最小寬度，四欄排列時會互相重疊 */
+    max-width:none !important;
+    height:auto !important;
+    min-height:0 !important;
+    max-height:none !important;
+    margin:0 !important;
+    padding:10px 12px !important;
+    transform:none !important;
+    opacity:1 !important;
+    visibility:visible !important;
+  }
+  html body .dashboard #command.page .interactive-flow-card > span{ font-size:12.5px !important; line-height:1.3 !important; }
+  html body .dashboard #command.page .interactive-flow-card > strong{ font-size:24px !important; line-height:1.15 !important; }
+  html body .dashboard #command.page .interactive-flow-card > small{ font-size:11.5px !important; line-height:1.3 !important; }
+  html body .dashboard #command.page .interactive-total-card > strong{ font-size:34px !important; }
+  html body .dashboard #command.page .category-trigger > strong{ font-size:28px !important; }
+  html body .dashboard #command.page .detail-card{ padding:8px 10px !important; }
+  html body .dashboard #command.page .detail-card > strong{ font-size:20px !important; }
+  /* 可收合提示：右側箭頭 */
+  html body .dashboard #command.page :is(.interactive-total-card,.category-trigger) > span::after{
+    content:" ▾";
+    color:#98a2b3;
+    font-size:12px;
+  }
+  html body .dashboard #command.page :is(.interactive-total-card,.category-trigger)[aria-expanded="false"] > span::after{ content:" ▸"; }
+}
+/* 大手機／直式平板（600–899px）寬度夠，四個狀態排成一列 */
+@media (min-width:600px) and (max-width:899px){
+  html body .dashboard #command.page .interactive-overall-column,
+  html body .dashboard #command.page .interactive-detail-group{
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  }
+}
+
+/* ---------- 5. 案件熱點地圖（≤899px） ---------- */
+@media (max-width:899px){
+  #districtMapDialog .geo-map-card{
+    display:flex !important;
+    flex-direction:column !important;
+    height:auto !important;
+    min-height:0 !important;
+    overflow:visible !important;
+  }
+  #districtMapDialog .geo-stage{
+    display:flex !important;
+    flex-direction:column !important;
+    flex:none !important;
+    height:auto !important;
+    min-height:0 !important;
+    overflow:visible !important;
+  }
+  /* 直式地圖框：寬度的 1.25 倍高（上限 560px）；不依視窗高度，避免網址列伸縮時重畫 */
+  #districtMapDialog .geo-svg{
+    flex:none !important;
+    width:100% !important;
+    height:clamp(300px,125vw,560px) !important;
+  }
+  /* 圖例原本疊在地圖下半部，會蓋住文山、南港一帶；改放在地圖下方 */
+  #districtMapDialog .geo-legend{
+    position:static !important;
+    order:3;
+    top:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    left:auto !important;
+    width:auto !important;
+    max-width:none !important;
+    margin:8px 10px 0 !important;
+    transform:none !important;
+  }
+  #districtMapDialog .geo-footnote{
+    height:auto !important;
+    min-height:0 !important;
+    padding:8px 12px 10px !important;
+    overflow:visible !important;
+    white-space:normal !important;
+    line-height:1.5 !important;
+  }
+  /* 縮放鈕加大，手指好按 */
+  #districtMapDialog .geo-zoom-tools button{
+    min-width:40px !important;
+    min-height:36px !important;
+    font-size:16px !important;
+  }
+  #districtMapDialog .geo-risk-btn{ min-height:32px !important; }
+}
+</style>
+
+<script id="v6-mobile-rwd-behavior">
+(function(){
+  "use strict";
+  /* v6：長條圖在手機改為橫向時，長條寬度要等於原本的「高度百分比」。
+     各圖表的繪製程式只寫行內 height:%，這裡同步成 CSS 變數 --v6-bar；
+     年齡圖的數值只存在提示文字（data-tooltip）裡，另外抽成 data-v6-value 供橫向時顯示。
+     以 MutationObserver 監看，日期／類別篩選重繪後會自動再同步。 */
+  var BAR_SELECTOR = "#basic .district-vbar, #basic .age-chart .vbar, #reporter .reporter-bar";
+
+  function syncBars(){
+    var bars = document.querySelectorAll(BAR_SELECTOR);
+    for(var i = 0; i < bars.length; i++){
+      var h = bars[i].style.height;
+      if(h && /%$/.test(h) && bars[i].style.getPropertyValue("--v6-bar") !== h){
+        bars[i].style.setProperty("--v6-bar", h);
+      }
+    }
+    var cols = document.querySelectorAll("#basic .age-chart .bar-col[data-tooltip]");
+    for(var j = 0; j < cols.length; j++){
+      var m = (cols[j].getAttribute("data-tooltip") || "").match(/[｜|]\s*([\d,.]+)/);
+      if(m && cols[j].getAttribute("data-v6-value") !== m[1]) cols[j].setAttribute("data-v6-value", m[1]);
+    }
+  }
+
+  var pending = false;
+  function schedule(){
+    if(pending) return;
+    pending = true;
+    Promise.resolve().then(function(){ pending = false; syncBars(); });
+  }
+
+  function boot(){
+    syncBars();
+    ["basic", "reporter"].forEach(function(id){
+      var root = document.getElementById(id);
+      if(root){
+        new MutationObserver(schedule).observe(root, {
+          subtree:true, childList:true, attributes:true, attributeFilter:["style", "data-tooltip"]
+        });
+      }
+    });
+  }
+
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot, { once:true });
+  else boot();
 })();
 </script>

@@ -74,11 +74,15 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
 
 ## 3. 目前狀況（2026-09-29）
 
-- **`tsghb-dashboard` 最新版是 `v6/`**（以 v5 為基礎：手機版 ≤899px 的主選單由橫向捲動 pill 改為黏頂下拉選單，其餘同 v5）。
+- **`tsghb-dashboard` 最新版是 `v6/`**（以 v5 為基礎的手機 RWD 版：≤899px 主選單改黏頂下拉、第二層頁籤換行、長條圖改橫向、
+  指揮板流程卡片改直式、熱點地圖改直式畫布並支援觸控手勢；醫療機構端「優化計畫無法收案」與 AI「預測吻合程度」的可點擊提示改為按鈕，桌機同步）。
   入口轉址頁 `LATEST = 6`，canonical、`<noscript>`、手動連結都指向 `v6/`。
-- v6 只新增主選單後的 `.v6-nav-select` 容器與檔尾 `<style id="v6-mobile-nav-select">`／`<script id="v6-mobile-nav-select-behavior">`：
-  選項由 `.tabs` 內的按鈕自動產生，切頁一律觸發對應 `.tab` 的 click（沿用既有切頁與指揮儀表板重畫邏輯）。
-  新增的控制項**不可帶 `tab` class**，否則會被 `querySelectorAll('.tab')` 當成頁籤綁上切頁事件。
+- v6 的修改：主選單後的 `.v6-nav-select` 容器、兩張可點擊卡片裡的 `.v6-open-hint`、檔尾 `<style id="v6-mobile-nav-select">`／`<style id="v6-mobile-rwd">`
+  與各自的 `-behavior` 腳本，以及地圖模組內標註 `v6` 的程式（`geoCanvasBox()`：≤899px 畫布高度依地圖框比例、`translateExtent`、觸控雙擊放大、旋轉時重畫）。
+  - 主選單下拉：選項由 `.tabs` 內的按鈕自動產生，切頁一律觸發對應 `.tab` 的 click；新增的控制項**不可帶 `tab` class**，否則會被 `querySelectorAll('.tab')` 當成頁籤。
+  - 長條圖橫向：各圖表只寫行內 `height:%`，由 `v6-mobile-rwd-behavior` 同步成 CSS 變數 `--v6-bar`（MutationObserver 監看 `#basic`、`#reporter`）；
+    新增直條圖時要把長條元素加進腳本的 `BAR_SELECTOR`，否則手機上長條寬度會是 0。
+  - ≤899px 的規則一律以 `html body .dashboard #頁面.page …` 起頭，才壓得過舊層的 `.dashboard .page:is(#…) :is(.…)`＋`!important`。
 - v5（以 v4 為基礎）：區域分布圖點位加大並合併同址通報、字級以 1920×1080 為基準放大、
   模擬資料補到 2026/09/25、SNQ 結案後轉介比例點擊開 dialog 看門診／居家／住院、
   醫療機構端無法收案原因表收成右側卡片 + dialog、指揮儀表板同期比較改為比較案件處理效率指標並可依通報類別篩選。

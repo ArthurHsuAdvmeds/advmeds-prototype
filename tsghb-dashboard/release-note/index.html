@@ -327,7 +327,9 @@ footer{
       <span class="release-vs">相較 V5</span>
     </div>
     <p class="release-summary">
-      以 V5 為基礎，手機版的主選單改為下拉選單。桌機版版面、各頁內容與資料均未更動。
+      以 V5 為基礎，針對手機版（螢幕寬度 899 px 以下）進行 RWD 優化：主選單改為下拉、第二層頁籤自動換行、
+      長條圖改為橫向、指揮板改為直式、案件熱點地圖支援觸控操作。另外「優化計畫無法收案」等可點擊卡片的提示
+      改為明顯的按鈕（桌機同步調整）。其餘桌機版面、各頁內容與資料均未更動。
     </p>
 
     <div class="group">
@@ -355,6 +357,147 @@ footer{
             <span class="crumb">用手機開啟（或把視窗縮到 899 px 以下）</span>
             <span class="sep">›</span>
             <span class="crumb tab">頁首下方「頁面」下拉選單</span>
+          </div>
+        </li>
+
+        <li class="item">
+          <div class="item-head">
+            <span class="item-no">2</span>
+            <h3>第二層頁籤過長時自動換行<span class="tag fix">排版</span></h3>
+          </div>
+          <p>
+            手機上各頁的第二層頁籤原本排成一列、超出的部分要左右滑（例如案件處理效率指標的第 4 個頁籤被切掉）。
+            V6 改為膠囊按鈕，放不下時自動換到下一列；目前所在的頁籤以實心藍色標示。
+          </p>
+          <div class="path">
+            <span class="path-label">點選路徑</span>
+            <span class="crumb nav">案件處理效率指標</span>
+            <span class="sep">›</span>
+            <span class="crumb">第二層頁籤列</span>
+          </div>
+          <div class="path">
+            <span class="path-label">另見</span>
+            <span class="crumb nav">精神症狀改善成效指標</span>
+            <span class="sep">／</span>
+            <span class="crumb nav">指揮儀表板</span>
+          </div>
+        </li>
+
+        <li class="item">
+          <div class="item-head">
+            <span class="item-no">3</span>
+            <h3>長條圖在手機改為橫向<span class="tag fix">排版</span></h3>
+          </div>
+          <p>
+            直條圖在手機上只看得到 3～5 根，其餘要在卡片內左右滑。螢幕寬度 899 px 以下改為橫條：
+            每列依序是名稱、長條、數值，全部項目一次看完。900 px 以上（桌機、平板橫放）維持原本的直條圖。
+          </p>
+          <div class="detail">
+            <ul>
+              <li><b>基本資料</b>：臺北市各行政區通報案件數、年齡（年齡的數值原本要滑過才看得到，橫向時直接顯示）</li>
+              <li><b>通報者基本資料分析</b>：七大網絡轉介數量、平台使用者滿意度調查回收率、滿意度調查分數（原本的配色保留）</li>
+              <li><b>通報案件風險分析</b>：「初評」堆疊條原本會超出卡片，改為貼齊卡片寬度；太窄放不下百分比的區段不顯示文字，滑過仍看得到</li>
+              <li>切換日期或通報類別後，橫條會跟著重畫</li>
+            </ul>
+          </div>
+          <div class="path">
+            <span class="path-label">點選路徑</span>
+            <span class="crumb nav">基本資料</span>
+            <span class="sep">／</span>
+            <span class="crumb nav">通報者基本資料分析</span>
+            <span class="sep">／</span>
+            <span class="crumb nav">通報案件風險分析</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="group">
+      <h3 class="group-title">指揮儀表板</h3>
+      <ul class="items">
+        <li class="item">
+          <div class="item-head">
+            <span class="item-no">4</span>
+            <h3>指揮板流程卡片在手機改為直式<span class="tag fix">排版</span></h3>
+          </div>
+          <p>
+            桌機的指揮板是「通報類別 × 案件狀態」的矩陣加連線，手機上右側的類別與明細整個跑到畫面外。
+            V6 在 899 px 以下改為由上往下閱讀：
+          </p>
+          <div class="detail">
+            <ul>
+              <li>總通報案件大卡，下方是待派、已派、結案、未轉介／開案四個總體狀態</li>
+              <li>「依通報類別」：緊急醫療與第一～三類優化計畫各一張卡，該類別的四個狀態排在卡片下方</li>
+              <li>點總通報或類別卡片仍可收合／展開，名稱旁的 ▾／▸ 表示目前狀態</li>
+              <li>手機直式時狀態卡兩兩一排；大手機與直式平板（600–899 px）四個一排</li>
+            </ul>
+          </div>
+          <div class="path">
+            <span class="path-label">點選路徑</span>
+            <span class="crumb nav">指揮儀表板</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">指揮板</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="group">
+      <h3 class="group-title">基本資料 › 通報案件區域分布</h3>
+      <ul class="items">
+        <li class="item">
+          <div class="item-head">
+            <span class="item-no">5</span>
+            <h3>案件熱點地圖手機版優化，支援一般觸控操作<span class="tag new">新增</span></h3>
+          </div>
+          <p>
+            原本手機上的臺北市只畫在地圖框中間一小塊、點位很小，圖例還疊在地圖下半部，蓋住文山、南港一帶。
+          </p>
+          <div class="detail">
+            <ul>
+              <li>地圖框改為直式並依比例繪製，臺北市撐滿整個寬度；點位與行政區名稱放大到手指點得到、看得清楚的大小</li>
+              <li>圖例移到地圖下方，說明文字完整換行，縮放按鈕加大</li>
+              <li>觸控：雙指縮放、放大後單指拖曳、雙擊放大、點行政區選取、點點位看明細；拖曳時提示框自動收起</li>
+              <li>未放大時地圖固定不動，不會被拖出畫面（桌機用滑鼠拖曳同樣適用）</li>
+              <li>旋轉手機或視窗大小改變時，地圖依新比例重畫，已選取的行政區會保留</li>
+            </ul>
+          </div>
+          <div class="path">
+            <span class="path-label">點選路徑</span>
+            <span class="crumb nav">基本資料</span>
+            <span class="sep">›</span>
+            <span class="crumb">臺北市各行政區通報案件數</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">查看熱點地圖 ↗</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="group">
+      <h3 class="group-title">醫療機構端處理成效分析（桌機與手機）</h3>
+      <ul class="items">
+        <li class="item">
+          <div class="item-head">
+            <span class="item-no">6</span>
+            <h3>「優化計畫無法收案」的可點擊提示改為明顯按鈕<span class="tag fix">調整</span></h3>
+          </div>
+          <p>
+            原本只有一行灰色小字「點擊查看各無法收案原因人數與占比」，看不出卡片可以點。
+            改為與 SNQ 頁相同的藍色按鈕樣式（含 ›），滑過或按下時也有回饋；桌機與手機都已調整。
+          </p>
+          <p>AI 模型預測準確率頁「預測吻合程度」卡片的「點擊查看變化」是同樣的問題，一併改為按鈕樣式。</p>
+          <div class="path">
+            <span class="path-label">點選路徑</span>
+            <span class="crumb nav">醫療機構端處理成效分析</span>
+            <span class="sep">›</span>
+            <span class="crumb">優化計畫無法收案</span>
+          </div>
+          <div class="path">
+            <span class="path-label">另見</span>
+            <span class="crumb nav">AI模型預測準確率</span>
+            <span class="sep">›</span>
+            <span class="crumb">預測吻合程度</span>
           </div>
         </li>
       </ul>
