@@ -2693,7 +2693,7 @@
           <div style="font-size:12px;color:var(--grey-600);margin-top:6px">{{ refWaist }}</div>
         </div>
         <div class="fld">
-          <label style="{{ lblGrip }}">握力（較佳值，kg）<span class="req">*</span></label>
+          <label style="{{ lblGrip }}">握力（慣用手，kg）<span class="req">*</span></label>
           <div class="mphr-field" style="{{ boxEditGrip }}"><input type="number" value="{{ grip }}" sc-camel-on-change="{{ upd_grip }}" placeholder="0" style="{{ valGrip }}"></div>
           <div style="font-size:12px;color:var(--grey-600);margin-top:6px">{{ refGrip }}</div>
         </div>
@@ -2706,13 +2706,6 @@
           <label style="{{ lblCalfR }}">右小腿圍（cm）<span class="req">*</span></label>
           <div class="mphr-field" style="{{ boxEditCalfR }}"><input type="number" value="{{ calfR }}" sc-camel-on-change="{{ upd_calfR }}" placeholder="0" style="{{ valCalfR }}"></div>
           <div style="font-size:12px;color:var(--grey-600);margin-top:6px">{{ refCalf }}</div>
-        </div>
-        <div class="fld">
-          <label style="{{ lblWaistCalf }}">腰腿比</label>
-          <div class="mphr-field ro-field" style="{{ boxWaistCalf }}">
-            <span style="{{ valWaistCalf }}">{{ waistCalfStr }}</span>
-          </div>
-          <div style="font-size:12px;color:var(--grey-600);margin-top:6px">腰圍 ÷ 較粗小腿圍（{{ thickCalfLabel }}）；{{ refWaistCalf }}</div>
         </div>
       </div>
 
@@ -2847,20 +2840,18 @@
             
           </div>
           <div style="padding: 18px 0; border-bottom: 1px solid var(--grey-200); border-style: none; margin-bottom: 8px; padding-top: 8px; padding-bottom: 8px">
-            <div style="box-sizing: border-box; display: flex; flex-direction: column; gap: 4px"><div style="font-size: 15px; font-weight: 700; margin-bottom: 8px">② 低肌力（握力）</div><div style="font-size: 13px; color: var(--grey-700); line-height: 1.8">握力取左右手較佳值。<br>50–64 歲 — 男：<b style="color:var(--grey-900)">&lt; 34 kg</b>　女：<b style="color:var(--grey-900)">&lt; 20 kg</b><br>≥65 歲 — 男：<b style="color:var(--grey-900)">&lt; 28 kg</b>　女：<b style="color:var(--grey-900)">&lt; 18 kg</b></div></div>
+            <div style="box-sizing: border-box; display: flex; flex-direction: column; gap: 4px"><div style="font-size: 15px; font-weight: 700; margin-bottom: 8px">② 低肌力（握力）</div><div style="font-size: 13px; color: var(--grey-700); line-height: 1.8">握力取慣用手測量值。<br>50–64 歲 — 男：<b style="color:var(--grey-900)">&lt; 34 kg</b>　女：<b style="color:var(--grey-900)">&lt; 20 kg</b><br>≥65 歲 — 男：<b style="color:var(--grey-900)">&lt; 28 kg</b>　女：<b style="color:var(--grey-900)">&lt; 18 kg</b></div></div>
             
           </div>
           
             <div style="box-sizing: border-box; display: flex; flex-direction: column; gap: 4px"><div style="font-size: 15px; font-weight: 700; margin-bottom: 8px">③ 小腿圍風險篩檢</div><div style="font-size: 13px; color: var(--grey-700); line-height: 1.8">男性：<b style="color:var(--grey-900)">&lt; 34 cm</b>　女性：<b style="color:var(--grey-900)">&lt; 33 cm</b><br>任一側低於門檻即提示風險，但小腿圍不是確診條件。</div></div>
             
           
-          <div style="box-sizing: border-box; display: flex; flex-direction: column; gap: 4px; margin-top: 8px"><div style="font-size: 15px; font-weight: 700; margin-bottom: 8px">④ 肥胖型肌少症風險（腰腿比）</div><div style="font-size: 13px; color: var(--grey-700); line-height: 1.8">腰腿比 ＝ 腰圍 ÷ 較粗小腿圍。<br>男性：<b style="color:var(--grey-900)">&gt; 2.6</b>　女性：<b style="color:var(--grey-900)">&gt; 2.4</b> 即標注風險。</div></div>
           <div style="padding: 18px 0 0; margin-top: 12px; padding-top: 8px">
             <div style="box-sizing: border-box; display: flex; flex-direction: column; gap: 4px; position: static"><div style="font-size: 15px; font-weight: 700; margin-bottom: 8px">AWGS 2025 肌少症</div><div style="font-size: 13px; color: var(--grey-700); line-height: 1.8"><b style="color:var(--grey-900)">低肌肉量 + 低肌力</b> 即判定為肌少症。<br>2025 共識已將步行速度、5 次坐站、SPPB 改列為「結果指標」，不再作為診斷條件；亦移除「嚴重肌少症」分級。</div></div>
             
           </div>
           <p style="margin: 20px 0 0; border-top: 1px solid var(--grey-200); font-size: 12px; color: var(--grey-600); line-height: 1.8; border-style: none; margin-top: 16px">門檻依 AWGS 2025 共識（BIA），依年齡分為 50–64 歲與 ≥65 歲（&lt;50 歲以 50–64 歲門檻作為參考）。低肌肉量可由 SMI 或 ASM/BMI 任一達標。小腿圍為篩檢工具，不作為確診條件。</p>
-          <div style="box-sizing: border-box; display: flex; flex-direction: column; gap: 4px; margin-top: 16px"><div style="font-size: 15px; font-weight: 700; margin-bottom: 8px">肥胖型肌少症風險</div><div style="font-size: 13px; color: var(--grey-700); line-height: 1.8">此指標之臨床切點源自國際大型高齡與長壽流行病學研究（如 Longevity Check-Up 8+ 國際研究項目）。在人體組成學中，腰圍反映腹部內臟脂肪堆積，小腿圍則代表下肢肌肉儲備。腰腿比（WCR）完美融合這兩項構面，能精準反映「脂肪過多、肌肉過少」的身體組成失衡。醫學統計顯示，健康族群的腰腿比平均值在 2.4 以下，當數值跨越臨界值時，受測者罹患肥胖型肌少症（Sarcopenic Obesity）、胰島素阻抗、糖尿病前期與心血管疾病的風險將顯著飆升。</div></div>
         </div>
         <div style="display:flex;justify-content:flex-end;padding:16px 24px;position:sticky;bottom:0;background:var(--grey-0)">
           <button sc-camel-on-click="{{ closeDialog }}" style="font-family:inherit;font-size:14px;font-weight:700;color:var(--grey-0);background:var(--green-300);border:none;border-radius:var(--radius-md);height:32px;padding:0 30px;cursor:pointer" style-hover="background:var(--green-500)">關閉</button>
@@ -2914,13 +2905,6 @@ class Component extends DCLogic {
     const cL = num(s.calfL), cR = num(s.calfR);
 
     const waist = num(s.waist);
-    let thickCalf = null, thickCalfLabel = "—";
-    if (cL != null || cR != null) {
-      if (cL != null && cR != null) { thickCalf = Math.max(cL, cR); thickCalfLabel = cL >= cR ? "左小腿" : "右小腿"; }
-      else if (cL != null) { thickCalf = cL; thickCalfLabel = "左小腿"; }
-      else { thickCalf = cR; thickCalfLabel = "右小腿"; }
-    }
-    const waistCalf = (waist != null && thickCalf) ? waist / thickCalf : null;
 
     // AWGS 2025 (BIA) cut-offs — age band: 50–64 (含 <50 參考) vs ≥65
     const elder = age != null && age >= 65;
@@ -2928,7 +2912,6 @@ class Component extends DCLogic {
     const asmBmiT = elder ? (male ? 0.83 : 0.57) : (male ? 0.90 : 0.63); // ASM/BMI
     const strT = elder ? (male ? 28 : 18) : (male ? 34 : 20);            // 握力
     const calfT = male ? 34 : 33;                                        // 小腿圍篩檢
-    const waistCalfT = male ? 2.6 : 2.4;                                 // 腰腿比（肥胖型）
 
     // 欄位下方的灰字標準值 — 依性別與 AWGS 2025 年齡分組
     const sexLabel = male ? "男性" : "女性";
@@ -2937,7 +2920,6 @@ class Component extends DCLogic {
     const refWaist = `建議 < ${male ? 90 : 80} cm（${sexLabel}）`;
     const refGrip = `低肌力門檻 < ${strT.toFixed(1)} kg（${sexLabel}${bandLabel}）`;
     const refCalf = `篩檢門檻 < ${calfT} cm（${sexLabel}）`;
-    const refWaistCalf = `肥胖型肌少症參考 > ${waistCalfT.toFixed(1)}`;
 
     const lowMassSmi = smi != null && smi < massT;
     const lowMassBmi = asmBmi != null && asmBmi < asmBmiT;
@@ -2966,7 +2948,6 @@ class Component extends DCLogic {
     };
 
     const chip = (bg, tx) => ({ fontSize: 12, fontWeight: 700, padding: "5px 12px", borderRadius: 100, background: bg, color: tx, whiteSpace: "nowrap" });
-    const obese = waistCalf != null && waistCalf > waistCalfT;
     // 臨床流程只使用三種標籤
     const tags = [];
     if (isSarc) tags.push({ text: "符合肌少症診斷", style: chip("var(--red-50)", "var(--red-500)") });
@@ -2999,12 +2980,11 @@ class Component extends DCLogic {
       Grip: lowStrength,
       CalfL: cL != null && cL < calfT,
       CalfR: cR != null && cR < calfT,
-      WaistCalf: obese,
     };
     const fieldStyles = {};
     for (const [k, bad] of Object.entries(outOfRange)) {
       fieldStyles["lbl" + k] = bad ? { color: "var(--red-500)" } : {};
-      // 唯讀格（BMI／腰腿比）超標時整格染紅底
+      // 唯讀格（BMI）超標時整格染紅底
       fieldStyles["box" + k] = bad ? {
         background: "var(--red-50)", boxShadow: "inset 0 0 0 1px var(--red-300)",
       } : {};
@@ -3016,8 +2996,7 @@ class Component extends DCLogic {
 
     return {
       ...s, ageGroup, isMale: male, isFemale: !male,
-      waistCalfStr: fmt(waistCalf, 2), thickCalfLabel,
-      refBmi, refWaist, refGrip, refCalf, refWaistCalf,
+      refBmi, refWaist, refGrip, refCalf,
       ...fieldStyles,
       bmiStr: fmt(bmi, 1), asmStr: fmt(asm, 2), smiStr: fmt(smi, 2), asmBmiStr: fmt(asmBmi, 3),
       hasResult, bannerStyle, bannerTitle, bannerDetail,

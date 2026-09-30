@@ -2701,13 +2701,6 @@ class Component extends DCLogic {
     const cL = num(s.calfL), cR = num(s.calfR);
 
     const waist = num(s.waist);
-    let thickCalf = null, thickCalfLabel = "—";
-    if (cL != null || cR != null) {
-      if (cL != null && cR != null) { thickCalf = Math.max(cL, cR); thickCalfLabel = cL >= cR ? "左小腿" : "右小腿"; }
-      else if (cL != null) { thickCalf = cL; thickCalfLabel = "左小腿"; }
-      else { thickCalf = cR; thickCalfLabel = "右小腿"; }
-    }
-    const waistCalf = (waist != null && thickCalf) ? waist / thickCalf : null;
 
     // AWGS 2025 (BIA) cut-offs — age band: 50–64 (含 <50 參考) vs ≥65
     const elder = age != null && age >= 65;
@@ -2715,7 +2708,6 @@ class Component extends DCLogic {
     const asmBmiT = elder ? (male ? 0.83 : 0.57) : (male ? 0.90 : 0.63); // ASM/BMI
     const strT = elder ? (male ? 28 : 18) : (male ? 34 : 20);            // 握力
     const calfT = male ? 34 : 33;                                        // 小腿圍篩檢
-    const waistCalfT = male ? 2.6 : 2.4;                                 // 腰腿比（肥胖型）
 
     // 欄位下方的灰字標準值 — 依性別與 AWGS 2025 年齡分組
     const sexLabel = male ? "男性" : "女性";
@@ -2726,7 +2718,6 @@ class Component extends DCLogic {
     const refGrip = `低肌力門檻 < ${strT.toFixed(1)} kg（${sexLabel}${bandLabel}）`;
     const refGripStandard = `標準值 ≥ ${strT.toFixed(1)} kg`;
     const refCalf = `篩檢門檻 < ${calfT} cm（${sexLabel}）`;
-    const refWaistCalf = `肥胖型肌少症參考 > ${waistCalfT.toFixed(1)}`;
 
     const queryResult = new URLSearchParams(window.location.search).get("a");
     const abnormalOverride = queryResult === "true" ? true : queryResult === "false" ? false : null;
@@ -2768,7 +2759,6 @@ class Component extends DCLogic {
       background: tc.bg, boxShadow: `inset 0 0 0 1px ${tc.bd}`,
     };
 
-    const obese = waistCalf != null && waistCalf > waistCalfT;
 
     // 評估結果三個指標：ASM 總量無門檻，SMI 與 ASM/BMI 顯示門檻與超標樣式
     const refSmi = `標準值 ≥ ${massT.toFixed(1)} kg/m²`;
@@ -2794,12 +2784,11 @@ class Component extends DCLogic {
       Grip: lowStrength,
       CalfL: cL != null && cL < calfT,
       CalfR: cR != null && cR < calfT,
-      WaistCalf: obese,
     };
     const fieldStyles = {};
     for (const [k, bad] of Object.entries(outOfRange)) {
       fieldStyles["lbl" + k] = bad ? { color: "var(--red-500)" } : {};
-      // 唯讀格（BMI／腰腿比）超標時整格染紅底
+      // 唯讀格（BMI）超標時整格染紅底
       fieldStyles["box" + k] = bad ? {
         background: "var(--red-50)", boxShadow: "inset 0 0 0 1px var(--red-300)",
       } : {};
@@ -2811,8 +2800,7 @@ class Component extends DCLogic {
 
     return {
       ...s, ageGroup, sexLabel, asmModeLabel,
-      waistCalfStr: fmt(waistCalf, 2), thickCalfLabel,
-      refBmi, refWaist, refGrip, refGripStandard, refCalf, refWaistCalf,
+      refBmi, refWaist, refGrip, refGripStandard, refCalf,
       ...fieldStyles,
       bmiStr: fmt(bmi, 1), asmStr: fmt(asm, 2), gripStr: fmt(grip, 1), smiStr: fmt(smi, 2), asmBmiStr: fmt(asmBmi, 3),
       hasResult, bannerStyle, bannerTitle, bannerDetail,
