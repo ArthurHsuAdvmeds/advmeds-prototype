@@ -2633,13 +2633,13 @@
           <div style="font-size:11px;color:var(--grey-600);margin-top:8px">{{ refGripStandard }}</div>
         </div>
         <div style="{{ tileSmi }}">
-          <div style="{{ tileSmiName }}">指標一</div>
+          <div style="{{ tileSmiName }}">身高校正之四肢肌肉量</div>
           <div style="{{ tileSmiVal }}">{{ smiStr }}</div>
           <div style="font-size:11px;color:var(--grey-500);margin-top:6px">kg/m²</div>
           <div style="font-size:11px;color:var(--grey-600);margin-top:8px">{{ refSmi }}</div>
         </div>
         <div style="{{ tileRatio }}">
-          <div style="{{ tileRatioName }}">指標二</div>
+          <div style="{{ tileRatioName }}">身體質量指數校正之四肢肌肉量</div>
           <div style="{{ tileRatioVal }}">{{ asmBmiStr }}</div>
           <div style="font-size:11px;color:var(--grey-600);margin-top:8px">{{ refAsmBmi }}</div>
         </div>
@@ -2760,7 +2760,7 @@ class Component extends DCLogic {
     };
 
 
-    // 評估結果三個指標：ASM 總量無門檻，SMI 與 ASM/BMI 顯示門檻與超標樣式
+    // 評估結果三個指標：握力、SMI、ASM/BMI，皆顯示標準值與超標樣式
     const refSmi = `標準值 ≥ ${massT.toFixed(1)} kg/m²`;
     const refAsmBmi = `標準值 ≥ ${asmBmiT.toFixed(2)}`;
     const tileBox = (bad) => ({

@@ -2786,23 +2786,21 @@
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
-        <div style="{{ tileAsm }}">
-          <div style="{{ tileAsmName }}">四肢 ASM 總量</div>
-          <div style="{{ tileAsmVal }}">{{ asmStr }}</div>
+        <div style="{{ tileGrip }}">
+          <div style="{{ tileGripName }}">握力（手握力測試）</div>
+          <div style="{{ tileGripVal }}">{{ gripStr }}</div>
           <div style="font-size:11px;color:var(--grey-500);margin-top:6px">kg</div>
-          <div style="font-size:11px;color:var(--grey-600);margin-top:8px">{{ asmSource }}</div>
+          <div style="font-size:11px;color:var(--grey-600);margin-top:8px">{{ refGripStandard }}</div>
         </div>
         <div style="{{ tileSmi }}">
-          <div style="{{ tileSmiName }}">SMI</div>
+          <div style="{{ tileSmiName }}">身高校正之四肢肌肉量</div>
           <div style="{{ tileSmiVal }}">{{ smiStr }}</div>
           <div style="font-size:11px;color:var(--grey-500);margin-top:6px">kg/m²</div>
-          <div style="font-size:11px;color:var(--grey-500);margin-top:2px">四肢 ASM 總量 ÷ 身高²</div>
           <div style="font-size:11px;color:var(--grey-600);margin-top:8px">{{ refSmi }}</div>
         </div>
         <div style="{{ tileRatio }}">
-          <div style="{{ tileRatioName }}">ASM / BMI</div>
+          <div style="{{ tileRatioName }}">身體質量指數校正之四肢肌肉量</div>
           <div style="{{ tileRatioVal }}">{{ asmBmiStr }}</div>
-          <div style="font-size:11px;color:var(--grey-500);margin-top:6px">ratio</div>
           <div style="font-size:11px;color:var(--grey-600);margin-top:8px">{{ refAsmBmi }}</div>
         </div>
       </div>
@@ -2919,6 +2917,7 @@ class Component extends DCLogic {
     const refBmi = "成人正常範圍 18.5–23.9";
     const refWaist = `建議 < ${male ? 90 : 80} cm（${sexLabel}）`;
     const refGrip = `低肌力門檻 < ${strT.toFixed(1)} kg（${sexLabel}${bandLabel}）`;
+    const refGripStandard = `標準值 ≥ ${strT.toFixed(1)} kg`;
     const refCalf = `篩檢門檻 < ${calfT} cm（${sexLabel}）`;
 
     const lowMassSmi = smi != null && smi < massT;
@@ -2933,8 +2932,7 @@ class Component extends DCLogic {
     let bannerTitle, bannerDetail;
     if (isSarc) {
       bannerTitle = "確診為肌少症";
-      const massMsg = lowMassSmi ? `SMI ${smi.toFixed(2)} kg/m² 低於 ${massT.toFixed(1)}` : `ASM/BMI ${asmBmi.toFixed(2)} 低於 ${asmBmiT.toFixed(2)}`;
-      bannerDetail = `建議掛老年醫學科門診接受進一步診治。`;
+      bannerDetail = "建議掛老年醫學科門診接受進一步診治。";
     } else {
       bannerTitle = "未有肌少症";
       bannerDetail = "恭喜你!請繼續維持良好的運動與營養習慣，享受健康人生!";
@@ -2954,10 +2952,8 @@ class Component extends DCLogic {
     if (lowStrength) tags.push({ text: "肌力低下", style: chip("var(--orange-50)", "var(--orange-500)") });
     if (lowMass) tags.push({ text: "肌肉質量不足", style: chip("var(--orange-50)", "var(--orange-500)") });
 
-    // 評估結果三個指標：ASM 總量無門檻，SMI 與 ASM/BMI 顯示門檻與超標樣式
-    const asmSource = s.asmMode === "asm" ? "右上肢 + 左上肢 + 右下肢 + 左下肢"
-      : s.asmMode === "mass" ? "直接輸入" : "SMI × 身高²";
-    const refSmi = `正常 ≥ ${massT.toFixed(1)} kg/m²`;
+    // 評估結果三個指標：握力、SMI、ASM/BMI，皆顯示標準值與超標樣式
+    const refSmi = `標準值 ≥ ${massT.toFixed(1)} kg/m²`;
     const refAsmBmi = `標準值 ≥ ${asmBmiT.toFixed(2)}`;
     const tileBox = (bad) => ({
       borderRadius: "var(--radius-lg)", padding: "16px",
@@ -2969,7 +2965,7 @@ class Component extends DCLogic {
       color: bad ? "var(--red-500)" : "var(--grey-600)",
     });
     const tileVal = (bad) => ({
-      fontSize: "26px", fontWeight: "700", lineHeight: "1",
+      fontSize: "28px", fontWeight: "800", lineHeight: "1",
       color: bad ? "var(--red-500)" : "var(--grey-900)",
     });
 
@@ -2996,14 +2992,14 @@ class Component extends DCLogic {
 
     return {
       ...s, ageGroup, isMale: male, isFemale: !male,
-      refBmi, refWaist, refGrip, refCalf,
+      refBmi, refWaist, refGrip, refGripStandard, refCalf,
       ...fieldStyles,
-      bmiStr: fmt(bmi, 1), asmStr: fmt(asm, 2), smiStr: fmt(smi, 2), asmBmiStr: fmt(asmBmi, 3),
+      bmiStr: fmt(bmi, 1), gripStr: fmt(grip, 1), smiStr: fmt(smi, 2), asmBmiStr: fmt(asmBmi, 3),
       hasResult, bannerStyle, bannerTitle, bannerDetail,
       bannerTitleStyle: { fontSize: 15, fontWeight: 700, marginBottom: 8, color: tc.tx },
       tags,
-      asmSource, refSmi, refAsmBmi,
-      tileAsm: tileBox(false), tileAsmName: tileName(false), tileAsmVal: tileVal(false),
+      refSmi, refAsmBmi,
+      tileGrip: tileBox(lowStrength), tileGripName: tileName(lowStrength), tileGripVal: tileVal(lowStrength),
       tileSmi: tileBox(lowMassSmi), tileSmiName: tileName(lowMassSmi), tileSmiVal: tileVal(lowMassSmi),
       tileRatio: tileBox(lowMassBmi), tileRatioName: tileName(lowMassBmi), tileRatioVal: tileVal(lowMassBmi),
       upd_year: this.set("year"),
