@@ -94,10 +94,11 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
 - **發佈新版（v7…）時要一起做**：更新版本說明頁、在根目錄總覽頁儀表板卡片加版本 chip、
   更新轉址頁的 `LATEST` / canonical / `<noscript>` / 手動連結。
 - `tsghb-dashboard/test_data.json` 為測試資料，目前沒有頁面引用。
+- **`tsghb-dashboard/kpi/` 整個資料夾不進版控、不部署**（已列入根目錄 `.gitignore`），內容只存在使用者本機；不要 `git add -f` 加回來。
 - `tsghb-dashboard/kpi/kpi.csv` 是依 v6 實際畫面整理的各分頁指標清單（UTF-8 含 BOM，供 Excel 直接開啟），
   欄位為項次、主分頁、次分頁、指標名稱、圖表種類、重複項次、計算公式、是否依賴HIS資料。儀表板增刪指標時要同步更新。
   - 「重複項次」填同一指標在前面出現過的項次（多個以 `;` 分隔），目前只留要跟客戶討論的幾項，由使用者維護。
-  - 「計算公式」以客戶的原始指標清單（`kpi/original_list.xlsx`，使用者自行放入、未進版控）為準，清單沒有的才依儀表板上的定義補；
+  - 「計算公式」以客戶的原始指標清單（`kpi/original_list.xlsx`，使用者自行放入）為準，清單沒有的才依儀表板上的定義補；
     句尾的【原清單無】表示儀表板有、原清單沒有，【差異】表示兩邊定義或呈現不一致，都是要跟客戶確認的項目。
   - 「是否依賴HIS資料」不依賴就留空，依賴才寫需要哪些 HIS 資料。
 - Landing page 已全部移到 `tsghb-landing-page/<role>/`；該處頁面、規格或插圖有改動時要**重新產生對應的 zip 下載包**（做法見其 CLAUDE.md 第 4 節）。
