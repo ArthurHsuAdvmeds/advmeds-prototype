@@ -2622,6 +2622,11 @@
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:12px">
           <h2 style="margin: 0; font-size: 17px; font-weight: 700; color: var(--color-primary)">評估結果</h2>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <sc-for list="{{ tags }}" as="tag" hint-placeholder-count="1">
+              <span style="{{ tag.style }}">{{ tag.text }}</span>
+            </sc-for>
+          </div>
         </div>
       </div>
 
@@ -2653,6 +2658,134 @@
       </sc-if>
     </div>
 
+    <!-- 詳細資訊（預設收合） -->
+    <button type="button" sc-camel-on-click="{{ toggleDetail }}" style="display:flex;align-items:center;gap:6px;margin-top:20px;padding:4px 0;font-family:inherit;font-size:14px;font-weight:700;color:var(--color-primary);background:none;border:none;cursor:pointer">
+      <span style="{{ detailChevron }}">
+        <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      </span>
+      {{ detailLabel }}
+    </button>
+
+    <sc-if value="{{ detailOpen }}" hint-placeholder-val="{{ true }}">
+    <div style="background: var(--grey-0); border-radius: var(--radius-lg); box-shadow: inset 0 0 0 1px var(--grey-200),var(--shadow-card); margin-top: 12px; padding: 24px">
+
+      <h2 style="margin: 0 0 20px; font-size: 17px; font-weight: 700; color: var(--color-primary); padding-bottom: 4px; border-bottom: 1px solid var(--grey-200)">基本資料</h2>
+
+      <div class="fld">
+        <label>姓名</label>
+        <div class="mphr-field ro-field" style="width: 200px"><span>{{ name }}</span></div>
+      </div>
+
+      <div class="fld">
+        <label>性別</label>
+        <div class="mphr-field ro-field" style="width: 200px"><span>{{ sexLabel }}</span></div>
+      </div>
+
+      <div class="fld">
+        <label>身分證字號</label>
+        <div class="mphr-field ro-field" style="width: 200px"><span>{{ pid }}</span></div>
+      </div>
+
+      <div class="two-col">
+        <div class="fld">
+          <label>年齡（歲）</label>
+          <div class="mphr-field ro-field" style="width: 200px"><span>{{ age }}</span></div>
+          <div class="hint">年齡分組：<b style="color:var(--grey-900)">{{ ageGroup }}</b></div>
+        </div>
+      </div>
+
+      <h2 style="margin: 8px 0 20px; font-size: 17px; font-weight: 700; color: var(--color-primary); padding-bottom: 4px; border-bottom: 1px solid var(--grey-200)">身體量測</h2>
+
+      <div class="two-col">
+        <div class="fld">
+          <label>身高（cm）</label>
+          <div class="mphr-field ro-field"><span>{{ height }}</span></div>
+        </div>
+        <div class="fld">
+          <label>體重（kg）</label>
+          <div class="mphr-field ro-field"><span>{{ weight }}</span></div>
+        </div>
+        <div class="fld">
+          <label style="{{ lblBmi }}">BMI（kg/m²）</label>
+          <div class="mphr-field ro-field" style="{{ boxBmi }}"><span style="{{ valBmi }}">{{ bmiStr }}</span></div>
+          <div class="hint">{{ refBmi }}</div>
+        </div>
+        <div class="fld">
+          <label style="{{ lblWaist }}">腰圍（cm）</label>
+          <div class="mphr-field ro-field" style="{{ boxWaist }}"><span style="{{ valWaist }}">{{ waist }}</span></div>
+          <div class="hint">{{ refWaist }}</div>
+        </div>
+        <div class="fld">
+          <label style="{{ lblGrip }}">握力（慣用手，kg）</label>
+          <div class="mphr-field ro-field" style="{{ boxGrip }}"><span style="{{ valGrip }}">{{ gripStr }}</span></div>
+          <div class="hint">{{ refGrip }}</div>
+        </div>
+        <div class="fld">
+          <label style="{{ lblCalfL }}">左小腿圍（cm）</label>
+          <div class="mphr-field ro-field" style="{{ boxCalfL }}"><span style="{{ valCalfL }}">{{ calfL }}</span></div>
+          <div class="hint">{{ refCalf }}</div>
+        </div>
+        <div class="fld">
+          <label style="{{ lblCalfR }}">右小腿圍（cm）</label>
+          <div class="mphr-field ro-field" style="{{ boxCalfR }}"><span style="{{ valCalfR }}">{{ calfR }}</span></div>
+          <div class="hint">{{ refCalf }}</div>
+        </div>
+        <div class="fld">
+          <label style="{{ lblWaistCalf }}">腰腿比</label>
+          <div class="mphr-field ro-field" style="{{ boxWaistCalf }}"><span style="{{ valWaistCalf }}">{{ waistCalfStr }}</span></div>
+          <div class="hint">腰圍 ÷ 較粗小腿圍（{{ thickCalfLabel }}）；{{ refWaistCalf }}</div>
+        </div>
+      </div>
+
+      <h2 style="margin: 8px 0 20px; font-size: 17px; font-weight: 700; color: var(--color-primary); padding-bottom: 4px; border-bottom: 1px solid var(--grey-200)">肌肉量資料</h2>
+
+      <div class="fld" style="max-width:calc(50% - 10px)">
+        <label>輸入方式</label>
+        <div class="mphr-field ro-field"><span>{{ asmModeLabel }}</span></div>
+      </div>
+
+      <sc-if value="{{ modeAsm }}" hint-placeholder-val="{{ true }}">
+        <div class="two-col">
+          <div class="fld">
+            <label>右上肢 ASM（kg）</label>
+            <div class="mphr-field ro-field"><span>{{ dRU }}</span></div>
+          </div>
+          <div class="fld">
+            <label>左上肢 ASM（kg）</label>
+            <div class="mphr-field ro-field"><span>{{ dLU }}</span></div>
+          </div>
+          <div class="fld">
+            <label>右下肢 ASM（kg）</label>
+            <div class="mphr-field ro-field"><span>{{ dRL }}</span></div>
+          </div>
+          <div class="fld">
+            <label>左下肢 ASM（kg）</label>
+            <div class="mphr-field ro-field"><span>{{ dLL }}</span></div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ modeMass }}" hint-placeholder-val="{{ false }}">
+        <div class="two-col">
+          <div class="fld">
+            <label>ASM（kg）</label>
+            <div class="mphr-field ro-field"><span>{{ dAsmDirect }}</span></div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ modeSmi }}" hint-placeholder-val="{{ false }}">
+        <div class="two-col">
+          <div class="fld">
+            <label>SMI（kg/m²）</label>
+            <div class="mphr-field ro-field"><span>{{ dSmiDirect }}</span></div>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+    </sc-if>
+
   </div>
   </div>
   <div style="flex-shrink:0">
@@ -2669,6 +2802,7 @@ class Component extends DCLogic {
     asmMode: "asm",
     asmRU: "1.8", asmLU: "1.7", asmRL: "5.1", asmLL: "5",
     asmDirect: "", smiDirect: "",
+    detailOpen: false,
   };
 
   renderVals() {
@@ -2701,6 +2835,13 @@ class Component extends DCLogic {
     const cL = num(s.calfL), cR = num(s.calfR);
 
     const waist = num(s.waist);
+    let thickCalf = null, thickCalfLabel = "—";
+    if (cL != null || cR != null) {
+      if (cL != null && cR != null) { thickCalf = Math.max(cL, cR); thickCalfLabel = cL >= cR ? "左小腿" : "右小腿"; }
+      else if (cL != null) { thickCalf = cL; thickCalfLabel = "左小腿"; }
+      else { thickCalf = cR; thickCalfLabel = "右小腿"; }
+    }
+    const waistCalf = (waist != null && thickCalf) ? waist / thickCalf : null;
 
     // AWGS 2025 (BIA) cut-offs — age band: 50–64 (含 <50 參考) vs ≥65
     const elder = age != null && age >= 65;
@@ -2708,6 +2849,7 @@ class Component extends DCLogic {
     const asmBmiT = elder ? (male ? 0.83 : 0.57) : (male ? 0.90 : 0.63); // ASM/BMI
     const strT = elder ? (male ? 28 : 18) : (male ? 34 : 20);            // 握力
     const calfT = male ? 34 : 33;                                        // 小腿圍篩檢
+    const waistCalfT = male ? 2.6 : 2.4;                                 // 腰腿比（肥胖型）
 
     // 欄位下方的灰字標準值 — 依性別與 AWGS 2025 年齡分組
     const sexLabel = male ? "男性" : "女性";
@@ -2718,10 +2860,13 @@ class Component extends DCLogic {
     const refGrip = `低肌力門檻 < ${strT.toFixed(1)} kg（${sexLabel}${bandLabel}）`;
     const refGripStandard = `標準值 ≥ ${strT.toFixed(1)} kg`;
     const refCalf = `篩檢門檻 < ${calfT} cm（${sexLabel}）`;
+    const refWaistCalf = `肥胖型肌少症參考 > ${waistCalfT.toFixed(1)}`;
 
     const queryResult = new URLSearchParams(window.location.search).get("a");
     const abnormalOverride = queryResult === "true" ? true : queryResult === "false" ? false : null;
     // a=false uses a normal-range preview so the values and card colors match the forced result.
+    const asmRaw = asm;
+    let dRU = s.asmRU, dLU = s.asmLU, dRL = s.asmRL, dLL = s.asmLL, dAsmDirect = s.asmDirect, dSmiDirect = s.smiDirect;
     if (abnormalOverride === false) {
       if (hm && bmi > 0) {
         asm = Math.max(asm || 0, massT * hm * hm, asmBmiT * bmi) + 0.2;
@@ -2732,6 +2877,12 @@ class Component extends DCLogic {
         asmBmi = Math.max(asmBmi || 0, asmBmiT + 0.05);
       }
       grip = Math.max(grip || 0, strT) + 2;
+      // 詳細資訊的肌肉量欄位依調整後的 ASM 等比換算
+      const k = asmRaw ? asm / asmRaw : null;
+      const scale = (v) => (k != null && num(v) != null) ? (num(v) * k).toFixed(2) : v;
+      [dRU, dLU, dRL, dLL] = [s.asmRU, s.asmLU, s.asmRL, s.asmLL].map(scale);
+      if (asm != null) dAsmDirect = asm.toFixed(2);
+      if (smi != null) dSmiDirect = smi.toFixed(2);
     }
 
     const lowMassSmi = smi != null && smi < massT;
@@ -2759,6 +2910,12 @@ class Component extends DCLogic {
       background: tc.bg, boxShadow: `inset 0 0 0 1px ${tc.bd}`,
     };
 
+    const chip = (bg, tx) => ({ fontSize: 12, fontWeight: 700, padding: "5px 12px", borderRadius: 100, background: bg, color: tx, whiteSpace: "nowrap" });
+    // 臨床流程只使用三種標籤
+    const tags = [];
+    if (isSarc) tags.push({ text: "符合肌少症診斷", style: chip("var(--red-50)", "var(--red-500)") });
+    if (lowStrength) tags.push({ text: "肌力低下", style: chip("var(--orange-50)", "var(--orange-500)") });
+    if (lowMass) tags.push({ text: "肌肉質量不足", style: chip("var(--orange-50)", "var(--orange-500)") });
 
     // 評估結果三個指標：握力、SMI、ASM/BMI，皆顯示標準值與超標樣式
     const refSmi = `標準值 ≥ ${massT.toFixed(1)} kg/m²`;
@@ -2784,11 +2941,12 @@ class Component extends DCLogic {
       Grip: lowStrength,
       CalfL: cL != null && cL < calfT,
       CalfR: cR != null && cR < calfT,
+      WaistCalf: waistCalf != null && waistCalf > waistCalfT,
     };
     const fieldStyles = {};
     for (const [k, bad] of Object.entries(outOfRange)) {
       fieldStyles["lbl" + k] = bad ? { color: "var(--red-500)" } : {};
-      // 唯讀格（BMI）超標時整格染紅底
+      // 唯讀格（BMI／腰腿比）超標時整格染紅底
       fieldStyles["box" + k] = bad ? {
         background: "var(--red-50)", boxShadow: "inset 0 0 0 1px var(--red-300)",
       } : {};
@@ -2800,7 +2958,8 @@ class Component extends DCLogic {
 
     return {
       ...s, ageGroup, sexLabel, asmModeLabel,
-      refBmi, refWaist, refGrip, refGripStandard, refCalf,
+      waistCalfStr: fmt(waistCalf, 2), thickCalfLabel,
+      refBmi, refWaist, refGrip, refGripStandard, refCalf, refWaistCalf,
       ...fieldStyles,
       bmiStr: fmt(bmi, 1), asmStr: fmt(asm, 2), gripStr: fmt(grip, 1), smiStr: fmt(smi, 2), asmBmiStr: fmt(asmBmi, 3),
       hasResult, bannerStyle, bannerTitle, bannerDetail,
@@ -2810,6 +2969,11 @@ class Component extends DCLogic {
       tileSmi: tileBox(lowMassSmi), tileSmiName: tileName(lowMassSmi), tileSmiVal: tileVal(lowMassSmi),
       tileRatio: tileBox(lowMassBmi), tileRatioName: tileName(lowMassBmi), tileRatioVal: tileVal(lowMassBmi),
       modeAsm: s.asmMode === "asm", modeMass: s.asmMode === "mass", modeSmi: s.asmMode === "smi",
+      tags, dRU, dLU, dRL, dLL, dAsmDirect, dSmiDirect,
+      detailOpen: !!s.detailOpen,
+      detailLabel: s.detailOpen ? "收合詳細資訊" : "查看詳細資訊",
+      detailChevron: { display: "flex", transition: "transform .2s", transform: s.detailOpen ? "rotate(180deg)" : "none" },
+      toggleDetail: () => this.setState({ detailOpen: !this.state.detailOpen }),
       footerProps: { style: { width: "100%" } },
     };
   }
