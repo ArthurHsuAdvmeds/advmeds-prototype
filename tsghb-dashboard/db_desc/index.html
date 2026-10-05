@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>三軍總醫院北投分院｜精神健康個案通報管理儀表板｜資料庫規劃</title>
+<style>
+:root{
+  --bg:#f6f2ee;
+  --card:#ffffff;
+  --ink:#2e2320;
+  --ink-2:#6b564b;
+  --ink-3:#9b8378;
+  --line:#e9ddd3;
+  --line-2:#f2e8e0;
+  --accent:#bd4a32;
+  --accent-soft:#fdf0ea;
+  --navy:#20303f;
+  --teal:#0f766e;
+  --teal-soft:#e6f4f1;
+  --gray:#6b7280;
+  --gray-soft:#f1f2f4;
+  --brown:#7c6f64;
+  --radius:14px;
+  --shadow:0 1px 2px rgba(46,35,32,.04),0 8px 24px rgba(46,35,32,.06);
+  --mono:ui-monospace,"Cascadia Code","SFMono-Regular",Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px;
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{
+  font-family:var(--mono);
+  font-size:.88em;
+  background:#f4ece6;
+  border-radius:5px;
+  padding:1px 5px;
+  overflow-wrap:anywhere;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+main.wrap{padding-bottom:90px}
+
+/* ---------- 頁首 ---------- */
+.masthead{
+  background:linear-gradient(180deg,#fffaf6 0%,var(--bg) 100%);
+  border-bottom:1px solid var(--line);
+  padding:42px 0 30px;
+}
+.eyebrow{
+  display:inline-block;
+  font-size:11px;
+  letter-spacing:.14em;
+  color:var(--accent);
+  background:var(--accent-soft);
+  border:1px solid #f6ddd2;
+  border-radius:999px;
+  padding:4px 12px;
+  margin-bottom:14px;
+}
+h1{margin:0 0 10px;font-size:28px;line-height:1.35;letter-spacing:.01em}
+.lede{margin:0;color:var(--ink-2);max-width:66ch;font-size:14.5px}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:22px}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  font:inherit;font-size:14px;font-weight:600;
+  border-radius:10px;padding:10px 18px;
+  border:1px solid var(--line);background:var(--card);color:var(--ink);
+  cursor:pointer;
+  transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease;
+}
+.btn:hover{text-decoration:none;transform:translateY(-1px);border-color:#e0b4a3}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 6px 16px rgba(189,74,50,.24)}
+.btn.primary:hover{border-color:#a43d27;background:#a43d27}
+.btn svg{flex:0 0 auto}
+.btn.small{font-size:12.5px;padding:6px 12px;border-radius:8px;font-weight:500}
+.actions .hint{font-size:12.5px;color:var(--ink-3)}
+.stats{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;
+  margin:26px 0 0;
+}
+.stats div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 15px}
+.stats dt{font-size:11.5px;color:var(--ink-3);letter-spacing:.04em}
+.stats dd{margin:2px 0 0;font-size:21px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.3}
+.stats dd small{font-size:12px;font-weight:500;color:var(--ink-2);margin-left:4px}
+
+/* ---------- 頁內導覽 ---------- */
+.toc{
+  position:sticky;top:0;z-index:20;
+  background:rgba(246,242,238,.94);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+}
+.toc .wrap{display:flex;gap:6px;overflow-x:auto;padding-top:9px;padding-bottom:9px;scrollbar-width:none}
+.toc .wrap::-webkit-scrollbar{display:none}
+.toc a{
+  flex:0 0 auto;font-size:13px;color:var(--ink-2);
+  padding:5px 12px;border-radius:999px;border:1px solid transparent;white-space:nowrap;
+}
+.toc a:hover{text-decoration:none;background:var(--card);border-color:var(--line);color:var(--ink)}
+
+/* ---------- 區段 ---------- */
+section.block{padding-top:46px;scroll-margin-top:52px}
+h2{
+  display:flex;align-items:baseline;gap:12px;
+  margin:0 0 6px;padding-bottom:12px;
+  border-bottom:2px solid var(--line);
+  font-size:22px;letter-spacing:.02em;line-height:1.4;
+}
+h2 .no{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.1em;font-variant-numeric:tabular-nums}
+.sub{color:var(--ink-2);font-size:14px;margin:12px 0 20px;max-width:74ch}
+h3{font-size:16px;margin:30px 0 8px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;scroll-margin-top:60px}
+h3 small{font-size:12px;font-weight:500;color:var(--ink-3)}
+p{margin:0 0 12px}
+ul.plain{margin:0 0 12px;padding-left:1.25em}
+ul.plain li{margin-bottom:5px}
+
+.callout{
+  background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:10px;padding:14px 18px;margin:22px 0 0;font-size:13.5px;color:var(--ink-2);
+}
+.callout strong{color:var(--ink)}
+.callout p:last-child{margin-bottom:0}
+
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;flex:0 0 auto}
+.dot.pf{background:var(--accent)}
+.dot.his{background:var(--teal)}
+.dot.mart{background:var(--navy)}
+.dot.ref{background:var(--gray)}
+.dot.sync{background:var(--brown)}
+
+/* ---------- 設計重點 ---------- */
+.keys{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.keys li{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 18px;box-shadow:var(--shadow);
+}
+.keys h4{margin:0 0 5px;font-size:15px;line-height:1.5}
+.keys p{margin:0;font-size:13.5px;color:var(--ink-2)}
+
+/* ---------- 資料流 ---------- */
+.flow{
+  display:grid;
+  grid-template-columns:minmax(0,1.15fr) 26px minmax(0,.9fr) 26px minmax(0,1.25fr) 26px minmax(0,1fr) 26px minmax(0,.9fr);
+  align-items:stretch;gap:0;margin-top:6px;
+}
+.flow-col{display:flex;flex-direction:column;gap:10px;justify-content:center}
+.node{
+  background:var(--card);border:1px solid var(--line);border-top:3px solid var(--ink-3);
+  border-radius:12px;padding:12px 13px;box-shadow:var(--shadow);
+}
+.node b{display:block;font-size:14px;line-height:1.45}
+.node span{display:block;font-size:12px;color:var(--ink-2);line-height:1.6;margin-top:3px}
+.node code{display:inline-block;margin-top:7px;font-size:11.5px}
+.node.pf{border-top-color:var(--accent)}
+.node.his{border-top-color:var(--teal)}
+.node.mart{border-top-color:var(--navy)}
+.node.ref{border-top-color:var(--gray)}
+.node.sync{border-top-color:var(--brown)}
+.node.out{border-top-color:#c79a2d}
+.flow-arrow{display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:18px}
+.flow-arrow::before{content:"→"}
+
+/* ---------- 一般表格 ---------- */
+.table-card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden;margin:0 0 14px;
+}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;vertical-align:top;padding:10px 14px;border-bottom:1px solid var(--line-2);font-size:13.5px}
+thead th{
+  font-size:11.5px;font-weight:700;letter-spacing:.06em;color:var(--ink-3);
+  background:#fcf8f5;border-bottom:1px solid var(--line);white-space:nowrap;
+}
+tbody tr:last-child td{border-bottom:0}
+td.no{font-variant-numeric:tabular-nums;color:var(--ink-3);white-space:nowrap;font-size:12.5px}
+td.name{font-weight:600}
+td.tables code{display:inline-block;margin:0 3px 3px 0}
+.src{
+  display:inline-block;font-size:11.5px;font-weight:600;border-radius:999px;padding:1px 9px;white-space:nowrap;
+  border:1px solid transparent;
+}
+.src.pf{color:var(--accent);background:var(--accent-soft);border-color:#f6ddd2}
+.src.his{color:var(--teal);background:var(--teal-soft);border-color:#c9e6e0}
+.src.both{color:#fff;background:var(--navy)}
+
+@media (min-width:721px){
+  table.map{table-layout:fixed}
+  table.map th:nth-child(1){width:76px}
+  table.map th:nth-child(2){width:27%}
+  table.map th:nth-child(3){width:108px}
+  table.map th:nth-child(4){width:212px}
+}
+@media (min-width:900px){
+  table.cols td.c-name{min-width:172px}
+}
+@media (min-width:1000px){
+  table.cols td.c-name{white-space:nowrap}
+}
+
+/* ---------- 資料表明細 ---------- */
+.layer-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.layer p.layer-desc{color:var(--ink-2);font-size:13.5px;margin:0 0 12px;max-width:78ch}
+details.tbl{
+  background:var(--card);border:1px solid var(--line);border-radius:12px;
+  margin-bottom:8px;scroll-margin-top:60px;
+}
+details.tbl[open]{box-shadow:var(--shadow)}
+details.tbl > summary{
+  list-style:none;cursor:pointer;
+  display:grid;grid-template-columns:minmax(0,230px) minmax(0,1fr) auto 14px;
+  align-items:center;gap:6px 14px;padding:11px 16px;
+}
+details.tbl > summary::-webkit-details-marker{display:none}
+details.tbl > summary::after{
+  content:"";width:8px;height:8px;border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);
+  transform:rotate(45deg);transition:transform .15s ease;justify-self:end;margin-top:-4px;
+}
+details.tbl[open] > summary::after{transform:rotate(-135deg);margin-top:4px}
+details.tbl > summary:hover .tname{color:var(--accent)}
+.tname{font-family:var(--mono);font-size:13.5px;font-weight:600;background:none;padding:0;color:var(--ink)}
+.ttitle{font-size:14px;font-weight:600}
+.ttitle small{display:block;font-size:12px;font-weight:400;color:var(--ink-3);line-height:1.5}
+.tcount{font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbody{border-top:1px solid var(--line-2);padding:14px 16px 16px}
+.tmeta{margin:0 0 12px;font-size:13px;color:var(--ink-2)}
+.tmeta b{color:var(--ink);font-weight:600;margin-right:6px}
+.tmeta span{display:block}
+table.cols{border:1px solid var(--line-2);border-radius:10px;border-collapse:separate;border-spacing:0;overflow:hidden}
+table.cols th,table.cols td{padding:8px 12px;font-size:13px}
+table.cols td.c-name code{background:none;padding:0;font-size:12.8px;font-weight:600;color:var(--ink)}
+table.cols td.c-type{font-family:var(--mono);font-size:12.3px;color:var(--ink-2);white-space:nowrap}
+table.cols td.c-type.is-text{color:var(--teal)}
+table.cols td.c-key{white-space:nowrap}
+table.cols td.c-note{color:var(--ink-2);min-width:240px}
+.chip{
+  display:inline-block;font-size:11px;line-height:1.5;border-radius:5px;padding:0 6px;margin:0 3px 3px 0;
+  border:1px solid var(--line);color:var(--ink-2);background:#fcf8f5;white-space:nowrap;
+}
+.chip.pk{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:600}
+.chip.fk{background:var(--accent-soft);border-color:#f6ddd2;color:var(--accent)}
+.chip.fk a{color:inherit}
+.tidx{margin:10px 0 0;font-size:12.5px;color:var(--ink-3)}
+.tidx b{color:var(--ink-2);font-weight:600;margin-right:6px}
+
+/* ---------- SQL ---------- */
+details.sql{
+  background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;overflow:hidden;
+}
+details.sql > summary{cursor:pointer;padding:11px 16px;font-size:14px;font-weight:600}
+details.sql > summary small{font-weight:400;color:var(--ink-3);font-size:12.5px;margin-left:8px}
+pre{
+  margin:0;background:var(--navy);color:#e6edf3;
+  font-family:var(--mono);font-size:12.5px;line-height:1.7;
+  padding:16px 18px;overflow-x:auto;tab-size:2;
+}
+pre .c{color:#93a7b8}
+
+/* ---------- 步驟 ---------- */
+ol.steps{margin:0 0 14px;padding:0;list-style:none;counter-reset:s}
+ol.steps li{
+  counter-increment:s;position:relative;padding:0 0 12px 38px;font-size:14px;
+}
+ol.steps li::before{
+  content:counter(s);position:absolute;left:0;top:1px;width:24px;height:24px;border-radius:8px;
+  background:var(--navy);color:#fff;font-size:12px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;
+}
+
+footer{margin-top:54px;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-3)}
+
+/* ---------- 窄螢幕 ---------- */
+@media (max-width:900px){
+  .flow{grid-template-columns:1fr}
+  .flow-arrow{padding:4px 0}
+  .flow-arrow::before{content:"↓"}
+  .flow-col{flex-direction:row;flex-wrap:wrap}
+  .flow-col .node{flex:1 1 220px}
+}
+@media (max-width:720px){
+  body{font-size:14.5px}
+  .wrap{padding:0 16px}
+  .masthead{padding:30px 0 24px}
+  h1{font-size:23px}
+  h2{font-size:19px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stats dd small{display:block;margin-left:0}
+  .keys{grid-template-columns:1fr}
+  .btn.primary{flex:1 1 100%;justify-content:center}
+
+  /* 表格改成一筆一張卡，不出現橫向捲軸 */
+  table.stack thead{display:none}
+  table.stack,table.stack tbody,table.stack tr,table.stack td{display:block;width:100%}
+  table.stack tr{padding:11px 14px;border-bottom:1px solid var(--line-2)}
+  table.stack tbody tr:last-child{border-bottom:0}
+  table.stack td{padding:2px 0;border:0}
+  table.stack td[data-l]::before{
+    content:attr(data-l);display:block;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--ink-3);margin-top:6px;
+  }
+  table.stack td.no{display:inline-block;width:auto;margin-right:8px}
+  table.stack td.no + td.name{display:inline;font-size:14px}
+
+  details.tbl > summary{grid-template-columns:minmax(0,1fr) 14px;padding:11px 14px}
+  details.tbl > summary .ttitle{grid-column:1;grid-row:2}
+  details.tbl > summary .tcount{grid-column:1;grid-row:3}
+  details.tbl > summary::after{grid-column:2;grid-row:1}
+  .tbody{padding:12px 12px 14px}
+  table.cols thead{display:none}
+  table.cols,table.cols tbody,table.cols tr,table.cols td{display:block}
+  table.cols tr{padding:9px 11px;border-bottom:1px solid var(--line-2)}
+  table.cols tbody tr:last-child{border-bottom:0}
+  table.cols td{padding:0;border:0;min-width:0}
+  table.cols td.c-name{display:inline-block;margin-right:8px}
+  table.cols td.c-type{display:inline-block}
+  table.cols td.c-key{white-space:normal;margin-top:4px}
+  table.cols td.c-key:empty{display:none}
+  table.cols td.c-note{margin-top:3px;min-width:0}
+  pre{font-size:11.5px;padding:13px 14px}
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <span class="eyebrow">資料庫規劃｜草案 2026-10-06</span>
+    <h1>管理儀表板資料庫規劃</h1>
+    <p class="lede">v6 儀表板上的指標，資料分別來自通報平台與醫院 HIS 兩支 API。這份規劃說明同步進來的資料在 PostgreSQL 裡怎麼存、每個指標從哪幾張表算出來，以及動工前要先確認的事。</p>
+    <div class="actions">
+      <a class="btn primary" href="./pgsql.dbml" download="pgsql.dbml">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        下載 pgsql.dbml
+      </a>
+      <a class="btn" href="../v6/">開啟儀表板 v6</a>
+      <span class="hint">DBML 可貼到 dbdiagram.io 看 ER 圖，或用 dbml2sql 轉成建表語法</span>
+    </div>
+    <dl class="stats">
+      <div><dt>資料表</dt><dd>30<small>張</small></dd></div>
+      <div><dt>欄位</dt><dd>251<small>個，其中 text 86 個</small></dd></div>
+      <div><dt>資料來源</dt><dd>2<small>支 API</small></dd></div>
+      <div><dt>涵蓋指標</dt><dd>149<small>項，儀表板 v6 全部</small></dd></div>
+    </dl>
+  </div>
+</header>
+
+<nav class="toc" aria-label="頁內導覽">
+  <div class="wrap">
+    <a href="#keys">設計重點</a>
+    <a href="#flow">資料流</a>
+    <a href="#api">要跟 API 拿的資料</a>
+    <a href="#tables">資料表</a>
+    <a href="#metrics">指標對應</a>
+    <a href="#sql">SQL 範例</a>
+    <a href="#sync">同步與重算</a>
+    <a href="#privacy">個資</a>
+    <a href="#open">待確認</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- ====================================================================== -->
+<section class="block" id="keys">
+  <h2><span class="no">01</span>設計重點</h2>
+  <p class="sub">整個資料庫繞著「一筆通報」組織。先記住下面六件事，後面的資料表就容易對上。</p>
+  <ul class="keys">
+    <li>
+      <h4>一筆通報一列，其他都掛在它底下</h4>
+      <p><code>pf_case</code> 是中心。派案、各階段表單、量表、問卷都用 <code>case_id</code> 接回來；日期、類別、網絡這些篩選條件也都在這張表上。</p>
+    </li>
+    <li>
+      <h4>平台的表單一種一張表</h4>
+      <p>受理方式表單、出勤單、衛生局回覆單等各自成表，欄位只留指標用得到的。之後指標定義調整，改查詢就好，不必重新設計。</p>
+    </li>
+    <li>
+      <h4>時效指標先攤成里程碑</h4>
+      <p><code>mart_case_timeline</code> 把每個案件各表單「最早的一筆」攤成一列。案件處理效率分頁的時效指標因此都是兩個時間欄位相減，比率指標都是依條件數件數。</p>
+    </li>
+    <li>
+      <h4>平台與 HIS 只在一個地方交會</h4>
+      <p>兩邊都把身分證字號換成同一種雜湊值 <code>id_no_hash</code>。比對結果彙總進 <code>mart_case_his_outcome</code>，17 個需要 HIS 的指標有 13 個讀它，另外 4 個純 HIS 指標讀 <code>mart_snq_*</code>。</p>
+    </li>
+    <li>
+      <h4>資料量小，不預先彙總</h4>
+      <p>一年幾百筆通報，各分頁的數字直接用 SQL 即時算，日期與類別怎麼篩都行。衍生表只做兩件事：取最早一筆、跨來源比對。</p>
+    </li>
+    <li>
+      <h4>不存可以認出人的資料</h4>
+      <p>沒有姓名、身分證明碼、電話和完整地址。地址只留行政區、座標與同址判斷用的雜湊值。</p>
+    </li>
+  </ul>
+  <div class="callout">
+    <p><strong>這份是依儀表板 v6 的畫面反推的需求。</strong>兩邊 API 實際給哪些欄位還沒核對過。<a href="#api">第 3 節</a>列出資料庫需要的欄位，請拿去對 API 文件；API 給不出來的欄位，對應的指標就算不出來，要回頭跟平台或 HIS 談。</p>
+  </div>
+</section>
+
+<!-- ====================================================================== -->
+<section class="block" id="flow">
+  <h2><span class="no">02</span>資料流</h2>
+  <p class="sub">儀表板只讀這個資料庫，不直接呼叫平台或 HIS。同步程式負責把兩邊的資料拉進來、去識別、寫表，再重算衍生表。</p>
+  <div class="flow">
+    <div class="flow-col">
+      <div class="node pf"><b>通報平台 API</b><span>通報單、派案、各階段表單、量表、滿意度問卷、AI 預測</span></div>
+      <div class="node his"><b>醫院 HIS API</b><span>病人基本檔、門診／急診／住院紀錄</span></div>
+    </div>
+    <div class="flow-arrow" aria-hidden="true"></div>
+    <div class="flow-col">
+      <div class="node sync"><b>同步程式</b><span>雜湊身分證字號、地址定位、代碼對應，再寫入資料庫</span><code>sync_*</code></div>
+    </div>
+    <div class="flow-arrow" aria-hidden="true"></div>
+    <div class="flow-col">
+      <div class="node pf"><b>平台資料</b><span>案件、個案、地址與各表單</span><code>pf_* 14 張</code></div>
+      <div class="node his"><b>HIS 資料</b><span>病人與就醫紀錄</span><code>his_* 2 張</code></div>
+      <div class="node ref"><b>代碼與設定</b><span>類別、網絡、行政區、量表、原因、科別</span><code>ref_* 8 張</code></div>
+    </div>
+    <div class="flow-arrow" aria-hidden="true"></div>
+    <div class="flow-col">
+      <div class="node mart"><b>衍生表</b><span>案件里程碑、結案後院內就醫、SNQ 追蹤名單</span><code>mart_* 4 張</code></div>
+    </div>
+    <div class="flow-arrow" aria-hidden="true"></div>
+    <div class="flow-col">
+      <div class="node out"><b>儀表板</b><span>後端 API 下 SQL 即時彙總，回傳 9 個分頁要的數字</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================================== -->
+<section class="block" id="api">
+  <h2><span class="no">03</span>要跟 API 拿的資料</h2>
+  <p class="sub">下面是資料庫需要的欄位，不是 API 現有的規格。每一列都標了少了它會影響哪些分頁。</p>
+
+  <h3><span class="dot pf"></span>通報平台 API</h3>
+  <div class="table-card">
+    <table class="stack">
+      <thead><tr><th>資料</th><th>需要的欄位</th><th>寫入</th><th>用在</th></tr></thead>
+      <tbody>
+        <tr><td class="name">通報案件</td><td data-l="需要的欄位">案件識別碼、通報類別、完成通報的系統時間、通報者所屬網絡與單位名稱、案件狀態、初評風險等級、開案時間、結案時間、收案時填報的過去一年精神科住院與門診次數、最後異動時間</td><td class="tables" data-l="寫入"><code>pf_case</code></td><td data-l="用在">所有分頁</td></tr>
+        <tr><td class="name">個案</td><td data-l="需要的欄位">個案識別碼、身分證字號（同步時雜湊，不寫進資料庫）、性別、出生日期</td><td class="tables" data-l="寫入"><code>pf_person</code></td><td data-l="用在">基本資料；所有需要 HIS 的指標</td></tr>
+        <tr><td class="name">地址</td><td data-l="需要的欄位">發生、居住、聯絡三種地址的縣市、行政區與完整地址（完整地址只用來定位座標）</td><td class="tables" data-l="寫入"><code>pf_case_address</code></td><td data-l="用在">基本資料的行政區長條圖與熱點地圖</td></tr>
+        <tr><td class="name">派案紀錄</td><td data-l="需要的欄位">完成指派的系統時間、受指派者是醫師或護理師</td><td class="tables" data-l="寫入"><code>pf_assignment</code></td><td data-l="用在">案件處理效率；待派與已派的判定</td></tr>
+        <tr><td class="name">受理方式表單</td><td data-l="需要的欄位">完成表單的系統時間、受理方式（電話諮詢、電話＋緊急醫療出勤）</td><td class="tables" data-l="寫入"><code>pf_emergency_intake</code></td><td data-l="用在">緊急醫療處置效率</td></tr>
+        <tr><td class="name">出勤單</td><td data-l="需要的欄位">表單上填寫的出勤年月日時間、完成表單的系統時間</td><td class="tables" data-l="寫入"><code>pf_emergency_dispatch</code></td><td data-l="用在">緊急醫療處置效率</td></tr>
+        <tr><td class="name">衛生局回覆單</td><td data-l="需要的欄位">完成回覆單的系統時間、訪視日期、派案日期、轉介或暫不轉介、是否轉介三總北投、轉介的機構、暫不轉介原因</td><td class="tables" data-l="寫入"><code>pf_bureau_reply</code></td><td data-l="用在">優化計畫衛生局、醫院端處置效率</td></tr>
+        <tr><td class="name">不轉介覆核單</td><td data-l="需要的欄位">完成覆核單的系統時間、同意或駁回</td><td class="tables" data-l="寫入"><code>pf_no_referral_review</code></td><td data-l="用在">優化計畫醫院端處置效率</td></tr>
+        <tr><td class="name">醫療機構回覆單</td><td data-l="需要的欄位">完成回覆單的系統時間、表單上填寫的進行聯繫時間、收案或無法收案、無法收案原因</td><td class="tables" data-l="寫入"><code>pf_hospital_reply</code></td><td data-l="用在">優化計畫醫院端處置效率；醫療機構端的無法收案</td></tr>
+        <tr><td class="name">訪視紀錄單</td><td data-l="需要的欄位">訪視階段（評估、追蹤、結案）、訪視方式、開始與結束時間、每月使用門診次數、每月使用急診次數</td><td class="tables" data-l="寫入"><code>pf_visit</code></td><td data-l="用在">不同風險個案處理時間、首次專業評估時間；成效的每月門診／急診次數變化</td></tr>
+        <tr><td class="name">量表</td><td data-l="需要的欄位">初評、結案時、結案後 3 個月與 6 個月的 BSRS-5、GAF、CGI-S、風險檢傷評估：總分、風險檢傷評估的危險性與支持系統分數、是否勾選無法填答、填寫時間、填寫者是通報者或專業人員</td><td class="tables" data-l="寫入"><code>pf_assessment</code> <code>pf_followup_form</code></td><td data-l="用在">通報案件風險分析；精神症狀改善成效的改善情況與評估表填寫狀況</td></tr>
+        <tr><td class="name">AI 預測</td><td data-l="需要的欄位">模型版本、預測分數與產生時間、同一案件專業人員的實測分數與評估時間</td><td class="tables" data-l="寫入"><code>pf_ai_prediction</code></td><td data-l="用在">AI 模型預測準確率</td></tr>
+        <tr><td class="name">滿意度問卷</td><td data-l="需要的欄位">發送時間、完成時間、兩題的分數（系統使用者介面、醫療團隊處置）</td><td class="tables" data-l="寫入"><code>pf_satisfaction_survey</code></td><td data-l="用在">通報者基本資料分析的回收率與分數</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3><span class="dot his"></span>醫院 HIS API</h3>
+  <div class="table-card">
+    <table class="stack">
+      <thead><tr><th>資料</th><th>需要的欄位</th><th>寫入</th><th>用在</th></tr></thead>
+      <tbody>
+        <tr><td class="name">病人基本檔</td><td data-l="需要的欄位">病人識別碼、身分證字號（同步時雜湊）、本院初診日、初診類別（是否為居家醫療）</td><td class="tables" data-l="寫入"><code>his_patient</code></td><td data-l="用在">所有需要 HIS 的指標</td></tr>
+        <tr><td class="name">就醫紀錄</td><td data-l="需要的欄位">就醫紀錄識別碼、門診／急診／住院別、科別、就診日或入院日、出院日、是否為強制住院、最後異動時間</td><td class="tables" data-l="寫入"><code>his_encounter</code></td><td data-l="用在">醫療機構端處理成效、醫院內控指標(SNQ)、成效的後續醫療資源使用</td></tr>
+        <tr><td class="name">科別主檔</td><td data-l="需要的欄位">科別代碼與名稱；另請院方指出哪些科別算身心科門診、哪些算居家照護科</td><td class="tables" data-l="寫入"><code>ref_his_dept</code></td><td data-l="用在">門診、居家、住院的分類</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>HIS 要拉兩群人的就醫紀錄，查法不一樣：</p>
+  <ul class="plain">
+    <li><strong>平台個案</strong>：以身分證字號查詢。結案日之後的門診、居家、住院紀錄是必要的；收案前一年的次數如果要改由 HIS 回溯，起點再往前推到通報日前一年。</li>
+    <li><strong>SNQ 追蹤名單</strong>：初診為居家醫療的病人、強制住院後出院的病人，以及這兩群人之後的門診、居家、住院紀錄。這群人不一定是平台個案，所以 HIS 要能依條件列出名單，不能只靠身分證字號查。</li>
+  </ul>
+</section>
+
+<!-- ====================================================================== -->
+<section class="block" id="tables">
+  <h2><span class="no">04</span>資料表</h2>
+  <p class="sub">欄位定義以 <a href="./pgsql.dbml" download="pgsql.dbml">pgsql.dbml</a> 為準，這一節是同一份內容的閱讀版。點表名展開欄位。</p>
+
+  <div class="table-card">
+    <table class="stack">
+      <thead><tr><th>慣例</th><th>做法</th></tr></thead>
+      <tbody>
+        <tr><td class="name">表名前綴</td><td>前綴就是來源：<code>pf_</code> 平台、<code>his_</code> HIS、<code>ref_</code> 代碼與設定、<code>mart_</code> 衍生、<code>sync_</code> 同步紀錄。</td></tr>
+        <tr><td class="name">字串</td><td>一律 <code>text</code>，不用 <code>varchar(n)</code> 也不用資料庫 enum。代碼型欄位的允許值寫在欄位說明；需要顯示名稱或會增減的代碼才另開 <code>ref_</code> 表。</td></tr>
+        <tr><td class="name">主鍵與來源識別碼</td><td>主鍵是 <code>bigint</code> 自動編號。來源系統的識別碼另存一欄 <code>text</code> 並設唯一，同步時靠它判斷新增或更新。</td></tr>
+        <tr><td class="name">時間</td><td>系統時間與表單上填的日期時間用 <code>timestamptz</code>，表單上只填日期的用 <code>date</code>。「本日、本月、本季、本年度」一律以 Asia/Taipei 切日。</td></tr>
+        <tr><td class="name">衍生表</td><td><code>mart_</code> 表不接受人工修改，隨時可以清空重建。要改成 materialized view 也可以，欄位照這裡的定義。</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <section class="layer" id="layer-platform">
+    <div class="layer-head">
+      <h3><span class="dot pf"></span>平台資料 <code>pf_*</code> <small>14 張</small></h3>
+      <button class="btn small" type="button" id="toggleAll" data-open="0">全部展開</button>
+    </div>
+    <p class="layer-desc">通報平台 API 同步進來的資料。除了個案，每張表都有 <code>case_id</code>。</p>
+    <details class="tbl" id="t-pf_person">
+      <summary><code class="tname">pf_person</code><span class="ttitle">個案<small>一位個案一列，同一人被通報多次只有一列</small></span><span class="tcount">6 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>平台 API（通報單上的個案資料）</span><span><b>用途</b>只留統計用得到的欄位，不存姓名、身分證明碼與電話。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>person_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>platform_<wbr>person_<wbr>id</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">唯一</span></td><td class="c-note">平台的個案主檔識別碼；平台沒有個案主檔時為 <code>null</code>，改用 <code>id_no_hash</code> 歸戶</td></tr>
+            <tr><td class="c-name"><code>id_<wbr>no_<wbr>hash</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note">身分證字號經 HMAC-SHA-256 後的十六進位字串，用來和 <code>his_patient.id_no_hash</code> 比對；身分不明的個案為 <code>null</code></td></tr>
+            <tr><td class="c-name"><code>gender</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note">M｜F｜U（不明）</td></tr>
+            <tr><td class="c-name"><code>birth_<wbr>date</code></td><td class="c-type">date</td><td class="c-key"></td><td class="c-note">出生日期，用來算通報時年齡；可只存到年月</td></tr>
+            <tr><td class="c-name"><code>synced_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後同步的時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>id_no_hash</code></p>
+      </div>
+    </details>
+    <details class="tbl" id="t-pf_case">
+      <summary><code class="tname">pf_case</code><span class="ttitle">通報案件<small>一筆通報一列</small></span><span class="tcount">18 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>平台 API（通報單、案件狀態）</span><span><b>用途</b>整個資料庫的中心。各分頁的案件數、狀態、類別、網絡與日期篩選都從這張表出發。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>case_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>platform_<wbr>case_<wbr>id</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span><span class="chip">唯一</span></td><td class="c-note">平台的案件識別碼；同步時以此判斷新增或更新</td></tr>
+            <tr><td class="c-name"><code>person_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-pf_person">pf_person</a></span></td><td class="c-note">被通報的個案</td></tr>
+            <tr><td class="c-name"><code>category_<wbr>code</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip fk">FK → <a href="#t-ref_report_category">ref_report_category</a></span><span class="chip">必填</span></td><td class="c-note">通報類別</td></tr>
+            <tr><td class="c-name"><code>network_<wbr>code</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip fk">FK → <a href="#t-ref_network_unit">ref_network_unit</a></span></td><td class="c-note">通報者所屬的七大網絡</td></tr>
+            <tr><td class="c-name"><code>reporter_<wbr>org_<wbr>name</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note">通報單位名稱，例如某分局、某社福中心；不存通報者姓名</td></tr>
+            <tr><td class="c-name"><code>reported_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">「系統」網絡完成通報的時間；所有日期篩選與時效指標的起點</td></tr>
+            <tr><td class="c-name"><code>age_<wbr>at_<wbr>report</code></td><td class="c-type">integer</td><td class="c-key"></td><td class="c-note">通報當下的年齡，同步時依出生日期算好</td></tr>
+            <tr><td class="c-name"><code>status_<wbr>code</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note"><code>pending_assign</code>（待派）｜<code>assigned</code>（已派）｜<code>closed</code>（結案）｜<code>not_referred</code>（未轉介／未開案）</td></tr>
+            <tr><td class="c-name"><code>platform_<wbr>status</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note">平台原始的案件狀態，保留以便日後調整對應規則</td></tr>
+            <tr><td class="c-name"><code>initial_<wbr>risk_<wbr>level</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note"><code>low</code>｜<code>medium</code>｜<code>high</code>；通報時填報的初評風險等級</td></tr>
+            <tr><td class="c-name"><code>opened_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">本院開案（收案）的時間；未開案為 <code>null</code></td></tr>
+            <tr><td class="c-name"><code>closed_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">結案時間；未結案為 <code>null</code></td></tr>
+            <tr><td class="c-name"><code>prior_<wbr>year_<wbr>psy_<wbr>admission_<wbr>count</code></td><td class="c-type">integer</td><td class="c-key"></td><td class="c-note">收案／開案時填報的過去一年精神科住院次數</td></tr>
+            <tr><td class="c-name"><code>prior_<wbr>year_<wbr>psy_<wbr>opd_<wbr>count</code></td><td class="c-type">integer</td><td class="c-key"></td><td class="c-note">收案／開案時填報的過去一年精神科門診次數</td></tr>
+            <tr><td class="c-name"><code>is_<wbr>void</code></td><td class="c-type">boolean</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 false</span></td><td class="c-note">作廢或測試案件；統計一律排除</td></tr>
+            <tr><td class="c-name"><code>source_<wbr>updated_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">平台端最後異動時間，增量同步用</td></tr>
+            <tr><td class="c-name"><code>synced_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後同步的時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>reported_at</code>、<code>category_code, reported_at</code>、<code>status_code</code>、<code>person_id</code>、<code>network_code</code></p>
+      </div>
+    </details>
+    <details class="tbl" id="t-pf_case_address">
+      <summary><code class="tname">pf_case_address</code><span class="ttitle">案件地址<small>一個案件的一種地址一列</small></span><span class="tcount">11 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>平台 API（通報單的三種地址），同步時做地址定位</span><span><b>用途</b>三種地址都留著，由 <code>is_primary</code> 決定統計用哪一筆，之後改口徑不必重拉資料。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>address_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>case_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-pf_case">pf_case</a></span><span class="chip">必填</span></td><td class="c-note">所屬的 <code>pf_case</code></td></tr>
+            <tr><td class="c-name"><code>address_<wbr>type</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note"><code>incident</code>（發生地址）｜<code>residence</code>（居住地址）｜<code>contact</code>（聯絡地址）</td></tr>
+            <tr><td class="c-name"><code>is_<wbr>primary</code></td><td class="c-type">boolean</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 false</span></td><td class="c-note">儀表板統計採用的那一筆；每個案件只有一筆為 <code>true</code></td></tr>
+            <tr><td class="c-name"><code>county_<wbr>code</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip fk">FK → <a href="#t-ref_region">ref_region</a></span></td><td class="c-note">縣市</td></tr>
+            <tr><td class="c-name"><code>district_<wbr>code</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip fk">FK → <a href="#t-ref_region">ref_region</a></span></td><td class="c-note">鄉鎮市區</td></tr>
+            <tr><td class="c-name"><code>latitude</code></td><td class="c-type">numeric(9,6)</td><td class="c-key"></td><td class="c-note">地址定位後的緯度，地圖點位用</td></tr>
+            <tr><td class="c-name"><code>longitude</code></td><td class="c-type">numeric(9,6)</td><td class="c-key"></td><td class="c-note">地址定位後的經度，地圖點位用</td></tr>
+            <tr><td class="c-name"><code>address_<wbr>key</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note">正規化地址的雜湊值，用來判斷同址並合併點位；不存完整地址</td></tr>
+            <tr><td class="c-name"><code>geocode_<wbr>status</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 pending</span></td><td class="c-note"><code>pending</code>｜<code>ok</code>｜<code>failed</code></td></tr>
+            <tr><td class="c-name"><code>synced_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後同步的時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>case_id, address_type</code>（唯一）、<code>district_code</code></p>
+      </div>
+    </details>
+    <details class="tbl" id="t-pf_assignment">
+      <summary><code class="tname">pf_assignment</code><span class="ttitle">派案紀錄<small>一次指派一列，改派會有多列</small></span><span class="tcount">6 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>平台 API（派案／指派醫師、護理師）</span><span><b>用途</b>時效指標取每個案件最早的一筆。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>assignment_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>platform_<wbr>record_<wbr>id</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span><span class="chip">唯一</span></td><td class="c-note">平台的派案紀錄識別碼</td></tr>
+            <tr><td class="c-name"><code>case_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-pf_case">pf_case</a></span><span class="chip">必填</span></td><td class="c-note">所屬的 <code>pf_case</code></td></tr>
+            <tr><td class="c-name"><code>assigned_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">「系統」醫療管理員完成指派的時間</td></tr>
+            <tr><td class="c-name"><code>assignee_<wbr>role</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note"><code>doctor</code>（醫師）｜<code>nurse</code>（護理師）｜<code>other</code></td></tr>
+            <tr><td class="c-name"><code>synced_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後同步的時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>case_id, assigned_at</code></p>
+      </div>
+    </details>
+    <details class="tbl" id="t-pf_emergency_intake">
+      <summary><code class="tname">pf_emergency_intake</code><span class="ttitle">緊急醫療受理方式表單<small>一次填寫一列</small></span><span class="tcount">6 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>平台 API（受理方式表單）</span><span><b>用途</b>電話處置率、出勤處置率的分類依據，也是首次專業評估時間的終點；取每個案件最早的一筆。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>intake_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>platform_<wbr>record_<wbr>id</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span><span class="chip">唯一</span></td><td class="c-note">平台的表單識別碼</td></tr>
+            <tr><td class="c-name"><code>case_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-pf_case">pf_case</a></span><span class="chip">必填</span></td><td class="c-note">所屬的 <code>pf_case</code></td></tr>
+            <tr><td class="c-name"><code>completed_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">「系統」完成受理方式表單的時間</td></tr>
+            <tr><td class="c-name"><code>intake_<wbr>method</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note"><code>phone</code>（電話諮詢）｜<code>phone_dispatch</code>（電話＋緊急醫療出勤）</td></tr>
+            <tr><td class="c-name"><code>synced_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後同步的時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>case_id, completed_at</code></p>
+      </div>
+    </details>
+    <details class="tbl" id="t-pf_emergency_dispatch">
+      <summary><code class="tname">pf_emergency_dispatch</code><span class="ttitle">緊急醫療出勤單<small>一張出勤單一列</small></span><span class="tcount">6 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>平台 API（出勤單）</span><span><b>用途</b>出勤準備時間與出勤總反應時間的終點。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>dispatch_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>platform_<wbr>record_<wbr>id</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span><span class="chip">唯一</span></td><td class="c-note">平台的表單識別碼</td></tr>
+            <tr><td class="c-name"><code>case_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-pf_case">pf_case</a></span><span class="chip">必填</span></td><td class="c-note">所屬的 <code>pf_case</code></td></tr>
+            <tr><td class="c-name"><code>dispatched_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">出勤單上填寫的出勤年月日時間，即實際出勤時間</td></tr>
+            <tr><td class="c-name"><code>completed_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">「系統」完成出勤單的時間</td></tr>
+            <tr><td class="c-name"><code>synced_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後同步的時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>case_id, dispatched_at</code></p>
+      </div>
+    </details>
+    <details class="tbl" id="t-pf_bureau_reply">
+      <summary><code class="tname">pf_bureau_reply</code><span class="ttitle">衛生局優化計畫回覆單<small>一張回覆單一列</small></span><span class="tcount">12 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>平台 API（衛生局回覆單）</span><span><b>用途</b>優化計畫衛生局處置效率整個次分頁的來源，也是醫院端各時效指標的起點。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>reply_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>platform_<wbr>record_<wbr>id</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span><span class="chip">唯一</span></td><td class="c-note">平台的表單識別碼</td></tr>
+            <tr><td class="c-name"><code>case_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-pf_case">pf_case</a></span><span class="chip">必填</span></td><td class="c-note">所屬的 <code>pf_case</code></td></tr>
+            <tr><td class="c-name"><code>completed_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">「系統」衛生局完成回覆單的時間；未完成為 <code>null</code></td></tr>
+            <tr><td class="c-name"><code>visit_<wbr>date</code></td><td class="c-type">date</td><td class="c-key"></td><td class="c-note">回覆單上填寫的訪視日期</td></tr>
+            <tr><td class="c-name"><code>dispatch_<wbr>date</code></td><td class="c-type">date</td><td class="c-key"></td><td class="c-note">回覆單上填寫的派案日期</td></tr>
+            <tr><td class="c-name"><code>decision</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note"><code>refer</code>（轉介醫療機構）｜<code>no_refer</code>（暫不轉介）</td></tr>
+            <tr><td class="c-name"><code>referred_<wbr>to_<wbr>tsghb</code></td><td class="c-type">boolean</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 false</span></td><td class="c-note">是否勾選「轉介三總北投」</td></tr>
+            <tr><td class="c-name"><code>referred_<wbr>org_<wbr>name</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note">轉介的醫療機構名稱</td></tr>
+            <tr><td class="c-name"><code>no_<wbr>referral_<wbr>reason_<wbr>code</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip fk">FK → <a href="#t-ref_reason">ref_reason</a></span></td><td class="c-note">暫不轉介原因；<code>reason_type</code> 為 <code>bureau_no_referral</code></td></tr>
+            <tr><td class="c-name"><code>no_<wbr>referral_<wbr>reason_<wbr>text</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note">選「其他原因」時填寫的說明</td></tr>
+            <tr><td class="c-name"><code>synced_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後同步的時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>case_id, completed_at</code></p>
+      </div>
+    </details>
+    <details class="tbl" id="t-pf_no_referral_review">
+      <summary><code class="tname">pf_no_referral_review</code><span class="ttitle">不轉介覆核單<small>一張覆核單一列</small></span><span class="tcount">6 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>平台 API（不轉介覆核單）</span><span><b>用途</b>衛生局暫不轉介後，本院同意或駁回的紀錄。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>review_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>platform_<wbr>record_<wbr>id</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span><span class="chip">唯一</span></td><td class="c-note">平台的表單識別碼</td></tr>
+            <tr><td class="c-name"><code>case_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-pf_case">pf_case</a></span><span class="chip">必填</span></td><td class="c-note">所屬的 <code>pf_case</code></td></tr>
+            <tr><td class="c-name"><code>completed_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">「系統」本院完成不轉介覆核單的時間</td></tr>
+            <tr><td class="c-name"><code>decision</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note"><code>agree</code>（同意）｜<code>reject</code>（駁回）</td></tr>
+            <tr><td class="c-name"><code>synced_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後同步的時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>case_id, completed_at</code></p>
+      </div>
+    </details>
+    <details class="tbl" id="t-pf_hospital_reply">
+      <summary><code class="tname">pf_hospital_reply</code><span class="ttitle">醫療機構回覆單<small>一張回覆單一列</small></span><span class="tcount">9 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>平台 API（醫療機構回覆單）</span><span><b>用途</b>首次聯繫時間、回覆衛生局時間與無法收案原因的來源。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>hospital_<wbr>reply_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>platform_<wbr>record_<wbr>id</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span><span class="chip">唯一</span></td><td class="c-note">平台的表單識別碼</td></tr>
+            <tr><td class="c-name"><code>case_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-pf_case">pf_case</a></span><span class="chip">必填</span></td><td class="c-note">所屬的 <code>pf_case</code></td></tr>
+            <tr><td class="c-name"><code>completed_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">「系統」完成醫療機構回覆單的時間；未完成為 <code>null</code></td></tr>
+            <tr><td class="c-name"><code>contact_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">回覆單上填寫的「進行聯繫時間」</td></tr>
+            <tr><td class="c-name"><code>intake_<wbr>result</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note"><code>accepted</code>（收案／開案）｜<code>unable</code>（無法收案）</td></tr>
+            <tr><td class="c-name"><code>unable_<wbr>reason_<wbr>code</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip fk">FK → <a href="#t-ref_reason">ref_reason</a></span></td><td class="c-note">無法收案原因；<code>reason_type</code> 為 <code>hospital_unable</code></td></tr>
+            <tr><td class="c-name"><code>unable_<wbr>reason_<wbr>text</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note">選「其他原因」時填寫的說明</td></tr>
+            <tr><td class="c-name"><code>synced_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後同步的時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>case_id, completed_at</code></p>
+      </div>
+    </details>
+    <details class="tbl" id="t-pf_visit">
+      <summary><code class="tname">pf_visit</code><span class="ttitle">訪視紀錄單<small>一次訪視一列</small></span><span class="tcount">10 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>平台 API（訪視紀錄單）</span><span><b>用途</b>優化計畫的首次訪視與首次專業評估時間由此取得；每月門診、急診次數變化用第一次評估訪視與結案訪視兩筆相減。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>visit_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>platform_<wbr>record_<wbr>id</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span><span class="chip">唯一</span></td><td class="c-note">平台的表單識別碼</td></tr>
+            <tr><td class="c-name"><code>case_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-pf_case">pf_case</a></span><span class="chip">必填</span></td><td class="c-note">所屬的 <code>pf_case</code></td></tr>
+            <tr><td class="c-name"><code>visit_<wbr>stage</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note"><code>assessment</code>（評估階段）｜<code>tracking</code>（追蹤階段）｜<code>closing</code>（結案訪視）</td></tr>
+            <tr><td class="c-name"><code>visit_<wbr>method</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note"><code>home</code>（家訪）｜<code>phone</code>（電訪）｜<code>other</code></td></tr>
+            <tr><td class="c-name"><code>visit_<wbr>started_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">訪視日期時間－開始</td></tr>
+            <tr><td class="c-name"><code>visit_<wbr>ended_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">訪視日期時間－結束</td></tr>
+            <tr><td class="c-name"><code>monthly_<wbr>opd_<wbr>count</code></td><td class="c-type">numeric(5,1)</td><td class="c-key"></td><td class="c-note">這次訪視填報的每月使用門診次數</td></tr>
+            <tr><td class="c-name"><code>monthly_<wbr>er_<wbr>count</code></td><td class="c-type">numeric(5,1)</td><td class="c-key"></td><td class="c-note">這次訪視填報的每月使用急診次數</td></tr>
+            <tr><td class="c-name"><code>synced_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後同步的時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>case_id, visit_started_at</code></p>
+      </div>
+    </details>
+    <details class="tbl" id="t-pf_followup_form">
+      <summary><code class="tname">pf_followup_form</code><span class="ttitle">結案後追蹤量表<small>一個案件的一個追蹤時點一列</small></span><span class="tcount">9 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>平台 API（結案後追蹤量表）；應回收的列由同步程式依結案日先建立</span><span><b>用途</b>應回收、已回收、可追蹤、無法填答四個數字都從這張表數出來。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>followup_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>platform_<wbr>record_<wbr>id</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">唯一</span></td><td class="c-note">平台的追蹤量表識別碼；尚未回收時為 <code>null</code></td></tr>
+            <tr><td class="c-name"><code>case_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-pf_case">pf_case</a></span><span class="chip">必填</span></td><td class="c-note">所屬的 <code>pf_case</code></td></tr>
+            <tr><td class="c-name"><code>timepoint</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note"><code>fu_3m</code>（結案後 3 個月）｜<code>fu_6m</code>（結案後 6 個月）</td></tr>
+            <tr><td class="c-name"><code>due_<wbr>date</code></td><td class="c-type">date</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">應回收日，結案日加 3 或 6 個月</td></tr>
+            <tr><td class="c-name"><code>returned_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">回收（填寫完成）的時間；未回收為 <code>null</code></td></tr>
+            <tr><td class="c-name"><code>is_<wbr>unable_<wbr>to_<wbr>answer</code></td><td class="c-type">boolean</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 false</span></td><td class="c-note">已回收且勾選無法填答</td></tr>
+            <tr><td class="c-name"><code>has_<wbr>score</code></td><td class="c-type">boolean</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 false</span></td><td class="c-note">已回收且有填寫分數</td></tr>
+            <tr><td class="c-name"><code>synced_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後同步的時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>case_id, timepoint</code>（唯一）、<code>due_date</code></p>
+      </div>
+    </details>
+    <details class="tbl" id="t-pf_assessment">
+      <summary><code class="tname">pf_assessment</code><span class="ttitle">量表評估<small>一個案件的一種量表的一個時點一列</small></span><span class="tcount">14 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>平台 API（通報單的初評量表、結案量表、結案後追蹤量表）</span><span><b>用途</b>風險分析頁看初評的分級，成效頁拿初評與 3、6 個月的分數相比。同一時點有多筆時，同步程式只留定義上有效的那一筆。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>assessment_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>platform_<wbr>record_<wbr>id</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">唯一</span></td><td class="c-note">平台的量表填寫紀錄識別碼</td></tr>
+            <tr><td class="c-name"><code>case_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-pf_case">pf_case</a></span><span class="chip">必填</span></td><td class="c-note">所屬的 <code>pf_case</code></td></tr>
+            <tr><td class="c-name"><code>scale_<wbr>code</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip fk">FK → <a href="#t-ref_scale">ref_scale</a></span><span class="chip">必填</span></td><td class="c-note">哪一種量表</td></tr>
+            <tr><td class="c-name"><code>timepoint</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note"><code>initial</code>（初評）｜<code>closing</code>（結案時）｜<code>fu_3m</code>（結案後 3 個月）｜<code>fu_6m</code>（結案後 6 個月）</td></tr>
+            <tr><td class="c-name"><code>followup_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-pf_followup_form">pf_followup_form</a></span></td><td class="c-note">追蹤時點的量表所屬的追蹤量表；初評與結案為 <code>null</code></td></tr>
+            <tr><td class="c-name"><code>assessed_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">評估（填寫）時間</td></tr>
+            <tr><td class="c-name"><code>assessor_<wbr>type</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note"><code>reporter</code>（通報者）｜<code>professional</code>（醫療專業人員）</td></tr>
+            <tr><td class="c-name"><code>total_<wbr>score</code></td><td class="c-type">numeric(6,2)</td><td class="c-key"></td><td class="c-note">量表總分；沒有填分數為 <code>null</code></td></tr>
+            <tr><td class="c-name"><code>danger_<wbr>score</code></td><td class="c-type">numeric(4,1)</td><td class="c-key"></td><td class="c-note">風險檢傷評估的危險性分數；其他量表為 <code>null</code></td></tr>
+            <tr><td class="c-name"><code>support_<wbr>score</code></td><td class="c-type">numeric(4,1)</td><td class="c-key"></td><td class="c-note">風險檢傷評估的支持系統分數；其他量表為 <code>null</code></td></tr>
+            <tr><td class="c-name"><code>severity_<wbr>level</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note"><code>low</code>｜<code>medium</code>｜<code>high</code>；分數落在分級規則之外為 <code>null</code></td></tr>
+            <tr><td class="c-name"><code>is_<wbr>unable_<wbr>to_<wbr>answer</code></td><td class="c-type">boolean</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 false</span></td><td class="c-note">勾選無法填答</td></tr>
+            <tr><td class="c-name"><code>synced_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後同步的時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>case_id, scale_code, timepoint</code>（唯一）、<code>scale_code, timepoint</code></p>
+      </div>
+    </details>
+    <details class="tbl" id="t-pf_ai_prediction">
+      <summary><code class="tname">pf_ai_prediction</code><span class="ttitle">AI 預測紀錄<small>一次預測一列</small></span><span class="tcount">9 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>平台 API（AI 風險分數預測與對應的專業人員評估）</span><span><b>用途</b>兩個分數都有值才算一筆比對資料；吻合程度、迴歸線與累積趨勢都由這張表即時算。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>prediction_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>platform_<wbr>record_<wbr>id</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span><span class="chip">唯一</span></td><td class="c-note">平台的預測紀錄識別碼</td></tr>
+            <tr><td class="c-name"><code>case_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-pf_case">pf_case</a></span><span class="chip">必填</span></td><td class="c-note">所屬的 <code>pf_case</code></td></tr>
+            <tr><td class="c-name"><code>model_<wbr>version</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note">產生這筆預測的模型版本</td></tr>
+            <tr><td class="c-name"><code>predicted_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">AI 產生預測的時間</td></tr>
+            <tr><td class="c-name"><code>predicted_<wbr>score</code></td><td class="c-type">numeric(5,2)</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">AI 模型預測分數，3–15 分</td></tr>
+            <tr><td class="c-name"><code>actual_<wbr>score</code></td><td class="c-type">numeric(5,2)</td><td class="c-key"></td><td class="c-note">專業人員實測分數，3–15 分；尚未評估為 <code>null</code></td></tr>
+            <tr><td class="c-name"><code>actual_<wbr>assessed_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">專業人員完成評估的時間</td></tr>
+            <tr><td class="c-name"><code>synced_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後同步的時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>case_id</code>、<code>actual_assessed_at</code></p>
+      </div>
+    </details>
+    <details class="tbl" id="t-pf_satisfaction_survey">
+      <summary><code class="tname">pf_satisfaction_survey</code><span class="ttitle">使用者滿意度問卷<small>一份發出的問卷一列</small></span><span class="tcount">9 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>平台 API（結案後發給通報者的滿意度問卷）</span><span><b>用途</b>回收率與平均分數依通報者所屬網絡（<code>pf_case.network_code</code>）分組；不存文字建議。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>survey_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>platform_<wbr>record_<wbr>id</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span><span class="chip">唯一</span></td><td class="c-note">平台的問卷識別碼</td></tr>
+            <tr><td class="c-name"><code>case_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-pf_case">pf_case</a></span><span class="chip">必填</span></td><td class="c-note">所屬的 <code>pf_case</code></td></tr>
+            <tr><td class="c-name"><code>sent_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">問卷發送時間，結案當日</td></tr>
+            <tr><td class="c-name"><code>due_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">填寫期限，發送後 3 日</td></tr>
+            <tr><td class="c-name"><code>completed_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">完成填寫的時間；未填為 <code>null</code></td></tr>
+            <tr><td class="c-name"><code>ui_<wbr>score</code></td><td class="c-type">smallint</td><td class="c-key"></td><td class="c-note">第一題 系統使用者介面滿意度，1–5 分</td></tr>
+            <tr><td class="c-name"><code>care_<wbr>score</code></td><td class="c-type">smallint</td><td class="c-key"></td><td class="c-note">第二題 醫療團隊處置滿意度，1–5 分</td></tr>
+            <tr><td class="c-name"><code>synced_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後同步的時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>case_id</code></p>
+      </div>
+    </details>
+  </section>
+
+  <section class="layer" id="layer-his">
+    <h3><span class="dot his"></span>HIS 資料 <code>his_*</code> <small>2 張</small></h3>
+    <p class="layer-desc">醫院 HIS API 同步進來的資料。只存「誰在哪一天看了哪一科、有沒有住院」，不存診斷與醫囑。</p>
+    <details class="tbl" id="t-his_patient">
+      <summary><code class="tname">his_patient</code><span class="ttitle">HIS 病人<small>一位 HIS 病人一列</small></span><span class="tcount">7 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>HIS API（病人基本檔）</span><span><b>用途</b>包含兩群人：平台個案在本院有就醫紀錄者，以及 SNQ 指標要追蹤的院內病人（不一定是平台個案）。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>his_<wbr>patient_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>his_<wbr>patient_<wbr>key</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span><span class="chip">唯一</span></td><td class="c-note">HIS 的病人識別碼，建議由 HIS 提供去識別代碼或同步時雜湊病歷號</td></tr>
+            <tr><td class="c-name"><code>id_<wbr>no_<wbr>hash</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note">身分證字號雜湊，演算法與金鑰必須和 <code>pf_person.id_no_hash</code> 相同</td></tr>
+            <tr><td class="c-name"><code>person_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-pf_person">pf_person</a></span></td><td class="c-note">比對到的平台個案；不是平台個案為 <code>null</code></td></tr>
+            <tr><td class="c-name"><code>first_<wbr>visit_<wbr>date</code></td><td class="c-type">date</td><td class="c-key"></td><td class="c-note">本院初診日</td></tr>
+            <tr><td class="c-name"><code>first_<wbr>visit_<wbr>care_<wbr>group</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note">初診類別，值同 <code>ref_his_dept.care_group</code>；<code>home_care</code> 即初診為居家醫療</td></tr>
+            <tr><td class="c-name"><code>synced_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後同步的時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>id_no_hash</code>、<code>person_id</code></p>
+      </div>
+    </details>
+    <details class="tbl" id="t-his_encounter">
+      <summary><code class="tname">his_encounter</code><span class="ttitle">HIS 就醫紀錄<small>一次就醫一列，住院為一次入出院一列</small></span><span class="tcount">10 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>HIS API（門診、急診、住院紀錄）</span><span><b>用途</b>只存就醫的事實與日期，不存診斷、醫囑與費用。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>encounter_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>his_<wbr>encounter_<wbr>key</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span><span class="chip">唯一</span></td><td class="c-note">HIS 的就醫紀錄識別碼</td></tr>
+            <tr><td class="c-name"><code>his_<wbr>patient_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-his_patient">his_patient</a></span><span class="chip">必填</span></td><td class="c-note">所屬的 <code>his_patient</code></td></tr>
+            <tr><td class="c-name"><code>encounter_<wbr>type</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note"><code>outpatient</code>（門診，含居家照護科）｜<code>inpatient</code>（住院）｜<code>emergency</code>（急診）</td></tr>
+            <tr><td class="c-name"><code>dept_<wbr>code</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip fk">FK → <a href="#t-ref_his_dept">ref_his_dept</a></span></td><td class="c-note">就醫科別；由此判斷身心科門診或居家</td></tr>
+            <tr><td class="c-name"><code>encounter_<wbr>date</code></td><td class="c-type">date</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">門診為就診日，住院為入院日，急診為到院日</td></tr>
+            <tr><td class="c-name"><code>discharge_<wbr>date</code></td><td class="c-type">date</td><td class="c-key"></td><td class="c-note">住院的出院日；尚未出院或非住院為 <code>null</code></td></tr>
+            <tr><td class="c-name"><code>is_<wbr>compulsory</code></td><td class="c-type">boolean</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 false</span></td><td class="c-note">是否為強制住院</td></tr>
+            <tr><td class="c-name"><code>source_<wbr>updated_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">HIS 端最後異動時間，增量同步用</td></tr>
+            <tr><td class="c-name"><code>synced_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後同步的時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>his_patient_id, encounter_date</code>、<code>encounter_type, encounter_date</code></p>
+      </div>
+    </details>
+  </section>
+
+  <section class="layer" id="layer-mart">
+    <h3><span class="dot mart"></span>衍生表 <code>mart_*</code> <small>4 張</small></h3>
+    <p class="layer-desc">同步完成後由排程重算。儀表板的時效指標與所有 HIS 指標都讀這一層。</p>
+    <details class="tbl" id="t-mart_case_timeline">
+      <summary><code class="tname">mart_case_timeline</code><span class="ttitle">案件里程碑<small>一個案件一列</small></span><span class="tcount">21 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>衍生（<code>pf_case</code> 加上各表單取每個案件最早的一筆）</span><span><b>用途</b>案件處理效率與同期比較的每個時效指標，都是這張表兩個時間欄位相減；每個比率指標，都是這張表依條件計數。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>case_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip fk">FK → <a href="#t-pf_case">pf_case</a></span></td><td class="c-note">所屬的 <code>pf_case</code></td></tr>
+            <tr><td class="c-name"><code>reported_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">完成通報；同 <code>pf_case.reported_at</code></td></tr>
+            <tr><td class="c-name"><code>assigned_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">首次完成指派醫師／護理師</td></tr>
+            <tr><td class="c-name"><code>em_<wbr>intake_<wbr>method</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note"><code>phone</code>｜<code>phone_dispatch</code>；首次完成的受理方式</td></tr>
+            <tr><td class="c-name"><code>em_<wbr>intake_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">首次完成受理方式表單</td></tr>
+            <tr><td class="c-name"><code>em_<wbr>dispatched_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">實際出勤時間（出勤單填寫）</td></tr>
+            <tr><td class="c-name"><code>bureau_<wbr>replied_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">衛生局完成回覆單</td></tr>
+            <tr><td class="c-name"><code>bureau_<wbr>visit_<wbr>date</code></td><td class="c-type">date</td><td class="c-key"></td><td class="c-note">衛生局回覆單填寫的訪視日期</td></tr>
+            <tr><td class="c-name"><code>bureau_<wbr>dispatch_<wbr>date</code></td><td class="c-type">date</td><td class="c-key"></td><td class="c-note">衛生局回覆單填寫的派案日期</td></tr>
+            <tr><td class="c-name"><code>bureau_<wbr>decision</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note"><code>refer_tsghb</code>（轉介三總北投）｜<code>refer_other</code>（轉介他院）｜<code>no_refer</code>（暫不轉介）</td></tr>
+            <tr><td class="c-name"><code>review_<wbr>decision</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note"><code>agree</code>｜<code>reject</code>；本院對暫不轉介的覆核結果</td></tr>
+            <tr><td class="c-name"><code>review_<wbr>completed_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">本院完成不轉介覆核單</td></tr>
+            <tr><td class="c-name"><code>hosp_<wbr>contact_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">醫療機構回覆單填寫的進行聯繫時間</td></tr>
+            <tr><td class="c-name"><code>hosp_<wbr>replied_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">完成醫療機構回覆單</td></tr>
+            <tr><td class="c-name"><code>hosp_<wbr>intake_<wbr>result</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note"><code>accepted</code>｜<code>unable</code></td></tr>
+            <tr><td class="c-name"><code>first_<wbr>assessment_<wbr>visit_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">評估階段第一次訪視的開始時間</td></tr>
+            <tr><td class="c-name"><code>first_<wbr>visit_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">任一階段最早一次訪視的開始時間</td></tr>
+            <tr><td class="c-name"><code>handled_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">處理完成時間：緊急醫療取 <code>em_intake_at</code>，優化計畫取 <code>first_visit_at</code></td></tr>
+            <tr><td class="c-name"><code>opened_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">開案；同 <code>pf_case.opened_at</code></td></tr>
+            <tr><td class="c-name"><code>closed_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">結案；同 <code>pf_case.closed_at</code></td></tr>
+            <tr><td class="c-name"><code>refreshed_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後重算的時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>reported_at</code></p>
+      </div>
+    </details>
+    <details class="tbl" id="t-mart_case_his_outcome">
+      <summary><code class="tname">mart_case_his_outcome</code><span class="ttitle">結案個案的院內就醫銜接<small>一個已結案案件一列</small></span><span class="tcount">11 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>衍生（<code>pf_case</code> 的已結案案件，以 <code>id_no_hash</code> 比對 <code>his_patient</code> 後彙總 <code>his_encounter</code>）</span><span><b>用途</b>結案後轉介至本院醫療系統比例、結案追蹤率、再住院次數與門診治療成效都讀這張表，是平台資料與 HIS 資料唯一的交會點。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>case_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip fk">FK → <a href="#t-pf_case">pf_case</a></span></td><td class="c-note">所屬的 <code>pf_case</code></td></tr>
+            <tr><td class="c-name"><code>his_<wbr>patient_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-his_patient">his_patient</a></span></td><td class="c-note">比對到的 HIS 病人；HIS 查無此人為 <code>null</code></td></tr>
+            <tr><td class="c-name"><code>closed_<wbr>date</code></td><td class="c-type">date</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">結案日（Asia/Taipei）</td></tr>
+            <tr><td class="c-name"><code>observed_<wbr>until</code></td><td class="c-type">date</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">統計截止日；結案日隔天起到這一天的就醫紀錄都納入</td></tr>
+            <tr><td class="c-name"><code>has_<wbr>opd_<wbr>after_<wbr>close</code></td><td class="c-type">boolean</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 false</span></td><td class="c-note">結案日後有門診紀錄</td></tr>
+            <tr><td class="c-name"><code>has_<wbr>home_<wbr>care_<wbr>after_<wbr>close</code></td><td class="c-type">boolean</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 false</span></td><td class="c-note">結案日後有居家紀錄</td></tr>
+            <tr><td class="c-name"><code>has_<wbr>inpatient_<wbr>after_<wbr>close</code></td><td class="c-type">boolean</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 false</span></td><td class="c-note">結案日後有住院紀錄</td></tr>
+            <tr><td class="c-name"><code>post_<wbr>close_<wbr>admission_<wbr>count</code></td><td class="c-type">integer</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 0</span></td><td class="c-note">結案後住院次數</td></tr>
+            <tr><td class="c-name"><code>post_<wbr>close_<wbr>psy_<wbr>opd_<wbr>count</code></td><td class="c-type">integer</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 0</span></td><td class="c-note">結案後身心科門診使用次數</td></tr>
+            <tr><td class="c-name"><code>post_<wbr>close_<wbr>home_<wbr>care_<wbr>count</code></td><td class="c-type">integer</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 0</span></td><td class="c-note">結案後居家照護科門診使用次數</td></tr>
+            <tr><td class="c-name"><code>refreshed_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後重算的時間</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+    <details class="tbl" id="t-mart_snq_cohort">
+      <summary><code class="tname">mart_snq_cohort</code><span class="ttitle">SNQ 追蹤名單<small>一位病人的一次起算事件一列</small></span><span class="tcount">8 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>衍生（<code>his_patient</code>、<code>his_encounter</code>）</span><span><b>用途</b>四個院內追蹤指標的分母；再住院率直接數 <code>has_readmission</code>。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>cohort_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>cohort_<wbr>type</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note"><code>home_care_first_visit</code>（初診為居家醫療）｜<code>compulsory_discharge</code>（強制住院出院）</td></tr>
+            <tr><td class="c-name"><code>his_<wbr>patient_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-his_patient">his_patient</a></span><span class="chip">必填</span></td><td class="c-note">所屬的 <code>his_patient</code></td></tr>
+            <tr><td class="c-name"><code>index_<wbr>date</code></td><td class="c-type">date</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">追蹤起算日：初診日或強制住院的出院日</td></tr>
+            <tr><td class="c-name"><code>index_<wbr>encounter_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-his_encounter">his_encounter</a></span></td><td class="c-note">起算的那一筆就醫紀錄</td></tr>
+            <tr><td class="c-name"><code>has_<wbr>readmission</code></td><td class="c-type">boolean</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 false</span></td><td class="c-note">起算日之後是否再住院</td></tr>
+            <tr><td class="c-name"><code>first_<wbr>readmission_<wbr>date</code></td><td class="c-type">date</td><td class="c-key"></td><td class="c-note">第一次再住院的入院日</td></tr>
+            <tr><td class="c-name"><code>refreshed_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後重算的時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>cohort_type, his_patient_id, index_date</code>（唯一）、<code>cohort_type, index_date</code></p>
+      </div>
+    </details>
+    <details class="tbl" id="t-mart_snq_cohort_year">
+      <summary><code class="tname">mart_snq_cohort_year</code><span class="ttitle">SNQ 逐年追蹤<small>名單上的一筆的一個追蹤年度一列</small></span><span class="tcount">8 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>衍生（<code>mart_snq_cohort</code>、<code>his_encounter</code>）</span><span><b>用途</b>門診追蹤率要求每年都穩定治療達門檻、中斷就不計入次年，所以逐年存。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>cohort_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip fk">FK → <a href="#t-mart_snq_cohort">mart_snq_cohort</a></span><span class="chip">必填</span></td><td class="c-note">所屬的 <code>mart_snq_cohort</code></td></tr>
+            <tr><td class="c-name"><code>year_<wbr>no</code></td><td class="c-type">integer</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">必填</span></td><td class="c-note">起算後的第幾年，從 1 開始</td></tr>
+            <tr><td class="c-name"><code>period_<wbr>start</code></td><td class="c-type">date</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">這一年的起日</td></tr>
+            <tr><td class="c-name"><code>period_<wbr>end</code></td><td class="c-type">date</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">這一年的迄日</td></tr>
+            <tr><td class="c-name"><code>visit_<wbr>count</code></td><td class="c-type">integer</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 0</span></td><td class="c-note">這一年內門診加居家的就醫次數</td></tr>
+            <tr><td class="c-name"><code>is_<wbr>eligible</code></td><td class="c-type">boolean</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 true</span></td><td class="c-note">前面各年都達標才列入這一年的計算；中斷後為 <code>false</code></td></tr>
+            <tr><td class="c-name"><code>is_<wbr>stable</code></td><td class="c-type">boolean</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 false</span></td><td class="c-note">這一年就醫次數達門檻（預設 4 次）</td></tr>
+            <tr><td class="c-name"><code>refreshed_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">這一列最後重算的時間</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </section>
+
+  <section class="layer" id="layer-reference">
+    <h3><span class="dot ref"></span>代碼與設定 <code>ref_*</code> <small>8 張</small></h3>
+    <p class="layer-desc">畫面上的分類名稱、量表分級門檻與計算參數。上線前先建好內容，下方附預設值。</p>
+    <details class="tbl" id="t-ref_report_category">
+      <summary><code class="tname">ref_report_category</code><span class="ttitle">通報類別<small>一個通報類別一列</small></span><span class="tcount">4 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>固定代碼，依平台的通報類別建立</span><span><b>用途</b>指揮板依四個類別分欄；其他分頁的類別篩選用 <code>category_group</code>。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>category_<wbr>code</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip pk">PK</span></td><td class="c-note"><code>emergency</code>｜<code>opt_1</code>｜<code>opt_2</code>｜<code>opt_3</code></td></tr>
+            <tr><td class="c-name"><code>category_<wbr>name</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">緊急醫療｜第一類優化計畫｜第二類優化計畫｜第三類優化計畫</td></tr>
+            <tr><td class="c-name"><code>category_<wbr>group</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note"><code>emergency</code>｜<code>optimization</code>；對應畫面「通報類別分析：全部／緊急醫療／優化計畫」</td></tr>
+            <tr><td class="c-name"><code>sort_<wbr>order</code></td><td class="c-type">integer</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 0</span></td><td class="c-note">顯示順序</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+    <details class="tbl" id="t-ref_network_unit">
+      <summary><code class="tname">ref_network_unit</code><span class="ttitle">七大網絡<small>一個網絡一列</small></span><span class="tcount">3 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>固定代碼，依平台的通報者所屬網絡建立</span><span><b>用途</b>通報者基本資料分析頁的所有圖表都以這七類分組。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>network_<wbr>code</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip pk">PK</span></td><td class="c-note"><code>social</code>｜<code>police</code>｜<code>civil</code>｜<code>health</code>｜<code>education</code>｜<code>fire</code>｜<code>labor</code></td></tr>
+            <tr><td class="c-name"><code>network_<wbr>name</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">社政｜警察｜民政｜衛政｜教育｜消防｜勞政</td></tr>
+            <tr><td class="c-name"><code>sort_<wbr>order</code></td><td class="c-type">integer</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 0</span></td><td class="c-note">顯示順序</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+    <details class="tbl" id="t-ref_region">
+      <summary><code class="tname">ref_region</code><span class="ttitle">行政區<small>一個縣市或一個鄉鎮市區一列</small></span><span class="tcount">5 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>固定代碼，22 個縣市與其下的鄉鎮市區</span><span><b>用途</b>行政區長條圖、熱點地圖的縣市與行政區排行都以這張表為準。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>region_<wbr>code</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip pk">PK</span></td><td class="c-note">行政區域代碼，建議沿用內政部行政區域代碼</td></tr>
+            <tr><td class="c-name"><code>region_<wbr>name</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">全名，例如 臺北市、北投區</td></tr>
+            <tr><td class="c-name"><code>region_<wbr>level</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note"><code>county</code>（縣市）｜<code>district</code>（鄉鎮市區）</td></tr>
+            <tr><td class="c-name"><code>parent_<wbr>code</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip fk">FK → <a href="#t-ref_region">ref_region</a></span></td><td class="c-note">所屬縣市的 <code>region_code</code>；縣市本身為 <code>null</code></td></tr>
+            <tr><td class="c-name"><code>sort_<wbr>order</code></td><td class="c-type">integer</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 0</span></td><td class="c-note">顯示順序</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+    <details class="tbl" id="t-ref_scale">
+      <summary><code class="tname">ref_scale</code><span class="ttitle">量表<small>一種量表一列</small></span><span class="tcount">6 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>固定代碼</span><span><b>用途</b>風險分析頁與成效頁共用的四種量表。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>scale_<wbr>code</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip pk">PK</span></td><td class="c-note"><code>risk_triage</code>｜<code>gaf</code>｜<code>bsrs5</code>｜<code>cgis</code></td></tr>
+            <tr><td class="c-name"><code>scale_<wbr>name</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">風險檢傷評估｜GAF｜BSRS-5｜CGI-S</td></tr>
+            <tr><td class="c-name"><code>higher_<wbr>is_<wbr>better</code></td><td class="c-type">boolean</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 false</span></td><td class="c-note">分數越高代表狀況越好；只有 GAF 為 <code>true</code>，改善率的分子方向因此相反</td></tr>
+            <tr><td class="c-name"><code>score_<wbr>min</code></td><td class="c-type">numeric(6,2)</td><td class="c-key"></td><td class="c-note">量表最低分</td></tr>
+            <tr><td class="c-name"><code>score_<wbr>max</code></td><td class="c-type">numeric(6,2)</td><td class="c-key"></td><td class="c-note">量表最高分</td></tr>
+            <tr><td class="c-name"><code>sort_<wbr>order</code></td><td class="c-type">integer</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 0</span></td><td class="c-note">顯示順序</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+    <details class="tbl" id="t-ref_scale_level_rule">
+      <summary><code class="tname">ref_scale_level_rule</code><span class="ttitle">量表分級規則<small>一種量表的一個等級的一個判定分項一列</small></span><span class="tcount">6 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>設定值，門檻確認後維護</span><span><b>用途</b>同一量表同一等級的所有分項都符合才算該等級；同步時用來算 <code>pf_assessment.severity_level</code>。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>rule_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>scale_<wbr>code</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip fk">FK → <a href="#t-ref_scale">ref_scale</a></span><span class="chip">必填</span></td><td class="c-note">所屬的 <code>ref_scale</code></td></tr>
+            <tr><td class="c-name"><code>severity_<wbr>level</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note"><code>low</code>（輕度／低風險）｜<code>medium</code>（中度／中風險）｜<code>high</code>（重度／高風險）</td></tr>
+            <tr><td class="c-name"><code>component</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 total</span></td><td class="c-note"><code>total</code>（總分）｜<code>danger</code>（危險性）｜<code>support</code>（支持系統）；後兩者只有風險檢傷評估使用</td></tr>
+            <tr><td class="c-name"><code>min_<wbr>score</code></td><td class="c-type">numeric(6,2)</td><td class="c-key"></td><td class="c-note">下限（含）；<code>null</code> 表示沒有下限</td></tr>
+            <tr><td class="c-name"><code>max_<wbr>score</code></td><td class="c-type">numeric(6,2)</td><td class="c-key"></td><td class="c-note">上限（含）；<code>null</code> 表示沒有上限</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>scale_code, severity_level, component</code>（唯一）</p>
+      </div>
+    </details>
+    <details class="tbl" id="t-ref_reason">
+      <summary><code class="tname">ref_reason</code><span class="ttitle">原因代碼<small>一個原因選項一列</small></span><span class="tcount">5 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>固定代碼，依平台表單選項建立</span><span><b>用途</b>暫不轉介原因分布與無法收案原因兩張表共用。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>reason_<wbr>code</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip pk">PK</span></td><td class="c-note">原因代碼，全表唯一</td></tr>
+            <tr><td class="c-name"><code>reason_<wbr>type</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note"><code>bureau_no_referral</code>（衛生局暫不轉介原因）｜<code>hospital_unable</code>（醫療機構無法收案原因）</td></tr>
+            <tr><td class="c-name"><code>reason_<wbr>name</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">畫面顯示的原因名稱</td></tr>
+            <tr><td class="c-name"><code>sort_<wbr>order</code></td><td class="c-type">integer</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 0</span></td><td class="c-note">顯示順序</td></tr>
+            <tr><td class="c-name"><code>is_<wbr>active</code></td><td class="c-type">boolean</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 true</span></td><td class="c-note">表單選項停用後設為 <code>false</code>，舊資料仍可對應</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+    <details class="tbl" id="t-ref_his_dept">
+      <summary><code class="tname">ref_his_dept</code><span class="ttitle">HIS 科別對照<small>一個 HIS 科別一列</small></span><span class="tcount">4 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>HIS 科別主檔，<code>care_group</code> 由院方確認後維護</span><span><b>用途</b>決定一筆就醫紀錄算身心科門診、居家還是其他。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>dept_<wbr>code</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip pk">PK</span></td><td class="c-note">HIS 科別代碼</td></tr>
+            <tr><td class="c-name"><code>dept_<wbr>name</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">HIS 科別名稱</td></tr>
+            <tr><td class="c-name"><code>care_<wbr>group</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note"><code>psy_opd</code>（身心科門診）｜<code>home_care</code>（居家照護科門診／居家醫療）｜<code>psy_ward</code>（精神科住院）｜<code>emergency</code>（急診）｜<code>other</code></td></tr>
+            <tr><td class="c-name"><code>is_<wbr>psychiatry</code></td><td class="c-type">boolean</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 false</span></td><td class="c-note">是否計入精神科的就醫次數</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+    <details class="tbl" id="t-ref_setting">
+      <summary><code class="tname">ref_setting</code><span class="ttitle">計算參數<small>一個參數一列</small></span><span class="tcount">3 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>設定值</span><span><b>用途</b>指標計算會用到、之後可能調整的門檻集中放這裡。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>setting_<wbr>key</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip pk">PK</span></td><td class="c-note">設定名稱，例如 <code>outcome_flat_threshold_pct</code></td></tr>
+            <tr><td class="c-name"><code>setting_<wbr>value</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">設定值，一律以文字存，讀取時再轉型</td></tr>
+            <tr><td class="c-name"><code>description</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note">這個設定影響哪些指標</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+
+    <h3 id="seed">代碼預設值</h3>
+    <div class="table-card">
+      <table class="stack">
+        <thead><tr><th>代碼表</th><th>內容</th></tr></thead>
+        <tbody>
+          <tr><td class="name"><code>ref_report_category</code></td><td><code>emergency</code> 緊急醫療（群組 <code>emergency</code>）；<code>opt_1</code> 第一類優化計畫、<code>opt_2</code> 第二類優化計畫、<code>opt_3</code> 第三類優化計畫（群組皆為 <code>optimization</code>）</td></tr>
+          <tr><td class="name"><code>ref_network_unit</code></td><td><code>social</code> 社政、<code>police</code> 警察、<code>civil</code> 民政、<code>health</code> 衛政、<code>education</code> 教育、<code>fire</code> 消防、<code>labor</code> 勞政</td></tr>
+          <tr><td class="name"><code>ref_scale</code></td><td><code>risk_triage</code> 風險檢傷評估、<code>gaf</code> GAF（<code>higher_is_better</code> 為 true）、<code>bsrs5</code> BSRS-5、<code>cgis</code> CGI-S</td></tr>
+          <tr><td class="name"><code>ref_reason</code><br>衛生局暫不轉介</td><td>社區心衛中心個管服務對象、已住院／門診／居家治療、另行收案、非衛生機關之服務項目、不符合轉介目的、拒訪、資料不足、其他原因</td></tr>
+          <tr><td class="name"><code>ref_reason</code><br>醫療機構無法收案</td><td>住院、門診／居家治療、拒絕接受服務（已依拒訪 SOP 處理）、拒訪、未轉介／轉介他院、搬遷、失聯（已依失聯 SOP 處理）、羈押中、死亡、其他原因</td></tr>
+          <tr><td class="name"><code>ref_setting</code></td><td><code>outcome_flat_threshold_pct</code> = 1.0（改善率在正負 1% 內算持平）；<code>snq_stable_visit_min</code> = 4（一年門診或居家達 4 次算穩定治療）；<code>survey_due_days</code> = 3（滿意度問卷的填寫期限）</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-card">
+      <table class="stack">
+        <thead><tr><th>量表分級（<code>ref_scale_level_rule</code>）</th><th>低</th><th>中</th><th>高</th></tr></thead>
+        <tbody>
+          <tr><td class="name">BSRS-5</td><td data-l="低">6–9</td><td data-l="中">10–14</td><td data-l="高">15 以上</td></tr>
+          <tr><td class="name">GAF</td><td data-l="低">61 以上</td><td data-l="中">51–60</td><td data-l="高">50 以下</td></tr>
+          <tr><td class="name">CGI-S</td><td data-l="低">2–3</td><td data-l="中">4</td><td data-l="高">5–7</td></tr>
+          <tr><td class="name">風險檢傷評估</td><td data-l="低">危險性 2 以下，且支持系統 2 以下</td><td data-l="中">危險性 3，且支持系統 3 以上</td><td data-l="高">危險性 4 以上，且支持系統 4 以上</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="layer-desc">分級門檻是常見的切分方式，先當預設值；正式門檻確認後改這張表的內容就好，不用改程式。</p>
+  </section>
+
+  <section class="layer" id="layer-sync">
+    <h3><span class="dot sync"></span>同步紀錄 <code>sync_*</code> <small>2 張</small></h3>
+    <p class="layer-desc">同步程式自己用的表，儀表板只會讀最後一次成功的時間。</p>
+    <details class="tbl" id="t-sync_run">
+      <summary><code class="tname">sync_run</code><span class="ttitle">同步批次<small>一次 API 拉取一列</small></span><span class="tcount">11 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>同步程式寫入</span><span><b>用途</b>用來接續增量同步，並在畫面顯示資料更新時間。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>sync_<wbr>run_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>source_<wbr>system</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note"><code>platform</code>｜<code>his</code></td></tr>
+            <tr><td class="c-name"><code>endpoint</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">這次呼叫的 API 資源名稱，例如 <code>cases</code>、<code>visits</code>、<code>encounters</code></td></tr>
+            <tr><td class="c-name"><code>window_<wbr>start</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">這次拉取的資料異動區間起點</td></tr>
+            <tr><td class="c-name"><code>window_<wbr>end</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">這次拉取的資料異動區間終點；成功後作為下次的起點</td></tr>
+            <tr><td class="c-name"><code>started_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">開始時間</td></tr>
+            <tr><td class="c-name"><code>finished_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"></td><td class="c-note">結束時間</td></tr>
+            <tr><td class="c-name"><code>status</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 running</span></td><td class="c-note"><code>running</code>｜<code>success</code>｜<code>failed</code></td></tr>
+            <tr><td class="c-name"><code>fetched_<wbr>count</code></td><td class="c-type">integer</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 0</span></td><td class="c-note">取回的筆數</td></tr>
+            <tr><td class="c-name"><code>upserted_<wbr>count</code></td><td class="c-type">integer</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 0</span></td><td class="c-note">實際新增或更新的筆數</td></tr>
+            <tr><td class="c-name"><code>error_<wbr>message</code></td><td class="c-type is-text">text</td><td class="c-key"></td><td class="c-note">失敗時的錯誤訊息；不可包含個資</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>source_system, endpoint, started_at</code></p>
+      </div>
+    </details>
+    <details class="tbl" id="t-sync_raw_record">
+      <summary><code class="tname">sync_raw_record</code><span class="ttitle">API 原始回應<small>一次拉取的一筆來源資料一列</small></span><span class="tcount">8 欄</span></summary>
+      <div class="tbody">
+        <p class="tmeta"><span><b>來源</b>同步程式寫入</span><span><b>用途</b>指標定義還會調整，保留去識別後的原始回應就能重算而不必重拉；建議只保留 90 天。</span></p>
+        <table class="cols">
+          <thead><tr><th>欄位</th><th>型別</th><th>限制</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td class="c-name"><code>raw_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip pk">PK</span><span class="chip">自動編號</span></td><td class="c-note">主鍵</td></tr>
+            <tr><td class="c-name"><code>sync_<wbr>run_<wbr>id</code></td><td class="c-type">bigint</td><td class="c-key"><span class="chip fk">FK → <a href="#t-sync_run">sync_run</a></span><span class="chip">必填</span></td><td class="c-note">所屬的 <code>sync_run</code></td></tr>
+            <tr><td class="c-name"><code>source_<wbr>system</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note"><code>platform</code>｜<code>his</code></td></tr>
+            <tr><td class="c-name"><code>endpoint</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">API 資源名稱</td></tr>
+            <tr><td class="c-name"><code>source_<wbr>key</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">來源端的主鍵</td></tr>
+            <tr><td class="c-name"><code>payload</code></td><td class="c-type">jsonb</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note">API 回應的單筆內容；寫入前先移除姓名、身分證字號、電話與完整地址</td></tr>
+            <tr><td class="c-name"><code>payload_<wbr>hash</code></td><td class="c-type is-text">text</td><td class="c-key"><span class="chip">必填</span></td><td class="c-note"><code>payload</code> 的雜湊值，用來判斷內容有沒有變</td></tr>
+            <tr><td class="c-name"><code>fetched_<wbr>at</code></td><td class="c-type">timestamptz</td><td class="c-key"><span class="chip">必填</span><span class="chip">預設 now()</span></td><td class="c-note">取回時間</td></tr>
+          </tbody>
+        </table>
+        <p class="tidx"><b>索引</b><code>source_system, endpoint, source_key</code>、<code>fetched_at</code></p>
+      </div>
+    </details>
+  </section>
+</section>
+
+<!-- ====================================================================== -->
+<section class="block" id="metrics">
+  <h2><span class="no">05</span>指標對應</h2>
+  <p class="sub">儀表板 v6 每個分頁的指標各自讀哪些表、怎麼算。「項次」對應本機指標清單 kpi.csv 的編號，1 到 149 全部涵蓋。</p>
+
+  <div class="table-card">
+    <table class="stack">
+      <thead><tr><th>共同規則</th><th>做法</th></tr></thead>
+      <tbody>
+        <tr><td class="name">日期篩選</td><td><code>pf_case.reported_at</code> 落在所選區間，以 Asia/Taipei 切日。指揮板畫面已寫明依通報日期計算，其他分頁比照。</td></tr>
+        <tr><td class="name">通報類別篩選</td><td>接 <code>ref_report_category</code>，用 <code>category_group</code> 分「緊急醫療」與「優化計畫」；指揮板的四欄用 <code>category_code</code>。</td></tr>
+        <tr><td class="name">排除</td><td><code>pf_case.is_void</code> 為 true 的案件一律不計。</td></tr>
+        <tr><td class="name">時效</td><td>終點減起點；任一為 null 的案件不計入，樣本數 N 另外回傳。資料庫逐案存時間點，所以平均、中位數、P90 都算得出來。</td></tr>
+        <tr><td class="name">比率</td><td>分母為 0 時回傳 null，畫面顯示「—」。</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>基本資料</h3>
+  <div class="table-card">
+    <table class="stack map">
+      <thead><tr><th>項次</th><th>指標</th><th>來源</th><th>資料表</th><th>算法</th></tr></thead>
+      <tbody>
+        <tr><td class="no">1–5</td><td class="name">總收案、待派、已派、結案、未轉介／開案件數</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_case</code></td><td data-l="算法">全部案件數；各狀態依 <code>status_code</code> 計數。</td></tr>
+        <tr><td class="no">6</td><td class="name">臺北市各行政區通報案件數</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_case_address</code> <code>ref_region</code></td><td data-l="算法">取 <code>is_primary</code> 那一筆，依 <code>district_code</code> 分組計數。</td></tr>
+        <tr><td class="no">7</td><td class="name">年齡</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_case</code></td><td data-l="算法"><code>age_at_report</code> 每 10 歲一組，80 歲以上併一組。</td></tr>
+        <tr><td class="no">8</td><td class="name">性別</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_person</code></td><td data-l="算法">依 <code>gender</code> 計數並算占比。</td></tr>
+        <tr><td class="no">9–12</td><td class="name">熱點地圖：點位、各風險等級件數、目前範圍案件數、行政區排行</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_case_address</code> <code>pf_case</code></td><td data-l="算法">以 <code>address_key</code> 合併同址，件數為筆數，顏色取同址中最高的 <code>initial_risk_level</code>；排行是 <code>district_code</code> 乘上風險等級的計數。</td></tr>
+        <tr><td class="no">13–14</td><td class="name">全臺縣市分布與排行</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_case_address</code> <code>ref_region</code></td><td data-l="算法">依 <code>county_code</code> 分組計數。</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>通報案件風險分析</h3>
+  <div class="table-card">
+    <table class="stack map">
+      <thead><tr><th>項次</th><th>指標</th><th>來源</th><th>資料表</th><th>算法</th></tr></thead>
+      <tbody>
+        <tr><td class="no">15–18</td><td class="name">初評四種量表的輕、中、重占比</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_assessment</code> <code>ref_scale</code></td><td data-l="算法"><code>timepoint</code> 為 initial，依 <code>scale_code</code>、<code>severity_level</code> 計數，再除以該量表三個等級的合計。</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>案件處理效率指標</h3>
+  <p class="layer-desc">除了暫不轉介原因分布，這個分頁全部讀 <code>mart_case_timeline</code>（下表簡稱 T），再接 <code>pf_case</code> 取類別與風險等級。</p>
+  <div class="table-card">
+    <table class="stack map">
+      <thead><tr><th>項次</th><th>指標</th><th>來源</th><th>資料表</th><th>算法</th></tr></thead>
+      <tbody>
+        <tr><td class="no">19–21</td><td class="name">高、中、低風險個案處理時間</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T <code>pf_case</code></td><td data-l="算法"><code>handled_at − reported_at</code>，依 <code>initial_risk_level</code> 分組；N 是有 <code>handled_at</code> 的案件數。</td></tr>
+        <tr><td class="no">22–27</td><td class="name">總覽的六張重點卡</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法">依序同項次 28、35、36、45、51、57。</td></tr>
+        <tr><td class="no">28–30</td><td class="name">緊醫案件結案率、電話處置率、出勤處置率</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法">分母是緊急醫療且 <code>em_intake_method</code> 有值的案件；分子分別是 <code>closed_at</code> 有值、受理方式為 phone、為 phone_dispatch。</td></tr>
+        <tr><td class="no">31</td><td class="name">緊醫通報後派案時間</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法"><code>assigned_at − reported_at</code></td></tr>
+        <tr><td class="no">32</td><td class="name">緊醫首次專業評估時間</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法"><code>em_intake_at − assigned_at</code></td></tr>
+        <tr><td class="no">33</td><td class="name">緊醫電話受理總反應時間</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法"><code>em_intake_at − reported_at</code>，只算受理方式為 phone 的案件。</td></tr>
+        <tr><td class="no">34</td><td class="name">緊醫出勤準備時間</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法"><code>em_dispatched_at − em_intake_at</code></td></tr>
+        <tr><td class="no">35</td><td class="name">緊醫出勤總反應時間</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法"><code>em_dispatched_at − reported_at</code></td></tr>
+        <tr><td class="no">36</td><td class="name">衛生局轉介案件開案率</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法"><code>bureau_decision</code> 為 refer_tsghb 的案件中，<code>opened_at</code> 有值的比例。</td></tr>
+        <tr><td class="no">37–39</td><td class="name">暫不轉介覆核同意率、駁回率、醫療介入率</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法">分母是 <code>bureau_decision</code> 為 no_refer 的案件；分子分別是 <code>review_decision</code> 為 agree、為 reject、<code>opened_at</code> 有值。</td></tr>
+        <tr><td class="no">40</td><td class="name">暫不轉介案件覆核時間</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法"><code>review_completed_at − bureau_replied_at</code></td></tr>
+        <tr><td class="no">41</td><td class="name">轉介案件派案時間</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法"><code>assigned_at − bureau_replied_at</code></td></tr>
+        <tr><td class="no">42</td><td class="name">轉介案件首次聯繫時間</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法"><code>hosp_contact_at − bureau_replied_at</code></td></tr>
+        <tr><td class="no">43</td><td class="name">派案後首次聯繫時間</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法"><code>hosp_contact_at − assigned_at</code></td></tr>
+        <tr><td class="no">44</td><td class="name">首次專業評估時間</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法"><code>first_assessment_visit_at − assigned_at</code></td></tr>
+        <tr><td class="no">45</td><td class="name">回覆衛生局時間</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法"><code>hosp_replied_at − assigned_at</code></td></tr>
+        <tr><td class="no">46–53</td><td class="name">已完成回覆單件數、分流結果、衛生局醫療轉介率、轉介本院率、本院醫療轉介占率、暫不轉介率</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法">已完成是 <code>bureau_replied_at</code> 有值的件數。依 <code>bureau_decision</code> 數出轉介本院、轉介他院、暫不轉介三個件數，各比率由這三個數與已完成件數相除。</td></tr>
+        <tr><td class="no">54</td><td class="name">暫不轉介原因分布</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_bureau_reply</code> <code>ref_reason</code></td><td data-l="算法">依 <code>no_referral_reason_code</code> 分組計數，除以暫不轉介件數。</td></tr>
+        <tr><td class="no">55</td><td class="name">衛生局訪視時間</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法"><code>bureau_visit_date</code> 減 <code>reported_at</code> 的日期，單位為天。</td></tr>
+        <tr><td class="no">56</td><td class="name">衛生局分流決策時間</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法"><code>bureau_dispatch_date</code> 減 <code>reported_at</code> 的日期，單位為天。</td></tr>
+        <tr><td class="no">57</td><td class="name">衛生局回覆通報時間</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T</td><td data-l="算法"><code>bureau_replied_at − reported_at</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>精神症狀改善成效指標</h3>
+  <div class="table-card">
+    <table class="stack map">
+      <thead><tr><th>項次</th><th>指標</th><th>來源</th><th>資料表</th><th>算法</th></tr></thead>
+      <tbody>
+        <tr><td class="no">58–65</td><td class="name">四種量表 3 個月、6 個月的平均改善率與改善／持平／變差人數</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_assessment</code> <code>ref_scale</code></td><td data-l="算法">同一案件同一量表，拿 initial 和 fu_3m 或 fu_6m 的 <code>total_score</code> 配對。改善率是（初評 − 追蹤）÷ 初評；<code>higher_is_better</code> 的量表分子反過來。大於 +1% 為改善、小於 −1% 為變差，其餘持平。</td></tr>
+        <tr><td class="no">66</td><td class="name">個案明細</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">同上，加 <code>pf_case</code></td><td data-l="算法">逐筆回傳通報類別、改善率、改善類別，不回傳案件識別碼。</td></tr>
+        <tr><td class="no">67–74</td><td class="name">結案後 3、6 個月的應回收份數、回收率、可追蹤率、無法填答率</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_followup_form</code></td><td data-l="算法">應回收是 <code>due_date</code> 已到的列數；已回收是 <code>returned_at</code> 有值。回收率＝已回收 ÷ 應回收；可追蹤率＝<code>has_score</code> ÷ 已回收；無法填答率＝<code>is_unable_to_answer</code> ÷ 已回收。</td></tr>
+        <tr><td class="no">75–76</td><td class="name">優化計畫結案每月門診、急診次數變化</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_visit</code></td><td data-l="算法">每個優化計畫案件取結案訪視的 <code>monthly_opd_count</code>（或 <code>monthly_er_count</code>）減第一次評估訪視的同一欄，再取平均。</td></tr>
+        <tr><td class="no">77–79</td><td class="name">個案再住院次數、身心科門診治療成效、居家照護科門診治療成效</td><td><span class="src both">平台＋HIS</span></td><td class="tables" data-l="資料表"><code>mart_case_his_outcome</code> <code>pf_case</code></td><td data-l="算法">結案後次數減收案時填報的過去一年次數，取每人平均。住院用 <code>post_close_admission_count − prior_year_psy_admission_count</code>；兩種門診分別用 <code>post_close_psy_opd_count</code>、<code>post_close_home_care_count</code> 減 <code>prior_year_psy_opd_count</code>。</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>AI模型預測準確率</h3>
+  <div class="table-card">
+    <table class="stack map">
+      <thead><tr><th>項次</th><th>指標</th><th>來源</th><th>資料表</th><th>算法</th></tr></thead>
+      <tbody>
+        <tr><td class="no">80–82</td><td class="name">整體趨勢線、預測吻合程度、累積比對資料</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_ai_prediction</code></td><td data-l="算法">只取兩個分數都有值的列，不套日期篩選。趨勢線用 <code>regr_slope</code>、<code>regr_intercept</code>，吻合程度用 <code>corr</code>，筆數用 <code>count</code>。</td></tr>
+        <tr><td class="no">83</td><td class="name">AI 預測吻合程度變化</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_ai_prediction</code></td><td data-l="算法">依 <code>actual_assessed_at</code> 排序做累積的 <code>corr</code>，每累積 100 筆取一點。</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>通報者基本資料分析</h3>
+  <div class="table-card">
+    <table class="stack map">
+      <thead><tr><th>項次</th><th>指標</th><th>來源</th><th>資料表</th><th>算法</th></tr></thead>
+      <tbody>
+        <tr><td class="no">84–86</td><td class="name">轉介人所屬單位占比、總轉介數、七大網絡轉介數量</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_case</code> <code>ref_network_unit</code></td><td data-l="算法">依 <code>network_code</code> 分組計數，占比除以合計。</td></tr>
+        <tr><td class="no">87</td><td class="name">平台使用者滿意度調查回收率</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_satisfaction_survey</code> <code>pf_case</code></td><td data-l="算法">依通報者的 <code>network_code</code> 分組，<code>completed_at</code> 有值的份數 ÷ 發出的份數。</td></tr>
+        <tr><td class="no">88</td><td class="name">平台使用者滿意度調查分數</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_satisfaction_survey</code> <code>pf_case</code></td><td data-l="算法">已回收問卷的 <code>ui_score</code> 與 <code>care_score</code> 全部分數取平均，依 <code>network_code</code> 分組。</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>醫療機構端處理成效分析</h3>
+  <div class="table-card">
+    <table class="stack map">
+      <thead><tr><th>項次</th><th>指標</th><th>來源</th><th>資料表</th><th>算法</th></tr></thead>
+      <tbody>
+        <tr><td class="no">89–90</td><td class="name">緊急醫療、優化計畫結案後轉介至本院醫療系統比例</td><td><span class="src both">平台＋HIS</span></td><td class="tables" data-l="資料表"><code>pf_case</code> <code>mart_case_his_outcome</code></td><td data-l="算法">該類別中，三個 <code>has_*_after_close</code> 任一為 true 的案件數 ÷ 該類別的通報案件數。</td></tr>
+        <tr><td class="no">91–93</td><td class="name">已結案後個案再住院次數、身心科門診、居家照護科門診治療成效</td><td><span class="src both">平台＋HIS</span></td><td class="tables" data-l="資料表"><code>mart_case_his_outcome</code> <code>pf_case</code></td><td data-l="算法">同項次 77–79。</td></tr>
+        <tr><td class="no">94</td><td class="name">結案追蹤率</td><td><span class="src both">平台＋HIS</span></td><td class="tables" data-l="資料表"><code>mart_case_his_outcome</code></td><td data-l="算法">三個 <code>has_*_after_close</code> 任一為 true 的案件數 ÷ 已結案案件數（這張表一個已結案案件一列）。</td></tr>
+        <tr><td class="no">95–96</td><td class="name">優化計畫無法收案件數與原因分布</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_hospital_reply</code> <code>ref_reason</code></td><td data-l="算法"><code>intake_result</code> 為 unable 的件數；依 <code>unable_reason_code</code> 分組，除以總無法收案件數。</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>醫院內控指標(SNQ)</h3>
+  <div class="table-card">
+    <table class="stack map">
+      <thead><tr><th>項次</th><th>指標</th><th>來源</th><th>資料表</th><th>算法</th></tr></thead>
+      <tbody>
+        <tr><td class="no">97–98</td><td class="name">居家醫療個案門診追蹤率、強制住院個案出院後門診追蹤率</td><td><span class="src his">HIS</span></td><td class="tables" data-l="資料表"><code>mart_snq_cohort</code> <code>mart_snq_cohort_year</code></td><td data-l="算法">分母是該 <code>cohort_type</code> 的名單人數；分子是每個追蹤年度都 <code>is_stable</code> 的人數。</td></tr>
+        <tr><td class="no">99–100</td><td class="name">初診為居家醫療病人再住院率、強制住院病人再住院率</td><td><span class="src his">HIS</span></td><td class="tables" data-l="資料表"><code>mart_snq_cohort</code></td><td data-l="算法"><code>has_readmission</code> 為 true 的人數 ÷ 名單人數。</td></tr>
+        <tr><td class="no">101–102</td><td class="name">緊急醫療、優化計畫結案後轉介至本院醫療系統比例</td><td><span class="src both">平台＋HIS</span></td><td class="tables" data-l="資料表"><code>pf_case</code> <code>mart_case_his_outcome</code></td><td data-l="算法">同項次 89–90。</td></tr>
+        <tr><td class="no">103–104</td><td class="name">門診、居家、住院各自比例與三項合計</td><td><span class="src both">平台＋HIS</span></td><td class="tables" data-l="資料表"><code>pf_case</code> <code>mart_case_his_outcome</code></td><td data-l="算法"><code>has_opd_after_close</code>、<code>has_home_care_after_close</code>、<code>has_inpatient_after_close</code> 各自計數，除以該類別的通報案件數；三項合計直接相加。</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>指揮儀表板</h3>
+  <div class="table-card">
+    <table class="stack map">
+      <thead><tr><th>項次</th><th>指標</th><th>來源</th><th>資料表</th><th>算法</th></tr></thead>
+      <tbody>
+        <tr><td class="no">105–117</td><td class="name">指揮板：總通報與四個類別的各狀態件數、占比</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_case</code></td><td data-l="算法">依 <code>category_code</code> 與 <code>status_code</code> 交叉計數；占比各除以上一層的合計。</td></tr>
+        <tr><td class="no">118–121</td><td class="name">本年度結案率與年度結案率趨勢</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表"><code>pf_case</code></td><td data-l="算法">依 <code>reported_at</code> 所屬年度分組，<code>status_code</code> 為 closed 的件數 ÷ 該年度通報件數。</td></tr>
+        <tr><td class="no">122–149</td><td class="name">同期比較：28 個效率指標的近三年數值與較去年增減</td><td><span class="src pf">平台</span></td><td class="tables" data-l="資料表">T <code>pf_case</code></td><td data-l="算法">算式同項次 19–21、28–45、50–53、55–57。改成依通報年度分組，日期條件換成三年的同一段期間（同月、年初到今天、或指定月份）；較去年＝今年值減去年值。</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ====================================================================== -->
+<section class="block" id="sql">
+  <h2><span class="no">06</span>SQL 範例</h2>
+  <p class="sub">幾個有代表性的寫法，其他指標照同樣的模式套。<code>:from</code>、<code>:to</code> 是所選日期區間換算成 Asia/Taipei 之後的起點（含）與終點隔天（不含）。</p>
+
+  <details class="sql" open>
+    <summary>重建案件里程碑<small>mart_case_timeline；每個表單取最早的一筆</small></summary>
+<pre>INSERT INTO mart_case_timeline (
+  case_id, reported_at, assigned_at,
+  em_intake_method, em_intake_at, em_dispatched_at,
+  bureau_replied_at, bureau_visit_date, bureau_dispatch_date, bureau_decision,
+  review_decision, review_completed_at,
+  hosp_contact_at, hosp_replied_at, hosp_intake_result,
+  first_assessment_visit_at, first_visit_at, handled_at, opened_at, closed_at)
+SELECT c.case_id, c.reported_at, a.assigned_at,
+       i.intake_method, i.completed_at, d.dispatched_at,
+       b.completed_at, b.visit_date, b.dispatch_date,
+       CASE WHEN b.decision = 'no_refer'                     THEN 'no_refer'
+            WHEN b.decision = 'refer' AND b.referred_to_tsghb THEN 'refer_tsghb'
+            WHEN b.decision = 'refer'                        THEN 'refer_other' END,
+       r.decision, r.completed_at,
+       h.contact_at, h.completed_at, h.intake_result,
+       v.first_assessment_visit_at, v.first_visit_at,
+       CASE WHEN g.category_group = 'emergency' THEN i.completed_at
+            ELSE v.first_visit_at END,
+       c.opened_at, c.closed_at
+FROM   pf_case c
+JOIN   ref_report_category g ON g.category_code = c.category_code
+LEFT   JOIN LATERAL (SELECT min(assigned_at) AS assigned_at
+                     FROM pf_assignment WHERE case_id = c.case_id) a ON true
+LEFT   JOIN LATERAL (SELECT intake_method, completed_at
+                     FROM pf_emergency_intake WHERE case_id = c.case_id
+                     ORDER BY completed_at LIMIT 1) i ON true
+LEFT   JOIN LATERAL (SELECT min(dispatched_at) AS dispatched_at
+                     FROM pf_emergency_dispatch WHERE case_id = c.case_id) d ON true
+LEFT   JOIN LATERAL (SELECT completed_at, visit_date, dispatch_date, decision, referred_to_tsghb
+                     FROM pf_bureau_reply WHERE case_id = c.case_id AND completed_at IS NOT NULL
+                     ORDER BY completed_at LIMIT 1) b ON true
+LEFT   JOIN LATERAL (SELECT decision, completed_at
+                     FROM pf_no_referral_review WHERE case_id = c.case_id
+                     ORDER BY completed_at LIMIT 1) r ON true
+LEFT   JOIN LATERAL (SELECT contact_at, completed_at, intake_result
+                     FROM pf_hospital_reply WHERE case_id = c.case_id
+                     ORDER BY completed_at NULLS LAST LIMIT 1) h ON true
+LEFT   JOIN LATERAL (SELECT min(visit_started_at) AS first_visit_at,
+                            min(visit_started_at) FILTER (WHERE visit_stage = 'assessment')
+                              AS first_assessment_visit_at
+                     FROM pf_visit WHERE case_id = c.case_id) v ON true
+WHERE  NOT c.is_void;</pre>
+  </details>
+
+  <details class="sql">
+    <summary>緊急醫療處置效率<small>比率、平均，以及同一欄位的中位數與 P90</small></summary>
+<pre>SELECT count(*) FILTER (WHERE t.em_intake_method IS NOT NULL)                AS accepted_cases,
+       round(100.0 * count(*) FILTER (WHERE t.em_intake_method IS NOT NULL
+                                        AND t.closed_at IS NOT NULL)
+             / nullif(count(*) FILTER (WHERE t.em_intake_method IS NOT NULL), 0), 1)  AS close_rate,
+       round(100.0 * count(*) FILTER (WHERE t.em_intake_method = 'phone')
+             / nullif(count(*) FILTER (WHERE t.em_intake_method IS NOT NULL), 0), 1)  AS phone_rate,
+       round(100.0 * count(*) FILTER (WHERE t.em_intake_method = 'phone_dispatch')
+             / nullif(count(*) FILTER (WHERE t.em_intake_method IS NOT NULL), 0), 1)  AS dispatch_rate,
+       <span class="c">-- 時效：單位小時</span>
+       avg(extract(epoch FROM t.assigned_at      - t.reported_at)  / 3600) AS assign_hours,
+       avg(extract(epoch FROM t.em_intake_at     - t.assigned_at)  / 3600) AS first_assess_hours,
+       avg(extract(epoch FROM t.em_dispatched_at - t.em_intake_at) / 3600) AS prepare_hours,
+       avg(extract(epoch FROM t.em_dispatched_at - t.reported_at)  / 3600) AS dispatch_total_hours,
+       percentile_cont(0.5) WITHIN GROUP (
+         ORDER BY extract(epoch FROM t.em_dispatched_at - t.reported_at) / 3600) AS dispatch_total_p50,
+       percentile_cont(0.9) WITHIN GROUP (
+         ORDER BY extract(epoch FROM t.em_dispatched_at - t.reported_at) / 3600) AS dispatch_total_p90
+FROM   mart_case_timeline t
+JOIN   pf_case c ON c.case_id = t.case_id
+WHERE  c.category_code = 'emergency'
+AND    NOT c.is_void
+AND    c.reported_at &gt;= :from AND c.reported_at &lt; :to;</pre>
+  </details>
+
+  <details class="sql">
+    <summary>量表改善情況<small>四種量表、3 與 6 個月一次算完</small></summary>
+<pre>WITH pair AS (
+  SELECT c.case_id, c.category_code, a0.scale_code, a1.timepoint,
+         100 * CASE WHEN s.higher_is_better
+                    THEN (a1.total_score - a0.total_score) / a0.total_score
+                    ELSE (a0.total_score - a1.total_score) / a0.total_score
+               END AS improve_pct
+  FROM   pf_case c
+  JOIN   pf_assessment a0 ON a0.case_id = c.case_id AND a0.timepoint = 'initial'
+  JOIN   pf_assessment a1 ON a1.case_id = c.case_id AND a1.scale_code = a0.scale_code
+                         AND a1.timepoint IN ('fu_3m', 'fu_6m')
+  JOIN   ref_scale s      ON s.scale_code = a0.scale_code
+  WHERE  NOT c.is_void
+  AND    a0.total_score &gt; 0 AND a1.total_score IS NOT NULL
+  AND    c.reported_at &gt;= :from AND c.reported_at &lt; :to
+)
+SELECT scale_code, timepoint,
+       count(*)                                              AS n,
+       round(avg(improve_pct), 1)                            AS avg_improve_pct,
+       count(*) FILTER (WHERE improve_pct &gt;  1.0)            AS improved,
+       count(*) FILTER (WHERE improve_pct BETWEEN -1.0 AND 1.0) AS flat,
+       count(*) FILTER (WHERE improve_pct &lt; -1.0)            AS worse
+FROM   pair
+GROUP  BY scale_code, timepoint;</pre>
+  </details>
+
+  <details class="sql">
+    <summary>重建結案個案的院內就醫銜接<small>mart_case_his_outcome；平台與 HIS 在這裡比對</small></summary>
+<pre>INSERT INTO mart_case_his_outcome (
+  case_id, his_patient_id, closed_date, observed_until,
+  has_opd_after_close, has_home_care_after_close, has_inpatient_after_close,
+  post_close_admission_count, post_close_psy_opd_count, post_close_home_care_count)
+SELECT c.case_id, hp.his_patient_id, x.closed_date, current_date,
+       coalesce(bool_or(e.encounter_type = 'outpatient'
+                        AND d.care_group IS DISTINCT FROM 'home_care'), false),
+       coalesce(bool_or(d.care_group = 'home_care'), false),
+       coalesce(bool_or(e.encounter_type = 'inpatient'), false),
+       count(*) FILTER (WHERE e.encounter_type = 'inpatient'),
+       count(*) FILTER (WHERE d.care_group = 'psy_opd'),
+       count(*) FILTER (WHERE d.care_group = 'home_care')
+FROM   pf_case c
+CROSS  JOIN LATERAL (SELECT (c.closed_at AT TIME ZONE 'Asia/Taipei')::date AS closed_date) x
+LEFT   JOIN pf_person p     ON p.person_id = c.person_id
+LEFT   JOIN his_patient hp  ON hp.id_no_hash = p.id_no_hash
+LEFT   JOIN his_encounter e ON e.his_patient_id = hp.his_patient_id
+                           AND e.encounter_date &gt; x.closed_date
+LEFT   JOIN ref_his_dept d  ON d.dept_code = e.dept_code
+WHERE  c.closed_at IS NOT NULL
+AND    NOT c.is_void
+GROUP  BY c.case_id, hp.his_patient_id, x.closed_date;</pre>
+  </details>
+
+  <details class="sql">
+    <summary>結案後轉介至本院醫療系統比例<small>醫療機構端與 SNQ 共用，含門診／居家／住院分項</small></summary>
+<pre>SELECT g.category_group,
+       count(*)                                                    AS reported_cases,
+       count(*) FILTER (WHERE o.has_opd_after_close
+                           OR o.has_home_care_after_close
+                           OR o.has_inpatient_after_close)         AS linked_cases,
+       count(*) FILTER (WHERE o.has_opd_after_close)               AS opd_cases,
+       count(*) FILTER (WHERE o.has_home_care_after_close)         AS home_care_cases,
+       count(*) FILTER (WHERE o.has_inpatient_after_close)         AS inpatient_cases
+FROM   pf_case c
+JOIN   ref_report_category g       ON g.category_code = c.category_code
+LEFT   JOIN mart_case_his_outcome o ON o.case_id = c.case_id
+WHERE  NOT c.is_void
+AND    c.reported_at &gt;= :from AND c.reported_at &lt; :to
+GROUP  BY g.category_group;</pre>
+  </details>
+
+  <details class="sql">
+    <summary>同期比較<small>以「年初到今天」為例，近三年各算一次</small></summary>
+<pre><span class="c">-- :year 為今年；:mmdd 為今天的月日，例如 '0925'</span>
+SELECT extract(year FROM x.d)::int AS report_year,
+       avg(extract(epoch FROM t.handled_at - t.reported_at) / 86400)
+         FILTER (WHERE c.initial_risk_level = 'high')   AS high_days,
+       avg(extract(epoch FROM t.handled_at - t.reported_at) / 86400)
+         FILTER (WHERE c.initial_risk_level = 'medium') AS medium_days,
+       avg(extract(epoch FROM t.handled_at - t.reported_at) / 86400)
+         FILTER (WHERE c.initial_risk_level = 'low')    AS low_days
+FROM   pf_case c
+JOIN   mart_case_timeline t ON t.case_id = c.case_id
+CROSS  JOIN LATERAL (SELECT (c.reported_at AT TIME ZONE 'Asia/Taipei')::date AS d) x
+WHERE  NOT c.is_void
+AND    extract(year FROM x.d) BETWEEN :year - 2 AND :year
+AND    to_char(x.d, 'MMDD') &lt;= :mmdd
+GROUP  BY 1
+ORDER  BY 1;</pre>
+  </details>
+
+  <details class="sql">
+    <summary>AI 預測吻合程度<small>目前數值，以及隨累積筆數的變化</small></summary>
+<pre>SELECT count(*)                                                   AS pairs,
+       corr(actual_score::float8, predicted_score::float8)        AS pearson_r,
+       regr_slope(actual_score::float8, predicted_score::float8)  AS slope,
+       regr_intercept(actual_score::float8, predicted_score::float8) AS intercept
+FROM   pf_ai_prediction
+WHERE  actual_score IS NOT NULL;
+
+<span class="c">-- 每累積 100 筆取一點</span>
+SELECT n, round(r::numeric, 3) AS pearson_r
+FROM  (SELECT row_number() OVER w AS n,
+              corr(actual_score::float8, predicted_score::float8) OVER w AS r
+       FROM   pf_ai_prediction
+       WHERE  actual_score IS NOT NULL
+       WINDOW w AS (ORDER BY actual_assessed_at, prediction_id)) s
+WHERE  n % 100 = 0
+ORDER  BY n;</pre>
+  </details>
+</section>
+
+<!-- ====================================================================== -->
+<section class="block" id="sync">
+  <h2><span class="no">07</span>同步與重算</h2>
+  <p class="sub">頻率是建議值，實際要看兩邊 API 的呼叫限制。</p>
+  <div class="table-card">
+    <table class="stack">
+      <thead><tr><th>對象</th><th>建議頻率</th><th>做法</th></tr></thead>
+      <tbody>
+        <tr><td class="name">平台的案件與各表單</td><td data-l="建議頻率">每 10–15 分鐘增量；每天凌晨全量比對一次</td><td data-l="做法">以來源的最後異動時間接續上次的 <code>sync_run.window_end</code>。畫面有「本日」篩選，所以白天要夠即時；凌晨的全量比對用來補漏和抓作廢案件。</td></tr>
+        <tr><td class="name">HIS 的病人與就醫紀錄</td><td data-l="建議頻率">每天凌晨一次</td><td data-l="做法">用 HIS 的指標都是結案之後的事，不需要當天即時。先同步平台，再拿已結案個案去查 HIS。</td></tr>
+        <tr><td class="name"><code>mart_case_timeline</code></td><td data-l="建議頻率">每次平台同步之後</td><td data-l="做法">只重算這次有異動的案件；凌晨整張重建一次。</td></tr>
+        <tr><td class="name"><code>mart_case_his_outcome</code>、<code>mart_snq_*</code></td><td data-l="建議頻率">每天 HIS 同步之後</td><td data-l="做法">整張清空重建。資料量小，重建比判斷哪些列要更新簡單，也不會留下過期的列。</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>一次同步的步驟</h3>
+  <ol class="steps">
+    <li>在 <code>sync_run</code> 開一列，記下來源、資源與這次要拉的異動區間。</li>
+    <li>呼叫 API。身分證字號在記憶體裡換成雜湊值，完整地址送去定位後只留座標與同址雜湊；去識別後的原始回應寫進 <code>sync_raw_record</code>。</li>
+    <li>以來源識別碼對 <code>pf_*</code> 或 <code>his_*</code> 做新增或更新（<code>INSERT … ON CONFLICT … DO UPDATE</code>），順手把平台的代碼轉成這裡的代碼。</li>
+    <li>重算受影響的 <code>mart_*</code>。</li>
+    <li>回頭把 <code>sync_run</code> 標成 success 或 failed。畫面上的「資料更新時間」取每個來源最後一次 success 的結束時間。</li>
+  </ol>
+</section>
+
+<!-- ====================================================================== -->
+<section class="block" id="privacy">
+  <h2><span class="no">08</span>個資</h2>
+  <p class="sub">儀表板只需要統計數字，所以資料庫從一開始就不放可以認出人的欄位。</p>
+  <ul class="plain">
+    <li><strong>不存的東西</strong>：個案與通報者的姓名、身分證明碼、電話、完整地址、問卷的文字建議、診斷與醫囑。</li>
+    <li><strong>身分證字號</strong>：同步程式用 HMAC-SHA-256 加上一把金鑰算出雜湊值，只把結果寫進 <code>id_no_hash</code>。平台與 HIS 兩邊用同一把金鑰，才比對得起來。金鑰放在同步程式的機密設定，不進資料庫也不進版控。不要用沒有金鑰的 SHA-256，身分證字號的組合有限，窮舉就能還原。</li>
+    <li><strong>地址</strong>：只留縣市、行政區、座標與 <code>address_key</code>。座標本身仍然指得到住家，熱點地圖如果會給院外的人看，回傳前先降低座標精度。</li>
+    <li><strong>原始回應</strong>：<code>sync_raw_record.payload</code> 寫入前先拿掉上面那些欄位，並且只保留 90 天。</li>
+    <li><strong>帳號</strong>：資料庫開兩個角色。同步程式可以寫入；儀表板後端只能讀，而且不需要讀 <code>sync_raw_record</code>。</li>
+    <li><strong>明細</strong>：成效頁的個案明細只回傳通報類別、改善率與改善類別，不回傳任何識別碼。</li>
+  </ul>
+</section>
+
+<!-- ====================================================================== -->
+<section class="block" id="open">
+  <h2><span class="no">09</span>待確認</h2>
+  <p class="sub">下面這些還沒有定論。資料庫先照「目前的做法」設計，最後一欄是定案後要動的範圍，大多數只改查詢。</p>
+  <div class="table-card">
+    <table class="stack">
+      <thead><tr><th>#</th><th>問題</th><th>目前的做法</th><th>定案後要改的地方</th></tr></thead>
+      <tbody>
+        <tr><td class="no">1</td><td class="name">待派、已派、未轉介／開案各自怎麼判定</td><td data-l="目前的做法">同步程式依平台狀態對應成 <code>status_code</code>，原始值留在 <code>platform_status</code></td><td data-l="定案後要改的地方">只改對應規則</td></tr>
+        <tr><td class="no">2</td><td class="name">行政區與地圖用發生、居住還是聯絡地址</td><td data-l="目前的做法">三種都存，由 <code>is_primary</code> 指定</td><td data-l="定案後要改的地方">只改 <code>is_primary</code> 的標法</td></tr>
+        <tr><td class="no">3</td><td class="name">指揮板以外的分頁，日期篩選套在哪個日期</td><td data-l="目前的做法">全部用完成通報的時間</td><td data-l="定案後要改的地方">只改查詢；結案日、應回收日、起算日都已經存了</td></tr>
+        <tr><td class="no">4</td><td class="name">時效指標要呈現平均、中位數還是 P90</td><td data-l="目前的做法">畫面是平均；資料庫逐案存時間點</td><td data-l="定案後要改的地方">只改查詢</td></tr>
+        <tr><td class="no">5</td><td class="name">衛生局醫療轉介率的分母</td><td data-l="目前的做法">已完成回覆單的件數（畫面上已註明定義待確認）</td><td data-l="定案後要改的地方">只改查詢</td></tr>
+        <tr><td class="no">6</td><td class="name">結案後的院內就醫要看多久</td><td data-l="目前的做法">從結案日隔天算到重算當天，截止日記在 <code>observed_until</code></td><td data-l="定案後要改的地方">改重算條件。要跟「過去一年」對等比較的話，期間應該是結案後一年</td></tr>
+        <tr><td class="no">7</td><td class="name">「門診」是否只算身心科；「居家」對應 HIS 哪些科別</td><td data-l="目前的做法">門診算全部科別；居家看 <code>ref_his_dept.care_group</code></td><td data-l="定案後要改的地方">維護科別對照表，必要時改重算條件</td></tr>
+        <tr><td class="no">8</td><td class="name">收案前一年的精神科住院、門診次數從哪裡來</td><td data-l="目前的做法">用平台收案時填報的數字（<code>pf_case</code> 的兩個欄位）</td><td data-l="定案後要改的地方">若改由 HIS 回溯，HIS 多拉通報日前一年的紀錄，這兩欄改由重算填入</td></tr>
+        <tr><td class="no">9</td><td class="name">SNQ 要追蹤幾年、再住院看多久、日期篩選套在哪</td><td data-l="目前的做法">逐年存在 <code>mart_snq_cohort_year</code>；日期篩選暫定套起算日</td><td data-l="定案後要改的地方">改重算與查詢</td></tr>
+        <tr><td class="no">10</td><td class="name">量表分數落在分級規則之外怎麼歸類（例如 BSRS-5 5 分以下，或風險檢傷評估兩個分項落在不同等級）</td><td data-l="目前的做法"><code>severity_level</code> 留 null，不計入三級占比</td><td data-l="定案後要改的地方">補 <code>ref_scale_level_rule</code> 的內容</td></tr>
+        <tr><td class="no">11</td><td class="name">風險檢傷評估的改善率用哪個分數</td><td data-l="目前的做法">總分（3–15 分）</td><td data-l="定案後要改的地方">只改查詢</td></tr>
+        <tr><td class="no">12</td><td class="name">初評分數為 0 時改善率無法計算</td><td data-l="目前的做法">該筆不計入</td><td data-l="定案後要改的地方">只改查詢</td></tr>
+        <tr><td class="no">13</td><td class="name">暫不轉介原因、無法收案原因能不能複選</td><td data-l="目前的做法">當作單選，各存一欄</td><td data-l="定案後要改的地方">可以複選的話，改成一對多的子表</td></tr>
+        <tr><td class="no">14</td><td class="name">追蹤量表何時算「應回收」</td><td data-l="目前的做法">結案滿 3 或 6 個月（<code>due_date</code> 已到）</td><td data-l="定案後要改的地方">只改查詢</td></tr>
+        <tr><td class="no">15</td><td class="name">滿意度回收率的分母；超過 3 日才填算不算回收</td><td data-l="目前的做法">分母是發出的問卷數；有完成時間就算回收</td><td data-l="定案後要改的地方">只改查詢；期限已存在 <code>due_at</code></td></tr>
+        <tr><td class="no">16</td><td class="name">同一個人被通報多次，算件數還是人數</td><td data-l="目前的做法">算件數；個案已歸戶在 <code>pf_person</code></td><td data-l="定案後要改的地方">只改查詢</td></tr>
+        <tr><td class="no">17</td><td class="name">兩邊 API 給不給異動時間；HIS 能不能用身分證字號查、能不能列出 SNQ 名單</td><td data-l="目前的做法">假設都可以</td><td data-l="定案後要改的地方">沒有異動時間就改成每次全量；HIS 查不了就改由院方定期提供批次檔，表結構不變</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    對應儀表板 v6。儀表板增刪指標、或 <code>pgsql.dbml</code> 有改動時，這一頁的資料表與指標對應要一起更新。
+  </footer>
+</section>
+
+</main>
+
+<script>
+(function(){
+  var tables = document.querySelectorAll('details.tbl');
+  var btn = document.getElementById('toggleAll');
+  if (btn) {
+    btn.addEventListener('click', function(){
+      var open = btn.getAttribute('data-open') !== '1';
+      for (var i = 0; i < tables.length; i++) tables[i].open = open;
+      btn.setAttribute('data-open', open ? '1' : '0');
+      btn.textContent = open ? '全部收合' : '全部展開';
+    });
+  }
+  /* 從外鍵連結或網址帶 #t-表名 進來時，自動展開那張表 */
+  function openTarget(){
+    var id = decodeURIComponent(location.hash.slice(1));
+    if (!id) return;
+    var el = document.getElementById(id);
+    if (el && el.tagName === 'DETAILS') { el.open = true; el.scrollIntoView(); }
+  }
+  window.addEventListener('hashchange', openTarget);
+  openTarget();
+})();
+</script>
+</body>
+</html>

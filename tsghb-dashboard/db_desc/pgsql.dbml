@@ -1,0 +1,744 @@
+// ============================================================================
+// 三軍總醫院北投分院｜精神健康個案通報管理儀表板
+// 分析資料庫結構（PostgreSQL）
+//
+// 資料來源：通報平台 API（pf_*）、醫院 HIS API（his_*）
+// 其他前綴：ref_* 代碼與設定、mart_* 由排程重算的衍生表、sync_* 同步紀錄
+// 字串欄位一律 text；時間一律 timestamptz；代碼型欄位的允許值寫在欄位 note
+// 規格說明：同資料夾 index.html
+// ============================================================================
+
+Project tsghb_dashboard {
+  database_type: 'PostgreSQL'
+  Note: '''
+  三軍總醫院北投分院｜精神健康個案通報管理儀表板 分析資料庫
+
+  - pf_*：通報平台 API 同步進來的資料
+  - his_*：醫院 HIS API 同步進來的資料
+  - ref_*：代碼與設定
+  - mart_*：由排程重算的衍生表，可整張清空重建
+  - sync_*：同步紀錄
+  - 字串欄位一律 text，時間一律 timestamptz（統計時以 Asia/Taipei 切日）
+  - 不存姓名、身分證明碼、電話與完整地址
+  '''
+}
+
+// ----------------------------------------------------------------------------
+// ref_*：代碼與設定
+// ----------------------------------------------------------------------------
+
+Table ref_report_category [headercolor: #6b7280] {
+  category_code text [pk, note: 'emergency｜opt_1｜opt_2｜opt_3']
+  category_name text [not null, note: '緊急醫療｜第一類優化計畫｜第二類優化計畫｜第三類優化計畫']
+  category_group text [not null, note: 'emergency｜optimization；對應畫面「通報類別分析：全部／緊急醫療／優化計畫」']
+  sort_order integer [not null, default: 0, note: '顯示順序']
+
+  Note: '''
+  通報類別
+  來源：固定代碼，依平台的通報類別建立
+  粒度：一個通報類別一列
+  指揮板依四個類別分欄；其他分頁的類別篩選用 category_group。
+  '''
+}
+
+Table ref_network_unit [headercolor: #6b7280] {
+  network_code text [pk, note: 'social｜police｜civil｜health｜education｜fire｜labor']
+  network_name text [not null, note: '社政｜警察｜民政｜衛政｜教育｜消防｜勞政']
+  sort_order integer [not null, default: 0, note: '顯示順序']
+
+  Note: '''
+  七大網絡
+  來源：固定代碼，依平台的通報者所屬網絡建立
+  粒度：一個網絡一列
+  通報者基本資料分析頁的所有圖表都以這七類分組。
+  '''
+}
+
+Table ref_region [headercolor: #6b7280] {
+  region_code text [pk, note: '行政區域代碼，建議沿用內政部行政區域代碼']
+  region_name text [not null, note: '全名，例如 臺北市、北投區']
+  region_level text [not null, note: 'county（縣市）｜district（鄉鎮市區）']
+  parent_code text [ref: > ref_region.region_code, note: '所屬縣市的 region_code；縣市本身為 null']
+  sort_order integer [not null, default: 0, note: '顯示順序']
+
+  Note: '''
+  行政區
+  來源：固定代碼，22 個縣市與其下的鄉鎮市區
+  粒度：一個縣市或一個鄉鎮市區一列
+  行政區長條圖、熱點地圖的縣市與行政區排行都以這張表為準。
+  '''
+}
+
+Table ref_scale [headercolor: #6b7280] {
+  scale_code text [pk, note: 'risk_triage｜gaf｜bsrs5｜cgis']
+  scale_name text [not null, note: '風險檢傷評估｜GAF｜BSRS-5｜CGI-S']
+  higher_is_better boolean [not null, default: false, note: '分數越高代表狀況越好；只有 GAF 為 true，改善率的分子方向因此相反']
+  score_min numeric(6,2) [note: '量表最低分']
+  score_max numeric(6,2) [note: '量表最高分']
+  sort_order integer [not null, default: 0, note: '顯示順序']
+
+  Note: '''
+  量表
+  來源：固定代碼
+  粒度：一種量表一列
+  風險分析頁與成效頁共用的四種量表。
+  '''
+}
+
+Table ref_scale_level_rule [headercolor: #6b7280] {
+  rule_id bigint [pk, increment]
+  scale_code text [not null, ref: > ref_scale.scale_code]
+  severity_level text [not null, note: 'low（輕度／低風險）｜medium（中度／中風險）｜high（重度／高風險）']
+  component text [not null, default: 'total', note: 'total（總分）｜danger（危險性）｜support（支持系統）；後兩者只有風險檢傷評估使用']
+  min_score numeric(6,2) [note: '下限（含）；null 表示沒有下限']
+  max_score numeric(6,2) [note: '上限（含）；null 表示沒有上限']
+
+  indexes {
+    (scale_code, severity_level, component) [unique, name: 'uq_ref_scale_level_rule']
+  }
+
+  Note: '''
+  量表分級規則
+  來源：設定值，門檻確認後維護
+  粒度：一種量表的一個等級的一個判定分項一列
+  同一量表同一等級的所有分項都符合才算該等級；同步時用來算 pf_assessment.severity_level。
+  '''
+}
+
+Table ref_reason [headercolor: #6b7280] {
+  reason_code text [pk, note: '原因代碼，全表唯一']
+  reason_type text [not null, note: 'bureau_no_referral（衛生局暫不轉介原因）｜hospital_unable（醫療機構無法收案原因）']
+  reason_name text [not null, note: '畫面顯示的原因名稱']
+  sort_order integer [not null, default: 0, note: '顯示順序']
+  is_active boolean [not null, default: true, note: '表單選項停用後設為 false，舊資料仍可對應']
+
+  Note: '''
+  原因代碼
+  來源：固定代碼，依平台表單選項建立
+  粒度：一個原因選項一列
+  暫不轉介原因分布與無法收案原因兩張表共用。
+  '''
+}
+
+Table ref_his_dept [headercolor: #6b7280] {
+  dept_code text [pk, note: 'HIS 科別代碼']
+  dept_name text [not null, note: 'HIS 科別名稱']
+  care_group text [not null, note: 'psy_opd（身心科門診）｜home_care（居家照護科門診／居家醫療）｜psy_ward（精神科住院）｜emergency（急診）｜other']
+  is_psychiatry boolean [not null, default: false, note: '是否計入精神科的就醫次數']
+
+  Note: '''
+  HIS 科別對照
+  來源：HIS 科別主檔，care_group 由院方確認後維護
+  粒度：一個 HIS 科別一列
+  決定一筆就醫紀錄算身心科門診、居家還是其他。
+  '''
+}
+
+Table ref_setting [headercolor: #6b7280] {
+  setting_key text [pk, note: '設定名稱，例如 outcome_flat_threshold_pct']
+  setting_value text [not null, note: '設定值，一律以文字存，讀取時再轉型']
+  description text [note: '這個設定影響哪些指標']
+
+  Note: '''
+  計算參數
+  來源：設定值
+  粒度：一個參數一列
+  指標計算會用到、之後可能調整的門檻集中放這裡。
+  '''
+}
+
+// ----------------------------------------------------------------------------
+// pf_*：通報平台 API
+// ----------------------------------------------------------------------------
+
+Table pf_person [headercolor: #bd4a32] {
+  person_id bigint [pk, increment]
+  platform_person_id text [unique, note: '平台的個案主檔識別碼；平台沒有個案主檔時為 null，改用 id_no_hash 歸戶']
+  id_no_hash text [note: '身分證字號經 HMAC-SHA-256 後的十六進位字串，用來和 his_patient.id_no_hash 比對；身分不明的個案為 null']
+  gender text [note: 'M｜F｜U（不明）']
+  birth_date date [note: '出生日期，用來算通報時年齡；可只存到年月']
+  synced_at timestamptz [not null, default: `now()`, note: '這一列最後同步的時間']
+
+  indexes {
+    id_no_hash [name: 'ix_pf_person_id_no_hash']
+  }
+
+  Note: '''
+  個案
+  來源：平台 API（通報單上的個案資料）
+  粒度：一位個案一列，同一人被通報多次只有一列
+  只留統計用得到的欄位，不存姓名、身分證明碼與電話。
+  '''
+}
+
+Table pf_case [headercolor: #bd4a32] {
+  case_id bigint [pk, increment]
+  platform_case_id text [not null, unique, note: '平台的案件識別碼；同步時以此判斷新增或更新']
+  person_id bigint [ref: > pf_person.person_id, note: '被通報的個案']
+  category_code text [not null, ref: > ref_report_category.category_code, note: '通報類別']
+  network_code text [ref: > ref_network_unit.network_code, note: '通報者所屬的七大網絡']
+  reporter_org_name text [note: '通報單位名稱，例如某分局、某社福中心；不存通報者姓名']
+  reported_at timestamptz [not null, note: '「系統」網絡完成通報的時間；所有日期篩選與時效指標的起點']
+  age_at_report integer [note: '通報當下的年齡，同步時依出生日期算好']
+  status_code text [not null, note: 'pending_assign（待派）｜assigned（已派）｜closed（結案）｜not_referred（未轉介／未開案）']
+  platform_status text [note: '平台原始的案件狀態，保留以便日後調整對應規則']
+  initial_risk_level text [note: 'low｜medium｜high；通報時填報的初評風險等級']
+  opened_at timestamptz [note: '本院開案（收案）的時間；未開案為 null']
+  closed_at timestamptz [note: '結案時間；未結案為 null']
+  prior_year_psy_admission_count integer [note: '收案／開案時填報的過去一年精神科住院次數']
+  prior_year_psy_opd_count integer [note: '收案／開案時填報的過去一年精神科門診次數']
+  is_void boolean [not null, default: false, note: '作廢或測試案件；統計一律排除']
+  source_updated_at timestamptz [note: '平台端最後異動時間，增量同步用']
+  synced_at timestamptz [not null, default: `now()`, note: '這一列最後同步的時間']
+
+  indexes {
+    reported_at [name: 'ix_pf_case_reported_at']
+    (category_code, reported_at) [name: 'ix_pf_case_category_reported']
+    status_code [name: 'ix_pf_case_status']
+    person_id [name: 'ix_pf_case_person']
+    network_code [name: 'ix_pf_case_network']
+  }
+
+  Note: '''
+  通報案件
+  來源：平台 API（通報單、案件狀態）
+  粒度：一筆通報一列
+  整個資料庫的中心。各分頁的案件數、狀態、類別、網絡與日期篩選都從這張表出發。
+  '''
+}
+
+Table pf_case_address [headercolor: #bd4a32] {
+  address_id bigint [pk, increment]
+  case_id bigint [not null, ref: > pf_case.case_id]
+  address_type text [not null, note: 'incident（發生地址）｜residence（居住地址）｜contact（聯絡地址）']
+  is_primary boolean [not null, default: false, note: '儀表板統計採用的那一筆；每個案件只有一筆為 true']
+  county_code text [ref: > ref_region.region_code, note: '縣市']
+  district_code text [ref: > ref_region.region_code, note: '鄉鎮市區']
+  latitude numeric(9,6) [note: '地址定位後的緯度，地圖點位用']
+  longitude numeric(9,6) [note: '地址定位後的經度，地圖點位用']
+  address_key text [note: '正規化地址的雜湊值，用來判斷同址並合併點位；不存完整地址']
+  geocode_status text [not null, default: 'pending', note: 'pending｜ok｜failed']
+  synced_at timestamptz [not null, default: `now()`, note: '這一列最後同步的時間']
+
+  indexes {
+    (case_id, address_type) [unique, name: 'uq_pf_case_address']
+    district_code [name: 'ix_pf_case_address_district']
+  }
+
+  Note: '''
+  案件地址
+  來源：平台 API（通報單的三種地址），同步時做地址定位
+  粒度：一個案件的一種地址一列
+  三種地址都留著，由 is_primary 決定統計用哪一筆，之後改口徑不必重拉資料。
+  '''
+}
+
+Table pf_assignment [headercolor: #bd4a32] {
+  assignment_id bigint [pk, increment]
+  platform_record_id text [not null, unique, note: '平台的派案紀錄識別碼']
+  case_id bigint [not null, ref: > pf_case.case_id]
+  assigned_at timestamptz [not null, note: '「系統」醫療管理員完成指派的時間']
+  assignee_role text [note: 'doctor（醫師）｜nurse（護理師）｜other']
+  synced_at timestamptz [not null, default: `now()`, note: '這一列最後同步的時間']
+
+  indexes {
+    (case_id, assigned_at) [name: 'ix_pf_assignment_case']
+  }
+
+  Note: '''
+  派案紀錄
+  來源：平台 API（派案／指派醫師、護理師）
+  粒度：一次指派一列，改派會有多列
+  時效指標取每個案件最早的一筆。
+  '''
+}
+
+Table pf_emergency_intake [headercolor: #bd4a32] {
+  intake_id bigint [pk, increment]
+  platform_record_id text [not null, unique, note: '平台的表單識別碼']
+  case_id bigint [not null, ref: > pf_case.case_id]
+  completed_at timestamptz [not null, note: '「系統」完成受理方式表單的時間']
+  intake_method text [not null, note: 'phone（電話諮詢）｜phone_dispatch（電話＋緊急醫療出勤）']
+  synced_at timestamptz [not null, default: `now()`, note: '這一列最後同步的時間']
+
+  indexes {
+    (case_id, completed_at) [name: 'ix_pf_emergency_intake_case']
+  }
+
+  Note: '''
+  緊急醫療受理方式表單
+  來源：平台 API（受理方式表單）
+  粒度：一次填寫一列
+  電話處置率、出勤處置率的分類依據，也是首次專業評估時間的終點；取每個案件最早的一筆。
+  '''
+}
+
+Table pf_emergency_dispatch [headercolor: #bd4a32] {
+  dispatch_id bigint [pk, increment]
+  platform_record_id text [not null, unique, note: '平台的表單識別碼']
+  case_id bigint [not null, ref: > pf_case.case_id]
+  dispatched_at timestamptz [not null, note: '出勤單上填寫的出勤年月日時間，即實際出勤時間']
+  completed_at timestamptz [note: '「系統」完成出勤單的時間']
+  synced_at timestamptz [not null, default: `now()`, note: '這一列最後同步的時間']
+
+  indexes {
+    (case_id, dispatched_at) [name: 'ix_pf_emergency_dispatch_case']
+  }
+
+  Note: '''
+  緊急醫療出勤單
+  來源：平台 API（出勤單）
+  粒度：一張出勤單一列
+  出勤準備時間與出勤總反應時間的終點。
+  '''
+}
+
+Table pf_bureau_reply [headercolor: #bd4a32] {
+  reply_id bigint [pk, increment]
+  platform_record_id text [not null, unique, note: '平台的表單識別碼']
+  case_id bigint [not null, ref: > pf_case.case_id]
+  completed_at timestamptz [note: '「系統」衛生局完成回覆單的時間；未完成為 null']
+  visit_date date [note: '回覆單上填寫的訪視日期']
+  dispatch_date date [note: '回覆單上填寫的派案日期']
+  decision text [note: 'refer（轉介醫療機構）｜no_refer（暫不轉介）']
+  referred_to_tsghb boolean [not null, default: false, note: '是否勾選「轉介三總北投」']
+  referred_org_name text [note: '轉介的醫療機構名稱']
+  no_referral_reason_code text [ref: > ref_reason.reason_code, note: '暫不轉介原因；reason_type 為 bureau_no_referral']
+  no_referral_reason_text text [note: '選「其他原因」時填寫的說明']
+  synced_at timestamptz [not null, default: `now()`, note: '這一列最後同步的時間']
+
+  indexes {
+    (case_id, completed_at) [name: 'ix_pf_bureau_reply_case']
+  }
+
+  Note: '''
+  衛生局優化計畫回覆單
+  來源：平台 API（衛生局回覆單）
+  粒度：一張回覆單一列
+  優化計畫衛生局處置效率整個次分頁的來源，也是醫院端各時效指標的起點。
+  '''
+}
+
+Table pf_no_referral_review [headercolor: #bd4a32] {
+  review_id bigint [pk, increment]
+  platform_record_id text [not null, unique, note: '平台的表單識別碼']
+  case_id bigint [not null, ref: > pf_case.case_id]
+  completed_at timestamptz [not null, note: '「系統」本院完成不轉介覆核單的時間']
+  decision text [not null, note: 'agree（同意）｜reject（駁回）']
+  synced_at timestamptz [not null, default: `now()`, note: '這一列最後同步的時間']
+
+  indexes {
+    (case_id, completed_at) [name: 'ix_pf_no_referral_review_case']
+  }
+
+  Note: '''
+  不轉介覆核單
+  來源：平台 API（不轉介覆核單）
+  粒度：一張覆核單一列
+  衛生局暫不轉介後，本院同意或駁回的紀錄。
+  '''
+}
+
+Table pf_hospital_reply [headercolor: #bd4a32] {
+  hospital_reply_id bigint [pk, increment]
+  platform_record_id text [not null, unique, note: '平台的表單識別碼']
+  case_id bigint [not null, ref: > pf_case.case_id]
+  completed_at timestamptz [note: '「系統」完成醫療機構回覆單的時間；未完成為 null']
+  contact_at timestamptz [note: '回覆單上填寫的「進行聯繫時間」']
+  intake_result text [note: 'accepted（收案／開案）｜unable（無法收案）']
+  unable_reason_code text [ref: > ref_reason.reason_code, note: '無法收案原因；reason_type 為 hospital_unable']
+  unable_reason_text text [note: '選「其他原因」時填寫的說明']
+  synced_at timestamptz [not null, default: `now()`, note: '這一列最後同步的時間']
+
+  indexes {
+    (case_id, completed_at) [name: 'ix_pf_hospital_reply_case']
+  }
+
+  Note: '''
+  醫療機構回覆單
+  來源：平台 API（醫療機構回覆單）
+  粒度：一張回覆單一列
+  首次聯繫時間、回覆衛生局時間與無法收案原因的來源。
+  '''
+}
+
+Table pf_visit [headercolor: #bd4a32] {
+  visit_id bigint [pk, increment]
+  platform_record_id text [not null, unique, note: '平台的表單識別碼']
+  case_id bigint [not null, ref: > pf_case.case_id]
+  visit_stage text [not null, note: 'assessment（評估階段）｜tracking（追蹤階段）｜closing（結案訪視）']
+  visit_method text [note: 'home（家訪）｜phone（電訪）｜other']
+  visit_started_at timestamptz [not null, note: '訪視日期時間－開始']
+  visit_ended_at timestamptz [note: '訪視日期時間－結束']
+  monthly_opd_count numeric(5,1) [note: '這次訪視填報的每月使用門診次數']
+  monthly_er_count numeric(5,1) [note: '這次訪視填報的每月使用急診次數']
+  synced_at timestamptz [not null, default: `now()`, note: '這一列最後同步的時間']
+
+  indexes {
+    (case_id, visit_started_at) [name: 'ix_pf_visit_case']
+  }
+
+  Note: '''
+  訪視紀錄單
+  來源：平台 API（訪視紀錄單）
+  粒度：一次訪視一列
+  優化計畫的首次訪視與首次專業評估時間由此取得；每月門診、急診次數變化用第一次評估訪視與結案訪視兩筆相減。
+  '''
+}
+
+Table pf_followup_form [headercolor: #bd4a32] {
+  followup_id bigint [pk, increment]
+  platform_record_id text [unique, note: '平台的追蹤量表識別碼；尚未回收時為 null']
+  case_id bigint [not null, ref: > pf_case.case_id]
+  timepoint text [not null, note: 'fu_3m（結案後 3 個月）｜fu_6m（結案後 6 個月）']
+  due_date date [not null, note: '應回收日，結案日加 3 或 6 個月']
+  returned_at timestamptz [note: '回收（填寫完成）的時間；未回收為 null']
+  is_unable_to_answer boolean [not null, default: false, note: '已回收且勾選無法填答']
+  has_score boolean [not null, default: false, note: '已回收且有填寫分數']
+  synced_at timestamptz [not null, default: `now()`, note: '這一列最後同步的時間']
+
+  indexes {
+    (case_id, timepoint) [unique, name: 'uq_pf_followup_form']
+    due_date [name: 'ix_pf_followup_form_due']
+  }
+
+  Note: '''
+  結案後追蹤量表
+  來源：平台 API（結案後追蹤量表）；應回收的列由同步程式依結案日先建立
+  粒度：一個案件的一個追蹤時點一列
+  應回收、已回收、可追蹤、無法填答四個數字都從這張表數出來。
+  '''
+}
+
+Table pf_assessment [headercolor: #bd4a32] {
+  assessment_id bigint [pk, increment]
+  platform_record_id text [unique, note: '平台的量表填寫紀錄識別碼']
+  case_id bigint [not null, ref: > pf_case.case_id]
+  scale_code text [not null, ref: > ref_scale.scale_code, note: '哪一種量表']
+  timepoint text [not null, note: 'initial（初評）｜closing（結案時）｜fu_3m（結案後 3 個月）｜fu_6m（結案後 6 個月）']
+  followup_id bigint [ref: > pf_followup_form.followup_id, note: '追蹤時點的量表所屬的追蹤量表；初評與結案為 null']
+  assessed_at timestamptz [note: '評估（填寫）時間']
+  assessor_type text [note: 'reporter（通報者）｜professional（醫療專業人員）']
+  total_score numeric(6,2) [note: '量表總分；沒有填分數為 null']
+  danger_score numeric(4,1) [note: '風險檢傷評估的危險性分數；其他量表為 null']
+  support_score numeric(4,1) [note: '風險檢傷評估的支持系統分數；其他量表為 null']
+  severity_level text [note: 'low｜medium｜high；分數落在分級規則之外為 null']
+  is_unable_to_answer boolean [not null, default: false, note: '勾選無法填答']
+  synced_at timestamptz [not null, default: `now()`, note: '這一列最後同步的時間']
+
+  indexes {
+    (case_id, scale_code, timepoint) [unique, name: 'uq_pf_assessment']
+    (scale_code, timepoint) [name: 'ix_pf_assessment_scale_timepoint']
+  }
+
+  Note: '''
+  量表評估
+  來源：平台 API（通報單的初評量表、結案量表、結案後追蹤量表）
+  粒度：一個案件的一種量表的一個時點一列
+  風險分析頁看初評的分級，成效頁拿初評與 3、6 個月的分數相比。同一時點有多筆時，同步程式只留定義上有效的那一筆。
+  '''
+}
+
+Table pf_ai_prediction [headercolor: #bd4a32] {
+  prediction_id bigint [pk, increment]
+  platform_record_id text [not null, unique, note: '平台的預測紀錄識別碼']
+  case_id bigint [not null, ref: > pf_case.case_id]
+  model_version text [note: '產生這筆預測的模型版本']
+  predicted_at timestamptz [not null, note: 'AI 產生預測的時間']
+  predicted_score numeric(5,2) [not null, note: 'AI 模型預測分數，3–15 分']
+  actual_score numeric(5,2) [note: '專業人員實測分數，3–15 分；尚未評估為 null']
+  actual_assessed_at timestamptz [note: '專業人員完成評估的時間']
+  synced_at timestamptz [not null, default: `now()`, note: '這一列最後同步的時間']
+
+  indexes {
+    case_id [name: 'ix_pf_ai_prediction_case']
+    actual_assessed_at [name: 'ix_pf_ai_prediction_actual']
+  }
+
+  Note: '''
+  AI 預測紀錄
+  來源：平台 API（AI 風險分數預測與對應的專業人員評估）
+  粒度：一次預測一列
+  兩個分數都有值才算一筆比對資料；吻合程度、迴歸線與累積趨勢都由這張表即時算。
+  '''
+}
+
+Table pf_satisfaction_survey [headercolor: #bd4a32] {
+  survey_id bigint [pk, increment]
+  platform_record_id text [not null, unique, note: '平台的問卷識別碼']
+  case_id bigint [not null, ref: > pf_case.case_id]
+  sent_at timestamptz [not null, note: '問卷發送時間，結案當日']
+  due_at timestamptz [note: '填寫期限，發送後 3 日']
+  completed_at timestamptz [note: '完成填寫的時間；未填為 null']
+  ui_score smallint [note: '第一題 系統使用者介面滿意度，1–5 分']
+  care_score smallint [note: '第二題 醫療團隊處置滿意度，1–5 分']
+  synced_at timestamptz [not null, default: `now()`, note: '這一列最後同步的時間']
+
+  indexes {
+    case_id [name: 'ix_pf_satisfaction_survey_case']
+  }
+
+  Note: '''
+  使用者滿意度問卷
+  來源：平台 API（結案後發給通報者的滿意度問卷）
+  粒度：一份發出的問卷一列
+  回收率與平均分數依通報者所屬網絡（pf_case.network_code）分組；不存文字建議。
+  '''
+}
+
+// ----------------------------------------------------------------------------
+// his_*：醫院 HIS API
+// ----------------------------------------------------------------------------
+
+Table his_patient [headercolor: #0f766e] {
+  his_patient_id bigint [pk, increment]
+  his_patient_key text [not null, unique, note: 'HIS 的病人識別碼，建議由 HIS 提供去識別代碼或同步時雜湊病歷號']
+  id_no_hash text [note: '身分證字號雜湊，演算法與金鑰必須和 pf_person.id_no_hash 相同']
+  person_id bigint [ref: > pf_person.person_id, note: '比對到的平台個案；不是平台個案為 null']
+  first_visit_date date [note: '本院初診日']
+  first_visit_care_group text [note: '初診類別，值同 ref_his_dept.care_group；home_care 即初診為居家醫療']
+  synced_at timestamptz [not null, default: `now()`, note: '這一列最後同步的時間']
+
+  indexes {
+    id_no_hash [name: 'ix_his_patient_id_no_hash']
+    person_id [name: 'ix_his_patient_person']
+  }
+
+  Note: '''
+  HIS 病人
+  來源：HIS API（病人基本檔）
+  粒度：一位 HIS 病人一列
+  包含兩群人：平台個案在本院有就醫紀錄者，以及 SNQ 指標要追蹤的院內病人（不一定是平台個案）。
+  '''
+}
+
+Table his_encounter [headercolor: #0f766e] {
+  encounter_id bigint [pk, increment]
+  his_encounter_key text [not null, unique, note: 'HIS 的就醫紀錄識別碼']
+  his_patient_id bigint [not null, ref: > his_patient.his_patient_id]
+  encounter_type text [not null, note: 'outpatient（門診，含居家照護科）｜inpatient（住院）｜emergency（急診）']
+  dept_code text [ref: > ref_his_dept.dept_code, note: '就醫科別；由此判斷身心科門診或居家']
+  encounter_date date [not null, note: '門診為就診日，住院為入院日，急診為到院日']
+  discharge_date date [note: '住院的出院日；尚未出院或非住院為 null']
+  is_compulsory boolean [not null, default: false, note: '是否為強制住院']
+  source_updated_at timestamptz [note: 'HIS 端最後異動時間，增量同步用']
+  synced_at timestamptz [not null, default: `now()`, note: '這一列最後同步的時間']
+
+  indexes {
+    (his_patient_id, encounter_date) [name: 'ix_his_encounter_patient_date']
+    (encounter_type, encounter_date) [name: 'ix_his_encounter_type_date']
+  }
+
+  Note: '''
+  HIS 就醫紀錄
+  來源：HIS API（門診、急診、住院紀錄）
+  粒度：一次就醫一列，住院為一次入出院一列
+  只存就醫的事實與日期，不存診斷、醫囑與費用。
+  '''
+}
+
+// ----------------------------------------------------------------------------
+// mart_*：衍生表（排程重算，可清空重建）
+// ----------------------------------------------------------------------------
+
+Table mart_case_timeline [headercolor: #20303f] {
+  case_id bigint [pk, ref: - pf_case.case_id]
+  reported_at timestamptz [not null, note: '完成通報；同 pf_case.reported_at']
+  assigned_at timestamptz [note: '首次完成指派醫師／護理師']
+  em_intake_method text [note: 'phone｜phone_dispatch；首次完成的受理方式']
+  em_intake_at timestamptz [note: '首次完成受理方式表單']
+  em_dispatched_at timestamptz [note: '實際出勤時間（出勤單填寫）']
+  bureau_replied_at timestamptz [note: '衛生局完成回覆單']
+  bureau_visit_date date [note: '衛生局回覆單填寫的訪視日期']
+  bureau_dispatch_date date [note: '衛生局回覆單填寫的派案日期']
+  bureau_decision text [note: 'refer_tsghb（轉介三總北投）｜refer_other（轉介他院）｜no_refer（暫不轉介）']
+  review_decision text [note: 'agree｜reject；本院對暫不轉介的覆核結果']
+  review_completed_at timestamptz [note: '本院完成不轉介覆核單']
+  hosp_contact_at timestamptz [note: '醫療機構回覆單填寫的進行聯繫時間']
+  hosp_replied_at timestamptz [note: '完成醫療機構回覆單']
+  hosp_intake_result text [note: 'accepted｜unable']
+  first_assessment_visit_at timestamptz [note: '評估階段第一次訪視的開始時間']
+  first_visit_at timestamptz [note: '任一階段最早一次訪視的開始時間']
+  handled_at timestamptz [note: '處理完成時間：緊急醫療取 em_intake_at，優化計畫取 first_visit_at']
+  opened_at timestamptz [note: '開案；同 pf_case.opened_at']
+  closed_at timestamptz [note: '結案；同 pf_case.closed_at']
+  refreshed_at timestamptz [not null, default: `now()`, note: '這一列最後重算的時間']
+
+  indexes {
+    reported_at [name: 'ix_mart_case_timeline_reported_at']
+  }
+
+  Note: '''
+  案件里程碑
+  來源：衍生（pf_case 加上各表單取每個案件最早的一筆）
+  粒度：一個案件一列
+  案件處理效率與同期比較的每個時效指標，都是這張表兩個時間欄位相減；每個比率指標，都是這張表依條件計數。
+  '''
+}
+
+Table mart_case_his_outcome [headercolor: #20303f] {
+  case_id bigint [pk, ref: - pf_case.case_id]
+  his_patient_id bigint [ref: > his_patient.his_patient_id, note: '比對到的 HIS 病人；HIS 查無此人為 null']
+  closed_date date [not null, note: '結案日（Asia/Taipei）']
+  observed_until date [not null, note: '統計截止日；結案日隔天起到這一天的就醫紀錄都納入']
+  has_opd_after_close boolean [not null, default: false, note: '結案日後有門診紀錄']
+  has_home_care_after_close boolean [not null, default: false, note: '結案日後有居家紀錄']
+  has_inpatient_after_close boolean [not null, default: false, note: '結案日後有住院紀錄']
+  post_close_admission_count integer [not null, default: 0, note: '結案後住院次數']
+  post_close_psy_opd_count integer [not null, default: 0, note: '結案後身心科門診使用次數']
+  post_close_home_care_count integer [not null, default: 0, note: '結案後居家照護科門診使用次數']
+  refreshed_at timestamptz [not null, default: `now()`, note: '這一列最後重算的時間']
+
+  Note: '''
+  結案個案的院內就醫銜接
+  來源：衍生（pf_case 的已結案案件，以 id_no_hash 比對 his_patient 後彙總 his_encounter）
+  粒度：一個已結案案件一列
+  結案後轉介至本院醫療系統比例、結案追蹤率、再住院次數與門診治療成效都讀這張表，是平台資料與 HIS 資料唯一的交會點。
+  '''
+}
+
+Table mart_snq_cohort [headercolor: #20303f] {
+  cohort_id bigint [pk, increment]
+  cohort_type text [not null, note: 'home_care_first_visit（初診為居家醫療）｜compulsory_discharge（強制住院出院）']
+  his_patient_id bigint [not null, ref: > his_patient.his_patient_id]
+  index_date date [not null, note: '追蹤起算日：初診日或強制住院的出院日']
+  index_encounter_id bigint [ref: > his_encounter.encounter_id, note: '起算的那一筆就醫紀錄']
+  has_readmission boolean [not null, default: false, note: '起算日之後是否再住院']
+  first_readmission_date date [note: '第一次再住院的入院日']
+  refreshed_at timestamptz [not null, default: `now()`, note: '這一列最後重算的時間']
+
+  indexes {
+    (cohort_type, his_patient_id, index_date) [unique, name: 'uq_mart_snq_cohort']
+    (cohort_type, index_date) [name: 'ix_mart_snq_cohort_type_date']
+  }
+
+  Note: '''
+  SNQ 追蹤名單
+  來源：衍生（his_patient、his_encounter）
+  粒度：一位病人的一次起算事件一列
+  四個院內追蹤指標的分母；再住院率直接數 has_readmission。
+  '''
+}
+
+Table mart_snq_cohort_year [headercolor: #20303f] {
+  cohort_id bigint [not null, ref: > mart_snq_cohort.cohort_id]
+  year_no integer [not null, note: '起算後的第幾年，從 1 開始']
+  period_start date [not null, note: '這一年的起日']
+  period_end date [not null, note: '這一年的迄日']
+  visit_count integer [not null, default: 0, note: '這一年內門診加居家的就醫次數']
+  is_eligible boolean [not null, default: true, note: '前面各年都達標才列入這一年的計算；中斷後為 false']
+  is_stable boolean [not null, default: false, note: '這一年就醫次數達門檻（預設 4 次）']
+  refreshed_at timestamptz [not null, default: `now()`, note: '這一列最後重算的時間']
+
+  indexes {
+    (cohort_id, year_no) [pk, name: 'pk_mart_snq_cohort_year']
+  }
+
+  Note: '''
+  SNQ 逐年追蹤
+  來源：衍生（mart_snq_cohort、his_encounter）
+  粒度：名單上的一筆的一個追蹤年度一列
+  門診追蹤率要求每年都穩定治療達門檻、中斷就不計入次年，所以逐年存。
+  '''
+}
+
+// ----------------------------------------------------------------------------
+// sync_*：同步紀錄
+// ----------------------------------------------------------------------------
+
+Table sync_run [headercolor: #7c6f64] {
+  sync_run_id bigint [pk, increment]
+  source_system text [not null, note: 'platform｜his']
+  endpoint text [not null, note: '這次呼叫的 API 資源名稱，例如 cases、visits、encounters']
+  window_start timestamptz [note: '這次拉取的資料異動區間起點']
+  window_end timestamptz [note: '這次拉取的資料異動區間終點；成功後作為下次的起點']
+  started_at timestamptz [not null, default: `now()`, note: '開始時間']
+  finished_at timestamptz [note: '結束時間']
+  status text [not null, default: 'running', note: 'running｜success｜failed']
+  fetched_count integer [not null, default: 0, note: '取回的筆數']
+  upserted_count integer [not null, default: 0, note: '實際新增或更新的筆數']
+  error_message text [note: '失敗時的錯誤訊息；不可包含個資']
+
+  indexes {
+    (source_system, endpoint, started_at) [name: 'ix_sync_run_source_endpoint']
+  }
+
+  Note: '''
+  同步批次
+  來源：同步程式寫入
+  粒度：一次 API 拉取一列
+  用來接續增量同步，並在畫面顯示資料更新時間。
+  '''
+}
+
+Table sync_raw_record [headercolor: #7c6f64] {
+  raw_id bigint [pk, increment]
+  sync_run_id bigint [not null, ref: > sync_run.sync_run_id]
+  source_system text [not null, note: 'platform｜his']
+  endpoint text [not null, note: 'API 資源名稱']
+  source_key text [not null, note: '來源端的主鍵']
+  payload jsonb [not null, note: 'API 回應的單筆內容；寫入前先移除姓名、身分證字號、電話與完整地址']
+  payload_hash text [not null, note: 'payload 的雜湊值，用來判斷內容有沒有變']
+  fetched_at timestamptz [not null, default: `now()`, note: '取回時間']
+
+  indexes {
+    (source_system, endpoint, source_key) [name: 'ix_sync_raw_record_key']
+    fetched_at [name: 'ix_sync_raw_record_fetched_at']
+  }
+
+  Note: '''
+  API 原始回應
+  來源：同步程式寫入
+  粒度：一次拉取的一筆來源資料一列
+  指標定義還會調整，保留去識別後的原始回應就能重算而不必重拉；建議只保留 90 天。
+  '''
+}
+
+// ----------------------------------------------------------------------------
+// 分組
+// ----------------------------------------------------------------------------
+
+TableGroup reference {
+  ref_report_category
+  ref_network_unit
+  ref_region
+  ref_scale
+  ref_scale_level_rule
+  ref_reason
+  ref_his_dept
+  ref_setting
+}
+
+TableGroup platform {
+  pf_person
+  pf_case
+  pf_case_address
+  pf_assignment
+  pf_emergency_intake
+  pf_emergency_dispatch
+  pf_bureau_reply
+  pf_no_referral_review
+  pf_hospital_reply
+  pf_visit
+  pf_followup_form
+  pf_assessment
+  pf_ai_prediction
+  pf_satisfaction_survey
+}
+
+TableGroup his {
+  his_patient
+  his_encounter
+}
+
+TableGroup mart {
+  mart_case_timeline
+  mart_case_his_outcome
+  mart_snq_cohort
+  mart_snq_cohort_year
+}
+
+TableGroup sync {
+  sync_run
+  sync_raw_record
+}

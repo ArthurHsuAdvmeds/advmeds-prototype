@@ -17,7 +17,7 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
 
 | 資料夾 | 客戶 | 內容 | 技術 | 詳細文件 |
 | --- | --- | --- | --- | --- |
-| `tsghb-dashboard/` | 三總北投 | 精神健康個案通報管理儀表板，`v1/`–`v4/` 各版並存；入口 `index.html` 自動轉址到最新版；`release-note/` 為 V2 以後的版本說明 | 單檔 HTML + D3 / topojson（CDN） | — |
+| `tsghb-dashboard/` | 三總北投 | 精神健康個案通報管理儀表板，`v1/`–`v4/` 各版並存；入口 `index.html` 自動轉址到最新版；`release-note/` 為 V2 以後的版本說明；`db_desc/` 為資料庫規劃（DBML＋規格頁） | 單檔 HTML + D3 / topojson（CDN） | — |
 | `tsghb-landing-page/` | 三總北投 | 各角色登入後的入口頁，一個角色一個子資料夾（`doctor/`、`orgMag/`），共用 `assets/`，另附規格下載 zip | dc-runtime + React | [CLAUDE.md](tsghb-landing-page/CLAUDE.md)、各角色資料夾內 CLAUDE.md |
 | `tsghb-doctor-landing-page/` | 三總北投 | **舊版**醫師入口頁，僅保留對照，**不要再改**（改 `tsghb-landing-page/doctor/`） | dc-runtime + React | [CLAUDE.md](tsghb-doctor-landing-page/CLAUDE.md) |
 | `tsghb-flow-test/` | 三總北投 | 通報流程測試導引（緊急醫療、優化計畫測試情境清單） | 單檔 HTML | — |
@@ -101,6 +101,12 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
   - 「計算公式」以客戶的原始指標清單（`kpi/original_list.xlsx`，使用者自行放入）為準，清單沒有的才依儀表板上的定義補；
     句尾的【原清單無】表示儀表板有、原清單沒有，【差異】表示兩邊定義或呈現不一致，都是要跟客戶確認的項目。
   - 「是否依賴HIS資料」不依賴就留空，依賴才寫需要哪些 HIS 資料。
+- `tsghb-dashboard/db_desc/` 是把 v6 儀表板落地成 PostgreSQL 的資料庫規劃：`pgsql.dbml`（資料表定義，以它為準）與 `index.html`（規格頁，頁首有下載 DBML 的按鈕）。
+  - 資料來源是通報平台 API 與醫院 HIS API；表名前綴 `pf_` 平台、`his_` HIS、`ref_` 代碼與設定、`mart_` 衍生表、`sync_` 同步紀錄。
+  - **字串欄位一律 `text`**（使用者指定），不用 `varchar(n)` 也不用 enum；代碼型欄位的允許值寫在欄位 note。
+  - `index.html` 第 4 節的資料表明細是依 DBML 產生後貼入的靜態 HTML：改 DBML 時該節、頁首的表數／欄位數、第 5 節的指標對應要一起改。
+    第 5 節的「項次」對應 `kpi/kpi.csv`，1–149 要全部涵蓋。
+  - 規格頁只依 v6 畫面寫，不引用客戶原始清單的內容（`kpi/` 不進版控）；兩邊 API 的實際欄位尚未核對，待確認事項列在第 9 節。
 - Landing page 已全部移到 `tsghb-landing-page/<role>/`；該處頁面、規格或插圖有改動時要**重新產生對應的 zip 下載包**（做法見其 CLAUDE.md 第 4 節）。
 - `tsghb-landing-page/` 的正式實作採 Vue 3 + .NET Core 8，HTML 只是參考原型。
 
