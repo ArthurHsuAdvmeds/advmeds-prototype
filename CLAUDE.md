@@ -95,7 +95,8 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
   更新轉址頁的 `LATEST` / canonical / `<noscript>` / 手動連結。
 - `tsghb-dashboard/test_data.json` 為測試資料，目前沒有頁面引用。
 - `tsghb-dashboard/kpi/kpi.csv` 是依 v6 實際畫面整理的各分頁指標清單（UTF-8 含 BOM，供 Excel 直接開啟），
-  欄位為主分頁、次分頁、指標名稱、圖表種類、計算公式、是否依賴HIS資料；目前只填了前四欄。儀表板增刪指標時要同步更新。
+  欄位為項次、主分頁、次分頁、指標名稱、圖表種類、重複項次、計算公式、是否依賴HIS資料；計算公式與 HIS 兩欄尚未填。
+  「重複項次」填的是同一指標在前面出現過的項次（多個以 `;` 分隔；指揮儀表板「同期比較」本來就是重複呈現，不標）。儀表板增刪指標時要同步更新。
 - Landing page 已全部移到 `tsghb-landing-page/<role>/`；該處頁面、規格或插圖有改動時要**重新產生對應的 zip 下載包**（做法見其 CLAUDE.md 第 4 節）。
 - `tsghb-landing-page/` 的正式實作採 Vue 3 + .NET Core 8，HTML 只是參考原型。
 
