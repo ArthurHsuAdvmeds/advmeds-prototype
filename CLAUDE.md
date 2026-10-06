@@ -26,6 +26,7 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
 | `spec/nhri_ms/` | 國衛院 | 肌少症評估量表（AWGS 2025），`write/` 填寫頁、`result/` 結果頁 | dc-runtime + React | [CLAUDE.md](spec/nhri_ms/CLAUDE.md) |
 | `spec/nhri_elearing_room/` | 國衛院 | ICOPE 學習小教室 | 單檔 HTML | — |
 | `spec/nhri_elearing/` | 國衛院 | ICOPE 衛教推播邏輯一覽（給 PM 對照） | 單檔 HTML | — |
+| `spec/sc_app_transfer/` | 未分類（總覽頁暫放「工具與其他」） | Health Go 健康夠 App 下載轉址頁：手機依裝置自動轉到 App Store／Google Play，電腦顯示兩個商店的 QR Code（`assets/qr-*.png`，內容即商店網址，改網址要換圖）；網址加 `?preview=ios`、`android` 或 `desktop` 可預覽該畫面且不跳轉 | 單檔 HTML | — |
 | `thai/qc-model/` | 泰國 | QC 品質管制模組（Levey-Jennings 管制圖，EN / ไทย / 中） | 單檔 HTML | — |
 | `flow-chart/` | 內部工具 | FlowScript 文字語法流程圖：說明頁、`edit/`、`view/`，共用 `flowchart.js` | HTML + 共用 JS | [README.md](flow-chart/README.md) |
 | `mjk/` | 非醫療 | 魔術道具報價單產生器，品項在 `item.csv` | 單檔 HTML | — |

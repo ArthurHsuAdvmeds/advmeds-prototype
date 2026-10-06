@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-device="desktop">
+<head>
+<meta charset="utf-8">
+
+<!--
+  ============================================================================
+  Health Go 健康夠 App 下載轉址頁
+  ----------------------------------------------------------------------------
+  依開啟頁面的裝置決定去向：
+    iPhone / iPad → 自動轉到 App Store
+    Android       → 自動轉到 Google Play
+    電腦與其他    → 留在本頁，顯示兩個商店的 QR Code
+
+  商店網址改下方的 STORES。assets/qr-*.png 的內容就是商店網址，
+  網址有變時圖片要一起換。
+
+  預覽：網址加上 ?preview=ios、?preview=android 或 ?preview=desktop，
+  可強制顯示該裝置的畫面，而且不會跳轉。
+  ============================================================================
+-->
+
+<script>
+/* 放在 <head> 最前面：手機在畫面畫出來之前就先轉走 */
+(function () {
+  "use strict";
+
+  var STORES = {
+    ios: {
+      name: "App Store",
+      device: "iPhone／iPad",
+      url: "https://apps.apple.com/tw/app/health-go-%E5%81%A5%E5%BA%B7%E5%A4%A0/id6752989877"
+    },
+    android: {
+      name: "Google Play",
+      device: "Android 手機",
+      url: "https://play.google.com/store/apps/details?id=io.h2u.fitfoodlog"
+    }
+  };
+
+  function detect() {
+    var ua = navigator.userAgent || "";
+    if (/Android/i.test(ua)) return "android";
+    if (/iPhone|iPad|iPod/i.test(ua)) return "ios";
+    // iPadOS 13 以後的 Safari 預設送出 Mac 的 UA，只能靠觸控點數分辨
+    if (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1) return "ios";
+    return "desktop";
+  }
+
+  var preview = (/[?&]preview=(ios|android|desktop)(?:&|$)/.exec(location.search) || [])[1];
+  var device = preview || detect();
+
+  document.documentElement.setAttribute("data-device", device);
+  window.APP_TRANSFER = { STORES: STORES, device: device };
+
+  // 用 replace 不留歷史紀錄，使用者從商店按返回時不會又被轉回商店
+  if (!preview && device !== "desktop") location.replace(STORES[device].url);
+})();
+</script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Health Go 健康夠｜下載 App</title>
+<meta name="robots" content="noindex">
+
+<style>
+  :root{
+    --bg:#F3F4F6;--panel:#FFFFFF;--line:#E0E0E0;
+    --ink:#1F2328;--ink-2:#5C6470;--ink-3:#818892;
+    --btn-bg:#1F2328;--btn-ink:#FFFFFF;
+    --qr-bg:#FFFFFF; /* QR Code 底色固定白色，深色模式也不能變 */
+    --radius-md:8px;--radius-lg:12px;
+    --shadow-card:0px 4px 6px -4px rgba(0,0,0,.1),0px 10px 15px -3px rgba(0,0,0,.1);
+    --font-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#16191d;--panel:#1f2328;--line:#30363d;
+      --ink:#e6e8ea;--ink-2:#a8b0b8;--ink-3:#7d8590;
+      --btn-bg:#e6e8ea;--btn-ink:#16191d;
+      --shadow-card:0 1px 2px rgba(0,0,0,.4);
+      color-scheme:dark;
+    }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;min-height:100vh;min-height:100dvh;padding:40px 20px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--bg);color:var(--ink);font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;text-align:center;
+  }
+  main{width:100%;max-width:640px}
+  h1{margin:0 0 10px;font-size:28px;font-weight:700;line-height:1.35}
+  .sub{margin:0;font-size:15px;color:var(--ink-2);line-height:1.75}
+
+  /* ---------- 畫面切換 ----------
+     由 <html data-device> 決定顯示哪一塊；沒有 JS 時維持預設的 desktop。 */
+  .view-mobile{display:none}
+  :is([data-device="ios"],[data-device="android"]) .view-desktop{display:none}
+  :is([data-device="ios"],[data-device="android"]) .view-mobile{display:block}
+
+  /* ---------- 按鈕 ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-height:48px;padding:12px 28px;border-radius:100px;
+    background:var(--btn-bg);color:var(--btn-ink);
+    font-size:16px;font-weight:700;line-height:1.3;text-decoration:none;
+    transition:opacity .15s;
+  }
+  .btn:hover{opacity:.86}
+  .btn:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+  .btn.ghost{
+    min-height:40px;padding:8px 20px;font-size:14px;
+    background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);
+  }
+  .btn.ghost:hover{opacity:1;box-shadow:inset 0 0 0 1px var(--ink)}
+
+  /* ---------- 電腦：兩個商店的 QR Code ---------- */
+  .stores{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:32px}
+  @media (max-width:560px){ .stores{grid-template-columns:1fr} }
+  .store{
+    display:flex;flex-direction:column;align-items:center;
+    background:var(--panel);border-radius:var(--radius-lg);
+    box-shadow:inset 0 0 0 1px var(--line),var(--shadow-card);
+    padding:24px 20px;
+  }
+  .store h2{margin:0;font-size:18px;font-weight:700;line-height:1.4}
+  .store .market{margin-top:2px;font-size:13px;color:var(--ink-3)}
+  .qr{
+    display:block;width:100%;max-width:220px;height:auto;aspect-ratio:1;
+    margin:16px 0 18px;border-radius:var(--radius-md);
+    padding:8px;background:var(--qr-bg); /* 深色模式下替 QR Code 留出白邊，掃描才穩 */
+  }
+  .hint{margin:24px 0 0;font-size:13px;color:var(--ink-3);line-height:1.7}
+
+  /* ---------- 手機：跳轉中／沒有自動開啟時的備援 ---------- */
+  .view-mobile .btn{margin-top:28px;width:100%;max-width:320px}
+  .other{margin:20px 0 0;font-size:14px;color:var(--ink-3);line-height:1.7}
+  .other a{color:var(--ink-2)}
+
+  @media (prefers-reduced-motion:reduce){ .btn{transition:none} }
+</style>
+</head>
+<body>
+<main>
+
+  <!-- 電腦與其他裝置：直接顯示 QR Code -->
+  <section class="view-desktop">
+    <h1>下載 Health Go 健康夠</h1>
+    <p class="sub">用手機相機掃描對應的 QR Code，即可前往商店下載。</p>
+
+    <div class="stores">
+      <div class="store">
+        <h2>iPhone／iPad</h2>
+        <div class="market">App Store</div>
+        <img class="qr" src="./assets/qr-ios.png" width="400" height="400" alt="Health Go 健康夠 iOS 版下載 QR Code">
+        <a class="btn ghost" data-store="ios" href="https://apps.apple.com/tw/app/health-go-%E5%81%A5%E5%BA%B7%E5%A4%A0/id6752989877" target="_blank" rel="noopener">開啟 App Store</a>
+      </div>
+      <div class="store">
+        <h2>Android</h2>
+        <div class="market">Google Play</div>
+        <img class="qr" src="./assets/qr-android.png" width="400" height="400" alt="Health Go 健康夠 Android 版下載 QR Code">
+        <a class="btn ghost" data-store="android" href="https://play.google.com/store/apps/details?id=io.h2u.fitfoodlog" target="_blank" rel="noopener">開啟 Google Play</a>
+      </div>
+    </div>
+
+    <p class="hint">用手機開啟本頁，會自動前往對應的商店。</p>
+  </section>
+
+  <!-- 手機：正常情況下看不到這塊就已經轉走；從商店回來或跳轉被擋時才會看到 -->
+  <section class="view-mobile">
+    <h1>下載 Health Go 健康夠</h1>
+    <p class="sub">正在為你開啟 <span data-fill="name"></span>，<br>若沒有自動開啟，請點下方按鈕。</p>
+    <!-- 文字包一層 span：.btn 是 flex 容器，直接放文字節點會吃掉中英文之間的空白 -->
+    <a class="btn" id="go" href="#"><span>前往 <span data-fill="name"></span> 下載</span></a>
+    <p class="other">使用 <span id="other-device"></span>？<a id="other" href="#">改到 <span id="other-name"></span> 下載</a></p>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORES = window.APP_TRANSFER.STORES;
+  var device = window.APP_TRANSFER.device;
+
+  // 商店連結一律以 STORES 為準；HTML 裡寫死的 href 只是沒有 JS 時的備援
+  document.querySelectorAll("a[data-store]").forEach(function (a) {
+    a.href = STORES[a.getAttribute("data-store")].url;
+  });
+
+  if (device === "desktop") return;
+
+  var mine = STORES[device];
+  var other = STORES[device === "ios" ? "android" : "ios"];
+
+  document.querySelectorAll('[data-fill="name"]').forEach(function (el) {
+    el.textContent = mine.name;
+  });
+  document.getElementById("go").href = mine.url;
+  document.getElementById("other").href = other.url;
+  document.getElementById("other-device").textContent = other.device;
+  document.getElementById("other-name").textContent = other.name;
+})();
+</script>
+</body>
+</html>
