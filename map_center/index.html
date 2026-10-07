@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>地圖半徑工具</title>
+<meta name="robots" content="noindex">
+
+<!--
+  ============================================================================
+  地圖半徑工具
+  ----------------------------------------------------------------------------
+  輸入地址／座標／Google 地圖連結，或直接點地圖決定圓心，再給半徑，
+  就在地圖上畫出範圍。可以同時畫多個圓、匯出 KML、複製分享連結。
+
+  地圖來源有兩種，程式裡各是一個 provider（共同介面寫在「地圖 provider」區）：
+    free    Leaflet + 免金鑰圖資（預設，開啟即可用）
+    google  Google Maps JavaScript API，金鑰由使用者在頁面上自己輸入
+
+  這個 repo 是公開的：Google API 金鑰只能存在使用者瀏覽器的 localStorage，
+  不可以寫進這個檔案，也不會進分享連結。
+
+  狀態存兩份：localStorage（下次開啟還原）與網址 # 後面（分享連結）。
+  ============================================================================
+-->
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+  :root{
+    /* 與根目錄總覽頁共用的設計 token */
+    --teal-50:#E8F7FC;--teal-300:#19AAD1;--teal-500:#1285B3;--teal-700:#0C6496;
+    --grey-0:#FFFFFF;--grey-50:#F7F7F7;--grey-100:#F0F0F0;--grey-200:#E0E0E0;--grey-400:#C4C4C4;
+    --grey-600:#818181;--grey-700:#666666;--grey-900:#333333;
+    --bg:var(--grey-100);--panel:var(--grey-0);--line:var(--grey-200);--field-line:var(--grey-400);
+    --ink:var(--grey-900);--ink-2:var(--grey-700);--ink-3:var(--grey-600);
+    --hover:var(--grey-50);--chip-bg:var(--grey-100);
+    --accent:var(--teal-500);--accent-strong:var(--teal-700);--accent-soft:var(--teal-50);--accent-ink:var(--teal-700);
+    --accent-ring:rgba(18,133,179,.24);--on-accent:#FFFFFF;
+    --danger:#C8372D;
+    /* 地圖上的標籤與控制點：底圖永遠是亮色，所以不跟著深色模式變 */
+    --map-ink:#1F2328;--map-chip:rgba(255,255,255,.94);--map-white:#FFFFFF;
+    --toast-bg:rgba(31,35,40,.94);--toast-ink:#FFFFFF;
+    --radius-md:4px;--radius-lg:5px;
+    --shadow-pop:0 4px 14px rgba(0,0,0,.2);
+    --font-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#16191d;--panel:#1f2328;--line:#30363d;--field-line:#48515c;
+      --ink:#e6e8ea;--ink-2:#a8b0b8;--ink-3:#7d8590;
+      --hover:#262b31;--chip-bg:#2a2f36;
+      --accent-soft:#12303b;--accent-ink:#7fd3ec;--accent-ring:rgba(25,170,209,.3);
+      --danger:#f08a80;
+      color-scheme:dark;
+    }
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;display:flex;overflow:hidden;
+    background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:14px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  button,input,select{font:inherit;color:inherit}
+  [hidden]{display:none !important}
+
+  /* ---------- 左側面板 ---------- */
+  .panel{
+    width:372px;flex-shrink:0;display:flex;flex-direction:column;
+    background:var(--panel);border-right:1px solid var(--line);
+    overflow-y:auto;overscroll-behavior:contain;
+  }
+  .panel-hidden .panel{display:none}
+  .head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 20px;border-bottom:1px solid var(--line)}
+  h1{margin:0;font-size:19px;font-weight:700}
+  .block{padding:14px 20px;border-bottom:1px solid var(--line)}
+  .block:last-of-type{border-bottom:0}
+  h2{margin:0 0 10px;font-size:13px;font-weight:700;color:var(--ink-2)}
+  .block-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+  .block-head h2{margin:0}
+  .head-acts{display:flex;gap:6px}
+  .hint{margin:8px 0 0;font-size:12px;color:var(--ink-3);line-height:1.65}
+
+  .field{
+    height:38px;min-width:0;padding:0 10px;
+    border:1px solid var(--field-line);border-radius:var(--radius-md);background:var(--panel);outline:none;
+  }
+  .field:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-ring)}
+  .btn{
+    height:38px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    border:1px solid var(--field-line);border-radius:var(--radius-md);background:var(--panel);color:var(--ink);
+    font-weight:500;white-space:nowrap;text-decoration:none;cursor:pointer;
+  }
+  .btn:hover{background:var(--hover)}
+  .btn:disabled{opacity:.45;cursor:default}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+  .btn.primary:hover{background:var(--accent-strong);border-color:var(--accent-strong)}
+  .btn.small{height:30px;padding:0 10px;font-size:13px}
+  .btn.is-on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+  .btn:focus-visible,.chip:focus-visible,.icon-btn:focus-visible,.result:focus-visible,.link:focus-visible,.map-btn:focus-visible{
+    outline:2px solid var(--accent);outline-offset:2px;
+  }
+  .link{padding:0;border:0;background:none;color:var(--accent-ink);font-size:12px;font-weight:500;cursor:pointer;text-decoration:underline}
+
+  .source{flex-shrink:0;height:30px;padding:0 10px;font-size:12px;color:var(--ink-2)}
+  .source b{color:var(--ink);font-weight:700}
+
+  /* 中心點 */
+  .search{display:flex;gap:8px}
+  .search .field{flex:1}
+  .msg{margin-top:8px;font-size:12px;color:var(--ink-2);line-height:1.65}
+  .msg:empty{display:none}
+  .msg.is-error{color:var(--danger)}
+  .results{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
+  .result{
+    width:100%;padding:7px 10px;text-align:left;font-size:12px;line-height:1.5;cursor:pointer;
+    border:1px solid var(--line);border-radius:var(--radius-md);background:var(--panel);color:var(--ink-2);
+  }
+  .result:hover{background:var(--hover)}
+  .result.is-on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink)}
+
+  /* 半徑 */
+  .radius-row{display:flex;gap:8px}
+  .radius-row .field:first-child{flex:1;font-variant-numeric:tabular-nums}
+  .radius-row select{width:92px;cursor:pointer}
+  .presets{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+  .chip{
+    height:28px;padding:0 9px;border-radius:100px;cursor:pointer;font-size:12px;
+    border:1px solid var(--line);background:var(--chip-bg);color:var(--ink-2);
+  }
+  .chip:hover{border-color:var(--field-line);color:var(--ink)}
+  .chip.is-on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+
+  /* 圓圈清單 */
+  .list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+  .item{
+    display:flex;align-items:center;gap:10px;padding:8px 6px 8px 10px;cursor:pointer;
+    border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--panel);
+  }
+  .item:hover{background:var(--hover)}
+  .item.is-sel{border-color:var(--accent);background:var(--accent-soft)}
+  .swatch{
+    flex-shrink:0;width:22px;height:22px;padding:0;border:0;border-radius:50%;background:none;cursor:pointer;
+    -webkit-appearance:none;appearance:none;
+  }
+  .swatch::-webkit-color-swatch-wrapper{padding:0}
+  .swatch::-webkit-color-swatch{border:2px solid var(--panel);border-radius:50%;box-shadow:0 0 0 1px var(--field-line)}
+  .swatch::-moz-color-swatch{border:2px solid var(--panel);border-radius:50%;box-shadow:0 0 0 1px var(--field-line)}
+  .item-main{flex:1;min-width:0}
+  .name{
+    width:100%;height:24px;margin-left:-5px;padding:0 4px;outline:none;
+    border:1px solid transparent;border-radius:3px;background:transparent;
+    font-size:14px;font-weight:700;text-overflow:ellipsis;
+  }
+  .name:hover{border-color:var(--field-line)}
+  .name:focus{border-color:var(--accent);background:var(--panel)}
+  .meta{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item-acts{display:flex;flex-shrink:0}
+  .icon-btn{
+    width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;
+    border:0;border-radius:var(--radius-md);background:transparent;color:var(--ink-2);
+  }
+  .icon-btn:hover{background:var(--chip-bg);color:var(--ink)}
+  .icon-btn[data-act="del"]:hover{color:var(--danger)}
+  .empty{margin:0;font-size:13px;color:var(--ink-3);line-height:1.65}
+
+  /* 範圍資訊 */
+  .stats{margin:0;display:grid;grid-template-columns:repeat(3,auto);justify-content:space-between;gap:10px 14px}
+  .stats .wide{grid-column:1 / -1}
+  .stats dt{font-size:12px;color:var(--ink-3)}
+  .stats dd{margin:2px 0 0;font-weight:700;font-variant-numeric:tabular-nums}
+  .stats dd .link{margin-left:8px;font-weight:500}
+  .acts{display:flex;flex-wrap:wrap;gap:8px}
+  .acts .btn{flex:1 1 auto}
+
+  /* ---------- 地圖 ---------- */
+  .map-wrap{flex:1;min-width:0;position:relative;background:var(--bg)}
+  .map{position:absolute;inset:0;font-family:var(--font-body)}
+  .map.is-error{display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--ink-2);line-height:1.8}
+  .map.is-placing.leaflet-grab{cursor:crosshair}
+  .map-btn{
+    position:absolute;z-index:1000;top:10px;left:10px;width:36px;height:36px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    border:0;border-radius:var(--radius-md);background:var(--map-white);color:var(--map-ink);
+    box-shadow:0 1px 5px rgba(0,0,0,.4);
+  }
+  .panel-hidden .map-btn svg{transform:scaleX(-1)}
+  .toast{
+    position:absolute;z-index:1100;left:50%;bottom:30px;transform:translateX(-50%);
+    max-width:min(520px,calc(100% - 32px));padding:10px 16px;border-radius:var(--radius-lg);
+    background:var(--toast-bg);color:var(--toast-ink);font-size:13px;line-height:1.6;box-shadow:var(--shadow-pop);
+    opacity:0;pointer-events:none;transition:opacity .2s;
+  }
+  .toast.is-on{opacity:1}
+
+  /* 地圖上的圓心與半徑控制點（Leaflet 的 divIcon；圖示本身寬高為 0，內容以圓心為原點往外畫） */
+  .mc-pin i{position:absolute;display:block;border-radius:50%;cursor:grab}
+  .mc-pin i::before{content:"";position:absolute;inset:-9px;border-radius:50%}  /* 加大觸控範圍 */
+  .mc-center i{left:-8px;top:-8px;width:16px;height:16px;background:var(--c);border:2.5px solid var(--map-white);box-shadow:0 1px 4px rgba(0,0,0,.5)}
+  .mc-edge i{left:-7px;top:-7px;width:14px;height:14px;background:var(--map-white);border:3px solid var(--c);box-shadow:0 1px 4px rgba(0,0,0,.4)}
+  .mc-pin.is-sel i{box-shadow:0 1px 4px rgba(0,0,0,.5),0 0 0 4px color-mix(in srgb,var(--c) 32%,transparent)}
+  .mc-pin span{
+    position:absolute;left:0;transform:translateX(-50%);padding:2px 7px;border-radius:100px;
+    background:var(--map-chip);color:var(--map-ink);box-shadow:0 1px 3px rgba(0,0,0,.3);
+    font:700 12px/1.35 var(--font-body);white-space:nowrap;pointer-events:none;
+  }
+  .mc-pin span:empty{display:none}
+  .mc-center span{top:13px}
+  .mc-edge span{top:-33px;font-variant-numeric:tabular-nums}
+  /* Google Maps 的標記文字沒有底色，改用白色光暈維持可讀性 */
+  .mc-glabel{text-shadow:0 0 3px var(--map-white),0 0 3px var(--map-white),0 0 3px var(--map-white),0 0 3px var(--map-white)}
+
+  /* ---------- 地圖來源對話框 ---------- */
+  .dlg{
+    width:min(460px,calc(100vw - 32px));padding:0;border:0;border-radius:8px;
+    background:var(--panel);color:var(--ink);box-shadow:0 20px 50px rgba(0,0,0,.35);
+  }
+  .dlg::backdrop{background:rgba(0,0,0,.45)}
+  .dlg form{padding:22px}
+  .dlg h2{font-size:17px;color:var(--ink);margin-bottom:14px}
+  .opt{display:flex;gap:10px;padding:12px;margin-bottom:8px;border:1px solid var(--line);border-radius:var(--radius-lg);cursor:pointer}
+  .opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+  .opt input{margin:3px 0 0;accent-color:var(--accent)}
+  .opt b{display:block}
+  .opt span{font-size:12px;color:var(--ink-2)}
+  .key-row{margin-top:14px}
+  .key-row label{display:block;margin-bottom:6px;font-size:13px;font-weight:700}
+  .key-row .field{width:100%;font-family:var(--font-mono);font-size:13px}
+  .dlg-acts{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+
+  /* ---------- 手機：地圖在上、面板在下 ---------- */
+  @media (max-width:760px){
+    body{flex-direction:column}
+    .map-wrap{order:-1;flex:none;height:48vh;height:48dvh}
+    .panel{width:auto;flex:1;border-right:0;border-top:1px solid var(--line)}
+    .panel-hidden .map-wrap{height:100vh;height:100dvh}
+    .map-btn svg{transform:rotate(-90deg)}
+    .panel-hidden .map-btn svg{transform:rotate(90deg)}
+  }
+  @media (prefers-reduced-motion:reduce){ .toast{transition:none} }
+</style>
+</head>
+<body>
+
+<aside class="panel" id="panel">
+  <header class="head">
+    <h1>地圖半徑工具</h1>
+    <button type="button" class="btn source" id="btn-source" title="切換地圖來源">地圖來源：<b id="source-name">載入中…</b></button>
+  </header>
+
+  <section class="block">
+    <h2>圓心</h2>
+    <form class="search" id="search-form">
+      <input class="field" id="q" type="text" autocomplete="off" spellcheck="false"
+             placeholder="地址、座標或 Google 地圖連結" aria-label="搜尋圓心">
+      <button class="btn primary" id="btn-go" type="submit">定位</button>
+    </form>
+    <div class="msg" id="search-msg" role="status"></div>
+    <ul class="results" id="results" hidden></ul>
+    <p class="hint" id="place-hint"></p>
+  </section>
+
+  <section class="block">
+    <h2>半徑</h2>
+    <div class="radius-row">
+      <input class="field" id="radius" type="number" min="0" step="any" inputmode="decimal" aria-label="半徑">
+      <select class="field" id="unit" aria-label="半徑單位">
+        <option value="m">公尺</option>
+        <option value="km">公里</option>
+      </select>
+    </div>
+    <div class="presets" id="presets"></div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>圓圈<span id="count"></span></h2>
+      <div class="head-acts">
+        <button type="button" class="btn small" id="btn-undo" title="復原上一步（Ctrl+Z）" disabled>復原</button>
+        <button type="button" class="btn small" id="btn-add">＋ 新增圓圈</button>
+      </div>
+    </div>
+    <ul class="list" id="list"></ul>
+    <p class="empty" id="empty">還沒有圓圈。搜尋地點或在地圖上點一下，就會畫出第一個。</p>
+  </section>
+
+  <section class="block" id="detail" hidden>
+    <h2>範圍資訊</h2>
+    <dl class="stats">
+      <div class="wide"><dt>圓心座標（緯度, 經度）</dt><dd><span id="d-center"></span><button type="button" class="link" id="btn-copy-center">複製</button><a class="link" id="d-gmaps" target="_blank" rel="noopener">在 Google 地圖開啟</a></dd></div>
+      <div><dt>直徑</dt><dd id="d-diameter"></dd></div>
+      <div><dt>面積</dt><dd id="d-area"></dd></div>
+      <div><dt>周長</dt><dd id="d-circ"></dd></div>
+    </dl>
+  </section>
+
+  <section class="block">
+    <h2>輸出</h2>
+    <div class="acts">
+      <button type="button" class="btn small" id="btn-share">複製分享連結</button>
+      <button type="button" class="btn small" id="btn-kml">下載 KML</button>
+      <button type="button" class="btn small" id="btn-clear">全部清除</button>
+    </div>
+    <p class="hint">KML 可以匯入 Google 我的地圖（My Maps）或 Google Earth。畫好的圓圈會記在這台瀏覽器，下次開啟時還原；要給別人看請用分享連結。</p>
+  </section>
+</aside>
+
+<main class="map-wrap" id="map-wrap">
+  <div class="map" id="map"></div>
+  <button type="button" class="map-btn" id="btn-panel" title="收合／展開面板" aria-label="收合／展開面板" aria-expanded="true">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</main>
+
+<dialog class="dlg" id="dlg-source" aria-labelledby="dlg-title">
+  <form id="source-form">
+    <h2 id="dlg-title">地圖來源</h2>
+    <label class="opt">
+      <input type="radio" name="source" value="free">
+      <div><b>免金鑰圖資</b><span>OpenStreetMap、臺灣通用電子地圖、正射影像，開啟就能用。門牌地址的搜尋比較弱。</span></div>
+    </label>
+    <label class="opt">
+      <input type="radio" name="source" value="google">
+      <div><b>Google Maps</b><span>真正的 Google 地圖與地址搜尋，需要你自己的 Google Maps API 金鑰。</span></div>
+    </label>
+    <div class="key-row" id="key-row">
+      <label for="gkey">Google Maps API 金鑰</label>
+      <input class="field" id="gkey" type="password" autocomplete="off" spellcheck="false" placeholder="AIza…">
+      <p class="hint">金鑰只存在這台瀏覽器（localStorage），不會寫進分享連結，也不會上傳到別的地方。金鑰需啟用 Maps JavaScript API；要用地址搜尋還要啟用 Geocoding API。建議在 Google Cloud Console 把金鑰限制成只允許這個網址使用。</p>
+    </div>
+    <div class="dlg-acts">
+      <button type="button" class="btn" id="source-cancel">取消</button>
+      <button type="submit" class="btn primary">儲存並重新載入</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ======================================================================
+     設定
+     ====================================================================== */
+  var STATE_KEY = "map_center.state.v1";
+  var PREFS_KEY = "map_center.prefs.v1";
+  var DEFAULT_VIEW = { lat: 25.0478, lng: 121.5319, zoom: 12 };   // 沒有任何圓圈時的畫面：臺北
+  var COLORS = ["#2F6FCF", "#D64545", "#2E9E5B", "#E8872E", "#7B4FD0", "#1285B3"];
+  var PRESETS = [300, 500, 1000, 3000, 5000, 10000];              // 公尺
+  var MIN_RADIUS = 1, MAX_RADIUS = 1000000;
+  var KML_STEPS = 120;                                             // KML 用幾個頂點近似一個圓
+
+  var OSM_CREDIT = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> 貢獻者';
+  var NLSC_CREDIT = '&copy; <a href="https://maps.nlsc.gov.tw/" target="_blank" rel="noopener">內政部國土測繪中心</a>';
+  var FREE_LAYERS = [
+    { name: "OpenStreetMap", url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      options: { maxZoom: 20, maxNativeZoom: 19, attribution: OSM_CREDIT } },
+    { name: "簡潔底圖（CARTO）", url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+      options: { maxZoom: 20, subdomains: "abcd", attribution: OSM_CREDIT + ' &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>' } },
+    { name: "臺灣通用電子地圖", url: "https://wmts.nlsc.gov.tw/wmts/EMAP/default/GoogleMapsCompatible/{z}/{y}/{x}",
+      options: { maxZoom: 20, attribution: NLSC_CREDIT } },
+    { name: "臺灣正射影像", url: "https://wmts.nlsc.gov.tw/wmts/PHOTO2/default/GoogleMapsCompatible/{z}/{y}/{x}",
+      options: { maxZoom: 20, attribution: NLSC_CREDIT } }
+  ];
+
+  var ICONS = {
+    ring: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/></svg>',
+    zoom: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="6" stroke="currentColor" stroke-width="2"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    del: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>'
+  };
+
+  /* ======================================================================
+     狀態
+     ====================================================================== */
+  var state = { circles: [], sel: null, radius: 1000 };   // sel 為 null 時代表「下一次點地圖／搜尋會新增一個圓」
+  var prefs = { source: "free", googleKey: "", layer: "" };
+  var provider = null, views = {}, mountSeq = 0, mountKind = null, idSeq = 0;
+  var earthR = 6371008.8;   // 掛上 provider 後換成該地圖畫圓用的地球半徑，控制點才會剛好落在圓周上
+
+  function $(id) { return document.getElementById(id); }
+  var $mapWrap = $("map-wrap"), $list = $("list"), $empty = $("empty"), $count = $("count"),
+      $q = $("q"), $go = $("btn-go"), $msg = $("search-msg"), $results = $("results"), $hint = $("place-hint"),
+      $radius = $("radius"), $unit = $("unit"), $presets = $("presets"),
+      $add = $("btn-add"), $detail = $("detail"), $undo = $("btn-undo"), $toast = $("toast"),
+      $source = $("source-name"), $dlg = $("dlg-source"), $form = $("source-form"), $gkey = $("gkey");
+
+  /* ======================================================================
+     小工具：儲存、球面幾何、文字格式
+     ====================================================================== */
+  function readJson(key) { try { return JSON.parse(localStorage.getItem(key)) || null; } catch (e) { return null; } }
+  function writeJson(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; } }
+
+  function toRad(d) { return d * Math.PI / 180; }
+  function toDeg(r) { return r * 180 / Math.PI; }
+  function wrapLng(lng) { return ((lng + 180) % 360 + 360) % 360 - 180; }
+  function round6(v) { return Math.round(v * 1e6) / 1e6; }
+  function validLatLng(lat, lng) { return isFinite(lat) && isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180; }
+  function clampRadius(m) { return Math.min(MAX_RADIUS, Math.max(MIN_RADIUS, m)); }
+
+  function distance(a, b) {
+    var dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
+    var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * earthR * Math.asin(Math.min(1, Math.sqrt(h)));
+  }
+  function bearing(a, b) {
+    var dLng = toRad(b.lng - a.lng), la1 = toRad(a.lat), la2 = toRad(b.lat);
+    var y = Math.sin(dLng) * Math.cos(la2);
+    var x = Math.cos(la1) * Math.sin(la2) - Math.sin(la1) * Math.cos(la2) * Math.cos(dLng);
+    return (toDeg(Math.atan2(y, x)) + 360) % 360;
+  }
+  function destination(from, brg, dist) {
+    var d = dist / earthR, t = toRad(brg), la = toRad(from.lat), lo = toRad(from.lng);
+    var la2 = Math.asin(Math.sin(la) * Math.cos(d) + Math.cos(la) * Math.sin(d) * Math.cos(t));
+    var lo2 = lo + Math.atan2(Math.sin(t) * Math.sin(d) * Math.cos(la), Math.cos(d) - Math.sin(la) * Math.sin(la2));
+    return { lat: toDeg(la2), lng: wrapLng(toDeg(lo2)) };
+  }
+  function boundsOf(list) {
+    var b = null;
+    list.forEach(function (c) {
+      var n = destination(c, 0, c.r).lat, s = destination(c, 180, c.r).lat,
+          e = destination(c, 90, c.r).lng, w = destination(c, 270, c.r).lng;
+      if (!b) b = { s: s, w: w, n: n, e: e };
+      else { b.s = Math.min(b.s, s); b.w = Math.min(b.w, w); b.n = Math.max(b.n, n); b.e = Math.max(b.e, e); }
+    });
+    return b;
+  }
+
+  function num(v, digits) { return (+v.toFixed(digits)).toLocaleString("zh-TW", { maximumFractionDigits: digits }); }
+  function fmtDist(m) {
+    if (m < 1000) return num(m, m < 100 ? 1 : 0) + " 公尺";
+    return num(m / 1000, m < 10000 ? 3 : 2) + " 公里";
+  }
+  function fmtArea(m2) { return m2 < 1e6 ? num(m2, 0) + " 平方公尺" : num(m2 / 1e6, 2) + " 平方公里"; }
+  function fmtLatLng(p, digits) { return p.lat.toFixed(digits) + ", " + p.lng.toFixed(digits); }
+  // 球面上的圓：面積是球冠、周長是小圓，半徑很大時才不會偏掉
+  function capArea(r) { return 2 * Math.PI * earthR * earthR * (1 - Math.cos(r / earthR)); }
+  function capCircumference(r) { return 2 * Math.PI * earthR * Math.sin(r / earthR); }
+  // 拖曳控制點時把半徑吸附到整數刻度；要精確的數字請直接輸入
+  function snapRadius(r) {
+    var step = r < 200 ? 1 : r < 2000 ? 10 : r < 10000 ? 50 : r < 50000 ? 100 : 1000;
+    return Math.round(r / step) * step;
+  }
+
+  var toastTimer = null;
+  function toast(text, ms) {
+    $toast.textContent = text;
+    $toast.classList.add("is-on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { $toast.classList.remove("is-on"); }, ms || 3200);
+  }
+  function copyText(text, okMsg) {
+    function fallback() {
+      var ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) {}
+      ta.remove();
+      toast(ok ? okMsg : "複製失敗，請手動複製：" + text, ok ? 0 : 8000);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { toast(okMsg); }, fallback);
+    else fallback();
+  }
+
+  /* ======================================================================
+     解析使用者貼上的座標與 Google 地圖連結
+     ====================================================================== */
+  function parseCoords(text) {
+    var m, lat, lng;
+
+    // Google 地圖連結：!3d…!4d… 是地點本身的座標，@ 後面只是畫面中心，所以前者優先
+    m = /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/.exec(text) ||
+        /[?&](?:q|query|ll|sll|center|destination|daddr)=(?:loc:)?(-?\d+(?:\.\d+)?)(?:,|%2C)\s*(-?\d+(?:\.\d+)?)/i.exec(text) ||
+        /@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/.exec(text);
+    if (m) {
+      lat = +m[1]; lng = +m[2];
+      return validLatLng(lat, lng) ? { lat: lat, lng: lng } : null;
+    }
+
+    // 度分秒：25°02'01.2"N 121°33'55.4"E
+    var parts = [], re = /(\d{1,3})\s*°\s*(\d{1,2})\s*['′]\s*(\d{1,2}(?:\.\d+)?)\s*(?:"|″|'')?\s*([NSEW])/gi, d;
+    while ((d = re.exec(text))) parts.push(d);
+    if (parts.length === 2) {
+      var out = {};
+      parts.forEach(function (p) {
+        var v = +p[1] + p[2] / 60 + p[3] / 3600, h = p[4].toUpperCase();
+        if (h === "S" || h === "W") v = -v;
+        out[h === "N" || h === "S" ? "lat" : "lng"] = v;
+      });
+      return validLatLng(out.lat, out.lng) ? out : null;
+    }
+
+    // 純座標：「25.0330, 121.5654」，也接受全形逗號、空白分隔與外層括號
+    m = /^\s*[(（]?\s*(-?\d{1,3}(?:\.\d+)?)\s*[,，\s]\s*(-?\d{1,3}(?:\.\d+)?)\s*[)）]?\s*$/.exec(text);
+    if (m) {
+      lat = +m[1]; lng = +m[2];
+      if (Math.abs(lat) > 90 && Math.abs(lng) <= 90) { var t = lat; lat = lng; lng = t; }   // 寫成「經度, 緯度」
+      return validLatLng(lat, lng) ? { lat: lat, lng: lng } : null;
+    }
+    return null;
+  }
+
+  // 連結裡沒有座標時，退而求其次拿地點名稱去搜尋
+  function queryFromUrl(text) {
+    var m = /\/maps\/(?:place|search)\/([^/@?#]+)/.exec(text) || /[?&](?:q|query)=([^&#]+)/.exec(text);
+    if (!m) return null;
+    try { return decodeURIComponent(m[1].replace(/\+/g, " ")).trim() || null; } catch (e) { return null; }
+  }
+
+  /* ======================================================================
+     圓圈資料與復原
+     ====================================================================== */
+  function byId(id) {
+    for (var i = 0; i < state.circles.length; i++) if (state.circles[i].id === id) return state.circles[i];
+    return null;
+  }
+  function selected() { return byId(state.sel); }
+  function selIndex() { return state.circles.indexOf(selected()); }
+
+  function nextName() {
+    var used = {}, n = 1;
+    state.circles.forEach(function (c) { used[c.name] = true; });
+    while (used["圓圈 " + n]) n++;
+    return "圓圈 " + n;
+  }
+  function nextColor() {
+    // 先挑還沒用過的顏色，都用過了再照順序輪
+    for (var i = 0; i < COLORS.length; i++) {
+      var taken = state.circles.some(function (c) { return c.color.toUpperCase() === COLORS[i]; });
+      if (!taken) return COLORS[i];
+    }
+    return COLORS[state.circles.length % COLORS.length];
+  }
+  // auto：名稱還是自動給的，搜尋地點時可以直接換成地點名稱；使用者自己改過就不再動
+  function makeCircle(lat, lng, r) {
+    return { id: "c" + (++idSeq), name: nextName(), auto: true, lat: round6(lat), lng: round6(lng), r: r, color: nextColor() };
+  }
+
+  // 讀進外部資料（localStorage、分享連結），格式不對的整筆略過
+  function adopt(data) {
+    state.circles = [];
+    (data.circles || []).slice(0, 200).forEach(function (raw) {
+      var lat = +raw.lat, lng = +raw.lng, r = +raw.r;
+      if (!validLatLng(lat, lng) || !(r > 0)) return;
+      var c = makeCircle(lat, lng, clampRadius(r));
+      if (typeof raw.name === "string") { c.name = raw.name.slice(0, 60); c.auto = /^圓圈 \d+$/.test(c.name); }
+      if (/^#[0-9a-f]{6}$/i.test(raw.color || "")) c.color = raw.color;
+      state.circles.push(c);
+    });
+    var pick = state.circles[data.sel] || state.circles[0];
+    state.sel = pick ? pick.id : null;
+  }
+
+  var undoStack = [], lastMark = { tag: null, at: 0 };
+  // 在每次修改「之前」呼叫。連續的同類修改（打字、挑顏色）帶同一個 tag，只會留下一個復原點
+  function mark(tag) {
+    var now = Date.now();
+    if (tag && tag === lastMark.tag && now - lastMark.at < 1500) { lastMark.at = now; return; }
+    lastMark = { tag: tag || null, at: now };
+    undoStack.push(JSON.stringify(state));
+    if (undoStack.length > 60) undoStack.shift();
+    $undo.disabled = false;
+  }
+  function undo() {
+    var snap = undoStack.pop();
+    if (!snap) return;
+    lastMark = { tag: null, at: 0 };
+    state = JSON.parse(snap);
+    $undo.disabled = !undoStack.length;
+    var c = selected();
+    if (c) unitFor(c.r);
+    rebuild();
+  }
+
+  /* ---------- 儲存：localStorage 與網址 # ---------- */
+  function encodeHash() {
+    if (!state.circles.length) return "";
+    var parts = state.circles.map(function (c) {
+      return "c=" + [c.lat, c.lng, Math.round(c.r * 10) / 10, c.color.slice(1)].join(",") + "," + encodeURIComponent(c.name);
+    });
+    if (selIndex() > 0) parts.push("s=" + selIndex());
+    return "#" + parts.join("&");
+  }
+  function decodeHash(hash) {
+    if (!hash || hash.length < 2) return null;
+    var p;
+    try { p = new URLSearchParams(hash.slice(1)); } catch (e) { return null; }
+    var rows = p.getAll("c");
+    if (!rows.length) return null;
+    return {
+      sel: +p.get("s") || 0,
+      circles: rows.map(function (row) {
+        var a = row.split(",");
+        return { lat: a[0], lng: a[1], r: a[2], color: "#" + a[3], name: a.slice(4).join(",") };
+      })
+    };
+  }
+  var saveTimer = null;
+  function save() {
+    clearTimeout(saveTimer);
+    writeJson(STATE_KEY, {
+      radius: state.radius, sel: selIndex(),
+      circles: state.circles.map(function (c) { return { name: c.name, lat: c.lat, lng: c.lng, r: c.r, color: c.color }; })
+    });
+    try { history.replaceState(null, "", encodeHash() || location.pathname + location.search); } catch (e) {}
+  }
+  function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(save, 300); }
+  function shareUrl() { return location.href.split("#")[0] + encodeHash(); }
+
+  /* ======================================================================
+     畫面：清單、半徑欄位、範圍資訊
+     ====================================================================== */
+  function itemOf(id) { return $list.querySelector('[data-id="' + id + '"]'); }
+
+  function buildItem(c) {
+    var li = document.createElement("li");
+    li.className = "item";
+    li.dataset.id = c.id;
+    // 這裡只放固定的骨架，名稱等使用者輸入的內容一律在 render() 用 value／textContent 填
+    li.innerHTML =
+      '<input type="color" class="swatch" title="顏色" aria-label="顏色">' +
+      '<div class="item-main"><input type="text" class="name" maxlength="60" spellcheck="false" placeholder="未命名" aria-label="名稱"><div class="meta"></div></div>' +
+      '<div class="item-acts">' +
+        '<button type="button" class="icon-btn" data-act="ring" title="同圓心再加一圈" aria-label="同圓心再加一圈">' + ICONS.ring + '</button>' +
+        '<button type="button" class="icon-btn" data-act="zoom" title="縮放到這個圓" aria-label="縮放到這個圓">' + ICONS.zoom + '</button>' +
+        '<button type="button" class="icon-btn" data-act="del" title="刪除" aria-label="刪除">' + ICONS.del + '</button>' +
+      '</div>';
+    return li;
+  }
+
+  // 圓圈增減或整批換掉之後呼叫：重建清單與地圖上的圖形
+  function rebuild() {
+    $list.textContent = "";
+    state.circles.forEach(function (c) { $list.appendChild(buildItem(c)); });
+    syncViews();
+    render();
+  }
+
+  // 只更新內容，不重建 DOM，所以拖曳或打字途中呼叫也不會打斷操作
+  function render() {
+    var sel = selected(), n = state.circles.length;
+
+    state.circles.forEach(function (c) {
+      var on = c.id === state.sel, li = itemOf(c.id);
+      if (li) {
+        var name = li.querySelector(".name"), swatch = li.querySelector(".swatch");
+        li.classList.toggle("is-sel", on);
+        if (document.activeElement !== name && name.value !== c.name) name.value = c.name;
+        if (swatch.value.toLowerCase() !== c.color.toLowerCase()) swatch.value = c.color;
+        li.querySelector(".meta").textContent = "半徑 " + fmtDist(c.r) + "　" + fmtLatLng(c, 4);
+      }
+      if (views[c.id]) views[c.id].update(c, on);
+    });
+
+    $count.textContent = n ? "（" + n + "）" : "";
+    $empty.hidden = n > 0;
+    $add.classList.toggle("is-on", !sel && n > 0);
+    $hint.textContent = sel
+      ? "點地圖或重新搜尋會移動「" + (sel.name || "未命名") + "」的圓心；也可以直接拖曳圓心，或拖圓周上的控制點調整半徑。"
+      : n ? "在地圖上點一下或搜尋地點，放置新的圓圈。"
+          : "可以輸入地址、地名、座標，或貼上 Google 地圖的連結；也可以直接在地圖上點一下決定圓心。";
+
+    var r = sel ? sel.r : state.radius;
+    if (document.activeElement !== $radius) showRadius(r);
+    [].forEach.call($presets.children, function (chip) {
+      chip.classList.toggle("is-on", Math.abs(+chip.dataset.m - r) < 0.5);
+    });
+
+    $detail.hidden = !sel;
+    if (sel) {
+      $("d-center").textContent = fmtLatLng(sel, 6);
+      $("d-diameter").textContent = fmtDist(sel.r * 2);
+      $("d-area").textContent = fmtArea(capArea(sel.r));
+      $("d-circ").textContent = fmtDist(capCircumference(sel.r));
+      $("d-gmaps").href = "https://www.google.com/maps/search/?api=1&query=" + sel.lat + "," + sel.lng;
+    }
+
+    if (provider) provider.setPlacing(!sel);
+    scheduleSave();
+  }
+
+  /* ---------- 半徑欄位 ---------- */
+  var radiusTyped = false;   // 欄位裡的數字是使用者剛打的（還沒被程式重填過）
+  function unitFor(m) { $unit.value = m >= 1000 ? "km" : "m"; }
+  function showRadius(m) {
+    var km = $unit.value === "km";
+    $radius.value = String(+(km ? m / 1000 : m).toFixed(km ? 3 : 1));
+    radiusTyped = false;
+  }
+  function readRadius() {
+    var v = parseFloat($radius.value);
+    return v > 0 ? clampRadius($unit.value === "km" ? v * 1000 : v) : null;
+  }
+  function setRadius(m, tag) {
+    var c = selected();
+    if (c) { mark(tag); c.r = m; }
+    state.radius = m;
+    render();
+    if (c) frameSoon(c);
+  }
+
+  /* ======================================================================
+     操作
+     ====================================================================== */
+  function select(id) {
+    if (state.sel === id) return;
+    state.sel = id;
+    var c = selected();
+    if (c) { state.radius = c.r; unitFor(c.r); }
+    render();
+  }
+
+  // 有選取的圓就移動它的圓心，沒有就新增一個
+  function placeCenter(lat, lng, name) {
+    var c = selected();
+    mark();
+    if (c) {
+      c.lat = round6(lat); c.lng = round6(lng);
+      if (name && c.auto) c.name = name;
+      render();
+    } else {
+      c = makeCircle(lat, lng, state.radius);
+      if (name) c.name = name;
+      state.circles.push(c);
+      state.sel = c.id;
+      rebuild();
+    }
+    return c;
+  }
+
+  function addRing(id) {
+    var c = byId(id), r = c.r * 2;
+    for (var i = 0; i < PRESETS.length; i++) if (PRESETS[i] > c.r + 0.5) { r = PRESETS[i]; break; }
+    mark();
+    var ring = makeCircle(c.lat, c.lng, clampRadius(r));
+    state.circles.splice(state.circles.indexOf(c) + 1, 0, ring);
+    state.sel = ring.id;
+    state.radius = ring.r;
+    unitFor(ring.r);
+    rebuild();
+    frame([ring], false);
+  }
+
+  function removeCircle(id) {
+    var i = state.circles.indexOf(byId(id));
+    if (i < 0) return;
+    mark();
+    state.circles.splice(i, 1);
+    if (state.sel === id) {
+      var next = state.circles[i] || state.circles[i - 1];
+      state.sel = next ? next.id : null;
+      if (next) unitFor(next.r);
+    }
+    rebuild();
+  }
+
+  // 調整地圖畫面讓圓圈看得到。force 為 false 時，圓已經在畫面內而且不會太小就不動
+  function frame(list, force) {
+    if (!provider || !list.length) return;
+    var b = boundsOf(list);
+    if (!force) {
+      var v = provider.getBounds();
+      if (v && b.s >= v.s && b.n <= v.n && b.w >= v.w && b.e <= v.e && (b.n - b.s) >= (v.n - v.s) * 0.1) return;
+    }
+    provider.fit(b);
+  }
+  var frameTimer = null;
+  function frameSoon(c) { clearTimeout(frameTimer); frameTimer = setTimeout(function () { frame([c], false); }, 350); }
+
+  // 連點兩下是放大地圖，不是設定圓心：單擊先等一下，確定沒有第二下才生效
+  var clickTimer = null;
+  function onMapClick(p) {
+    clearTimeout(clickTimer);
+    clickTimer = setTimeout(function () { frame([placeCenter(p.lat, wrapLng(p.lng), null)], false); }, 240);
+  }
+  function onMapDblClick() { clearTimeout(clickTimer); }
+
+  // 地圖上拖曳圓心／控制點時由 provider 回呼
+  var viewCallbacks = {
+    select: function (id) { select(id); },
+    dragStart: function (id) { mark(); select(id); },
+    move: function (id, lat, lng) {
+      var c = byId(id);
+      if (!c) return;
+      c.lat = round6(lat); c.lng = round6(wrapLng(lng));
+      render();
+    },
+    resize: function (id, r) {
+      var c = byId(id);
+      if (!c) return;
+      c.r = clampRadius(snapRadius(r));
+      state.radius = c.r;
+      render();
+    },
+    dragEnd: function () { render(); }
+  };
+
+  /* ---------- 搜尋 ---------- */
+  var searchSeq = 0;
+  function say(text, isError) {
+    $msg.textContent = text || "";
+    $msg.classList.toggle("is-error", !!isError);
+  }
+  function goTo(lat, lng, name) { frame([placeCenter(lat, lng, name)], true); }
+
+  function showResults(list) {
+    $results.textContent = "";
+    $results.hidden = !list.length;
+    list.forEach(function (r, i) {
+      var li = document.createElement("li"), b = document.createElement("button");
+      b.type = "button";
+      b.className = "result" + (i === 0 ? " is-on" : "");
+      b.textContent = r.label;
+      b.addEventListener("click", function () {
+        [].forEach.call($results.querySelectorAll(".result"), function (x) { x.classList.remove("is-on"); });
+        b.classList.add("is-on");
+        goTo(r.lat, r.lng, r.name);
+      });
+      li.appendChild(b);
+      $results.appendChild(li);
+    });
+  }
+
+  function runSearch() {
+    var text = $q.value.trim(), seq = ++searchSeq;
+    $go.disabled = false;
+    showResults([]);
+    if (!text) { say(""); return; }
+
+    var p = parseCoords(text);
+    if (p) { goTo(p.lat, p.lng, null); say("已定位到 " + fmtLatLng(p, 6)); return; }
+
+    if (/maps\.app\.goo\.gl|goo\.gl\/maps|g\.co\/kgs/i.test(text)) {
+      say("短網址沒辦法直接解析。請先用瀏覽器打開它，再複製網址列上的完整連結；或在 Google 地圖上按右鍵複製座標。", true);
+      return;
+    }
+    var query = /^https?:\/\//i.test(text) ? queryFromUrl(text) : text;
+    if (!query) { say("這個連結裡找不到座標或地點名稱。", true); return; }
+    if (!provider) { say("地圖還沒載入完成，請稍後再試。", true); return; }
+
+    say("搜尋中…");
+    $go.disabled = true;
+    provider.geocode(query).then(function (res) {
+      if (seq !== searchSeq) return;
+      $go.disabled = false;
+      if (!res.list.length) { say("找不到這個地點。" + provider.searchTip, true); return; }
+      var first = res.list[0];
+      goTo(first.lat, first.lng, first.name);
+      if (res.approx) say("找不到這個門牌，先定位到附近的路段，請拖曳圓心調整。" + provider.searchTip, true);
+      else if (res.list.length > 1) say("已定位到第一筆結果，也可以改選其他筆：");
+      else say("已定位：" + first.label);
+      if (res.list.length > 1) showResults(res.list);
+    }, function (err) {
+      if (seq !== searchSeq) return;
+      $go.disabled = false;
+      say("搜尋失敗（" + ((err && (err.code || err.message)) || "未知錯誤") + "）。" + provider.searchTip, true);
+    });
+  }
+
+  /* ---------- KML ---------- */
+  function xml(s) { return String(s).replace(/[<>&'"]/g, function (ch) { return "&#" + ch.charCodeAt(0) + ";"; }); }
+  function buildKml() {
+    var out = ['<?xml version="1.0" encoding="UTF-8"?>', '<kml xmlns="http://www.opengis.net/kml/2.2">', "<Document>", "<name>地圖半徑工具</name>"];
+    state.circles.forEach(function (c, i) {
+      var hex = c.color.slice(1), bgr = hex.slice(4, 6) + hex.slice(2, 4) + hex.slice(0, 2);   // KML 顏色是 aabbggrr
+      var ring = [];
+      for (var k = 0; k <= KML_STEPS; k++) {
+        var p = destination(c, 360 * k / KML_STEPS, c.r);
+        ring.push(p.lng.toFixed(6) + "," + p.lat.toFixed(6) + ",0");
+      }
+      var name = c.name || "未命名";
+      out.push('<Style id="s' + i + '"><LineStyle><color>ff' + bgr + '</color><width>2</width></LineStyle><PolyStyle><color>33' + bgr + '</color></PolyStyle></Style>');
+      out.push("<Placemark><name>" + xml(name + "（半徑 " + fmtDist(c.r) + "）") + '</name><styleUrl>#s' + i + "</styleUrl><Polygon><outerBoundaryIs><LinearRing><coordinates>" +
+               ring.join(" ") + "</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>");
+      out.push("<Placemark><name>" + xml(name) + "</name><Point><coordinates>" + c.lng + "," + c.lat + ",0</coordinates></Point></Placemark>");
+    });
+    out.push("</Document>", "</kml>");
+    return out.join("\n");
+  }
+  function downloadKml() {
+    if (!state.circles.length) { toast("還沒有圓圈可以匯出。"); return; }
+    var url = URL.createObjectURL(new Blob([buildKml()], { type: "application/vnd.google-earth.kml+xml" }));
+    var a = document.createElement("a");
+    a.href = url; a.download = "map-radius.kml";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  /* ======================================================================
+     地圖 provider
+     ----------------------------------------------------------------------
+     兩種地圖都包成同樣的介面，上面的程式不直接碰 Leaflet 或 Google 的 API：
+       kind, label, earthRadius, searchTip
+       onClick(fn({lat,lng}))、onDblClick(fn)
+       getView() → {lat,lng,zoom}、getBounds() → {s,w,n,e} 或 null、fit({s,w,n,e})
+       resize()、setPlacing(bool)、destroy()
+       geocode(文字) → Promise<{ list:[{name,label,lat,lng}], approx? }>
+       addCircle(c, callbacks) → { update(c, 是否選取), remove() }
+     圓的填色區塊不接滑鼠事件，點在圓裡面一樣算點地圖；要選取請點圓心或清單。
+     ====================================================================== */
+  function syncViews() {
+    if (!provider) return;
+    var alive = {};
+    state.circles.forEach(function (c) {
+      alive[c.id] = true;
+      if (!views[c.id]) views[c.id] = provider.addCircle(c, viewCallbacks);
+    });
+    Object.keys(views).forEach(function (id) {
+      if (!alive[id]) { views[id].remove(); delete views[id]; }
+    });
+  }
+
+  /* ---------- free：Leaflet + 免金鑰圖資 ---------- */
+  function createFreeProvider(box, view) {
+    var map = L.map(box, { zoomControl: false, worldCopyJump: true }).setView([view.lat, view.lng], view.zoom);
+    map.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
+    L.control.zoom({ position: "bottomright", zoomInTitle: "放大", zoomOutTitle: "縮小" }).addTo(map);
+    L.control.scale({ imperial: false, position: "bottomleft", maxWidth: 140 }).addTo(map);
+
+    var layers = {};
+    FREE_LAYERS.forEach(function (def) { layers[def.name] = L.tileLayer(def.url, def.options); });
+    layers[layers[prefs.layer] ? prefs.layer : FREE_LAYERS[0].name].addTo(map);
+    L.control.layers(layers, null, { position: "topright" }).addTo(map);
+    map.on("baselayerchange", function (e) { prefs.layer = e.name; writeJson(PREFS_KEY, prefs); });
+
+    function pin(kind, latlng, title, z) {
+      return L.marker(latlng, {
+        draggable: true, keyboard: false, title: title, zIndexOffset: z,
+        icon: L.divIcon({ className: "mc-pin mc-" + kind, html: "<i></i><span></span>", iconSize: [0, 0] })
+      }).addTo(map);
+    }
+
+    function addCircle(c, cb) {
+      var brg = 90, dragging = null;   // brg：控制點在圓周上的方位，拖到哪就停在哪
+      function edgeLatLng() { var p = destination(c, brg, c.r); return [p.lat, p.lng]; }
+
+      var shape = L.circle([c.lat, c.lng], { radius: c.r, interactive: false, fillOpacity: 0.14 }).addTo(map);
+      var spoke = L.polyline([[c.lat, c.lng], edgeLatLng()], { interactive: false, weight: 2, dashArray: "2 6", opacity: 0.9 }).addTo(map);
+      var center = pin("center", [c.lat, c.lng], "拖曳可移動圓心", 1000);
+      var edge = pin("edge", edgeLatLng(), "拖曳可調整半徑", 500);
+
+      center.on("click", function () { cb.select(c.id); });
+      edge.on("click", function () { cb.select(c.id); });
+      center.on("dragstart", function () { dragging = "center"; cb.dragStart(c.id); });
+      center.on("drag", function () { var p = center.getLatLng(); cb.move(c.id, p.lat, p.lng); });
+      center.on("dragend", function () { dragging = null; cb.dragEnd(c.id); });
+      edge.on("dragstart", function () { dragging = "edge"; cb.dragStart(c.id); });
+      edge.on("drag", function () {
+        var p = edge.getLatLng(), q = { lat: p.lat, lng: p.lng };
+        brg = bearing(c, q);
+        cb.resize(c.id, distance(c, q));
+      });
+      edge.on("dragend", function () { dragging = null; cb.dragEnd(c.id); });
+
+      function paint(marker, text, sel) {
+        var node = marker.getElement();
+        if (!node) return;
+        node.style.setProperty("--c", c.color);
+        node.classList.toggle("is-sel", sel);
+        var label = node.querySelector("span");
+        if (label.textContent !== text) label.textContent = text;
+      }
+
+      return {
+        // 正在拖的那顆標記位置由 Leaflet 自己管，這裡不去動它，否則拖曳會被打斷
+        update: function (next, sel) {
+          c = next;
+          var e = edgeLatLng();
+          shape.setLatLng([c.lat, c.lng]);
+          shape.setRadius(c.r);
+          shape.setStyle({ color: c.color, fillColor: c.color, weight: sel ? 3 : 2 });
+          spoke.setLatLngs([[c.lat, c.lng], dragging === "edge" ? edge.getLatLng() : e]);
+          spoke.setStyle({ color: c.color });
+          if (dragging !== "center") center.setLatLng([c.lat, c.lng]);
+          if (dragging !== "edge") edge.setLatLng(e);
+          center.setZIndexOffset(sel ? 2000 : 1000);
+          edge.setZIndexOffset(sel ? 1500 : 500);
+          paint(center, c.name, sel);
+          paint(edge, fmtDist(c.r), sel);
+        },
+        remove: function () { [shape, spoke, center, edge].forEach(function (layer) { layer.remove(); }); }
+      };
+    }
+
+    function nominatim(q) {
+      var b = map.getBounds();
+      var url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&accept-language=zh-TW" +
+                "&viewbox=" + [b.getWest(), b.getNorth(), b.getEast(), b.getSouth()].join(",") +
+                "&q=" + encodeURIComponent(q);
+      return fetch(url).then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      }).then(function (rows) {
+        return rows.map(function (x) {
+          return { name: x.name || q.slice(0, 30), label: x.display_name, lat: +x.lat, lng: +x.lon };
+        });
+      });
+    }
+
+    return {
+      kind: "free", label: "免金鑰圖資", earthRadius: 6371000,
+      searchTip: "免金鑰的搜尋對門牌地址不太準，可以改貼 Google 地圖的連結或座標，或把地圖來源換成 Google Maps。",
+      onClick: function (fn) { map.on("click", function (e) { fn({ lat: e.latlng.lat, lng: e.latlng.lng }); }); },
+      onDblClick: function (fn) { map.on("dblclick", fn); },
+      getView: function () { var p = map.getCenter(); return { lat: p.lat, lng: p.lng, zoom: map.getZoom() }; },
+      getBounds: function () { var b = map.getBounds(); return { s: b.getSouth(), w: b.getWest(), n: b.getNorth(), e: b.getEast() }; },
+      fit: function (b) { map.fitBounds([[b.s, b.w], [b.n, b.e]], { padding: [48, 48], maxZoom: 19 }); },
+      resize: function () { map.invalidateSize(); },
+      setPlacing: function (on) { box.classList.toggle("is-placing", on); },
+      destroy: function () { map.remove(); },
+      addCircle: addCircle,
+      geocode: function (q) {
+        return nominatim(q).then(function (list) {
+          if (list.length) return { list: list };
+          // OpenStreetMap 幾乎沒有臺灣的門牌資料：找不到時拿掉門牌號碼，退一步定位到路段
+          var road = q.replace(/\d+(?:[之\-]\d+)?\s*號.*$/, "").trim();
+          if (road === q || road.length < 2) return { list: [] };
+          return new Promise(function (resolve) { setTimeout(resolve, 1100); })   // Nominatim 限制每秒一次查詢
+            .then(function () { return nominatim(road); })
+            .then(function (near) { return { list: near, approx: near.length > 0 }; });
+        });
+      }
+    };
+  }
+
+  /* ---------- google：Google Maps JavaScript API ---------- */
+  var googleLoading = null;
+  function loadGoogle(key) {
+    if (googleLoading) return googleLoading;
+    googleLoading = new Promise(function (resolve, reject) {
+      var timer = setTimeout(function () { reject(new Error("timeout")); }, 15000);
+      window.__mapCenterGoogleReady = function () {
+        clearTimeout(timer);
+        var gm = window.google.maps;
+        Promise.all(["core", "maps", "marker", "geocoding"].map(function (lib) { return gm.importLibrary(lib); }))
+          .then(function () { resolve(gm); }, reject);
+      };
+      var s = document.createElement("script");
+      s.src = "https://maps.googleapis.com/maps/api/js?key=" + encodeURIComponent(key) +
+              "&v=weekly&loading=async&language=zh-TW&region=TW&callback=__mapCenterGoogleReady";
+      s.async = true;
+      s.onerror = function () { clearTimeout(timer); reject(new Error("network")); };
+      document.head.appendChild(s);
+    });
+    return googleLoading;
+  }
+
+  function createGoogleProvider(box, view, key) {
+    return loadGoogle(key).then(function (gm) {
+      var map = new gm.Map(box, {
+        center: { lat: view.lat, lng: view.lng }, zoom: view.zoom,
+        clickableIcons: false,          // 點到店家圖示時照樣當成點地圖，不跳出店家資訊
+        gestureHandling: "greedy",
+        streetViewControl: false, fullscreenControl: false, scaleControl: true,
+        mapTypeControlOptions: { position: gm.ControlPosition.TOP_RIGHT }
+      });
+      var geocoder = new gm.Geocoder(), placing = null;
+
+      // 金鑰驗證失敗時 Google 會把地圖清空，getCenter() 變成 undefined，所以自己記住最後一次的畫面
+      var lastView = { lat: view.lat, lng: view.lng, zoom: view.zoom };
+      function readView() {
+        var p = map.getCenter(), z = map.getZoom();
+        if (p && isFinite(z)) lastView = { lat: p.lat(), lng: p.lng(), zoom: z };
+        return lastView;
+      }
+      map.addListener("idle", readView);
+
+      function dot(color, filled) {
+        return {
+          path: gm.SymbolPath.CIRCLE, scale: filled ? 7 : 6,
+          fillColor: filled ? color : "#FFFFFF", fillOpacity: 1,
+          strokeColor: filled ? "#FFFFFF" : color, strokeWeight: filled ? 2.5 : 3,
+          labelOrigin: new gm.Point(0, filled ? 3.2 : -3.4)   // 單位是圖示半徑：名稱放圓心下方、半徑放控制點上方
+        };
+      }
+      function label(text) {
+        return text ? { text: text, className: "mc-glabel", color: "#1F2328", fontSize: "12px", fontWeight: "700" } : null;
+      }
+
+      function addCircle(c, cb) {
+        var brg = 90, dragging = null;
+        function edgePoint() { return destination(c, brg, c.r); }
+        function at(e) { return { lat: e.latLng.lat(), lng: e.latLng.lng() }; }
+
+        var shape = new gm.Circle({ map: map, clickable: false, strokeOpacity: 0.95, fillOpacity: 0.14 });
+        var spoke = new gm.Polyline({ map: map, clickable: false, geodesic: true, strokeOpacity: 0.9, strokeWeight: 1.5 });
+        var center = new gm.Marker({ map: map, draggable: true, title: "拖曳可移動圓心" });
+        var edge = new gm.Marker({ map: map, draggable: true, title: "拖曳可調整半徑" });
+
+        center.addListener("click", function () { cb.select(c.id); });
+        edge.addListener("click", function () { cb.select(c.id); });
+        center.addListener("dragstart", function () { dragging = "center"; cb.dragStart(c.id); });
+        center.addListener("drag", function (e) { var p = at(e); cb.move(c.id, p.lat, p.lng); });
+        center.addListener("dragend", function () { dragging = null; cb.dragEnd(c.id); });
+        edge.addListener("dragstart", function () { dragging = "edge"; cb.dragStart(c.id); });
+        edge.addListener("drag", function (e) { var p = at(e); brg = bearing(c, p); cb.resize(c.id, distance(c, p)); });
+        edge.addListener("dragend", function () { dragging = null; cb.dragEnd(c.id); });
+
+        return {
+          update: function (next, sel) {
+            c = next;
+            var o = { lat: c.lat, lng: c.lng }, e = edgePoint();
+            shape.setOptions({ center: o, radius: c.r, strokeColor: c.color, fillColor: c.color, strokeWeight: sel ? 3 : 2, zIndex: sel ? 2 : 1 });
+            spoke.setOptions({ path: [o, dragging === "edge" ? edge.getPosition() : e], strokeColor: c.color });
+            if (dragging !== "center") center.setPosition(o);
+            if (dragging !== "edge") edge.setPosition(e);
+            center.setOptions({ icon: dot(c.color, true), label: label(c.name), zIndex: sel ? 40 : 20 });
+            edge.setOptions({ icon: dot(c.color, false), label: label(fmtDist(c.r)), zIndex: sel ? 30 : 10 });
+          },
+          remove: function () { [shape, spoke, center, edge].forEach(function (o) { o.setMap(null); }); }
+        };
+      }
+
+      return {
+        kind: "google", label: "Google Maps", earthRadius: 6378137,
+        searchTip: "若一直失敗，請確認金鑰有啟用 Geocoding API；也可以直接貼 Google 地圖的連結或座標。",
+        onClick: function (fn) { map.addListener("click", function (e) { if (e.latLng) fn({ lat: e.latLng.lat(), lng: e.latLng.lng() }); }); },
+        onDblClick: function (fn) { map.addListener("dblclick", fn); },
+        getView: readView,
+        getBounds: function () {
+          var b = map.getBounds();
+          if (!b) return null;
+          var ne = b.getNorthEast(), sw = b.getSouthWest();
+          return { s: sw.lat(), w: sw.lng(), n: ne.lat(), e: ne.lng() };
+        },
+        fit: function (b) { map.fitBounds({ south: b.s, west: b.w, north: b.n, east: b.e }, 56); },
+        resize: function () {},   // Google 地圖會自己偵測容器大小
+        setPlacing: function (on) {
+          if (on === placing) return;
+          placing = on;
+          map.setOptions({ draggableCursor: on ? "crosshair" : null });
+        },
+        destroy: function () { gm.event.clearInstanceListeners(map); },
+        addCircle: addCircle,
+        geocode: function (q) {
+          return geocoder.geocode({ address: q, region: "TW" }).then(function (res) {
+            return {
+              list: (res.results || []).slice(0, 5).map(function (r) {
+                return { name: q.slice(0, 30), label: r.formatted_address, lat: r.geometry.location.lat(), lng: r.geometry.location.lng() };
+              })
+            };
+          }, function (err) {
+            if (err && err.code === "ZERO_RESULTS") return { list: [] };
+            throw err;
+          });
+        }
+      };
+    });
+  }
+
+  /* ---------- 掛上／更換地圖 ---------- */
+  function mount(kind) {
+    var seq = ++mountSeq;
+    var view = provider ? provider.getView() : DEFAULT_VIEW;
+    mountKind = kind;
+    if (provider) {
+      // 會走到這裡多半是舊地圖已經壞了（例如 Google 金鑰驗證失敗），收拾時出錯不能擋住換地圖
+      try {
+        Object.keys(views).forEach(function (id) { views[id].remove(); });
+        provider.destroy();
+      } catch (e) {}
+    }
+    views = {};
+    provider = null;
+
+    // 每次都換一個全新的容器，Google 載入失敗留下的錯誤畫面才不會殘留
+    var box = document.createElement("div");
+    box.id = "map";
+    box.className = "map";
+    $mapWrap.replaceChild(box, $("map"));
+
+    var ready;
+    if (kind === "google") ready = createGoogleProvider(box, view, prefs.googleKey);
+    else if (window.L) ready = Promise.resolve().then(function () { return createFreeProvider(box, view); });
+    else ready = Promise.reject(new Error("leaflet"));
+
+    return ready.then(function (p) {
+      if (seq !== mountSeq) { p.destroy(); return; }
+      provider = p;
+      earthR = p.earthRadius;
+      p.onClick(onMapClick);
+      p.onDblClick(onMapDblClick);
+      $source.textContent = p.label;
+      syncViews();
+      render();
+      if (state.circles.length) frame(state.circles, true);
+    }, function () {
+      if (seq !== mountSeq) return;
+      if (kind === "google") {
+        toast("Google Maps 載入失敗，先改用免金鑰圖資。", 6000);
+        return mount("free");
+      }
+      $source.textContent = "載入失敗";
+      box.classList.add("is-error");
+      box.textContent = "地圖元件載入失敗，請確認網路連線後重新整理。";
+    });
+  }
+
+  // 金鑰無效、沒啟用 API 或網址不在允許清單時，Google 會呼叫這個全域函式
+  window.gm_authFailure = function () {
+    if (mountKind !== "google") return;
+    toast("Google Maps 金鑰驗證失敗，先改用免金鑰圖資。請到「地圖來源」檢查金鑰。", 8000);
+    mount("free");
+  };
+
+  /* ======================================================================
+     事件
+     ====================================================================== */
+  $("search-form").addEventListener("submit", function (e) { e.preventDefault(); runSearch(); });
+
+  PRESETS.forEach(function (m) {
+    var chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip";
+    chip.dataset.m = m;
+    chip.textContent = fmtDist(m);
+    chip.addEventListener("click", function () { unitFor(m); setRadius(m); });
+    $presets.appendChild(chip);
+  });
+
+  $radius.addEventListener("input", function () {
+    radiusTyped = true;
+    var m = readRadius(), c = selected();
+    if (m) setRadius(m, c ? "radius:" + c.id : null);
+  });
+  $radius.addEventListener("blur", function () {
+    // 只整理數字的寫法；「剛打過」的記號要留著，因為去點單位選單之前一定會先離開這個欄位
+    var c = selected(), typed = radiusTyped;
+    showRadius(c ? c.r : state.radius);
+    radiusTyped = typed;
+  });
+  $unit.addEventListener("change", function () {
+    // 剛打完數字才切單位，多半是想說「5 → 5 公里」，所以沿用數字；否則只是換個單位看同一個半徑
+    var c = selected(), m = radiusTyped ? readRadius() : null;
+    if (m) setRadius(m, c ? "radius:" + c.id : null);
+    showRadius(c ? c.r : state.radius);
+  });
+
+  $add.addEventListener("click", function () {
+    select(null);
+    $q.value = "";
+    say("");
+    showResults([]);
+    $q.focus();
+  });
+
+  $list.addEventListener("click", function (e) {
+    var li = e.target.closest(".item");
+    if (!li) return;
+    var id = li.dataset.id, act = e.target.closest("[data-act]");
+    if (!act) { select(id); return; }
+    if (act.dataset.act === "ring") addRing(id);
+    else if (act.dataset.act === "del") removeCircle(id);
+    else { select(id); frame([byId(id)], true); }
+  });
+  $list.addEventListener("focusin", function (e) {
+    var li = e.target.closest(".item");
+    if (li && e.target.matches(".name, .swatch")) select(li.dataset.id);
+  });
+  $list.addEventListener("input", function (e) {
+    var li = e.target.closest(".item"), c = li && byId(li.dataset.id);
+    if (!c) return;
+    if (e.target.matches(".name")) { mark("name:" + c.id); c.name = e.target.value; c.auto = false; }
+    else if (e.target.matches(".swatch")) { mark("color:" + c.id); c.color = e.target.value; }
+    render();
+  });
+
+  $("btn-copy-center").addEventListener("click", function () {
+    var c = selected();
+    if (c) copyText(fmtLatLng(c, 6), "已複製圓心座標");
+  });
+  $("btn-share").addEventListener("click", function () {
+    if (!state.circles.length) { toast("還沒有圓圈可以分享。"); return; }
+    save();
+    copyText(shareUrl(), "已複製分享連結");
+  });
+  $("btn-kml").addEventListener("click", downloadKml);
+  $undo.addEventListener("click", undo);
+  $("btn-clear").addEventListener("click", function () {
+    if (!state.circles.length) return;
+    mark();
+    state.circles = [];
+    state.sel = null;
+    rebuild();
+    toast("已全部清除，按「復原」可以救回來。");
+  });
+
+  $("btn-panel").addEventListener("click", function () {
+    var hidden = document.body.classList.toggle("panel-hidden");
+    this.setAttribute("aria-expanded", String(!hidden));
+    if (provider) provider.resize();
+  });
+
+  document.addEventListener("keydown", function (e) {
+    var typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "z" && !typing && !$dlg.open) {
+      e.preventDefault();
+      undo();
+    }
+  });
+
+  /* ---------- 地圖來源對話框 ---------- */
+  function syncKeyRow() { $("key-row").hidden = $form.elements.source.value !== "google"; }
+  $("btn-source").addEventListener("click", function () {
+    $form.elements.source.value = prefs.source;
+    $gkey.value = prefs.googleKey;
+    syncKeyRow();
+    $dlg.showModal();
+  });
+  $form.addEventListener("change", syncKeyRow);
+  $("source-cancel").addEventListener("click", function () { $dlg.close(); });
+  $form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var source = $form.elements.source.value, key = $gkey.value.trim();
+    if (source === "google" && !key) { $gkey.focus(); return; }
+    prefs.source = source;
+    prefs.googleKey = key;
+    if (!writeJson(PREFS_KEY, prefs)) {
+      $dlg.close();
+      toast("這個瀏覽器不允許儲存設定，沒辦法切換地圖來源。", 6000);
+      return;
+    }
+    save();
+    location.reload();   // Google 的程式一頁只能載入一次，換金鑰或換來源都直接重新載入最單純
+  });
+
+  // 在同一個分頁貼上另一條分享連結
+  window.addEventListener("hashchange", function () {
+    if (location.hash === encodeHash()) return;
+    var data = decodeHash(location.hash);
+    if (!data) return;
+    mark();
+    adopt(data);
+    rebuild();
+    frame(state.circles, true);
+  });
+  window.addEventListener("pagehide", save);
+
+  /* ======================================================================
+     啟動
+     ====================================================================== */
+  (function init() {
+    var p = readJson(PREFS_KEY);
+    if (p) {
+      prefs.source = p.source === "google" ? "google" : "free";
+      prefs.googleKey = typeof p.googleKey === "string" ? p.googleKey : "";
+      prefs.layer = typeof p.layer === "string" ? p.layer : "";
+    }
+    var saved = readJson(STATE_KEY);
+    if (saved && saved.radius > 0) state.radius = clampRadius(+saved.radius);
+    var data = decodeHash(location.hash) || saved;   // 網址帶著分享連結時以連結為準
+    if (data) adopt(data);
+
+    var c = selected();
+    if (c) state.radius = c.r;
+    unitFor(state.radius);
+    rebuild();
+    mount(prefs.source === "google" && prefs.googleKey ? "google" : "free");
+  })();
+})();
+</script>
+</body>
+</html>

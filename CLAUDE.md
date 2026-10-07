@@ -29,6 +29,7 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
 | `spec/sc_app_transfer/` | 未分類（總覽頁暫放「工具與其他」） | Health Go 健康夠 App 下載轉址頁：手機依裝置自動轉到 App Store／Google Play，電腦顯示兩個商店的 QR Code（`assets/qr-*.png`，內容即商店網址，改網址要換圖）；網址加 `?preview=ios`、`android` 或 `desktop` 可預覽該畫面且不跳轉 | 單檔 HTML | — |
 | `thai/qc-model/` | 泰國 | QC 品質管制模組（Levey-Jennings 管制圖，EN / ไทย / 中） | 單檔 HTML | — |
 | `flow-chart/` | 內部工具 | FlowScript 文字語法流程圖：說明頁、`edit/`、`view/`，共用 `flowchart.js` | HTML + 共用 JS | [README.md](flow-chart/README.md) |
+| `map_center/` | 內部工具 | 地圖半徑工具：輸入地址／座標／Google 地圖連結或點地圖決定圓心，給半徑畫出範圍；可多圓、匯出 KML、複製分享連結（狀態存在網址 `#` 與 localStorage）。地圖來源預設是 Leaflet + 免金鑰圖資；Google Maps 模式的 API 金鑰由使用者在頁面上輸入、只存 localStorage，**不可寫進檔案** | 單檔 HTML + Leaflet（CDN） | — |
 | `mjk/` | 非醫療 | 魔術道具報價單產生器，品項在 `item.csv` | 單檔 HTML | — |
 
 **有子文件的資料夾，動手前先讀該資料夾的 CLAUDE.md / README.md**，裡面有判定邏輯、版面規格、打包方式等細節，以子文件為準。
