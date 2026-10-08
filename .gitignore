@@ -1,2 +1,5 @@
 # 儀表板指標清單與客戶原始文件：只留在本機，不進版控、不部署
 tsghb-dashboard/kpi/
+
+# 快速通報原型的登入方式與 seed 個案清單：只留在本機，不進版控、不部署
+tsghb-quick-report/account.csv

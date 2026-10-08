@@ -110,6 +110,8 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
   - `index.html` 第 4 節的資料表明細是依 DBML 產生後貼入的靜態 HTML：改 DBML 時該節、頁首的表數／欄位數、第 5 節的指標對應要一起改。
     第 5 節的「項次」對應 `kpi/kpi.csv`，1–149 要全部涵蓋。
   - 規格頁只依 v6 畫面寫，不引用客戶原始清單的內容（`kpi/` 不進版控）；兩邊 API 的實際欄位尚未核對，待確認事項列在第 9 節。
+- **`tsghb-quick-report/account.csv` 不進版控、不部署**（已列入根目錄 `.gitignore`）：它是快速通報原型的登入方式與 seed 個案清單，
+  內容與該頁 `index.html` 的 `SEED_CASES` 對應，改 seed 時兩邊要一起改；不要 `git add -f` 加回來。
 - Landing page 已全部移到 `tsghb-landing-page/<role>/`；該處頁面、規格或插圖有改動時要**重新產生對應的 zip 下載包**（做法見其 CLAUDE.md 第 4 節）。
 - `tsghb-landing-page/` 的正式實作採 Vue 3 + .NET Core 8，HTML 只是參考原型。
 

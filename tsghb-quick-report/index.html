@@ -5122,7 +5122,7 @@
 }
 </style>
 <style>
-  :root { --lp-page:#f8f8f8; --lp-hero-from:#3fd2fe; --lp-hero-mid:#98e9d5; --lp-hero-to:#e2f8d0; }
+  :root { --lp-page:#f8f8f8; --lp-hero-from:#3fd2fe; --lp-hero-mid:#98e9d5; --lp-hero-to:#e2f8d0; --qr-alert-mid:#73cde5; --qr-alert-to:#ccf0fa; }
   body { margin:0; background:var(--grey-0); font-family:'Noto Sans TC',system-ui,sans-serif; color:var(--text-body); -webkit-font-smoothing:antialiased; }
   a { color:var(--teal-300); text-decoration:none; }
 
@@ -5188,6 +5188,7 @@
   .qr-btn--primary { background:var(--teal-300); color:#fff; }
   .qr-btn--outline { background:var(--grey-0); border-color:var(--teal-300); color:var(--teal-300); }
   .qr-btn--danger { background:var(--red-300); color:#fff; }
+  .qr-btn--done { background:var(--color-primary); color:#fff; }
   .qr-btn--line { background:var(--success); border-color:var(--green-300); color:#fff; }
   .qr-btn:disabled { opacity:.55; cursor:default; }
   .qr-link { display:block; margin:0 auto; padding:0; border:0; background:none; font:inherit; font-size:14px; line-height:20px; color:var(--teal-300); cursor:pointer; }
@@ -5271,6 +5272,18 @@
   .qr-step .qr-btn { width:108px; height:33px; margin-top:16px; }
   .qr-rep-body > .qr-link { margin-top:28px; }
 
+  /* ── 通報提示頁：個案已有進行中的通報 ── */
+  .qr-alert { flex:none; display:flex; flex-direction:column; align-items:center; gap:16px; padding:34px 16px; background:linear-gradient(90deg,var(--teal-300),var(--qr-alert-to)); color:#fff; }
+  .qr-alert h1 { margin:0; text-align:center; font-size:24px; line-height:36px; font-weight:700; }
+  .qr-notice { --qr-col:568px; --qr-gutter:16px; }
+  .qr-notice-art { display:block; width:280px; max-width:100%; height:auto; margin:0 auto; }
+  .qr-notice-card { margin-top:16px; padding:4px 16px; font-size:14px; line-height:26px; color:var(--grey-900); }
+  .qr-notice-card p, .qr-notice-card h2 { margin:0; }
+  .qr-notice-card h2 { font-size:16px; line-height:26px; font-weight:400; }
+  .qr-notice-card .qr-notice-no { color:var(--grey-500); }
+  .qr-notice-row { display:grid; gap:16px; }
+  .qr-notice-row, .qr-notice > .qr-btn { margin-top:16px; }
+
   /* ── 電腦（≥1024px）：頁首加高、流程頁放寬 ── */
   @media (min-width:1024px) {
     .lp-bar { gap:8px; padding:16px; }
@@ -5295,6 +5308,7 @@
     .qr-row--addr { grid-template-columns:repeat(3,minmax(0,1fr)); }
     .qr-actions { grid-template-columns:repeat(2,minmax(0,1fr)); }
     .qr-rep-art { width:178px; }
+    .qr-notice-row { grid-template-columns:repeat(2,minmax(0,1fr)); }
     .qr-steps { margin-top:16px; }
   }
 
@@ -5572,6 +5586,33 @@
     </main>
   </sc-if>
 
+  <!-- ═══ 通報提示頁（Y1／Z0／X2_2）：既有個案已有進行中的通報 ═══ -->
+  <sc-if value="{{ isNotice }}" hint-placeholder-val="{{ false }}">
+    <section class="qr-alert">
+      <svg width="44" height="40" sc-camel-view-box="0 1.5 24 20" aria-hidden="true"><path d="M12 4.5L21 20H3z" fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round"></path><rect x="10.9" y="9" width="2.2" height="6.2" rx="1.1" fill="var(--qr-alert-mid)"></rect><circle cx="12" cy="17.9" r="1.3" fill="var(--qr-alert-mid)"></circle></svg>
+      <h1>{{ noticeTitle }}</h1>
+    </section>
+    <main class="qr-wrap qr-notice">
+      <img class="qr-notice-art" sc-camel-src="{{ noticeArt }}" width="280" height="280" alt="">
+      <section class="qr-card qr-notice-card">
+        <p class="qr-notice-no">通報編號: {{ noticeNo }}</p>
+        <h2>{{ noticeKind }}</h2>
+        <p>通報日: {{ noticeDate }}</p>
+        <p>通報者: {{ noticeReporter }}</p>
+      </section>
+      <sc-if value="{{ noticeSelf }}" hint-placeholder-val="{{ false }}">
+        <div class="qr-notice-row">
+          <a href="{{ resumeHref }}" class="qr-btn qr-btn--outline" style-hover="background:var(--teal-50)">繼續填寫</a>
+          <button type="button" class="qr-btn qr-btn--outline" style-hover="background:var(--teal-50)">變更風險等級</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ noticeOther }}" hint-placeholder-val="{{ false }}">
+        <button type="button" class="qr-btn qr-btn--block qr-btn--outline" style-hover="background:var(--teal-50)">處置中再通報</button>
+      </sc-if>
+      <a href="{{ checkHref }}" class="qr-btn qr-btn--block qr-btn--primary" style-hover="filter:brightness(.94)">返回</a>
+    </main>
+  </sc-if>
+
   <!-- ═══ 填寫表單（R2a2／R2b–R3）：標題列與通報區塊依通報類型換字與主題色 ═══ -->
   <sc-if value="{{ isReport }}" hint-placeholder-val="{{ false }}">
     <section class="qr-bar">
@@ -5626,7 +5667,7 @@
         <div class="qr-rep-body">
           <div class="qr-rep-meta">
             <div>
-              <p class="qr-rep-no">通報編號: -</p>
+              <p class="qr-rep-no">通報編號: {{ reportNo }}</p>
               <h3>
                 <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 11v2h4v-2h-4zm-2 6.61c.96.71 2.21 1.65 3.2 2.39.4-.53.8-1.07 1.2-1.6-.99-.74-2.24-1.68-3.2-2.4-.4.54-.8 1.08-1.2 1.61zM20.4 5.6c-.4-.53-.8-1.07-1.2-1.6-.99.74-2.24 1.68-3.2 2.4.4.53.8 1.07 1.2 1.6.96-.72 2.21-1.65 3.2-2.4zM4 9c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h1v4h2v-4h1l5 3V6L8 9H4zm11.5 3c0-1.33-.58-2.53-1.5-3.35v6.69c.92-.81 1.5-2.01 1.5-3.34z"></path></svg>
                 通報者通報內容及初評
@@ -5634,11 +5675,11 @@
               <span class="qr-chip">未完成</span>
               <p class="qr-rep-line">
                 <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zM5 9h14v11H5V9zm2 2v4h4v-4H7z"></path></svg>
-                通報日: {{ todayText }}
+                通報日: {{ reportDate }}
               </p>
               <p class="qr-rep-line">
                 <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
-                通報者: {{ userName }}
+                通報者: {{ reportBy }}
               </p>
             </div>
             <img class="qr-rep-art" src="./assets/img/report-forms.png" alt="">
@@ -5652,7 +5693,7 @@
                     <span>{{ form.name }}</span>
                     <sc-if value="{{ form.required }}" hint-placeholder-val="{{ false }}"><span class="qr-req">*</span></sc-if>
                   </div>
-                  <button type="button" class="qr-btn qr-btn--danger" disabled="{{ form.disabled }}">未填寫</button>
+                  <button type="button" class="{{ form.btnClass }}" disabled="{{ form.disabled }}">{{ form.btnText }}</button>
                 </li>
               </sc-for>
             </ol>
@@ -5676,18 +5717,37 @@ const PLAN_FORMS = [
   { no: 6, name: '精神病患簡易篩檢表【當事人版】' }
 ];
 const TYPES = {
-  emergency: { label: '緊急醫療通報', barTitle: '緊急醫療通報', forms: [{ no: 1, name: '通報表', required: true }, { no: 3, name: '初評表' }] },
-  plan1: { label: '第一類優化計畫通報', barTitle: '優化計畫通報', forms: PLAN_FORMS },
-  plan2: { label: '第二類優化計畫通報', barTitle: '優化計畫通報', forms: PLAN_FORMS }
+  emergency: { label: '緊急醫療通報', short: '緊急通報', barTitle: '緊急醫療通報', forms: [{ no: 1, name: '通報表', required: true }, { no: 3, name: '初評表' }] },
+  plan1: { label: '第一類優化計畫通報', short: '第一類通報', barTitle: '優化計畫通報', forms: PLAN_FORMS },
+  plan2: { label: '第二類優化計畫通報', short: '第二類通報', barTitle: '優化計畫通報', forms: PLAN_FORMS }
 };
 
-// 示範資料（皆為虛構）：任何帳號密碼都以這位使用者登入；SEED_CASES 是「身分證字號已存在」的個案
+// 示範資料（皆為虛構）：任何帳號密碼都以這位使用者登入；SEED_CASES 是「身分證字號已存在」的個案。
+// 進行中的通報掛在個案的 emergency（緊急醫療）與 plan（優化計畫，不分第一、二類）：
+// reporter 等於登入者就是「自己通報的」，filled 是已填寫的表單編號。清單同步記在 account.csv（不進版控）。
 const DEMO_USER = '張美玲 心衛中心志工';
+const OTHER_USER = '賀祐柏';
 const SEED_CASES = {
   A123456789: {
     id: 'A123456789', name: '陳AA', gender: 'female', birthday: '1911-01-01', mobile: '0900123456',
     telArea: '02', tel: '28901234', email: '', city: '臺北市', district: '北投區', zip: '112', road: '中和街 0 號',
     ecName: '陳BB', ecRelation: '子女', ecMobile: '0900654321', ecTelArea: '', ecTel: ''
+  },
+  B123456789: {
+    id: 'B123456789', name: '林BB', gender: 'male', birthday: '1975-03-12', mobile: '0900234567',
+    emergency: { no: '20260921160751', date: '2026-09-21', reporter: DEMO_USER, filled: [1] }
+  },
+  C123456789: {
+    id: 'C123456789', name: '王CC', gender: 'female', birthday: '1988-11-05', mobile: '0900345678',
+    emergency: { no: '2026010100002', date: '2026-01-01', reporter: OTHER_USER, filled: [1] }
+  },
+  D123456789: {
+    id: 'D123456789', name: '張DD', gender: 'male', birthday: '1962-07-30', mobile: '0900456789',
+    plan: { type: 'plan1', no: '20261008174057', date: '2026-10-08', reporter: DEMO_USER, filled: [1] }
+  },
+  E123456789: {
+    id: 'E123456789', name: '李EE', gender: 'female', birthday: '1999-02-18', mobile: '0900567890',
+    plan: { type: 'plan1', no: '2026010100003', date: '2026-01-01', reporter: OTHER_USER, filled: [1] }
   }
 };
 
@@ -5713,15 +5773,34 @@ function writeStore(key, value) {
   try { if (value == null) window.sessionStorage.removeItem(key); else window.sessionStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
 }
 
-// 畫面由網址 # 決定：#/、#/login、#/check、#/create、#/report，參數 type（通報類型）、id（身分證字號）
+// 畫面由網址 # 決定：#/、#/login、#/check、#/create、#/notice、#/report，
+// 參數 type（通報類型）、id（身分證字號）、resume=1（填表頁接續進行中的那一筆通報）
 function parseHash() {
   const parts = window.location.hash.replace(/^#\/?/, '').split('?');
   const q = new URLSearchParams(parts[1] || '');
-  return { view: parts[0] || 'landing', type: q.get('type') || '', id: (q.get('id') || '').toUpperCase() };
+  return { view: parts[0] || 'landing', type: q.get('type') || '', id: (q.get('id') || '').toUpperCase(), resume: q.get('resume') === '1' };
 }
-function hashFor(view, type, id) {
+function hashFor(view, type, id, resume) {
   if (view === 'landing') return '#/';
-  return '#/' + view + (type ? '?type=' + type + (id ? '&id=' + id : '') : '');
+  return '#/' + view + (type ? '?type=' + type + (id ? '&id=' + id + (resume ? '&resume=1' : '') : '') : '');
+}
+
+// 既有個案選了通報類型之後的去向（design/.flow 的 R2b1 以下，註解是流程圖的節點）。
+// view 是 report（進填表頁，resume 表示接續進行中的那一筆）或 notice（提示頁，mode 決定有哪些按鈕）
+function entryFor(type, kase, user) {
+  const em = kase.emergency;
+  const pl = kase.plan;
+  if (type === 'emergency') {
+    if (!em) return { view: 'report', type };                                                              // X1
+    return { view: 'notice', mode: em.reporter === user ? 'self' : 'other', report: em, kind: 'emergency' };  // Z0／X2_2
+  }
+  if (pl && pl.reporter === user) return { view: 'report', type: pl.type, resume: true };                  // Z2
+  if (pl) return { view: 'notice', mode: 'blocked', report: pl, kind: pl.type };                           // Y1
+  if (em) return { view: 'notice', mode: 'blocked', report: em, kind: 'emergency' };                       // Y1
+  return { view: 'report', type };                                                                         // Y3
+}
+function entryHash(type, id, entry) {
+  return entry.view === 'notice' ? hashFor('notice', type, id) : hashFor('report', entry.type, id, entry.resume);
 }
 function pad2(n) { return String(n).padStart(2, '0'); }
 function options(placeholder, values) {
@@ -5731,7 +5810,7 @@ function options(placeholder, values) {
 
 class Component extends DCLogic {
   state = {
-    route: { view: 'none', type: '', id: '' },
+    route: { view: 'none', type: '', id: '', resume: false },
     user: readStore('qr-user', null),
     cases: Object.assign({}, readStore('qr-cases', {}), SEED_CASES),
     f: Object.assign({}, EMPTY_FORM),
@@ -5754,13 +5833,19 @@ class Component extends DCLogic {
     const user = this.state.user;
     if (r.view === 'landing') return null;
     if (r.view === 'login') return user ? (typed ? hashFor('check', r.type) : '#/') : null;
-    if (!typed || ['check', 'create', 'report'].indexOf(r.view) < 0) return '#/';
+    if (!typed || ['check', 'create', 'notice', 'report'].indexOf(r.view) < 0) return '#/';
     if (!user) return hashFor('login', r.type);
     if (r.view === 'check') return null;
     if (!ID_RE.test(r.id)) return hashFor('check', r.type);
-    const exists = !!this.state.cases[r.id];
-    if (r.view === 'create') return exists ? hashFor('report', r.type, r.id) : null;
-    return exists ? null : hashFor('check', r.type);
+    const kase = this.state.cases[r.id];
+    if (!kase) return r.view === 'create' ? null : hashFor('check', r.type);
+    const entry = entryFor(r.type, kase, user);
+    const to = entryHash(r.type, r.id, entry);
+    if (r.view === 'create') return to;
+    if (r.view === 'notice') return entry.view === 'notice' ? null : to;
+    // 該看提示頁的個案只有一種情況能進填表頁：自己通報的緊急醫療按了「繼續填寫」（Z0 → Z3）
+    if (entry.view === 'notice') return entry.mode === 'self' && r.resume ? null : to;
+    return entry.type === r.type && !!entry.resume === r.resume ? null : to;
   }
 
   onHash = () => {
@@ -5816,7 +5901,8 @@ class Component extends DCLogic {
     if (!id) { this.setState({ errors: { check: '請輸入身分證字號' } }); return; }
     if (!ID_RE.test(id)) { this.setState({ errors: { check: '身分證字號格式不正確' } }); return; }
     const type = this.state.route.type;
-    window.location.hash = hashFor(this.state.cases[id] ? 'report' : 'create', type, id);
+    const kase = this.state.cases[id];
+    window.location.hash = kase ? entryHash(type, id, entryFor(type, kase, this.state.user)) : hashFor('create', type, id);
   };
 
   pickPhoto = (e) => {
@@ -5868,12 +5954,23 @@ class Component extends DCLogic {
       ['緊急聯絡人市內電話', phone(kase.ecTel, kase.ecTelArea)]
     ].map((row) => ({ label: row[0], value: row[1] || '—' }));
 
+    // 提示頁要顯示的那一筆進行中通報
+    const notice = r.view === 'notice' ? entryFor(r.type, kase, s.user) : { report: {} };
+    // 填表頁接續進行中的通報時，通報編號、通報日、通報者與各表單的填寫狀況都帶那一筆的
+    const resumed = (r.view === 'report' && r.resume && (r.type === 'emergency' ? kase.emergency : kase.plan)) || null;
+    const forms = type.forms.map((form) => {
+      const done = !!resumed && resumed.filled.indexOf(form.no) >= 0;
+      return Object.assign({}, form, { btnText: done ? '已填寫' : '未填寫', btnClass: 'qr-btn ' + (done ? 'qr-btn--done' : 'qr-btn--danger') });
+    });
+    const slash = (iso) => (iso || '').replace(/-/g, '/');
+
     return {
       isLogin: r.view === 'login',
       isApp: r.view !== 'login',
       isLanding: r.view === 'landing',
       isCheck: r.view === 'check',
       isCreate: r.view === 'create',
+      isNotice: r.view === 'notice',
       isReport: r.view === 'report',
       rootClass: 'lp-root' + (r.view === 'landing' ? ' lp-root--landing' : '') + (r.view === 'report' ? ' qr-theme--' + r.type : ''),
 
@@ -5912,9 +6009,22 @@ class Component extends DCLogic {
       pickPhoto: this.pickPhoto,
       submitCreate: this.submitCreate,
 
+      noticeTitle: notice.report.reporter === s.user ? '該個案已被貴單位通報' : '該個案已被其他單位通報',
+      noticeArt: './assets/img/' + (notice.mode === 'blocked' ? 'notice-stop.png' : 'notice-phone.png'),
+      noticeNo: notice.report.no || '',
+      noticeKind: (TYPES[notice.kind] || {}).short || '',
+      noticeDate: slash(notice.report.date),
+      noticeReporter: notice.report.reporter || '',
+      noticeSelf: notice.mode === 'self',
+      noticeOther: notice.mode === 'other',
+      resumeHref: hashFor('report', r.type, r.id, true),
+
       barTitle: type.barTitle,
       typeLabel: type.label,
-      forms: type.forms,
+      forms,
+      reportNo: resumed ? resumed.no : '-',
+      reportDate: resumed ? slash(resumed.date) : slash(todayIso),
+      reportBy: resumed ? resumed.reporter : s.user || '',
       caseTitle: (kase.name || '') + ' (' + genderText + ')',
       caseId: kase.id || '',
       caseBirth: birth,
@@ -5924,7 +6034,6 @@ class Component extends DCLogic {
       infoOpen: s.infoOpen,
       infoLabel: s.infoOpen ? '收合基本資料' : '查看基本資料',
       toggleInfo: this.toggleInfo,
-      todayText: todayIso.replace(/-/g, '/'),
       formsOpen: s.formsOpen,
       formsLabel: s.formsOpen ? '關閉' : '展開',
       toggleForms: this.toggleForms
