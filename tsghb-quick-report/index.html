@@ -5122,169 +5122,812 @@
 }
 </style>
 <style>
-  body { margin:0; background:#f8f8f8; font-family:'Noto Sans TC',system-ui,sans-serif; color:#333; -webkit-font-smoothing:antialiased; }
-  a { color:#19aad1; text-decoration:none; }
-  a:hover { color:#0c6496; }
-  @keyframes dcFade { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:none;} }
+  :root { --lp-page:#f8f8f8; --lp-hero-from:#3fd2fe; --lp-hero-mid:#98e9d5; --lp-hero-to:#e2f8d0; }
+  body { margin:0; background:var(--grey-0); font-family:'Noto Sans TC',system-ui,sans-serif; color:var(--text-body); -webkit-font-smoothing:antialiased; }
+  a { color:var(--teal-300); text-decoration:none; }
 
-  /* 版面：手機／平板為一般捲動頁 */
-  .lp-root { min-height:100vh; display:flex; flex-direction:column; background:#f8f8f8; }
-  .lp-hero { display:flex; flex-wrap:wrap; align-items:stretch; background:#96daec; }
-  .lp-hero-title { flex:1 1 320px; min-width:min(100%,300px); background:linear-gradient(90deg,#19aad1 0%,#8fd7ea 100%); padding:clamp(32px,6vw,72px) clamp(20px,5vw,64px); display:flex; align-items:center; }
-  .lp-hero-title h1 { margin:0; color:#fff; font-weight:700; font-size:clamp(34px,5.6vw,68px); line-height:1.22; letter-spacing:.04em; text-shadow:0 1px 2px rgba(0,80,110,.18); }
-  .lp-hero-art { flex:1 1 440px; min-width:min(100%,320px); display:flex; }
-  .lp-hero-art img { display:block; width:100%; height:100%; min-height:200px; object-fit:cover; object-position:left center; }
-  .lp-main { flex:1; max-width:1280px; width:100%; margin:0 auto; padding:clamp(28px,5vw,56px) clamp(16px,3vw,32px) 64px; box-sizing:border-box; }
-  .lp-grid { display:grid; gap:clamp(20px,2.5vw,32px); grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); }
-  .lp-card { background:#fff; border-radius:5px; box-shadow:0 1px 4px rgba(0,0,0,.12); padding:clamp(16px,2vw,24px); display:flex; flex-direction:column; gap:20px; transition:box-shadow .2s ease,transform .2s ease; }
-  .lp-media { display:block; border-radius:4px; overflow:hidden; }
-  .lp-media img { display:block; width:100%; aspect-ratio:631/434; object-fit:cover; }
-  .lp-body { display:flex; flex-direction:column; gap:12px; align-items:center; text-align:center; padding:0 4px 4px; }
-  .lp-body h2 { margin:0; font-size:clamp(20px,2vw,26px); font-weight:700; letter-spacing:.02em; }
-  .lp-btn { margin-top:4px; box-sizing:border-box; width:100%; max-width:260px; display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:42px; padding:0 16px; border-radius:6px; color:#fff; font-size:15px; font-weight:500; letter-spacing:.04em; }
+  /* ── 外框與頁首（登入頁以外的畫面共用） ── */
+  .lp-root { min-height:100vh; display:flex; flex-direction:column; background:var(--lp-page); }
+  .lp-root--landing { background:var(--grey-0); }
+  .lp-header { position:sticky; top:0; z-index:40; background:var(--grey-0); box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  .lp-bar { position:relative; display:flex; align-items:center; gap:4px; padding:8px 4px; }
+  .lp-home { display:flex; align-items:center; gap:inherit; color:inherit; }
+  .lp-logo { width:auto; height:40px; flex:none; }
+  .lp-brand { font-size:16px; font-weight:500; color:var(--grey-700); }
+  .lp-user { margin-left:auto; display:flex; align-items:center; }
+  .lp-user-btn { display:none; align-items:center; gap:8px; height:40px; padding:0 8px; border:0; border-radius:4px; background:transparent; font:inherit; font-size:14px; color:var(--grey-900); cursor:pointer; }
+  .lp-menu { flex:none; width:40px; height:40px; display:grid; place-items:center; padding:0; border:0; border-radius:50%; background:transparent; color:var(--grey-900); cursor:pointer; }
+  .lp-menu-backdrop { position:fixed; inset:0; z-index:45; }
+  .lp-menu-pop { position:absolute; right:8px; top:calc(100% - 4px); z-index:50; min-width:168px; padding:6px 0; border-radius:6px; background:var(--grey-0); box-shadow:0 4px 12px rgba(0,0,0,.18); }
+  .lp-menu-user { margin:0; padding:8px 16px 10px; border-bottom:1px solid var(--border-subtle); font-size:13px; color:var(--text-muted); }
+  .lp-menu-item { display:block; box-sizing:border-box; width:100%; padding:10px 16px; border:0; background:none; text-align:left; font:inherit; font-size:14px; color:var(--grey-900); cursor:pointer; }
 
-  /* 手機／平板：卡片改橫式，圖片在左、標題與按鈕在右 */
-  @media (max-width:1023px) {
-    .lp-grid { grid-template-columns:minmax(0,1fr); max-width:640px; margin:0 auto; gap:16px; }
-    .lp-card { flex-direction:row; align-items:center; gap:16px; padding:12px; }
-    .lp-media { flex:0 0 42%; min-width:0; }
-    .lp-body { flex:1; min-width:0; gap:10px; padding:0; }
-    .lp-body h2 { font-size:clamp(17px,4.6vw,22px); }
-    .lp-btn { margin-top:0; max-width:none; min-height:38px; padding:0 10px; font-size:14px; }
+  /* ── 入口頁 Hero：標題字級跟著高度 --lp-hero-h 縮放；插圖靠右，放不下時裁切 ── */
+  .lp-hero { --lp-hero-h:clamp(144px,38.4vw,min(300px,45vh)); --lp-hero-angle:118deg; flex:none; height:var(--lp-hero-h); display:flex; overflow:hidden; background:linear-gradient(var(--lp-hero-angle),var(--lp-hero-from) 0%,var(--lp-hero-mid) 45%,var(--lp-hero-to) 100%); }
+  .lp-hero-title { flex:none; display:flex; align-items:center; padding-left:clamp(10px,2.7vw,32px); }
+  .lp-hero-title h1 { margin:0; color:#fff; font-weight:700; font-size:min(calc(var(--lp-hero-h)*.222),8.5vw); line-height:1.45; letter-spacing:.1em; white-space:nowrap; }
+  .lp-hero-art { flex:0 1 auto; min-width:0; margin-left:auto; height:100%; aspect-ratio:680/298; }
+  .lp-hero-art img { --lp-art-fade:32%; display:block; width:100%; height:100%; object-fit:cover; object-position:40% center; -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 var(--lp-art-fade)); mask-image:linear-gradient(90deg,transparent 0,#000 var(--lp-art-fade)); }
+
+  /* ── 入口頁卡片：手機／平板為橫式，圖片在左，標題、說明與按鈕在右 ── */
+  .lp-main { flex:1; width:100%; box-sizing:border-box; padding:16px 16px 56px; }
+  .lp-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:24px; max-width:560px; margin:0 auto; }
+  .lp-card { background:var(--surface-card); border-radius:8px; box-shadow:0 4px 6px -1px rgba(0,0,0,.2); padding:16px; display:flex; align-items:center; gap:12px; transition:box-shadow .2s ease,transform .2s ease; }
+  .lp-card--emergency { --lp-title:var(--red-500); --lp-accent:var(--red-300); --lp-img:.83; }
+  .lp-card--plan1 { --lp-title:var(--teal-500); --lp-accent:var(--teal-300); --lp-img:.86; }
+  .lp-card--plan2 { --lp-title:var(--teal-700); --lp-accent:var(--teal-500); --lp-img:.975; }
+  .lp-media { flex:0 0 clamp(88px,36%,160px); min-width:0; display:flex; align-items:center; justify-content:center; }
+  .lp-media img { display:block; width:100%; height:auto; }
+  .lp-body { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; text-align:center; }
+  .lp-body h2 { margin:0; color:var(--lp-title); font-size:clamp(16px,5.2vw,20px); line-height:1.4; font-weight:500; text-wrap:balance; }
+  .lp-desc { margin:16px 0 0; font-size:14px; line-height:20px; color:var(--text-muted); text-wrap:balance; }
+  .lp-btn { margin-top:14px; box-sizing:border-box; width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:32px; padding:0 14px; border-radius:var(--radius-pill); background:var(--lp-accent); color:#fff; font-size:14px; font-weight:500; letter-spacing:.02em; }
+
+  /* ── 流程頁共用：標題列、內容欄、卡片、表單元件 ── */
+  .qr-bar { position:relative; flex:none; display:flex; align-items:center; justify-content:center; min-height:56px; padding:0 16px; background:var(--qr-bar,var(--teal-300)); color:#fff; }
+  .qr-bar h1 { margin:0; font-size:24px; font-weight:500; line-height:1.5; }
+  .qr-bar--plain { min-height:40px; }
+  .qr-bar--plain h1 { font-size:20px; }
+  .qr-back { position:absolute; left:16px; top:50%; transform:translateY(-50%); display:inline-flex; align-items:center; gap:8px; color:#fff; font-size:14px; font-weight:700; }
+  .qr-theme--emergency { --qr-bar:var(--red-300); --qr-head:var(--red-500); }
+  .qr-theme--plan1, .qr-theme--plan2 { --qr-bar:var(--teal-300); --qr-head:var(--teal-500); }
+  /* 內容欄：--qr-col 是最大寬度，兩側至少留 --qr-gutter */
+  .qr-wrap { --qr-col:600px; --qr-gutter:24px; flex:1; box-sizing:border-box; width:100%; padding:16px max(var(--qr-gutter),calc(50% - var(--qr-col)/2)) 56px; }
+  .qr-card { background:var(--surface-card); border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,.16); }
+  .qr-label { display:block; margin:0 0 4px; font-size:14px; line-height:20px; font-weight:500; color:var(--grey-900); }
+  .qr-req { color:var(--red-300); }
+  .qr-input { box-sizing:border-box; width:100%; height:34px; padding:0 10px; border:1px solid var(--border-default); border-radius:4px; background:var(--grey-0); font:inherit; font-size:14px; color:var(--grey-900); }
+  .qr-input::placeholder { color:var(--grey-500); }
+  .qr-input:focus { outline:none; border-color:var(--teal-300); box-shadow:0 0 0 2px rgba(25,170,209,.2); }
+  .qr-input:disabled { background:var(--grey-100); color:var(--grey-700); cursor:not-allowed; }
+  select.qr-input { -webkit-appearance:none; appearance:none; padding-right:30px; cursor:pointer; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23333' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; }
+  select.qr-input:invalid { color:var(--grey-500); }
+  select.qr-input option { color:var(--grey-900); }
+  .qr-btn { box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; gap:6px; height:34px; padding:0 16px; border:1px solid transparent; border-radius:4px; font:inherit; font-size:14px; font-weight:500; cursor:pointer; }
+  .qr-btn--block { width:100%; }
+  .qr-btn--primary { background:var(--teal-300); color:#fff; }
+  .qr-btn--outline { background:var(--grey-0); border-color:var(--teal-300); color:var(--teal-300); }
+  .qr-btn--danger { background:var(--red-300); color:#fff; }
+  .qr-btn--line { background:var(--success); border-color:var(--green-300); color:#fff; }
+  .qr-btn:disabled { opacity:.55; cursor:default; }
+  .qr-link { display:block; margin:0 auto; padding:0; border:0; background:none; font:inherit; font-size:14px; line-height:20px; color:var(--teal-300); cursor:pointer; }
+  .qr-error { margin:6px 0 0; font-size:13px; line-height:18px; color:var(--red-500); }
+  .qr-check-inline { display:inline-flex; align-items:center; gap:6px; font-size:14px; line-height:20px; color:var(--grey-900); cursor:pointer; }
+  .qr-check-inline input { width:16px; height:16px; margin:0; accent-color:var(--teal-300); }
+
+  /* ── 登入頁：背景圖以原尺寸置中、向四周重複 ── */
+  .qr-login { min-height:100vh; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; padding:80px 16px 48px; background:var(--teal-300) url("./assets/img/login-bg.jpg") center/1440px 1024px repeat; }
+  .qr-login-brand { box-sizing:border-box; width:100%; max-width:334px; height:66px; display:flex; align-items:center; justify-content:center; gap:2px; padding-right:8px; border-radius:33px; background:var(--grey-0); color:var(--teal-300); font-size:clamp(20px,6.1vw,24px); font-weight:500; white-space:nowrap; }
+  .qr-login-brand img { width:auto; height:48px; flex:none; }
+  .qr-login-title { margin:25px 0 24px; color:#fff; font-size:24px; line-height:31px; font-weight:700; }
+  .qr-login-card { box-sizing:border-box; width:100%; max-width:334px; padding:16px 16px 32px; border-radius:16px; background:rgba(255,255,255,.6); }
+  .qr-login-card h2 { margin:0; text-align:center; font-size:18px; line-height:28px; font-weight:500; color:var(--grey-900); }
+  .qr-login-card .qr-field { margin-top:18px; }
+  .qr-login-card .qr-input { height:38px; font-size:16px; }
+  .qr-login-card .qr-btn { height:40px; margin-top:18px; }
+  .qr-login-row { display:flex; align-items:center; justify-content:space-between; margin-top:18px; font-size:14px; line-height:20px; }
+  .qr-login-row .qr-check-inline { font-size:12px; }
+  .qr-or { display:flex; align-items:center; gap:24px; margin-top:18px; font-size:14px; line-height:20px; color:var(--grey-500); }
+  .qr-or::before, .qr-or::after { content:""; flex:1; height:1px; background:var(--grey-500); }
+
+  /* ── 開始通報（比對身分證字號） ── */
+  .qr-check { --qr-col:600px; padding-top:21px; }
+  .qr-check .qr-card { padding:16px; }
+  .qr-check .qr-input { height:32px; }
+  .qr-check .qr-btn { height:30px; }
+  .qr-check-lead { margin:0 0 20px; text-align:center; font-size:14px; line-height:20px; font-weight:700; color:var(--grey-900); }
+  .qr-check-lead--out { display:none; }
+  .qr-check .qr-label { font-weight:700; }
+  .qr-check-go { margin-top:24px; }
+  .qr-check-back { display:flex; margin:16px 16px 0; }
+  @media (max-width:600px) {
+    .qr-check { background:url("./assets/img/hospital-bg.png") center bottom/100% auto no-repeat; }
   }
-  .lp-footer { background:#fff; border-top:1px solid #eee; padding:24px 0; }
-  .lp-bar { padding-inline:clamp(20px,5vw,64px); }
 
-  /* 電腦瀏覽：整頁收在一個視窗高度內，不需捲動 */
+  /* ── 新增個案 ── */
+  .qr-create { --qr-col:1056px; padding-top:24px; }
+  .qr-photo { box-sizing:border-box; width:100px; height:100px; display:grid; place-items:center; overflow:hidden; border:1px solid var(--border-default); border-radius:8px; background:var(--grey-0); color:var(--red-100); }
+  .qr-photo img { width:100%; height:100%; object-fit:cover; }
+  .qr-upload { position:relative; margin-top:16px; padding:0 12px; }
+  .qr-upload input { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+  .qr-field { margin-top:16px; }
+  .qr-radios { display:flex; gap:16px; }
+  .qr-row { display:grid; gap:8px; }
+  .qr-row--tel { grid-template-columns:96px minmax(0,1fr); }
+  .qr-row + .qr-input { margin-top:8px; }
+  .qr-actions { display:grid; gap:16px; margin-top:16px; }
+
+  /* ── 填寫表單 ── */
+  .qr-report { --qr-col:1070px; --qr-gutter:16px; }
+  .qr-case { padding:16px; }
+  .qr-case h2 { margin:0; font-size:20px; line-height:28px; font-weight:500; color:var(--grey-900); }
+  .qr-case-row { display:flex; align-items:center; gap:16px; margin-top:12px; }
+  .qr-case-avatar { flex:none; width:80px; height:80px; display:grid; place-items:center; overflow:hidden; border-radius:50%; background:var(--red-50); color:var(--red-100); }
+  .qr-case-avatar img { width:100%; height:100%; object-fit:cover; }
+  .qr-case-info { margin:0; padding:0; list-style:none; font-size:16px; line-height:32px; color:var(--grey-900); }
+  .qr-case-info li { display:flex; align-items:center; gap:8px; }
+  .qr-case-info svg { flex:none; color:var(--teal-300); }
+  .qr-case-info .qr-ico-phone { color:var(--orange-300); }
+  .qr-case-detail { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px 24px; margin:20px 0 0; padding-top:16px; border-top:1px solid var(--border-subtle); }
+  .qr-case-detail dt { font-size:13px; line-height:18px; color:var(--text-muted); }
+  .qr-case-detail dd { margin:2px 0 0; font-size:15px; line-height:22px; color:var(--grey-900); overflow-wrap:anywhere; }
+  .qr-case .qr-link { margin-top:28px; }
+  .qr-rep { margin-top:17px; overflow:hidden; }
+  .qr-rep-head { margin:0; padding:0 14px; background:var(--qr-head,var(--teal-500)); color:#fff; font-size:20px; line-height:52px; font-weight:500; }
+  .qr-rep-body { padding:9px 16px 23px; }
+  .qr-rep-meta { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+  .qr-rep-no { margin:0; font-size:14px; line-height:20px; color:var(--grey-500); }
+  .qr-rep-meta h3 { display:flex; align-items:center; gap:4px; margin:9px 0 0; font-size:18px; line-height:26px; font-weight:500; color:var(--grey-700); }
+  .qr-chip { display:inline-block; margin-top:13px; padding:0 16px; border-radius:var(--radius-pill); background:var(--red-300); color:#fff; font-size:12px; line-height:23px; }
+  .qr-rep-line { display:flex; align-items:center; gap:4px; margin:13px 0 0; font-size:14px; line-height:20px; color:var(--teal-500); }
+  .qr-rep-line + .qr-rep-line { margin-top:16px; }
+  .qr-rep-art { flex:none; width:128px; height:auto; margin-top:19px; }
+  .qr-steps { position:relative; margin:20px 24px 0 16px; padding:0 0 0 9px; border-left:1px solid var(--grey-500); list-style:none; }
+  .qr-steps::before { content:""; position:absolute; left:-4.5px; top:-4px; width:8px; height:8px; border-radius:50%; background:var(--grey-500); }
+  .qr-step { padding:16px 7px 15px; border:1px solid var(--red-50); border-radius:8px; }
+  .qr-step + .qr-step { margin-top:16px; }
+  .qr-step-head { display:flex; align-items:center; gap:8px; font-size:16px; line-height:24px; font-weight:500; color:var(--grey-900); }
+  .qr-step-no { flex:none; width:32px; height:32px; display:grid; place-items:center; border-radius:50%; background:linear-gradient(135deg,var(--red-100),var(--red-50)); color:#fff; font-weight:400; }
+  .qr-step .qr-btn { width:108px; height:33px; margin-top:16px; }
+  .qr-rep-body > .qr-link { margin-top:28px; }
+
+  /* ── 電腦（≥1024px）：頁首加高、流程頁放寬 ── */
+  @media (min-width:1024px) {
+    .lp-bar { gap:8px; padding:16px; }
+    .lp-logo { height:60px; }
+    .lp-brand { font-size:20px; }
+    .lp-user { margin-right:8px; }
+    .lp-user--in .lp-user-btn { display:inline-flex; }
+    .lp-user--in .lp-menu { display:none; }
+    .lp-menu-pop { right:16px; top:calc(100% - 20px); }
+    .lp-menu-user { display:none; }
+    .qr-login-card .qr-input { height:34px; font-size:14px; }
+    .qr-bar { min-height:72px; }
+    .qr-bar--plain { min-height:68px; }
+    .qr-bar--plain h1 { font-size:24px; }
+    .qr-back { left:24px; }
+    .qr-check { padding-top:25px; }
+    .qr-check-lead { margin-bottom:13px; font-size:16px; line-height:24px; }
+    .qr-check-lead--out { display:block; }
+    .qr-check-lead--in { display:none; }
+    .qr-check .qr-label { font-weight:400; }
+    .qr-create .qr-input--name { width:240px; }
+    .qr-row--addr { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .qr-actions { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .qr-rep-art { width:178px; }
+    .qr-steps { margin-top:16px; }
+  }
+
+  /* ── 入口頁在電腦上（設計稿 1440×1024）：整頁收在一個視窗高度內，不需捲動 ── */
   @media (min-width:1024px) and (min-height:600px) {
-    .lp-root { height:100vh; height:100dvh; min-height:0; }
-    .lp-hero { flex:none; height:clamp(200px,34vh,380px); flex-wrap:nowrap; }
-    .lp-hero-title { padding:0 clamp(32px,5vw,72px); }
-    .lp-hero-title h1 { font-size:min(5.6vw,7.5vh); }
-    .lp-hero-art img { min-height:0; }
-    .lp-main { flex:1 1 auto; min-height:0; display:flex; max-width:1440px; padding:clamp(16px,3.5vh,40px) 32px; }
-    .lp-grid { flex:1; min-height:0; grid-template-columns:repeat(3,1fr); gap:32px; }
-    .lp-card { min-height:0; gap:clamp(10px,1.8vh,20px); padding:clamp(12px,2vh,24px); }
-    .lp-media { flex:1 1 auto; min-height:0; display:flex; justify-content:center; background:transparent !important; }
-    .lp-media img { width:auto; max-width:100%; height:100%; border-radius:4px; }
-    .lp-body { flex:none; gap:clamp(4px,1vh,12px); }
-    .lp-btn { margin-top:clamp(0px,.5vh,6px); }
-    .lp-footer { flex:none; padding:14px 0; }
-    .lp-bar { padding-inline:clamp(32px,5vw,72px); }
+    .lp-root--landing { height:100vh; height:100dvh; min-height:0; background:var(--lp-page); }
+    .lp-root--landing .lp-bar { padding-block:clamp(8px,1.56vh,16px); }
+    .lp-hero { --lp-hero-h:clamp(200px,29.3vh,300px); --lp-hero-angle:135deg; }
+    .lp-hero-title { padding-left:45px; }
+    .lp-hero-title h1 { font-size:min(calc(var(--lp-hero-h)*.267),5.55vw); }
+    .lp-hero-art img { --lp-art-fade:7%; object-position:left center; }
+    .lp-main { flex:1 1 auto; min-height:0; display:flex; padding:clamp(20px,7.8vh,80px) 32px clamp(16px,3vh,32px); }
+    .lp-grid { flex:1; min-height:0; max-width:none; margin:0; grid-template-columns:repeat(3,minmax(0,348px)); grid-template-rows:minmax(0,400px); justify-content:center; align-content:start; }
+    .lp-card { min-height:0; flex-direction:column; align-items:stretch; gap:0; padding:clamp(12px,2.35vh,24px) 16px 16px; }
+    .lp-media { flex:1 1 0; min-height:0; }
+    .lp-media img { width:auto; max-width:100%; height:calc(var(--lp-img)*100%); object-fit:contain; }
+    .lp-body { flex:none; }
+    .lp-body h2 { margin-top:clamp(8px,2.7vh,28px); font-size:24px; line-height:32px; }
+    .lp-desc { margin-top:clamp(4px,1.4vh,14px); min-height:38px; font-size:16px; line-height:19px; text-wrap:wrap; }
+    .lp-btn { margin-top:clamp(8px,1.6vh,16px); width:auto; min-height:30px; }
   }
 </style>
 </helmet>
-<div class="lp-root">
 
-  <header style="position:sticky;top:0;z-index:40;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.08)">
-    <div class="lp-bar" style="padding-block:10px;display:flex;align-items:center;gap:14px">
-      <img src="./assets/img/logo-tsghb.png" alt="三軍總醫院北投分院" style="width:44px;height:44px;object-fit:contain;flex:none">
-      <span style="font-size:clamp(17px,2.4vw,22px);font-weight:700;letter-spacing:.02em;color:#333">精神醫療快速應變平台</span>
+<!-- ═══ 登入頁（W3） ═══ -->
+<sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+  <div class="qr-login">
+    <div class="qr-login-brand">
+      <img src="./assets/img/logo-tsghb.png" alt="三軍總醫院北投分院">
+      <span>精神醫療快速應變平台</span>
+    </div>
+    <h1 class="qr-login-title">通報平台</h1>
+    <form class="qr-login-card" sc-camel-on-submit="{{ submitLogin }}" sc-camel-no-validate="novalidate">
+      <h2>登入</h2>
+      <div class="qr-field">
+        <label class="qr-label" for="qr-account">帳號</label>
+        <input id="qr-account" class="qr-input" type="text" name="account" value="{{ fAccount }}" sc-camel-on-change="{{ setField }}" sc-camel-auto-complete="username">
+      </div>
+      <div class="qr-field">
+        <label class="qr-label" for="qr-password">密碼</label>
+        <input id="qr-password" class="qr-input" type="password" name="password" value="{{ fPassword }}" sc-camel-on-change="{{ setField }}" sc-camel-auto-complete="current-password">
+      </div>
+      <sc-if value="{{ loginError }}" hint-placeholder-val="{{ false }}">
+        <p class="qr-error">{{ loginError }}</p>
+      </sc-if>
+      <div class="qr-login-row">
+        <label class="qr-check-inline"><input type="checkbox" name="remember" checked="{{ fRemember }}" sc-camel-on-change="{{ setField }}">記住我</label>
+        <a href="#/login" sc-camel-on-click="{{ noop }}">忘記密碼？</a>
+      </div>
+      <button type="submit" class="qr-btn qr-btn--block qr-btn--primary" style-hover="filter:brightness(.94)">登入</button>
+      <div class="qr-or">或</div>
+      <button type="button" class="qr-btn qr-btn--block qr-btn--line" sc-camel-on-click="{{ loginLine }}" style-hover="filter:brightness(.94)">透過 LINE 登入</button>
+    </form>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isApp }}" hint-placeholder-val="{{ true }}">
+<div class="{{ rootClass }}">
+
+  <header class="lp-header">
+    <div class="lp-bar">
+      <a class="lp-home" href="#/">
+        <img src="./assets/img/logo-tsghb.png" alt="三軍總醫院北投分院" class="lp-logo">
+        <span class="lp-brand">精神醫療快速應變平台</span>
+      </a>
+      <div class="{{ userClass }}">
+        <button type="button" class="lp-user-btn" sc-camel-on-click="{{ toggleMenu }}" style-hover="background:var(--grey-100)">
+          {{ userName }}
+          <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l7 7 7-7"></path></svg>
+        </button>
+        <button type="button" class="lp-menu" aria-label="選單" sc-camel-on-click="{{ toggleMenu }}" style-hover="background:var(--grey-100)">
+          <svg width="24" height="24" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"></path></svg>
+        </button>
+      </div>
+      <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+        <div class="lp-menu-backdrop" sc-camel-on-click="{{ toggleMenu }}"></div>
+        <div class="lp-menu-pop" role="menu">
+          <sc-if value="{{ loggedIn }}" hint-placeholder-val="{{ false }}">
+            <p class="lp-menu-user">{{ userName }}</p>
+            <button type="button" class="lp-menu-item" role="menuitem" sc-camel-on-click="{{ logout }}" style-hover="background:var(--grey-100)">登出</button>
+          </sc-if>
+          <sc-if value="{{ loggedOut }}" hint-placeholder-val="{{ true }}">
+            <a class="lp-menu-item" role="menuitem" href="#/login" style-hover="background:var(--grey-100)">登入</a>
+          </sc-if>
+        </div>
+      </sc-if>
     </div>
   </header>
 
-  <section class="lp-hero">
-    <div class="lp-hero-title">
-      <h1>精神醫療<br>快速應變平台</h1>
-    </div>
-    <div class="lp-hero-art">
-      <img src="./assets/img/hero.png" alt="醫護、警消與社工協作示意">
-    </div>
-  </section>
-
-  <main class="lp-main">
-    <div class="lp-grid">
-      <article class="lp-card" style-hover="box-shadow:0 10px 15px -3px rgba(0,0,0,.12),0 4px 6px -4px rgba(0,0,0,.1);transform:translateY(-2px)">
-        <a href="https://mphr-tsghb.docloop.pro/patient-groups/list?" target="_blank" rel="noopener" class="lp-media" style="background:#19aad1">
-          <img src="./assets/img/feature-case-list.png" alt="我的案件">
-        </a>
-        <div class="lp-body">
-          <h2 style="color:#19aad1">我的案件</h2>
-          <a href="https://mphr-tsghb.docloop.pro/patient-groups/list?" target="_blank" rel="noopener" class="lp-btn" style="background:#19aad1" style-hover="filter:brightness(.92);color:#fff">
-            <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 12h6M9 16h6"></path></svg>
-            前往頁面
-          </a>
-        </div>
-      </article>
-
-      <article class="lp-card" style-hover="box-shadow:0 10px 15px -3px rgba(0,0,0,.12),0 4px 6px -4px rgba(0,0,0,.1);transform:translateY(-2px)">
-        <a href="#" sc-camel-on-click="{{ openDev }}" class="lp-media" style="background:#0c6496">
-          <img src="./assets/img/feature-report-history.png" alt="案件查詢">
-        </a>
-        <div class="lp-body">
-          <h2 style="color:#0c6496">案件查詢</h2>
-          <a href="#" sc-camel-on-click="{{ openDev }}" class="lp-btn" style="background:#0c6496" style-hover="filter:brightness(.92);color:#fff">
-            <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            前往頁面
-          </a>
-        </div>
-      </article>
-
-      <article class="lp-card" style-hover="box-shadow:0 10px 15px -3px rgba(0,0,0,.12),0 4px 6px -4px rgba(0,0,0,.1);transform:translateY(-2px)">
-        <a href="https://mphr-tsghb.docloop.pro/data-dashboard?c=tsghbperp" target="_blank" rel="noopener" class="lp-media" style="background:#1285b3">
-          <img src="./assets/img/feature-dashboard.png" alt="管理儀錶板">
-        </a>
-        <div class="lp-body">
-          <h2 style="color:#1285b3">管理儀錶板</h2>
-          <a href="https://mphr-tsghb.docloop.pro/data-dashboard?c=tsghbperp" target="_blank" rel="noopener" class="lp-btn" style="background:#1285b3" style-hover="filter:brightness(.92);color:#fff">
-            <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="20" x2="6" y2="14"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="18" y1="20" x2="18" y2="10"></line></svg>
-            前往頁面
-          </a>
-        </div>
-      </article>
-    </div>
-  </main>
-
-  <footer class="lp-footer">
-    <div class="lp-bar" style="display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center;justify-content:space-between;font-size:13px;color:#666">
-      <span>三軍總醫院北投分院　精神醫療快速應變平台</span>
-      <span>本平台資料僅供授權之醫療、警消及社政人員使用</span>
-    </div>
-  </footer>
-
-  <sc-if value="{{ devOpen }}" hint-placeholder-val="{{ false }}">
-    <div role="dialog" aria-modal="true" style="position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:20px">
-      <div style="background:#fff;border-radius:5px;box-shadow:0 10px 15px -3px rgba(0,0,0,.2);max-width:400px;width:100%;padding:32px 28px;text-align:center;animation:dcFade .2s ease both">
-        <div style="width:56px;height:56px;margin:0 auto 18px;border-radius:50%;background:#e8f7fc;display:grid;place-items:center;color:#19aad1">
-          <svg width="30" height="30" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
-        </div>
-        <h3 style="margin:0 0 10px;font-size:20px;font-weight:700;color:#333">功能開發中</h3>
-        <p style="margin:0 0 4px;font-size:15px;line-height:1.7;color:#666">案件查詢尚在開發中，{{ countdownText }}</p>
-        <button type="button" sc-camel-on-click="{{ goBack }}" style="margin-top:22px;min-height:44px;padding:0 28px;border:0;border-radius:100px;background:#0c6496;color:#fff;font-size:15px;font-weight:500;cursor:pointer" style-hover="filter:brightness(1.1)">立即返回上一頁</button>
+  <!-- ═══ 入口頁（W1–W2）：選擇通報類型 ═══ -->
+  <sc-if value="{{ isLanding }}" hint-placeholder-val="{{ true }}">
+    <section class="lp-hero">
+      <div class="lp-hero-title">
+        <h1>精神醫療<br>快速應變平台</h1>
       </div>
-    </div>
+      <div class="lp-hero-art">
+        <img src="./assets/img/hero.png" alt="醫護與警察協作示意">
+      </div>
+    </section>
+
+    <main class="lp-main">
+      <div class="lp-grid">
+        <article class="lp-card lp-card--emergency" style-hover="box-shadow:0 10px 15px -3px rgba(0,0,0,.2),0 4px 6px -4px rgba(0,0,0,.14);transform:translateY(-2px)">
+          <a href="#/check?type=emergency" class="lp-media">
+            <img src="./assets/img/feature-emergency.png" alt="緊急醫療通報">
+          </a>
+          <div class="lp-body">
+            <h2>緊急醫療通報</h2>
+            <p class="lp-desc">由警察、消防隊員、公衛護理師、社工進行通報</p>
+            <a href="#/check?type=emergency" class="lp-btn" style-hover="filter:brightness(.92)">
+              <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.28-.28.67-.36 1.02-.25 1.12.37 2.32.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"></path></svg>
+              進行通報
+            </a>
+          </div>
+        </article>
+
+        <article class="lp-card lp-card--plan1" style-hover="box-shadow:0 10px 15px -3px rgba(0,0,0,.2),0 4px 6px -4px rgba(0,0,0,.14);transform:translateY(-2px)">
+          <a href="#/check?type=plan1" class="lp-media">
+            <img src="./assets/img/feature-plan-1.png" alt="第一類優化計畫通報">
+          </a>
+          <div class="lp-body">
+            <h2>第一類優化計畫通報</h2>
+            <p class="lp-desc">網路轉介之疑似精神病個案</p>
+            <a href="#/check?type=plan1" class="lp-btn" style-hover="filter:brightness(.92)">
+              <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M6 2h12a2 2 0 0 1 2 2v13a1 1 0 0 1-1 1H7a1 1 0 1 0 0 2h12a1 1 0 1 1 0 2H7a3 3 0 0 1-3-3V4a2 2 0 0 1 2-2zm5 4v3H8v2h3v3h2v-3h3V9h-3V6h-2z"></path></svg>
+              進行通報
+            </a>
+          </div>
+        </article>
+
+        <article class="lp-card lp-card--plan2" style-hover="box-shadow:0 10px 15px -3px rgba(0,0,0,.2),0 4px 6px -4px rgba(0,0,0,.14);transform:translateY(-2px)">
+          <a href="#/check?type=plan2" class="lp-media">
+            <img src="./assets/img/feature-plan-2.png" alt="第二類優化計畫通報">
+          </a>
+          <div class="lp-body">
+            <h2>第二類優化計畫通報</h2>
+            <p class="lp-desc">疑似精神病人被護送就醫未住院者</p>
+            <a href="#/check?type=plan2" class="lp-btn" style-hover="filter:brightness(.92)">
+              <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M6 2h12a2 2 0 0 1 2 2v13a1 1 0 0 1-1 1H7a1 1 0 1 0 0 2h12a1 1 0 1 1 0 2H7a3 3 0 0 1-3-3V4a2 2 0 0 1 2-2zm5 4v3H8v2h3v3h2v-3h3V9h-3V6h-2z"></path></svg>
+              進行通報
+            </a>
+          </div>
+        </article>
+      </div>
+    </main>
   </sc-if>
+
+  <!-- ═══ 開始通報（R1–R2）：輸入身分證字號並比對 ═══ -->
+  <sc-if value="{{ isCheck }}" hint-placeholder-val="{{ false }}">
+    <section class="qr-bar qr-bar--plain">
+      <h1>開始通報</h1>
+    </section>
+    <main class="qr-wrap qr-check">
+      <p class="qr-check-lead qr-check-lead--out">請輸入需通報個案身分證字號</p>
+      <form class="qr-card" sc-camel-on-submit="{{ submitCheck }}" sc-camel-no-validate="novalidate">
+        <p class="qr-check-lead qr-check-lead--in">請輸入需通報個案身分證字號</p>
+        <label class="qr-label" for="qr-id-no">身分證號</label>
+        <input id="qr-id-no" class="qr-input" type="text" name="idNo" value="{{ fIdNo }}" sc-camel-on-change="{{ setField }}" placeholder="輸入身分證號" sc-camel-max-length="10" sc-camel-auto-complete="off">
+        <sc-if value="{{ checkError }}" hint-placeholder-val="{{ false }}">
+          <p class="qr-error">{{ checkError }}</p>
+        </sc-if>
+        <button type="submit" class="qr-btn qr-btn--block qr-btn--primary qr-check-go" style-hover="filter:brightness(.94)">比對</button>
+      </form>
+      <a href="#/" class="qr-btn qr-btn--outline qr-check-back" style-hover="background:var(--teal-50)">返回</a>
+    </main>
+  </sc-if>
+
+  <!-- ═══ 新增個案（R2a）：查無身分證字號時建立個案 ═══ -->
+  <sc-if value="{{ isCreate }}" hint-placeholder-val="{{ false }}">
+    <section class="qr-bar">
+      <a href="{{ checkHref }}" class="qr-back" style-hover="opacity:.85">
+        <svg width="24" height="24" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12H4M11 5l-7 7 7 7"></path></svg>
+        返回
+      </a>
+      <h1>新增個案</h1>
+    </section>
+    <main class="qr-wrap qr-create">
+      <form sc-camel-on-submit="{{ submitCreate }}" sc-camel-no-validate="novalidate">
+        <div class="qr-photo">
+          <sc-if value="{{ hasPhoto }}" hint-placeholder-val="{{ false }}">
+            <img sc-camel-src="{{ fPhoto }}" alt="個案照片">
+          </sc-if>
+          <sc-if value="{{ noPhoto }}" hint-placeholder-val="{{ true }}">
+            <svg width="46" height="46" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="10" r="3.4"></circle><path d="M5.9 19a7 7 0 0 1 12.2 0"></path></svg>
+          </sc-if>
+        </div>
+        <label class="qr-btn qr-btn--primary qr-upload" style-hover="filter:brightness(.94)">
+          <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"></path></svg>
+          上傳圖片
+          <input type="file" accept="image/*" sc-camel-on-change="{{ pickPhoto }}">
+        </label>
+
+        <div class="qr-field">
+          <label class="qr-label" for="qr-name">姓名<span class="qr-req">*</span></label>
+          <input id="qr-name" class="qr-input qr-input--name" type="text" name="name" value="{{ fName }}" sc-camel-on-change="{{ setField }}" placeholder="請輸入姓名">
+          <sc-if value="{{ nameError }}" hint-placeholder-val="{{ false }}">
+            <p class="qr-error">{{ nameError }}</p>
+          </sc-if>
+        </div>
+
+        <div class="qr-field">
+          <span class="qr-label">性別<span class="qr-req">*</span></span>
+          <div class="qr-radios">
+            <label class="qr-check-inline"><input type="radio" name="gender" value="male" checked="{{ isMale }}" sc-camel-on-change="{{ setField }}">男</label>
+            <label class="qr-check-inline"><input type="radio" name="gender" value="female" checked="{{ isFemale }}" sc-camel-on-change="{{ setField }}">女</label>
+          </div>
+        </div>
+
+        <div class="qr-field">
+          <label class="qr-label" for="qr-create-id">身分證字號</label>
+          <input id="qr-create-id" class="qr-input" type="text" value="{{ routeId }}" disabled="disabled" sc-camel-read-only="readonly">
+        </div>
+
+        <div class="qr-field">
+          <label class="qr-label" for="qr-birthday">出生年月日</label>
+          <input id="qr-birthday" class="qr-input" type="date" name="birthday" sc-camel-value="{{ fBirthday }}" sc-camel-on-change="{{ setField }}" sc-camel-max="{{ todayIso }}">
+        </div>
+
+        <div class="qr-field">
+          <label class="qr-label" for="qr-mobile">手機號碼</label>
+          <input id="qr-mobile" class="qr-input" type="tel" name="mobile" value="{{ fMobile }}" sc-camel-on-change="{{ setField }}">
+        </div>
+
+        <div class="qr-field">
+          <label class="qr-label" for="qr-tel">市內電話</label>
+          <div class="qr-row qr-row--tel">
+            <sc-raw-select class="qr-input" name="telArea" value="{{ fTelArea }}" sc-camel-on-change="{{ setField }}" required="required" aria-label="市內電話區碼">{{ areaOptions }}</sc-raw-select>
+            <input id="qr-tel" class="qr-input" type="tel" name="tel" value="{{ fTel }}" sc-camel-on-change="{{ setField }}" placeholder="請輸入市內電話">
+          </div>
+        </div>
+
+        <div class="qr-field">
+          <label class="qr-label" for="qr-email">電子信箱</label>
+          <input id="qr-email" class="qr-input" type="email" name="email" value="{{ fEmail }}" sc-camel-on-change="{{ setField }}" placeholder="請輸入電子信箱">
+        </div>
+
+        <div class="qr-field">
+          <label class="qr-label" for="qr-road">地址</label>
+          <div class="qr-row qr-row--addr">
+            <sc-raw-select class="qr-input" name="city" value="{{ fCity }}" sc-camel-on-change="{{ setField }}" required="required" aria-label="縣市">{{ cityOptions }}</sc-raw-select>
+            <sc-raw-select class="qr-input" name="district" value="{{ fDistrict }}" sc-camel-on-change="{{ setField }}" required="required" aria-label="鄉鎮市區">{{ districtOptions }}</sc-raw-select>
+            <input class="qr-input" type="text" name="zip" value="{{ fZip }}" sc-camel-on-change="{{ setField }}" placeholder="請輸入郵遞區號" sc-camel-input-mode="numeric" aria-label="郵遞區號">
+          </div>
+          <input id="qr-road" class="qr-input" type="text" name="road" value="{{ fRoad }}" sc-camel-on-change="{{ setField }}" placeholder="請輸入路名">
+        </div>
+
+        <div class="qr-field">
+          <label class="qr-label" for="qr-ec-name">緊急聯絡人</label>
+          <input id="qr-ec-name" class="qr-input" type="text" name="ecName" value="{{ fEcName }}" sc-camel-on-change="{{ setField }}" placeholder="請輸入緊急聯絡人">
+        </div>
+
+        <div class="qr-field">
+          <label class="qr-label" for="qr-ec-relation">緊急聯絡人關係</label>
+          <sc-raw-select id="qr-ec-relation" class="qr-input" name="ecRelation" value="{{ fEcRelation }}" sc-camel-on-change="{{ setField }}" required="required">{{ relationOptions }}</sc-raw-select>
+        </div>
+
+        <div class="qr-field">
+          <label class="qr-label" for="qr-ec-mobile">緊急聯絡人手機號碼</label>
+          <input id="qr-ec-mobile" class="qr-input" type="tel" name="ecMobile" value="{{ fEcMobile }}" sc-camel-on-change="{{ setField }}" placeholder="請輸入緊急聯絡人手機號碼">
+        </div>
+
+        <div class="qr-field">
+          <label class="qr-label" for="qr-ec-tel">緊急聯絡人市內電話</label>
+          <div class="qr-row qr-row--tel">
+            <sc-raw-select class="qr-input" name="ecTelArea" value="{{ fEcTelArea }}" sc-camel-on-change="{{ setField }}" required="required" aria-label="緊急聯絡人市內電話區碼">{{ areaOptions }}</sc-raw-select>
+            <input id="qr-ec-tel" class="qr-input" type="tel" name="ecTel" value="{{ fEcTel }}" sc-camel-on-change="{{ setField }}" placeholder="請輸入緊急聯絡人市內電話">
+          </div>
+        </div>
+
+        <div class="qr-actions">
+          <a href="{{ checkHref }}" class="qr-btn qr-btn--outline" style-hover="background:var(--teal-50)">取消</a>
+          <button type="submit" class="qr-btn qr-btn--primary" style-hover="filter:brightness(.94)">送出</button>
+        </div>
+      </form>
+    </main>
+  </sc-if>
+
+  <!-- ═══ 填寫表單（R2a2／R2b–R3）：標題列與通報區塊依通報類型換字與主題色 ═══ -->
+  <sc-if value="{{ isReport }}" hint-placeholder-val="{{ false }}">
+    <section class="qr-bar">
+      <a href="{{ checkHref }}" class="qr-back" style-hover="opacity:.85">
+        <svg width="24" height="24" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12H4M11 5l-7 7 7 7"></path></svg>
+        返回
+      </a>
+      <h1>{{ barTitle }}</h1>
+    </section>
+    <main class="qr-wrap qr-report">
+      <section class="qr-card qr-case">
+        <h2>{{ caseTitle }}</h2>
+        <div class="qr-case-row">
+          <div class="qr-case-avatar">
+            <sc-if value="{{ hasCasePhoto }}" hint-placeholder-val="{{ false }}">
+              <img sc-camel-src="{{ casePhoto }}" alt="個案照片">
+            </sc-if>
+            <sc-if value="{{ noCasePhoto }}" hint-placeholder-val="{{ true }}">
+              <svg width="56" height="56" sc-camel-view-box="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
+            </sc-if>
+          </div>
+          <ul class="qr-case-info">
+            <li>
+              <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm5 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-3.5 7h7c0-1.66-1.57-3-3.5-3s-3.5 1.34-3.5 3zM14 9v2h5V9h-5zm0 4v2h5v-2h-5z"></path></svg>
+              {{ caseId }}
+            </li>
+            <li>
+              <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v2h18V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zM3 10v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V10H3z"></path></svg>
+              {{ caseBirth }}
+            </li>
+            <li>
+              <svg class="qr-ico-phone" width="18" height="18" sc-camel-view-box="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.28-.28.67-.36 1.02-.25 1.12.37 2.32.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"></path></svg>
+              {{ casePhone }}
+            </li>
+          </ul>
+        </div>
+        <sc-if value="{{ infoOpen }}" hint-placeholder-val="{{ false }}">
+          <dl class="qr-case-detail">
+            <sc-for list="{{ caseDetail }}" as="row" hint-placeholder-count="0">
+              <div>
+                <dt>{{ row.label }}</dt>
+                <dd>{{ row.value }}</dd>
+              </div>
+            </sc-for>
+          </dl>
+        </sc-if>
+        <button type="button" class="qr-link" sc-camel-on-click="{{ toggleInfo }}">{{ infoLabel }}</button>
+      </section>
+
+      <section class="qr-card qr-rep">
+        <h2 class="qr-rep-head">{{ typeLabel }}</h2>
+        <div class="qr-rep-body">
+          <div class="qr-rep-meta">
+            <div>
+              <p class="qr-rep-no">通報編號: -</p>
+              <h3>
+                <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 11v2h4v-2h-4zm-2 6.61c.96.71 2.21 1.65 3.2 2.39.4-.53.8-1.07 1.2-1.6-.99-.74-2.24-1.68-3.2-2.4-.4.54-.8 1.08-1.2 1.61zM20.4 5.6c-.4-.53-.8-1.07-1.2-1.6-.99.74-2.24 1.68-3.2 2.4.4.53.8 1.07 1.2 1.6.96-.72 2.21-1.65 3.2-2.4zM4 9c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h1v4h2v-4h1l5 3V6L8 9H4zm11.5 3c0-1.33-.58-2.53-1.5-3.35v6.69c.92-.81 1.5-2.01 1.5-3.34z"></path></svg>
+                通報者通報內容及初評
+              </h3>
+              <span class="qr-chip">未完成</span>
+              <p class="qr-rep-line">
+                <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zM5 9h14v11H5V9zm2 2v4h4v-4H7z"></path></svg>
+                通報日: {{ todayText }}
+              </p>
+              <p class="qr-rep-line">
+                <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
+                通報者: {{ userName }}
+              </p>
+            </div>
+            <img class="qr-rep-art" src="./assets/img/report-forms.png" alt="">
+          </div>
+          <sc-if value="{{ formsOpen }}" hint-placeholder-val="{{ true }}">
+            <ol class="qr-steps">
+              <sc-for list="{{ forms }}" as="form" hint-placeholder-count="2">
+                <li class="qr-step">
+                  <div class="qr-step-head">
+                    <span class="qr-step-no">{{ form.no }}</span>
+                    <span>{{ form.name }}</span>
+                    <sc-if value="{{ form.required }}" hint-placeholder-val="{{ false }}"><span class="qr-req">*</span></sc-if>
+                  </div>
+                  <button type="button" class="qr-btn qr-btn--danger" disabled="{{ form.disabled }}">未填寫</button>
+                </li>
+              </sc-for>
+            </ol>
+          </sc-if>
+          <button type="button" class="qr-link" sc-camel-on-click="{{ toggleForms }}">{{ formsLabel }}</button>
+        </div>
+      </section>
+    </main>
+  </sc-if>
+
 </div>
+</sc-if>
 </x-dc>
 <script type="text/x-dc" data-dc-script="" data-props="{}">
+// 通報類型：標題列文字、主題色（CSS 的 .qr-theme--*）與填表頁要列的表單
+const PLAN_FORMS = [
+  { no: 1, name: '優化計畫轉介單', required: true },
+  { no: 2, name: '衛生局回覆單', required: true, disabled: true },
+  { no: 4, name: '初評表' },
+  { no: 5, name: '精神病患簡易篩檢表【家屬版】' },
+  { no: 6, name: '精神病患簡易篩檢表【當事人版】' }
+];
+const TYPES = {
+  emergency: { label: '緊急醫療通報', barTitle: '緊急醫療通報', forms: [{ no: 1, name: '通報表', required: true }, { no: 3, name: '初評表' }] },
+  plan1: { label: '第一類優化計畫通報', barTitle: '優化計畫通報', forms: PLAN_FORMS },
+  plan2: { label: '第二類優化計畫通報', barTitle: '優化計畫通報', forms: PLAN_FORMS }
+};
+
+// 示範資料（皆為虛構）：任何帳號密碼都以這位使用者登入；SEED_CASES 是「身分證字號已存在」的個案
+const DEMO_USER = '張美玲 心衛中心志工';
+const SEED_CASES = {
+  A123456789: {
+    id: 'A123456789', name: '陳AA', gender: 'female', birthday: '1911-01-01', mobile: '0900123456',
+    telArea: '02', tel: '28901234', email: '', city: '臺北市', district: '北投區', zip: '112', road: '中和街 0 號',
+    ecName: '陳BB', ecRelation: '子女', ecMobile: '0900654321', ecTelArea: '', ecTel: ''
+  }
+};
+
+const ID_RE = /^[A-Z][A-D0-9][0-9]{8}$/;
+const AREA_CODES = ['02', '03', '037', '04', '049', '05', '06', '07', '08', '089', '082', '0826', '0836'];
+const RELATIONS = ['父母', '配偶', '子女', '兄弟姊妹', '祖父母', '其他親屬', '朋友', '其他'];
+// 鄉鎮市區與郵遞區號，先放臺北市、新北市
+const CITIES = {
+  '臺北市': { '中正區': '100', '大同區': '103', '中山區': '104', '松山區': '105', '大安區': '106', '萬華區': '108', '信義區': '110', '士林區': '111', '北投區': '112', '內湖區': '114', '南港區': '115', '文山區': '116' },
+  '新北市': { '萬里區': '207', '金山區': '208', '板橋區': '220', '汐止區': '221', '深坑區': '222', '石碇區': '223', '瑞芳區': '224', '平溪區': '226', '雙溪區': '227', '貢寮區': '228', '新店區': '231', '坪林區': '232', '烏來區': '233', '永和區': '234', '中和區': '235', '土城區': '236', '三峽區': '237', '樹林區': '238', '鶯歌區': '239', '三重區': '241', '新莊區': '242', '泰山區': '243', '林口區': '244', '蘆洲區': '247', '五股區': '248', '八里區': '249', '淡水區': '251', '三芝區': '252', '石門區': '253' }
+};
+const EMPTY_FORM = {
+  account: '', password: '', remember: false, idNo: '',
+  photo: '', name: '', gender: 'male', birthday: '', mobile: '', telArea: '', tel: '', email: '',
+  city: '', district: '', zip: '', road: '', ecName: '', ecRelation: '', ecMobile: '', ecTelArea: '', ecTel: ''
+};
+
+// 登入狀態與新建的個案只留在這個分頁（sessionStorage）；無法使用時就只存在記憶體
+function readStore(key, fallback) {
+  try { const v = window.sessionStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
+}
+function writeStore(key, value) {
+  try { if (value == null) window.sessionStorage.removeItem(key); else window.sessionStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
+}
+
+// 畫面由網址 # 決定：#/、#/login、#/check、#/create、#/report，參數 type（通報類型）、id（身分證字號）
+function parseHash() {
+  const parts = window.location.hash.replace(/^#\/?/, '').split('?');
+  const q = new URLSearchParams(parts[1] || '');
+  return { view: parts[0] || 'landing', type: q.get('type') || '', id: (q.get('id') || '').toUpperCase() };
+}
+function hashFor(view, type, id) {
+  if (view === 'landing') return '#/';
+  return '#/' + view + (type ? '?type=' + type + (id ? '&id=' + id : '') : '');
+}
+function pad2(n) { return String(n).padStart(2, '0'); }
+function options(placeholder, values) {
+  return [React.createElement('option', { key: '', value: '' }, placeholder)]
+    .concat(values.map((v) => React.createElement('option', { key: v, value: v }, v)));
+}
+
 class Component extends DCLogic {
-  state = { devOpen: false, count: 3 };
-
-  componentWillUnmount() { clearInterval(this.timer); }
-
-  openDev = (e) => {
-    if (e) e.preventDefault();
-    this.setState({ devOpen: true, count: 3 });
-    clearInterval(this.timer);
-    this.timer = setInterval(() => {
-      const n = this.state.count - 1;
-      if (n <= 0) { clearInterval(this.timer); this.goBack(); }
-      else this.setState({ count: n });
-    }, 1000);
+  state = {
+    route: { view: 'none', type: '', id: '' },
+    user: readStore('qr-user', null),
+    cases: Object.assign({}, readStore('qr-cases', {}), SEED_CASES),
+    f: Object.assign({}, EMPTY_FORM),
+    errors: {},
+    menuOpen: false,
+    infoOpen: false,
+    formsOpen: true
   };
 
-  goBack = () => {
-    clearInterval(this.timer);
-    this.setState({ devOpen: false });
-    if (window.history.length > 1) window.history.back();
+  componentDidMount() {
+    window.addEventListener('hashchange', this.onHash);
+    this.onHash();
+  }
+
+  componentWillUnmount() { window.removeEventListener('hashchange', this.onHash); }
+
+  // 不符合前置條件的網址要轉去哪裡；回傳 null 表示可以進入
+  guard(r) {
+    const typed = !!TYPES[r.type];
+    const user = this.state.user;
+    if (r.view === 'landing') return null;
+    if (r.view === 'login') return user ? (typed ? hashFor('check', r.type) : '#/') : null;
+    if (!typed || ['check', 'create', 'report'].indexOf(r.view) < 0) return '#/';
+    if (!user) return hashFor('login', r.type);
+    if (r.view === 'check') return null;
+    if (!ID_RE.test(r.id)) return hashFor('check', r.type);
+    const exists = !!this.state.cases[r.id];
+    if (r.view === 'create') return exists ? hashFor('report', r.type, r.id) : null;
+    return exists ? null : hashFor('check', r.type);
+  }
+
+  onHash = () => {
+    const route = parseHash();
+    const to = this.guard(route);
+    if (to) { window.location.replace(to); return; }
+    this.setState({ route, f: Object.assign({}, EMPTY_FORM), errors: {}, menuOpen: false, infoOpen: false, formsOpen: true });
+    window.scrollTo(0, 0);
+  };
+
+  setField = (e) => {
+    const t = e.target;
+    const f = Object.assign({}, this.state.f);
+    f[t.name] = t.type === 'checkbox' ? t.checked : t.value;
+    if (t.name === 'idNo') f.idNo = t.value.toUpperCase().replace(/\s/g, '');
+    if (t.name === 'city') { f.district = ''; f.zip = ''; }
+    if (t.name === 'district') f.zip = (CITIES[f.city] || {})[t.value] || '';
+    this.setState({ f, errors: {} });
+  };
+
+  noop = (e) => { e.preventDefault(); };
+  toggleMenu = () => { this.setState({ menuOpen: !this.state.menuOpen }); };
+  toggleInfo = () => { this.setState({ infoOpen: !this.state.infoOpen }); };
+  toggleForms = () => { this.setState({ formsOpen: !this.state.formsOpen }); };
+
+  signIn() {
+    writeStore('qr-user', DEMO_USER);
+    this.setState({ user: DEMO_USER });
+    const type = this.state.route.type;
+    window.location.replace(TYPES[type] ? hashFor('check', type) : '#/');
+  }
+
+  submitLogin = (e) => {
+    e.preventDefault();
+    if (!this.state.f.account.trim() || !this.state.f.password) {
+      this.setState({ errors: { login: '請輸入帳號與密碼' } });
+      return;
+    }
+    this.signIn();
+  };
+
+  loginLine = () => { this.signIn(); };
+
+  logout = () => {
+    writeStore('qr-user', null);
+    this.setState({ user: null, menuOpen: false });
+    if (this.state.route.view !== 'landing') window.location.hash = '#/';
+  };
+
+  submitCheck = (e) => {
+    e.preventDefault();
+    const id = this.state.f.idNo;
+    if (!id) { this.setState({ errors: { check: '請輸入身分證字號' } }); return; }
+    if (!ID_RE.test(id)) { this.setState({ errors: { check: '身分證字號格式不正確' } }); return; }
+    const type = this.state.route.type;
+    window.location.hash = hashFor(this.state.cases[id] ? 'report' : 'create', type, id);
+  };
+
+  pickPhoto = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    this.setState({ f: Object.assign({}, this.state.f, { photo: URL.createObjectURL(file) }) });
+  };
+
+  submitCreate = (e) => {
+    e.preventDefault();
+    const f = this.state.f;
+    const route = this.state.route;
+    if (!f.name.trim()) { this.setState({ errors: { name: '請輸入姓名' } }); return; }
+    const kase = { id: route.id };
+    ['photo', 'name', 'gender', 'birthday', 'mobile', 'telArea', 'tel', 'email', 'city', 'district', 'zip', 'road', 'ecName', 'ecRelation', 'ecMobile', 'ecTelArea', 'ecTel']
+      .forEach((k) => { kase[k] = typeof f[k] === 'string' ? f[k].trim() : f[k]; });
+    const cases = Object.assign({}, this.state.cases);
+    cases[kase.id] = kase;
+    // 照片是 blob 網址，重新整理後就失效，不寫進 sessionStorage
+    const stored = {};
+    Object.keys(cases).forEach((id) => { if (!SEED_CASES[id]) stored[id] = Object.assign({}, cases[id], { photo: '' }); });
+    writeStore('qr-cases', stored);
+    this.setState({ cases });
+    window.location.replace(hashFor('report', route.type, kase.id));
   };
 
   renderVals() {
+    const s = this.state;
+    const r = s.route;
+    const f = s.f;
+    const type = TYPES[r.type] || { label: '', barTitle: '', forms: [] };
+    const kase = s.cases[r.id] || {};
+    const now = new Date();
+    const todayIso = now.getFullYear() + '-' + pad2(now.getMonth() + 1) + '-' + pad2(now.getDate());
+
+    let birth = '—';
+    if (kase.birthday) {
+      const b = kase.birthday.split('-').map(Number);
+      const hadBirthday = now.getMonth() + 1 > b[1] || (now.getMonth() + 1 === b[1] && now.getDate() >= b[2]);
+      birth = kase.birthday.replace(/-/g, '/') + '(' + (now.getFullYear() - b[0] - (hadBirthday ? 0 : 1)) + 'y)';
+    }
+    const genderText = kase.gender === 'female' ? '女' : '男';
+    const phone = (n, area) => (n ? (area ? area + '-' : '') + n : '');
+    const detail = [
+      ['姓名', kase.name], ['性別', genderText], ['身分證字號', kase.id], ['出生年月日', kase.birthday && kase.birthday.replace(/-/g, '/')],
+      ['手機號碼', kase.mobile], ['市內電話', phone(kase.tel, kase.telArea)], ['電子信箱', kase.email],
+      ['地址', [kase.zip, kase.city, kase.district, kase.road].filter(Boolean).join(' ')],
+      ['緊急聯絡人', kase.ecName], ['緊急聯絡人關係', kase.ecRelation], ['緊急聯絡人手機號碼', kase.ecMobile],
+      ['緊急聯絡人市內電話', phone(kase.ecTel, kase.ecTelArea)]
+    ].map((row) => ({ label: row[0], value: row[1] || '—' }));
+
     return {
-      devOpen: this.state.devOpen,
-      countdownText: this.state.count + ' 秒後自動返回上一頁。',
-      openDev: this.openDev,
-      goBack: this.goBack
+      isLogin: r.view === 'login',
+      isApp: r.view !== 'login',
+      isLanding: r.view === 'landing',
+      isCheck: r.view === 'check',
+      isCreate: r.view === 'create',
+      isReport: r.view === 'report',
+      rootClass: 'lp-root' + (r.view === 'landing' ? ' lp-root--landing' : '') + (r.view === 'report' ? ' qr-theme--' + r.type : ''),
+
+      loggedIn: !!s.user,
+      loggedOut: !s.user,
+      userName: s.user || '',
+      userClass: 'lp-user' + (s.user ? ' lp-user--in' : ''),
+      menuOpen: s.menuOpen,
+      toggleMenu: this.toggleMenu,
+      logout: this.logout,
+      noop: this.noop,
+      setField: this.setField,
+
+      fAccount: f.account, fPassword: f.password, fRemember: f.remember,
+      loginError: s.errors.login || '',
+      submitLogin: this.submitLogin,
+      loginLine: this.loginLine,
+
+      fIdNo: f.idNo,
+      checkError: s.errors.check || '',
+      submitCheck: this.submitCheck,
+      checkHref: hashFor('check', r.type),
+
+      routeId: r.id,
+      todayIso,
+      fPhoto: f.photo, hasPhoto: !!f.photo, noPhoto: !f.photo,
+      fName: f.name, nameError: s.errors.name || '',
+      isMale: f.gender === 'male', isFemale: f.gender === 'female',
+      fBirthday: f.birthday, fMobile: f.mobile, fTelArea: f.telArea, fTel: f.tel, fEmail: f.email,
+      fCity: f.city, fDistrict: f.district, fZip: f.zip, fRoad: f.road,
+      fEcName: f.ecName, fEcRelation: f.ecRelation, fEcMobile: f.ecMobile, fEcTelArea: f.ecTelArea, fEcTel: f.ecTel,
+      areaOptions: options('請選擇', AREA_CODES),
+      relationOptions: options('請選擇', RELATIONS),
+      cityOptions: options('請輸入縣市', Object.keys(CITIES)),
+      districtOptions: options('請輸入鄉鎮市區', Object.keys(CITIES[f.city] || {})),
+      pickPhoto: this.pickPhoto,
+      submitCreate: this.submitCreate,
+
+      barTitle: type.barTitle,
+      typeLabel: type.label,
+      forms: type.forms,
+      caseTitle: (kase.name || '') + ' (' + genderText + ')',
+      caseId: kase.id || '',
+      caseBirth: birth,
+      casePhone: kase.mobile || phone(kase.tel, kase.telArea) || '—',
+      casePhoto: kase.photo || '', hasCasePhoto: !!kase.photo, noCasePhoto: !kase.photo,
+      caseDetail: detail,
+      infoOpen: s.infoOpen,
+      infoLabel: s.infoOpen ? '收合基本資料' : '查看基本資料',
+      toggleInfo: this.toggleInfo,
+      todayText: todayIso.replace(/-/g, '/'),
+      formsOpen: s.formsOpen,
+      formsLabel: s.formsOpen ? '關閉' : '展開',
+      toggleForms: this.toggleForms
     };
   }
 }
