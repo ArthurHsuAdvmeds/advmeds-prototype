@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head><script>window.__resources = {"https://unpkg.com/react@18.3.1/umd/react.production.min.js": "./assets/js/react.production.min.js", "https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js": "./assets/js/react-dom.production.min.js"};</script>
+<html lang="zh-Hant"><head><script>window.__resources = {"https://unpkg.com/react@18.3.1/umd/react.production.min.js": "./assets/js/react.production.min.js", "https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js": "./assets/js/react-dom.production.min.js"};</script>
 <meta charset="utf-8">
 <title>精神醫療快速應變平台</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -5122,135 +5122,176 @@
 }
 </style>
 <style>
-  body { margin:0; background:#f8f8f8; font-family:'Noto Sans TC',system-ui,sans-serif; color:#333; -webkit-font-smoothing:antialiased; }
-  a { color:#19aad1; text-decoration:none; }
-  a:hover { color:#0c6496; }
+  /* 設計 token 沒有的頁面專用色與陰影（取自設計圖），其餘顏色一律用上方的 token */
+  :root {
+    --lp-page:#f8f8f8;
+    --lp-hero-from:#40d2fe; --lp-hero-mid:#b0efd1; --lp-hero-to:#e5f9ce;
+    --lp-shadow-card:0 2px 4px -1px rgba(0,0,0,.2),0 4px 5px rgba(0,0,0,.14),0 1px 10px rgba(0,0,0,.12);
+    --lp-shadow-pop:0 5px 5px -3px rgba(0,0,0,.2),0 8px 10px 1px rgba(0,0,0,.14),0 3px 14px 2px rgba(0,0,0,.12);
+  }
+  body { margin:0; background:var(--lp-page); font-family:'Noto Sans TC',system-ui,sans-serif; color:var(--grey-900); -webkit-font-smoothing:antialiased; }
+  a { text-decoration:none; }
   @keyframes dcFade { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:none;} }
 
-  /* 版面：手機／平板為一般捲動頁 */
-  .lp-root { min-height:100vh; display:flex; flex-direction:column; background:#f8f8f8; }
-  .lp-hero { display:flex; flex-wrap:wrap; align-items:stretch; background:#96daec; }
-  .lp-hero-title { flex:1 1 320px; min-width:min(100%,300px); background:linear-gradient(90deg,#19aad1 0%,#8fd7ea 100%); padding:clamp(32px,6vw,72px) clamp(20px,5vw,64px); display:flex; align-items:center; }
-  .lp-hero-title h1 { margin:0; color:#fff; font-weight:700; font-size:clamp(34px,5.6vw,68px); line-height:1.22; letter-spacing:.04em; text-shadow:0 1px 2px rgba(0,80,110,.18); }
-  .lp-hero-art { flex:1 1 440px; min-width:min(100%,320px); display:flex; }
-  .lp-hero-art img { display:block; width:100%; height:100%; min-height:200px; object-fit:cover; object-position:left center; }
-  .lp-main { flex:1; max-width:1280px; width:100%; margin:0 auto; padding:clamp(28px,5vw,56px) clamp(16px,3vw,32px) 64px; box-sizing:border-box; }
-  .lp-grid { display:grid; gap:clamp(20px,2.5vw,32px); grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); }
-  .lp-card { background:#fff; border-radius:5px; box-shadow:0 1px 4px rgba(0,0,0,.12); padding:clamp(16px,2vw,24px); display:flex; flex-direction:column; gap:20px; transition:box-shadow .2s ease,transform .2s ease; }
-  .lp-media { display:block; border-radius:4px; overflow:hidden; }
-  .lp-media img { display:block; width:100%; aspect-ratio:631/434; object-fit:cover; }
-  .lp-body { display:flex; flex-direction:column; gap:12px; align-items:center; text-align:center; padding:0 4px 4px; }
-  .lp-body h2 { margin:0; font-size:clamp(20px,2vw,26px); font-weight:700; letter-spacing:.02em; }
-  .lp-btn { margin-top:4px; box-sizing:border-box; width:100%; max-width:260px; display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:42px; padding:0 16px; border-radius:6px; color:#fff; font-size:15px; font-weight:500; letter-spacing:.04em; }
+  /* 版面：手機／平板為一般捲動頁（設計圖手機版 375px） */
+  .lp-root { min-height:100vh; display:flex; flex-direction:column; background:var(--lp-page); }
 
-  /* 手機／平板：卡片改橫式，圖片在左、標題與按鈕在右 */
-  @media (max-width:1023px) {
-    .lp-grid { grid-template-columns:minmax(0,1fr); max-width:640px; margin:0 auto; gap:16px; }
-    .lp-card { flex-direction:row; align-items:center; gap:16px; padding:12px; }
-    .lp-media { flex:0 0 42%; min-width:0; }
-    .lp-body { flex:1; min-width:0; gap:10px; padding:0; }
-    .lp-body h2 { font-size:clamp(17px,4.6vw,22px); }
-    .lp-btn { margin-top:0; max-width:none; min-height:38px; padding:0 10px; font-size:14px; }
+  .lp-header { position:sticky; top:0; z-index:40; flex:none; box-sizing:border-box; height:56px; padding:0 4px 0 8px; display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--grey-0); }
+  .lp-brand { display:flex; align-items:center; gap:6px; min-width:0; }
+  .lp-logo { flex:none; width:40px; height:40px; object-fit:contain; }
+  .lp-brand-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:16px; color:var(--grey-700); }
+  .lp-menu-btn { flex:none; width:48px; height:48px; padding:0; border:0; border-radius:50%; background:transparent; color:var(--grey-900); display:grid; place-items:center; cursor:pointer; }
+  .lp-menu-backdrop { position:fixed; inset:0; }
+  .lp-menu { position:absolute; top:calc(100% - 4px); right:8px; min-width:236px; padding:8px 0; background:var(--grey-0); border-radius:var(--radius-md); box-shadow:var(--lp-shadow-pop); animation:dcFade .15s ease both; }
+  .lp-menu a { display:flex; align-items:center; gap:12px; min-height:44px; padding:0 20px; color:var(--grey-900); font-size:15px; }
+  .lp-menu a::before { content:""; flex:none; width:8px; height:8px; border-radius:50%; background:var(--lp-title); }
+
+  .lp-hero { position:relative; flex:none; overflow:hidden; height:clamp(144px,38.4vw,260px); display:flex; align-items:center; background:linear-gradient(135deg,var(--lp-hero-from) 0%,var(--lp-hero-mid) 62%,var(--lp-hero-to) 100%); }
+  .lp-hero h1 { position:relative; z-index:1; margin:0; padding-left:clamp(12px,3.3vw,48px); color:var(--grey-0); font-weight:700; font-size:clamp(26px,7.5vw,56px); line-height:1.44; letter-spacing:.09em; white-space:nowrap; text-shadow:0 1px 2px rgba(0,80,110,.16); }
+  /* 插圖靠右、等高；寬度不夠時從左側裁掉，左緣淡出接回底下的漸層 */
+  .lp-hero-art { position:absolute; top:0; right:0; height:100%; aspect-ratio:679/298; max-width:46%; -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 28px); mask-image:linear-gradient(90deg,transparent 0,#000 28px); }
+  .lp-hero-art img { display:block; width:100%; height:100%; object-fit:cover; object-position:right center; }
+
+  .lp-main { flex:1 0 auto; width:100%; max-width:1140px; margin:0 auto; box-sizing:border-box; padding:20px 16px 40px; }
+  .lp-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:24px; max-width:560px; margin:0 auto; }
+  /* 卡片：手機／平板為橫式，圖片在左、標題／說明／按鈕在右 */
+  .lp-card { box-sizing:border-box; display:flex; align-items:center; gap:16px; padding:16px; background:var(--grey-0); border-radius:var(--radius-md); box-shadow:var(--lp-shadow-card); }
+  .lp-tone-emergency { --lp-title:var(--red-500); --lp-btn:var(--red-300); }
+  .lp-tone-plan1 { --lp-title:var(--teal-500); --lp-btn:var(--teal-300); }
+  .lp-tone-plan2 { --lp-title:var(--teal-700); --lp-btn:var(--teal-500); }
+  .lp-media { position:relative; flex:0 0 38%; max-width:200px; aspect-ratio:220/200; }
+  .lp-media img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+  .lp-body { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; text-align:center; }
+  .lp-body h2 { margin:0; font-size:clamp(17px,4.8vw,20px); line-height:1.4; font-weight:500; color:var(--lp-title); }
+  .lp-body p { margin:10px 0 0; font-size:14px; line-height:1.45; color:var(--grey-700); }
+  .lp-btn { margin-top:14px; box-sizing:border-box; width:100%; min-height:32px; padding:0 14px; display:inline-flex; align-items:center; justify-content:center; gap:7px; border-radius:var(--radius-pill); background:var(--lp-btn); color:var(--grey-0); font-size:14px; font-weight:500; letter-spacing:.02em; }
+
+  .lp-dialog-mask { position:fixed; inset:0; z-index:60; background:rgba(0,0,0,.45); display:grid; place-items:center; padding:20px; }
+  .lp-dialog { box-sizing:border-box; width:100%; max-width:400px; padding:32px 28px; background:var(--grey-0); border-radius:var(--radius-lg); box-shadow:var(--lp-shadow-pop); text-align:center; animation:dcFade .2s ease both; }
+  .lp-dialog-icon { width:56px; height:56px; margin:0 auto 18px; border-radius:50%; background:var(--teal-50); color:var(--teal-300); display:grid; place-items:center; }
+  .lp-dialog h3 { margin:0 0 10px; font-size:20px; font-weight:700; color:var(--grey-900); }
+  .lp-dialog p { margin:0; font-size:15px; line-height:1.7; color:var(--grey-700); }
+  .lp-dialog button { margin-top:22px; min-height:44px; padding:0 28px; border:0; border-radius:var(--radius-pill); background:var(--teal-700); color:var(--grey-0); font-family:inherit; font-size:15px; font-weight:500; cursor:pointer; }
+
+  /* 窄手機：縮小留白與標題，讓最長的標題（9 個字）維持一行 */
+  @media (max-width:359px) {
+    .lp-card { gap:12px; padding:12px; }
+    .lp-body h2 { font-size:16px; }
   }
-  .lp-footer { background:#fff; border-top:1px solid #eee; padding:24px 0; }
-  .lp-bar { padding-inline:clamp(20px,5vw,64px); }
 
-  /* 電腦瀏覽：整頁收在一個視窗高度內，不需捲動 */
+  /* 電腦（設計圖桌機版 1440×1024）：三欄直式卡片，內容區寬 1140 */
+  @media (min-width:1024px) {
+    .lp-header { height:clamp(64px,9vh,92px); padding:0 20px 0 24px; }
+    .lp-brand { gap:10px; }
+    .lp-logo { width:clamp(44px,5.9vh,60px); height:clamp(44px,5.9vh,60px); }
+    .lp-brand-name { font-size:20px; }
+    .lp-menu { right:20px; }
+    .lp-hero { height:clamp(180px,29.3vh,300px); }
+    .lp-hero h1 { padding-left:45px; font-size:clamp(44px,min(5.55vw,7.8vh),80px); letter-spacing:.1em; }
+    .lp-hero-art { max-width:56%; -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 44px); mask-image:linear-gradient(90deg,transparent 0,#000 44px); }
+    .lp-main { padding:clamp(24px,7.8vh,80px) 24px clamp(16px,3vh,32px); }
+    .lp-grid { max-width:none; grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .lp-card { flex-direction:column; align-items:stretch; gap:0; padding:24px 16px 16px; }
+    .lp-media { flex:0 1 200px; max-width:none; min-height:0; aspect-ratio:auto; }
+    .lp-body { flex:none; }
+    .lp-body h2 { margin-top:27px; font-size:24px; line-height:32px; }
+    .lp-body p { margin-top:15px; min-height:2.4em; font-size:16px; line-height:1.2; }
+    .lp-btn { margin-top:16px; width:auto; }
+  }
+  /* 電腦且視窗夠高：整頁收在一個視窗高度內，不夠高時先縮卡片插圖 */
   @media (min-width:1024px) and (min-height:600px) {
     .lp-root { height:100vh; height:100dvh; min-height:0; }
-    .lp-hero { flex:none; height:clamp(200px,34vh,380px); flex-wrap:nowrap; }
-    .lp-hero-title { padding:0 clamp(32px,5vw,72px); }
-    .lp-hero-title h1 { font-size:min(5.6vw,7.5vh); }
-    .lp-hero-art img { min-height:0; }
-    .lp-main { flex:1 1 auto; min-height:0; display:flex; max-width:1440px; padding:clamp(16px,3.5vh,40px) 32px; }
-    .lp-grid { flex:1; min-height:0; grid-template-columns:repeat(3,1fr); gap:32px; }
-    .lp-card { min-height:0; gap:clamp(10px,1.8vh,20px); padding:clamp(12px,2vh,24px); }
-    .lp-media { flex:1 1 auto; min-height:0; display:flex; justify-content:center; background:transparent !important; }
-    .lp-media img { width:auto; max-width:100%; height:100%; border-radius:4px; }
-    .lp-body { flex:none; gap:clamp(4px,1vh,12px); }
-    .lp-btn { margin-top:clamp(0px,.5vh,6px); }
-    .lp-footer { flex:none; padding:14px 0; }
-    .lp-bar { padding-inline:clamp(32px,5vw,72px); }
+    .lp-main { flex:1 1 auto; min-height:0; display:flex; }
+    .lp-grid { flex:1; min-height:0; grid-template-rows:minmax(0,1fr); }
+    .lp-card { align-self:start; max-height:100%; min-height:0; }
+  }
+  @media (prefers-reduced-motion:reduce) {
+    .lp-menu,.lp-dialog { animation:none; }
   }
 </style>
 </helmet>
 <div class="lp-root">
 
-  <header style="position:sticky;top:0;z-index:40;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.08)">
-    <div class="lp-bar" style="padding-block:10px;display:flex;align-items:center;gap:14px">
-      <img src="./assets/img/logo-tsghb.png" alt="三軍總醫院北投分院" style="width:44px;height:44px;object-fit:contain;flex:none">
-      <span style="font-size:clamp(17px,2.4vw,22px);font-weight:700;letter-spacing:.02em;color:#333">精神醫療快速應變平台</span>
+  <header class="lp-header">
+    <div class="lp-brand">
+      <img class="lp-logo" src="./assets/img/logo-tsghb.png" alt="三軍總醫院北投分院">
+      <span class="lp-brand-name">精神醫療快速應變平台</span>
     </div>
+    <button type="button" class="lp-menu-btn" aria-label="選單" aria-haspopup="true" aria-expanded="{{ menuOpen }}" sc-camel-on-click="{{ toggleMenu }}" style-hover="background:var(--grey-100)">
+      <svg width="18" height="14" sc-camel-view-box="0 0 18 14" fill="currentColor" aria-hidden="true"><rect width="18" height="2.4" rx=".6"></rect><rect y="5.8" width="18" height="2.4" rx=".6"></rect><rect y="11.6" width="18" height="2.4" rx=".6"></rect></svg>
+    </button>
+    <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+      <div class="lp-menu-backdrop" sc-camel-on-click="{{ closeMenu }}"></div>
+      <nav class="lp-menu" aria-label="通報選單">
+        <a href="{{ emergencyHref }}" target="_blank" rel="noopener" class="lp-tone-emergency" sc-camel-on-click="{{ goEmergency }}" style-hover="background:var(--grey-100)">緊急醫療通報</a>
+        <a href="{{ plan1Href }}" target="_blank" rel="noopener" class="lp-tone-plan1" sc-camel-on-click="{{ goPlan1 }}" style-hover="background:var(--grey-100)">第一類優化計畫通報</a>
+        <a href="{{ plan2Href }}" target="_blank" rel="noopener" class="lp-tone-plan2" sc-camel-on-click="{{ goPlan2 }}" style-hover="background:var(--grey-100)">第二類優化計畫通報</a>
+      </nav>
+    </sc-if>
   </header>
 
   <section class="lp-hero">
-    <div class="lp-hero-title">
-      <h1>精神醫療<br>快速應變平台</h1>
-    </div>
+    <h1>精神醫療<br>快速應變平台</h1>
     <div class="lp-hero-art">
-      <img src="./assets/img/hero.png" alt="醫護、警消與社工協作示意">
+      <img src="./assets/img/hero.jpg" alt="醫護與警消人員協作示意">
     </div>
   </section>
 
   <main class="lp-main">
     <div class="lp-grid">
-      <article class="lp-card" style-hover="box-shadow:0 10px 15px -3px rgba(0,0,0,.12),0 4px 6px -4px rgba(0,0,0,.1);transform:translateY(-2px)">
-        <a href="https://mphr-tsghb.docloop.pro/patient-groups/list?" target="_blank" rel="noopener" class="lp-media" style="background:#19aad1">
-          <img src="./assets/img/feature-case-list.png" alt="我的案件">
-        </a>
+      <article class="lp-card lp-tone-emergency">
+        <div class="lp-media">
+          <img src="./assets/img/report-emergency.png" alt="">
+        </div>
         <div class="lp-body">
-          <h2 style="color:#19aad1">我的案件</h2>
-          <a href="https://mphr-tsghb.docloop.pro/patient-groups/list?" target="_blank" rel="noopener" class="lp-btn" style="background:#19aad1" style-hover="filter:brightness(.92);color:#fff">
-            <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 12h6M9 16h6"></path></svg>
-            前往頁面
+          <h2>緊急醫療通報</h2>
+          <p>由警察、消防隊員、公衛護理師、社工進行通報</p>
+          <a href="{{ emergencyHref }}" target="_blank" rel="noopener" class="lp-btn" sc-camel-on-click="{{ goEmergency }}" style-hover="filter:brightness(.92)">
+            <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.61 21 3 13.39 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z"></path></svg>
+            進行通報
           </a>
         </div>
       </article>
 
-      <article class="lp-card" style-hover="box-shadow:0 10px 15px -3px rgba(0,0,0,.12),0 4px 6px -4px rgba(0,0,0,.1);transform:translateY(-2px)">
-        <a href="#" sc-camel-on-click="{{ openDev }}" class="lp-media" style="background:#0c6496">
-          <img src="./assets/img/feature-report-history.png" alt="案件查詢">
-        </a>
+      <article class="lp-card lp-tone-plan1">
+        <div class="lp-media">
+          <img src="./assets/img/report-plan1.png" alt="">
+        </div>
         <div class="lp-body">
-          <h2 style="color:#0c6496">案件查詢</h2>
-          <a href="#" sc-camel-on-click="{{ openDev }}" class="lp-btn" style="background:#0c6496" style-hover="filter:brightness(.92);color:#fff">
-            <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            前往頁面
+          <h2>第一類優化計畫通報</h2>
+          <p>網路轉介之疑似精神病個案</p>
+          <a href="{{ plan1Href }}" target="_blank" rel="noopener" class="lp-btn" sc-camel-on-click="{{ goPlan1 }}" style-hover="filter:brightness(.92)">
+            <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M6 2h11a2 2 0 0 1 2 2v13a1 1 0 0 1-1 1H6.5a1.5 1.5 0 0 0 0 3H18a1 1 0 1 1 0 2H6.5A3.5 3.5 0 0 1 3 19.5V5a3 3 0 0 1 3-3zm4.5 4.5v2h-2v2h2v2h2v-2h2v-2h-2v-2h-2z"></path></svg>
+            進行通報
           </a>
         </div>
       </article>
 
-      <article class="lp-card" style-hover="box-shadow:0 10px 15px -3px rgba(0,0,0,.12),0 4px 6px -4px rgba(0,0,0,.1);transform:translateY(-2px)">
-        <a href="https://mphr-tsghb.docloop.pro/data-dashboard?c=tsghbperp" target="_blank" rel="noopener" class="lp-media" style="background:#1285b3">
-          <img src="./assets/img/feature-dashboard.png" alt="管理儀錶板">
-        </a>
+      <article class="lp-card lp-tone-plan2">
+        <div class="lp-media">
+          <img src="./assets/img/report-plan2.png" alt="">
+        </div>
         <div class="lp-body">
-          <h2 style="color:#1285b3">管理儀錶板</h2>
-          <a href="https://mphr-tsghb.docloop.pro/data-dashboard?c=tsghbperp" target="_blank" rel="noopener" class="lp-btn" style="background:#1285b3" style-hover="filter:brightness(.92);color:#fff">
-            <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="20" x2="6" y2="14"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="18" y1="20" x2="18" y2="10"></line></svg>
-            前往頁面
+          <h2>第二類優化計畫通報</h2>
+          <p>疑似精神病人被護送就醫未住院者</p>
+          <a href="{{ plan2Href }}" target="_blank" rel="noopener" class="lp-btn" sc-camel-on-click="{{ goPlan2 }}" style-hover="filter:brightness(.92)">
+            <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M6 2h11a2 2 0 0 1 2 2v13a1 1 0 0 1-1 1H6.5a1.5 1.5 0 0 0 0 3H18a1 1 0 1 1 0 2H6.5A3.5 3.5 0 0 1 3 19.5V5a3 3 0 0 1 3-3zm4.5 4.5v2h-2v2h2v2h2v-2h2v-2h-2v-2h-2z"></path></svg>
+            進行通報
           </a>
         </div>
       </article>
     </div>
   </main>
 
-  <footer class="lp-footer">
-    <div class="lp-bar" style="display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center;justify-content:space-between;font-size:13px;color:#666">
-      <span>三軍總醫院北投分院　精神醫療快速應變平台</span>
-      <span>本平台資料僅供授權之醫療、警消及社政人員使用</span>
-    </div>
-  </footer>
-
-  <sc-if value="{{ devOpen }}" hint-placeholder-val="{{ false }}">
-    <div role="dialog" aria-modal="true" style="position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:20px">
-      <div style="background:#fff;border-radius:5px;box-shadow:0 10px 15px -3px rgba(0,0,0,.2);max-width:400px;width:100%;padding:32px 28px;text-align:center;animation:dcFade .2s ease both">
-        <div style="width:56px;height:56px;margin:0 auto 18px;border-radius:50%;background:#e8f7fc;display:grid;place-items:center;color:#19aad1">
-          <svg width="30" height="30" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+  <sc-if value="{{ dlgOpen }}" hint-placeholder-val="{{ false }}">
+    <div class="lp-dialog-mask" role="dialog" aria-modal="true" aria-labelledby="lp-dialog-title" sc-camel-on-click="{{ closeDlg }}">
+      <div class="lp-dialog" sc-camel-on-click="{{ stop }}">
+        <div class="lp-dialog-icon">
+          <svg width="30" height="30" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.5"></path></svg>
         </div>
-        <h3 style="margin:0 0 10px;font-size:20px;font-weight:700;color:#333">功能開發中</h3>
-        <p style="margin:0 0 4px;font-size:15px;line-height:1.7;color:#666">案件查詢尚在開發中，{{ countdownText }}</p>
-        <button type="button" sc-camel-on-click="{{ goBack }}" style="margin-top:22px;min-height:44px;padding:0 28px;border:0;border-radius:100px;background:#0c6496;color:#fff;font-size:15px;font-weight:500;cursor:pointer" style-hover="filter:brightness(1.1)">立即返回上一頁</button>
+        <h3 id="lp-dialog-title">{{ dlgTitle }}</h3>
+        <p>此原型僅示意通報入口頁，通報表單尚未串接。</p>
+        <button type="button" sc-camel-auto-focus="true" sc-camel-on-click="{{ closeDlg }}" style-hover="filter:brightness(1.1)">關閉</button>
       </div>
     </div>
   </sc-if>
@@ -5258,33 +5299,48 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script="" data-props="{}">
 class Component extends DCLogic {
-  state = { devOpen: false, count: 3 };
+  state = { menuOpen: false, dlgOpen: false, dlgTitle: '' };
 
-  componentWillUnmount() { clearInterval(this.timer); }
+  // 各通報表單的正式網址。留空時點擊只開「尚未串接」提示；填入後改為另開分頁前往。
+  links = { emergency: '', plan1: '', plan2: '' };
+  names = { emergency: '緊急醫療通報', plan1: '第一類優化計畫通報', plan2: '第二類優化計畫通報' };
 
-  openDev = (e) => {
+  componentDidMount() { window.addEventListener('keydown', this.onKey); }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
+
+  onKey = (e) => {
+    if (e.key === 'Escape') this.setState({ menuOpen: false, dlgOpen: false });
+  };
+
+  toggleMenu = () => this.setState({ menuOpen: !this.state.menuOpen });
+  closeMenu = () => this.setState({ menuOpen: false });
+  closeDlg = () => this.setState({ dlgOpen: false });
+  stop = (e) => e.stopPropagation();
+
+  go(key, e) {
+    if (this.links[key]) { this.setState({ menuOpen: false }); return; }
     if (e) e.preventDefault();
-    this.setState({ devOpen: true, count: 3 });
-    clearInterval(this.timer);
-    this.timer = setInterval(() => {
-      const n = this.state.count - 1;
-      if (n <= 0) { clearInterval(this.timer); this.goBack(); }
-      else this.setState({ count: n });
-    }, 1000);
-  };
-
-  goBack = () => {
-    clearInterval(this.timer);
-    this.setState({ devOpen: false });
-    if (window.history.length > 1) window.history.back();
-  };
+    this.setState({ menuOpen: false, dlgOpen: true, dlgTitle: this.names[key] });
+  }
+  goEmergency = (e) => this.go('emergency', e);
+  goPlan1 = (e) => this.go('plan1', e);
+  goPlan2 = (e) => this.go('plan2', e);
 
   renderVals() {
     return {
-      devOpen: this.state.devOpen,
-      countdownText: this.state.count + ' 秒後自動返回上一頁。',
-      openDev: this.openDev,
-      goBack: this.goBack
+      menuOpen: this.state.menuOpen,
+      dlgOpen: this.state.dlgOpen,
+      dlgTitle: this.state.dlgTitle,
+      emergencyHref: this.links.emergency || '#',
+      plan1Href: this.links.plan1 || '#',
+      plan2Href: this.links.plan2 || '#',
+      toggleMenu: this.toggleMenu,
+      closeMenu: this.closeMenu,
+      closeDlg: this.closeDlg,
+      stop: this.stop,
+      goEmergency: this.goEmergency,
+      goPlan1: this.goPlan1,
+      goPlan2: this.goPlan2
     };
   }
 }
