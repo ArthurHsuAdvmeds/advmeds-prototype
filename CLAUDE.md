@@ -19,6 +19,7 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
 | --- | --- | --- | --- | --- |
 | `tsghb-dashboard/` | 三總北投 | 精神健康個案通報管理儀表板，`v1/`–`v4/` 各版並存；入口 `index.html` 自動轉址到最新版；`release-note/` 為 V2 以後的版本說明；`db_desc/` 為資料庫規劃（DBML＋規格頁） | 單檔 HTML + D3 / topojson（CDN） | — |
 | `tsghb-landing-page/` | 三總北投 | 各角色登入後的入口頁，一個角色一個子資料夾（`doctor/`、`orgMag/`），共用 `assets/`，另附規格下載 zip | dc-runtime + React | [CLAUDE.md](tsghb-landing-page/CLAUDE.md)、各角色資料夾內 CLAUDE.md |
+| `tsghb-quick-report/` | 三總北投 | 快速通報頁面（無追蹤需求的網絡通報前臺）：選通報類型 → 登入 → 比對身分證字號 → 新增個案 → 填寫表單，五個畫面都在同一份 `index.html`、用網址 `#` 切換；設計稿與流程在 `design/` | dc-runtime + React | [CLAUDE.md](tsghb-quick-report/CLAUDE.md) |
 | `tsghb-doctor-landing-page/` | 三總北投 | **舊版**醫師入口頁，僅保留對照，**不要再改**（改 `tsghb-landing-page/doctor/`） | dc-runtime + React | [CLAUDE.md](tsghb-doctor-landing-page/CLAUDE.md) |
 | `tsghb-flow-test/` | 三總北投 | 通報流程測試導引（緊急醫療、優化計畫測試情境清單） | 單檔 HTML | — |
 | `tsghb-middleware/` | 三總北投 | HIS 整合示範（HIS 門診畫面開啟個案紀錄） | 單檔 HTML | — |
@@ -66,7 +67,7 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
 
 ### dc-runtime 頁面
 
-`tsghb-landing-page/`、`tsghb-doctor-landing-page/`、`spec/nhri_ms/` 使用 `<x-dc>` 樣板 + `dc-runtime.js` 以 React 渲染：
+`tsghb-landing-page/`、`tsghb-doctor-landing-page/`、`tsghb-quick-report/`、`spec/nhri_ms/` 使用 `<x-dc>` 樣板 + `dc-runtime.js` 以 React 渲染：
 
 - `window.__resources` 不可移除（React 靠它從本地 `assets/js/` 載入）。
 - `{{ 變數 }}` 只能綁 `renderVals()` 回傳的頂層鍵；顏色一律用 `:root` 設計 token，不寫死色碼。
