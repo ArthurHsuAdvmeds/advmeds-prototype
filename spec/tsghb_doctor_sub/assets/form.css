@@ -1,0 +1,141 @@
+/* 編輯帳號（前臺 front/）與基本資料（後臺 back/）共用：設計 token、表單欄位、次專科多選下拉。
+   頁面外框（Header、標題列、側邊選單、Footer）各自寫在該頁的 <style>。 */
+
+:root {
+  --teal-50: #D0FCF9; --teal-100: #71E8F1; --teal-300: #19AAD1; --teal-500: #1285B3; --teal-700: #0C6496;
+  --red-300: #E54B4B; --red-500: #C43643;
+  --grey-0: #FFFFFF; --grey-50: #FAFAFA; --grey-100: #F0F0F0; --grey-200: #E0E0E0; --grey-400: #C4C4C4;
+  --grey-500: #9E9E9E; --grey-700: #666666; --grey-900: #333333;
+  --border-default: var(--grey-400);
+  --focus-ring: 0 0 0 2px rgba(25, 170, 209, .2);
+
+  /* 次專科選項的狀態色。參考樣式用的是綠色主題的 green-100／green-50，
+     這個平台的主題色是 teal，取同一階的 teal-100／teal-50。
+     色塊與已選標籤的底色是每個選項自己的資料（form.js 的 SUB_SPECIALTIES），由腳本設成 --ss-color */
+  --ss-selected: var(--teal-100);
+  --ss-hover: var(--teal-50);
+
+  --f-h: 34px;   /* 輸入框高度，各頁可在 media query 裡覆寫 */
+  --font-body: "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft JhengHei", sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; font-family: var(--font-body); font-size: 14px; line-height: 1.5; color: var(--grey-900); }
+button, input, select { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+
+/* ---------- 欄位 ---------- */
+.f-field { margin-top: 16px; }
+.f-field:first-child { margin-top: 0; }
+.f-label { display: block; margin: 0 0 4px; font-size: 14px; line-height: 20px; font-weight: 500; }
+.f-req { color: var(--red-300); }
+
+.f-input {
+  display: block; width: 100%; height: var(--f-h); padding: 0 10px;
+  border: 1px solid var(--border-default); border-radius: 4px; outline: 0;
+  background: var(--grey-0); font-size: 14px; color: var(--grey-900);
+}
+.f-input::placeholder { color: var(--grey-500); }
+.f-input:focus-visible { border-color: var(--teal-300); box-shadow: var(--focus-ring); }
+.f-input.is-invalid { border-color: var(--red-300); }
+select.f-input {
+  -webkit-appearance: none; appearance: none; padding-right: 30px; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23333' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+}
+/* 「請選擇」那個空白選項顯示成灰字：select 帶 required，表單本身 novalidate */
+select.f-input:invalid { color: var(--grey-500); }
+select.f-input option { color: var(--grey-900); }
+
+.f-row { display: flex; gap: 8px; }
+.f-row > .f-area { flex: none; width: 96px; }
+.f-row > .f-input:not(.f-area) { flex: 1; min-width: 0; }
+@media (max-width: 600px) { .f-row > .f-area { width: 86px; } }
+
+.f-error { margin: 4px 0 0; font-size: 12px; line-height: 18px; color: var(--red-500); }
+.f-hint { margin: 0 0 7px; font-size: 12px; line-height: 18px; color: var(--grey-500); }
+
+/* ---------- 簽章圖片 ---------- */
+.f-upload-wrap { position: relative; width: 120px; }
+.f-upload {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  width: 120px; height: 120px; overflow: hidden;
+  border: 2px dashed var(--border-default); border-radius: 4px;
+  color: var(--teal-300); font-size: 16px; cursor: pointer;
+}
+.f-upload:hover { border-color: var(--teal-300); }
+.f-upload:focus-within { border-color: var(--teal-300); box-shadow: var(--focus-ring); }
+.f-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.f-upload img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: var(--grey-0); }
+.f-upload-remove {
+  position: absolute; right: -8px; top: -8px; display: grid; place-items: center; width: 22px; height: 22px; padding: 0;
+  border: 0; border-radius: 50%; background: var(--grey-700); color: #fff; cursor: pointer;
+}
+.f-upload-remove:hover { background: var(--grey-900); }
+
+/* ---------- 儲存 ---------- */
+.f-save {
+  display: block; width: 100%; height: 34px; margin-top: 16px; padding: 0;
+  border: 0; border-radius: 4px; background: var(--teal-300); color: #fff; font-size: 14px; font-weight: 500; cursor: pointer;
+}
+.f-save:hover { background: var(--teal-500); }
+.f-save:focus-visible { outline: 2px solid var(--teal-700); outline-offset: 2px; }
+@media (max-width: 600px) { .f-save { height: 30px; } }
+
+.f-toast {
+  position: fixed; left: 50%; bottom: 32px; z-index: 100; transform: translateX(-50%);
+  max-width: calc(100vw - 32px); padding: 10px 20px; border-radius: 4px;
+  background: rgba(51, 51, 51, .92); color: #fff; font-size: 14px;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.f-toast.is-on { opacity: 1; }
+
+/* ---------- 次專科多選下拉（.ss = sub-specialty select） ----------
+   結構由 form.js 產生：.ss-control（已選的標籤＋箭頭）與 .ss-panel（搜尋＋選項） */
+.ss { position: relative; }
+.ss-control {
+  position: relative; display: flex; align-items: center; min-height: var(--f-h); padding: 4px 34px 4px 8px;
+  border: 1px solid var(--border-default); border-radius: 4px; outline: 0; background: var(--grey-0); cursor: pointer;
+}
+.ss-control:focus-visible, .ss.is-open .ss-control { border-color: var(--teal-300); box-shadow: var(--focus-ring); }
+.ss-chips { display: flex; flex: 1; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.ss-placeholder { padding-left: 2px; line-height: 22px; color: var(--grey-500); }
+.ss-chip {
+  display: inline-flex; align-items: center; gap: 5px; max-width: 100%; height: 22px; padding: 0 3px 0 7px;
+  border-radius: 4px; background: var(--ss-color); color: #fff; font-size: 14px; line-height: 22px; white-space: nowrap;
+}
+.ss-chip svg { flex: none; }
+.ss-chip-text { overflow: hidden; text-overflow: ellipsis; }
+.ss-chip-x {
+  flex: none; display: grid; place-items: center; width: 18px; height: 18px; padding: 0;
+  border: 0; border-radius: 3px; background: transparent; color: inherit; cursor: pointer;
+}
+.ss-chip-x:hover, .ss-chip-x:focus-visible { background: rgba(255, 255, 255, .28); outline: 0; }
+.ss-caret { position: absolute; right: 10px; top: 50%; width: 14px; height: 14px; margin-top: -7px; transition: transform .15s; }
+.ss.is-open .ss-caret { transform: rotate(180deg); }
+
+.ss-panel {
+  position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 30; padding: 12px;
+  border: 1px solid var(--border-default); border-radius: 4px; background: var(--grey-0); box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+}
+/* 下方空間不夠時往上開（參考樣式就是往上開的樣子） */
+.ss.is-up .ss-panel { top: auto; bottom: calc(100% + 4px); }
+.ss-search { position: relative; }
+.ss-search input {
+  display: block; width: 100%; height: 34px; padding: 0 46px 0 10px;
+  border: 1px solid var(--border-default); border-radius: 4px; outline: 0; background: var(--grey-0); font-size: 14px;
+}
+.ss-search input::placeholder { color: var(--grey-500); }
+.ss-search input:focus-visible { border-color: var(--teal-300); }
+.ss-search-ico { position: absolute; right: 0; top: 0; display: grid; place-items: center; width: 36px; height: 34px; color: var(--teal-300); pointer-events: none; }
+.ss-search-ico::before { content: ""; position: absolute; left: 0; top: 7px; bottom: 7px; border-left: 1px solid var(--border-default); }
+
+.ss-list { max-height: 216px; margin: 12px 0 0; padding: 0; overflow-y: auto; list-style: none; }
+.ss-opt { display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 6px 8px; border-radius: 4px; line-height: 20px; cursor: pointer; }
+.ss-opt:hover { background: var(--ss-hover); }
+.ss-opt[aria-selected="true"] { background: var(--ss-selected); }
+/* 鍵盤上下鍵移到的那一列：只加外框，不動底色，才分得出已選中／未選中 */
+.ss-opt.is-active { box-shadow: inset 0 0 0 2px var(--teal-300); }
+.ss-swatch { flex: none; width: 20px; height: 20px; background: var(--ss-color); }
+.ss-empty { margin: 12px 0 0; padding: 8px; text-align: center; color: var(--grey-500); }

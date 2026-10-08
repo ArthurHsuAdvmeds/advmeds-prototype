@@ -24,6 +24,7 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
 | `tsghb-flow-test/` | 三總北投 | 通報流程測試導引（緊急醫療、優化計畫測試情境清單） | 單檔 HTML | — |
 | `tsghb-middleware/` | 三總北投 | HIS 整合示範（HIS 門診畫面開啟個案紀錄） | 單檔 HTML | — |
 | `tsghb-ppt/` | 三總北投 | 平台網頁版簡報，圖片在 `assets/` | 單檔 HTML | — |
+| `spec/tsghb_doctor_sub/` | 三總北投 | 醫師次專科欄位：帳號資料新增「次專科」多選下拉，通報前臺的編輯帳號（`front/`）與後臺的基本資料（`back/`）各一頁、共用 `assets/form.css`／`form.js`；入口 `index.html` 是切換瀏覽頁（iframe 切前後臺與電腦／手機寬度）；設計稿在 `design/` | HTML + 共用 CSS／JS | [CLAUDE.md](spec/tsghb_doctor_sub/CLAUDE.md) |
 | `spec/nhri_ms/` | 國衛院 | 肌少症評估量表（AWGS 2025），`write/` 填寫頁、`result/` 結果頁 | dc-runtime + React | [CLAUDE.md](spec/nhri_ms/CLAUDE.md) |
 | `spec/nhri_elearing_room/` | 國衛院 | ICOPE 學習小教室 | 單檔 HTML | — |
 | `spec/nhri_elearing/` | 國衛院 | ICOPE 衛教推播邏輯一覽（給 PM 對照） | 單檔 HTML | — |

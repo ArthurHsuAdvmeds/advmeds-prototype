@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>基本資料 — 精神醫療快速應變平台（後臺）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../assets/form.css">
+<style>
+  /* 後臺的外框：藍色 Header／Footer、左側選單＋白色卡片。基礎樣式是手機版，電腦版在 min-width:1024px。
+     欄位與次專科下拉的樣式在 ../assets/form.css，與前臺共用 */
+  :root { --bk-brand: #0CB9E4; }   /* 後臺 Header／Footer 的底色，設計 token 裡沒有 */
+
+  body { display: flex; flex-direction: column; min-height: 100vh; background: var(--grey-50); }
+
+  .bk-header {
+    position: sticky; top: 0; z-index: 40; flex: none; display: flex; align-items: center; height: 54px; padding: 0 15px;
+    background: var(--bk-brand); box-shadow: 0 2px 4px rgba(0, 0, 0, .12); color: #fff;
+  }
+  .bk-logo {
+    flex: none; display: flex; align-items: center; gap: 4px; height: 35px; padding: 0 14px 0 4px; overflow: hidden;
+    border-radius: 100px; background: #fff; color: var(--teal-300); font-size: 12px; line-height: 14px; font-weight: 700; text-align: center;
+  }
+  .bk-logo img { width: auto; height: 30px; }
+  .bk-nav { display: none; }
+  .bk-nav button {
+    display: inline-flex; align-items: center; gap: 8px; padding: 0; border: 0; background: transparent;
+    color: #fff; font-size: 20px; white-space: nowrap; cursor: pointer;
+  }
+  .bk-nav button:hover { opacity: .85; }
+  .bk-tools { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+  .bk-tools button { flex: none; border: 0; cursor: pointer; }
+  .bk-bell { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border-radius: 50%; background: #fff; color: var(--bk-brand); }
+  .bk-user {
+    display: none; align-items: center; gap: 8px; width: 184px; height: 38px; padding: 0 12px 0 5px;
+    border-radius: 100px; background: #fff; color: var(--bk-brand); font-size: 14px;
+  }
+  .bk-user-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+  .bk-menu { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; background: transparent; color: #fff; }
+
+  .bk-main { flex: 1; width: 100%; padding: 15px 14px 40px; }
+  .bk-switch { height: 32px; }
+  .bk-title { margin: 22px 0 13px; font-size: 22px; line-height: 30px; font-weight: 500; }
+  .bk-side { display: none; }
+  .bk-card { padding: 14px 22px 16px; border-radius: 4px; background: var(--grey-0); box-shadow: 0 1px 4px rgba(0, 0, 0, .1); }
+
+  .bk-footer {
+    flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    min-height: 86px; padding: 16px; background: var(--bk-brand); color: #fff; font-size: 14px; text-align: center;
+  }
+  .bk-footer p { margin: 0; }
+
+  @media (min-width: 1024px) {
+    .bk-header { height: 58px; padding: 0 16px 0 20px; }
+    .bk-logo { gap: 6px; height: 38px; padding: 0 20px 0 6px; }
+    .bk-nav { display: flex; gap: 30px; margin-left: 32px; }
+    .bk-tools { gap: 10px; }
+    .bk-bell { width: 38px; height: 38px; }
+    .bk-user { display: flex; }
+    .bk-menu { display: none; }
+
+    /* 左欄 208 的選單、右欄卡片；標題與卡片同一欄，選單與卡片頂端對齊 */
+    .bk-main {
+      display: grid; grid-template-columns: 208px minmax(0, 1fr); column-gap: 24px; align-content: start;
+      max-width: 1537px; margin: 0 auto; padding: 26px 24px 48px;
+    }
+    .bk-switch { display: none; }
+    .bk-title { grid-column: 2; grid-row: 1; margin: 0 0 16px; }
+    .bk-side {
+      grid-column: 1; grid-row: 2; align-self: start; display: block; margin: 0; padding: 0; overflow: hidden; list-style: none;
+      border: 1px solid var(--border-default); border-radius: 6px; background: var(--grey-0);
+    }
+    .bk-side li + li { border-top: 1px solid var(--border-default); }
+    .bk-side button {
+      display: block; width: 100%; height: 44px; padding: 0 16px; border: 0; background: transparent;
+      font-size: 14px; font-weight: 500; text-align: left; cursor: pointer;
+    }
+    .bk-side button:hover { background: var(--grey-50); }
+    .bk-side .is-current { color: var(--teal-300); }
+    .bk-card { grid-column: 2; grid-row: 2; padding: 16px 24px; }
+
+    .bk-footer { flex-direction: row; justify-content: space-between; min-height: 54px; padding: 0 48px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header 的選單、通知、使用者選單與 Footer 是既有功能，這份原型只放外觀，沒有動作 -->
+<header class="bk-header">
+  <div class="bk-logo">
+    <img src="../assets/img/logo-tsghb.png" alt="三軍總醫院北投分院">
+    <span>精神醫療<br>快速應變平台</span>
+  </div>
+  <nav class="bk-nav" aria-label="主選單">
+    <button type="button">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/></svg>
+      我的案件
+    </button>
+    <button type="button">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+      案件查詢
+    </button>
+    <button type="button">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V4M4 20h16M8 16v-4M12 16V8M16 16v-6"/></svg>
+      管理儀錶板
+    </button>
+  </nav>
+  <div class="bk-tools">
+    <button type="button" class="bk-bell" aria-label="通知">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a1.5 1.5 0 0 0-1.5 1.5v.7A6.5 6.5 0 0 0 5.5 10.5V15l-1.7 2.5a1 1 0 0 0 .8 1.5h14.8a1 1 0 0 0 .8-1.5L18.5 15v-4.5a6.5 6.5 0 0 0-5-6.3v-.7A1.5 1.5 0 0 0 12 2zM9.5 20.5a2.5 2.5 0 0 0 5 0h-5z"/></svg>
+    </button>
+    <button type="button" class="bk-user">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="10.5"/><circle cx="12" cy="9.5" r="3.5"/><path d="M5 19.5a8 8 0 0 1 14 0"/></svg>
+      <span class="bk-user-name" data-user-name>王大明</span>
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 7h18l-9 11z"/></svg>
+    </button>
+    <button type="button" class="bk-menu" aria-label="選單">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="bk-main">
+  <!-- 手機用下拉、電腦用左側選單切換「基本資料／修改密碼」；修改密碼不在這份原型的範圍 -->
+  <select class="f-input bk-switch" id="bk-switch" aria-label="帳號設定">
+    <option value="profile" selected>基本資料</option>
+    <option value="password">修改密碼</option>
+  </select>
+  <ul class="bk-side">
+    <li><button type="button" class="is-current" aria-current="page">基本資料</button></li>
+    <li><button type="button">修改密碼</button></li>
+  </ul>
+
+  <h1 class="bk-title">基本資料</h1>
+
+  <div class="bk-card">
+    <!-- 表單欄位與 ../front/index.html 相同（id 也相同，form.js 靠 id 找欄位），改欄位時兩頁一起改 -->
+    <form id="profile-form" novalidate>
+      <div class="f-field">
+        <label class="f-label" for="f-name">姓名<span class="f-req">*</span></label>
+        <input class="f-input" id="f-name" name="name" type="text" autocomplete="name" aria-describedby="f-name-error" required>
+        <p class="f-error" id="f-name-error" hidden>請輸入姓名</p>
+      </div>
+
+      <div class="f-field">
+        <label class="f-label" for="f-mobile">手機號碼</label>
+        <input class="f-input" id="f-mobile" name="mobile" type="tel" inputmode="numeric" autocomplete="tel">
+      </div>
+
+      <div class="f-field">
+        <label class="f-label" for="f-tel">市內電話</label>
+        <div class="f-row">
+          <select class="f-input f-area" id="f-area" name="area" aria-label="市內電話區碼" required>
+            <option value="">請選擇</option>
+          </select>
+          <input class="f-input" id="f-tel" name="tel" type="tel" inputmode="numeric" placeholder="請輸入市內電話">
+        </div>
+      </div>
+
+      <div class="f-field">
+        <label class="f-label" for="f-email">電子信箱</label>
+        <input class="f-input" id="f-email" name="email" type="email" autocomplete="email" placeholder="請輸入電子信箱">
+      </div>
+
+      <!-- 次專科：多選下拉，內容由 form.js 的 initSubSelect() 產生 -->
+      <div class="f-field">
+        <span class="f-label" id="f-sub-label">次專科</span>
+        <div class="ss" id="f-sub" data-labelledby="f-sub-label"></div>
+      </div>
+
+      <div class="f-field">
+        <span class="f-label" id="f-sign-label">簽章圖片</span>
+        <p class="f-hint" id="f-sign-hint">建議尺寸：1200 x 607 px；檔案格式：png</p>
+        <div class="f-upload-wrap">
+          <label class="f-upload">
+            <input type="file" id="f-sign" accept="image/png" aria-labelledby="f-sign-label" aria-describedby="f-sign-hint">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+            <span>上傳圖片</span>
+          </label>
+        </div>
+        <p class="f-error" id="f-sign-error" hidden>檔案格式須為 png</p>
+      </div>
+
+      <button type="submit" class="f-save">儲存</button>
+    </form>
+  </div>
+</main>
+
+<footer class="bk-footer">
+  <p>本網站採用 reCAPTCHA 保護機制 - 隱私權 &amp; 條款</p>
+  <p>隱私權聲明及服務條款</p>
+</footer>
+
+<script src="../assets/form.js"></script>
+<script>
+  // 修改密碼沒有做：手機的下拉選了也留在基本資料
+  document.getElementById("bk-switch").addEventListener("change", function () { this.value = "profile"; });
+</script>
+</body>
+</html>

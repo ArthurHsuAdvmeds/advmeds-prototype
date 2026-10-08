@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>編輯帳號 — 精神醫療快速應變平台（通報前臺）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../assets/form.css">
+<style>
+  /* 通報前臺的外框：白色 Header＋藍色標題列。基礎樣式是手機版，電腦版在 min-width:1024px。
+     欄位與次專科下拉的樣式在 ../assets/form.css，與後臺共用 */
+  :root { --fr-page: #F8F8F8; }   /* 手機版頁面底色，hospital-bg.png 的底也是這個顏色 */
+
+  body { display: flex; flex-direction: column; min-height: 100vh; background: var(--fr-page); }
+
+  .fr-header {
+    position: sticky; top: 0; z-index: 40; display: flex; align-items: center; gap: 4px; padding: 8px 4px;
+    background: var(--grey-0); box-shadow: 0 1px 4px rgba(0, 0, 0, .08);
+  }
+  .fr-logo { flex: none; width: auto; height: 40px; }
+  .fr-name { font-size: 16px; font-weight: 500; color: var(--grey-700); white-space: nowrap; }
+  .fr-user, .fr-menu { margin-left: auto; border: 0; background: transparent; cursor: pointer; }
+  .fr-user { display: none; align-items: center; gap: 8px; height: 40px; padding: 0 8px; border-radius: 4px; font-size: 14px; }
+  .fr-menu { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border-radius: 50%; }
+  .fr-user:hover, .fr-menu:hover { background: var(--grey-100); }
+
+  .fr-bar {
+    position: relative; flex: none; display: flex; align-items: center; justify-content: center;
+    min-height: 45px; padding: 0 16px; background: var(--teal-300); color: #fff;
+  }
+  .fr-bar h1 { margin: 0; font-size: 20px; line-height: 1.5; font-weight: 500; }
+  .fr-back {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; gap: 8px;
+    padding: 4px; border: 0; background: transparent; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  .fr-back:hover { opacity: .85; }
+
+  /* 內容欄最寬 1056，兩側至少留 40 */
+  .fr-main { flex: 1; width: 100%; padding: 16px max(40px, calc(50% - 528px)) 56px; }
+
+  @media (max-width: 600px) {
+    :root { --f-h: 32px; }
+    .fr-main { background: url("../assets/img/hospital-bg.png") center bottom / 100% auto no-repeat; }
+  }
+
+  @media (min-width: 1024px) {
+    body { background: var(--grey-50); }
+    .fr-header { gap: 8px; padding: 16px; }
+    .fr-logo { height: 60px; }
+    .fr-name { font-size: 20px; }
+    .fr-user { display: inline-flex; margin-right: 8px; }
+    .fr-menu { display: none; }
+    .fr-bar { min-height: 72px; }
+    .fr-bar h1 { font-size: 24px; }
+    .fr-back { left: 20px; }
+    .fr-main { padding-top: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header、「返回」是既有功能，這份原型只放外觀，沒有動作 -->
+<header class="fr-header">
+  <img src="../assets/img/logo-tsghb.png" alt="三軍總醫院北投分院" class="fr-logo">
+  <span class="fr-name">精神醫療快速應變平台</span>
+  <button type="button" class="fr-user">
+    <span data-user-name>王大明</span>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg>
+  </button>
+  <button type="button" class="fr-menu" aria-label="選單">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  </button>
+</header>
+
+<section class="fr-bar">
+  <button type="button" class="fr-back">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12H4M10 6l-6 6 6 6"/></svg>
+    返回
+  </button>
+  <h1>編輯帳號</h1>
+</section>
+
+<main class="fr-main">
+  <!-- 表單欄位與 ../back/index.html 相同（id 也相同，form.js 靠 id 找欄位），改欄位時兩頁一起改 -->
+  <form id="profile-form" novalidate>
+    <div class="f-field">
+      <label class="f-label" for="f-name">姓名<span class="f-req">*</span></label>
+      <input class="f-input" id="f-name" name="name" type="text" autocomplete="name" aria-describedby="f-name-error" required>
+      <p class="f-error" id="f-name-error" hidden>請輸入姓名</p>
+    </div>
+
+    <div class="f-field">
+      <label class="f-label" for="f-mobile">手機號碼</label>
+      <input class="f-input" id="f-mobile" name="mobile" type="tel" inputmode="numeric" autocomplete="tel">
+    </div>
+
+    <div class="f-field">
+      <label class="f-label" for="f-tel">市內電話</label>
+      <div class="f-row">
+        <select class="f-input f-area" id="f-area" name="area" aria-label="市內電話區碼" required>
+          <option value="">請選擇</option>
+        </select>
+        <input class="f-input" id="f-tel" name="tel" type="tel" inputmode="numeric" placeholder="請輸入市內電話">
+      </div>
+    </div>
+
+    <div class="f-field">
+      <label class="f-label" for="f-email">電子信箱</label>
+      <input class="f-input" id="f-email" name="email" type="email" autocomplete="email" placeholder="請輸入電子信箱">
+    </div>
+
+    <!-- 次專科：多選下拉，內容由 form.js 的 initSubSelect() 產生 -->
+    <div class="f-field">
+      <span class="f-label" id="f-sub-label">次專科</span>
+      <div class="ss" id="f-sub" data-labelledby="f-sub-label"></div>
+    </div>
+
+    <div class="f-field">
+      <span class="f-label" id="f-sign-label">簽章圖片</span>
+      <p class="f-hint" id="f-sign-hint">建議尺寸：1200 x 607 px；檔案格式：png</p>
+      <div class="f-upload-wrap">
+        <label class="f-upload">
+          <input type="file" id="f-sign" accept="image/png" aria-labelledby="f-sign-label" aria-describedby="f-sign-hint">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+          <span>上傳圖片</span>
+        </label>
+      </div>
+      <p class="f-error" id="f-sign-error" hidden>檔案格式須為 png</p>
+    </div>
+
+    <button type="submit" class="f-save">儲存</button>
+  </form>
+</main>
+
+<script src="../assets/form.js"></script>
+</body>
+</html>
