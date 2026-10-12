@@ -73,6 +73,8 @@ code,pre,textarea{font-variant-ligatures:none}
 
 .chk{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
 .chk input{width:16px;height:16px;margin:0;accent-color:var(--accent);cursor:pointer}
+.chk:has(input:disabled){opacity:.45;cursor:default}
+.chk input:disabled{cursor:default}
 
 /* ---------- 工具頁版面 ---------- */
 .app{
@@ -89,7 +91,7 @@ code,pre,textarea{font-variant-ligatures:none}
 .top h1{margin:0;font-size:20px;font-weight:700}
 .lead{margin:0;font-size:13px;color:var(--ink-2);line-height:1.6}
 .lead code{
-  font-family:var(--font-mono);font-size:12px;padding:2px 6px;
+  font-family:var(--font-mono);font-size:12px;padding:2px 6px;white-space:nowrap;
   background:var(--panel);border-radius:var(--radius-md);box-shadow:inset 0 0 0 1px var(--line);
 }
 
@@ -123,8 +125,10 @@ code,pre,textarea{font-variant-ligatures:none}
   font-family:var(--font-mono);font-size:13px;line-height:1.6;white-space:pre;tab-size:4;
 }
 .out.wrap{white-space:pre-wrap;overflow-wrap:anywhere}
-/* 每塊 --n 行（json.js 的 chunked()）；畫面外的區塊不排版，先用行數估高度 */
+/* 每塊 --n 行（tool.js 的 chunked()）；畫面外的區塊不排版，先用行數估高度 */
 .out .chunk{content-visibility:auto;contain-intrinsic-block-size:auto calc(var(--n) * 1.6em)}
+/* content-visibility 會把超出區塊的內容裁掉：不換行時要讓區塊跟著最長的那行變寬，才捲得過去 */
+.out:not(.wrap) .chunk{width:max-content;min-width:100%}
 .out:empty::before{
   content:attr(data-empty);color:var(--ink-3);font-family:var(--font-body);white-space:normal;
 }

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>URL 編碼／解碼｜小工具</title>
+<meta name="robots" content="noindex">
+
+<!--
+  ============================================================================
+  URL 編碼／解碼：文字 ↔ %XX（percent-encoding，UTF-8）
+  ----------------------------------------------------------------------------
+  範圍兩種，對應瀏覽器內建的兩組函式：
+    參數值    encodeURIComponent／decodeURIComponent，連 : / ? & = # 都處理
+    整段網址  encodeURI／decodeURI，上面這些網址符號保持原樣
+  解碼刻意寬鬆：內建函式遇到一個不完整的 %XX 就整段丟錯，
+  這裡改成解得開的照解、解不開的原樣留著，再指出第一處在哪裡。
+
+  畫面接線在共用的 ../assets/tool.js（說明見該檔開頭），這頁只放版面與編解碼的邏輯。
+  ============================================================================
+-->
+
+<link rel="stylesheet" href="../assets/tool.css?v=20261012b">
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <a class="back" href="../">← 小工具</a>
+    <h1>URL 編碼／解碼</h1>
+    <p class="lead">文字與 <code>%E4%B8%AD</code> 這種網址編碼互轉。「參數值」連 <code>/ ? &amp; =</code> 都會處理，適合要放進參數裡的內容；「整段網址」會保留這些符號。資料只在你的瀏覽器裡處理。</p>
+  </header>
+
+  <div class="opts">
+    <div class="opt-group">
+      <span class="opt-label" id="modeLabel">方向</span>
+      <div class="seg" role="radiogroup" aria-labelledby="modeLabel">
+        <label><input type="radio" name="mode" data-opt="mode" value="encode" checked><span>編碼</span></label>
+        <label><input type="radio" name="mode" data-opt="mode" value="decode"><span>解碼</span></label>
+      </div>
+    </div>
+    <div class="opt-group">
+      <span class="opt-label" id="scopeLabel">範圍</span>
+      <div class="seg" role="radiogroup" aria-labelledby="scopeLabel">
+        <label><input type="radio" name="scope" data-opt="scope" value="component" checked><span>參數值</span></label>
+        <label><input type="radio" name="scope" data-opt="scope" value="url"><span>整段網址</span></label>
+      </div>
+    </div>
+    <label class="chk"><input type="checkbox" data-opt="plus"><span id="plusText">空格編成 +</span></label>
+    <label class="chk"><input type="checkbox" data-opt="lines" id="linesOpt">每行分開編碼</label>
+    <label class="chk"><input type="checkbox" data-opt="wrap" checked>過長自動換行</label>
+  </div>
+
+  <main class="panes">
+    <section class="pane" aria-labelledby="inTitle">
+      <div class="pane-head">
+        <h2 id="inTitle">輸入</h2>
+        <span class="meta" id="inMeta"></span>
+        <button class="btn" type="button" data-act="paste">貼上</button>
+        <button class="btn" type="button" data-act="sample">範例</button>
+        <button class="btn" type="button" data-act="clear">清除</button>
+      </div>
+      <textarea id="input" spellcheck="false" autocomplete="off" autocapitalize="off" aria-labelledby="inTitle"></textarea>
+    </section>
+
+    <section class="pane" aria-labelledby="outTitle">
+      <div class="pane-head">
+        <h2 id="outTitle">結果</h2>
+        <span class="meta" id="outMeta"></span>
+        <button class="btn" type="button" data-act="swap" data-needs-result id="swapBtn" disabled>拿去解碼</button>
+        <button class="btn primary" type="button" data-act="copy" disabled>複製</button>
+      </div>
+      <div class="status" id="status" role="status" hidden></div>
+      <pre class="out wrap" id="output" tabindex="0" aria-labelledby="outTitle" data-empty="結果會顯示在這裡。"></pre>
+    </section>
+  </main>
+
+</div>
+
+<script src="../assets/tool.js?v=20261012b"></script>
+<script>
+(function () {
+  'use strict';
+  var T = window.SmallTool;
+  var input = document.getElementById('input');
+  var plusText = document.getElementById('plusText');
+  var linesOpt = document.getElementById('linesOpt');
+  var swapBtn = document.getElementById('swapBtn');
+
+  var HEX2 = /%[0-9A-Fa-f]{2}/;
+  var RESERVED = /%(?:2[346BCF]|3[ABDF]|40)/i;      // ; / ? : @ & = + $ , # 的編碼，decodeURI 不會解開
+  var RUN = /(?:%[0-9A-Fa-f]{2})+|%/g;               // 連續的 %XX，或落單的 %
+  var LONE = /[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDFFF]/g;
+
+  /* ---------- 編碼 ---------- */
+
+  function encode(src, o) {
+    var whole = o.scope === 'url';
+    var fn = whole ? encodeURI : encodeURIComponent;
+    var broken = false;
+
+    function one(text) {
+      var out;
+      try {
+        out = fn(text);
+      } catch (e) {
+        // 落單的代理字元（例如只剩半個的表情符號）編不成 UTF-8，換成 � 再編
+        if (!(e instanceof URIError)) throw e;
+        out = fn(text.replace(LONE, function (m) { return m.length === 2 ? m : '�'; }));
+        broken = true;
+      }
+      return o.plus ? out.replace(/%20/g, '+') : out;
+    }
+
+    var lines = o.lines ? src.split(/\r\n|\r|\n/) : [src];
+    var text = lines.map(one).join('\n');
+    var res = { text: text, notes: [] };
+
+    if (text === src) res.notes.push('沒有需要編碼的字元，內容不變');
+    else res.notes.push('已用 ' + (whole ? 'encodeURI' : 'encodeURIComponent') + ' 編碼' + (o.plus ? '，空格編成 +' : ''));
+    var filled = lines.filter(Boolean).length;
+    if (o.lines && filled > 1) res.notes.push(filled + ' 行分開編碼');
+    else if (!o.lines && /[\r\n]/.test(src)) res.notes.push('換行也編碼了（%0A）');
+    if (lines.some(function (l) { return /^[ \t]|[ \t]$/.test(l); })) res.notes.push('開頭或結尾的空白也編碼了');
+    if (broken) res.notes.push('有殘缺的字元（例如半個表情符號），已換成 �');
+    if (HEX2.test(src)) {
+      res.kind = 'warn';
+      res.notes.push('輸入裡已經有 %XX，裡面的 % 會再被編成 %25');
+      res.hint = { text: '如果是要把它解開，', link: '改成解碼', action: function (tool) { tool.setOpts({ mode: 'decode' }); } };
+    }
+    return res;
+  }
+
+  /* ---------- 解碼 ---------- */
+
+  // UTF-8 第一個位元組決定這個字元佔幾個位元組；0 表示它不能當開頭
+  function sequenceLength(b) {
+    return b < 0x80 ? 1 : b >= 0xC2 && b <= 0xDF ? 2 : b >= 0xE0 && b <= 0xEF ? 3 : b >= 0xF0 && b <= 0xF4 ? 4 : 0;
+  }
+
+  function decode(src, o) {
+    var whole = o.scope === 'url';
+    var fn = whole ? decodeURI : decodeURIComponent;
+    var bad = [];     // 解不開的地方 { pos, end, message }，相鄰的併成一處
+
+    function flag(pos, length, message) {
+      var last = bad[bad.length - 1];
+      if (last && last.end === pos) last.end = pos + length;
+      else bad.push({ pos: pos, end: pos + length, message: message });
+    }
+
+    // + 換成空格要在解 %XX 之前做，%2B 解出來的 + 才不會也被換掉；兩者等長，pos 仍對得上原文
+    var text = (o.plus ? src.replace(/\+/g, ' ') : src).replace(RUN, function (run, pos) {
+      if (run === '%') {
+        flag(pos, 1, '% 後面要接兩個十六進位數字');
+        return run;
+      }
+      try { return fn(run); } catch (e) { if (!(e instanceof URIError)) throw e; }
+      // 整段解不開：一個字元一個字元試，湊不成 UTF-8 字元的位元組原樣留著
+      var out = '';
+      for (var k = 0; k < run.length;) {
+        var length = sequenceLength(parseInt(run.slice(k + 1, k + 3), 16)) * 3;
+        var ch = null;
+        if (length && k + length <= run.length) {
+          try { ch = fn(run.slice(k, k + length)); } catch (e) { if (!(e instanceof URIError)) throw e; }
+        }
+        if (ch == null) {
+          flag(pos + k, 3, '這裡的位元組湊不成 UTF-8 字元（可能被截斷，或原本不是用 UTF-8 編碼）');
+          out += run.slice(k, k + 3);
+          k += 3;
+        } else {
+          out += ch;
+          k += length;
+        }
+      }
+      return out;
+    });
+
+    var res = { text: text, notes: [] };
+    if (text !== src) res.notes.push('已用 ' + (whole ? 'decodeURI' : 'decodeURIComponent') + ' 解碼' + (o.plus && src.indexOf('+') >= 0 ? '，+ 換成空格' : ''));
+    else if (!bad.length) res.notes.push('沒有需要解碼的內容，內容不變');
+    if (!o.plus && src.indexOf('+') >= 0) res.notes.push('+ 保持原樣（代表空格的話請勾「+ 當成空格」）');
+    if (whole && RESERVED.test(text)) res.notes.push('/ ? & = 這類網址符號的 %XX 維持原樣');
+
+    if (bad.length) {
+      res.notes.push('有 ' + bad.length + ' 處解不開，已原樣保留');
+      res.error = new T.InputError(bad[0].message, bad[0].pos, src);
+    } else if (HEX2.test(whole ? text.replace(new RegExp(RESERVED.source, 'gi'), '') : text)) {
+      // 解完還有 %XX：原本的 %25 解成了 %，多半是被編碼了不只一次
+      res.hint = { text: '結果裡還有 %XX，可能被編碼了不只一次，', link: '再解一次', action: function (tool) { tool.setInput(tool.result()); } };
+    }
+    return res;
+  }
+
+  /* ---------- 畫面 ---------- */
+
+  // 範例的網址與姓名都是虛構的。解碼範例的 tab 參數多編了一層，解一次後會出現「再解一次」
+  var RETURN_URL = 'https://example.com/回診?id=A001&tab=';
+  var ENCODE_SAMPLE = RETURN_URL + '檢驗 報告';
+  var DECODE_SAMPLE = 'https://example.com/login?name=' + encodeURIComponent('王小明') +
+    '&returnUrl=' + encodeURIComponent(RETURN_URL + encodeURIComponent('檢驗 報告'));
+
+  T.mount({
+    optKey: 'small_tool.url.opts',
+    fileName: 'url.txt',
+    sample: function (o) { return o.mode === 'decode' ? DECODE_SAMPLE : ENCODE_SAMPLE; },
+    convert: function (src, o) { return o.mode === 'decode' ? decode(src, o) : encode(src, o); },
+    onOptions: function (o) {
+      var decoding = o.mode === 'decode';
+      input.placeholder = decoding ? '在這裡貼上編碼過的文字，例如 %E4%B8%AD%E6%96%87' : '在這裡貼上要編碼的文字或網址';
+      plusText.textContent = decoding ? '+ 當成空格' : '空格編成 +';
+      linesOpt.disabled = decoding;     // 解碼不會動到換行，這個選項只對編碼有意義
+      swapBtn.textContent = decoding ? '拿去編碼' : '拿去解碼';
+    },
+    actions: {
+      // 把結果放回輸入框、方向反過來，用來檢查轉回去是不是原本的內容
+      swap: function (tool) {
+        var text = tool.result();
+        tool.setOpts({ mode: tool.opts().mode === 'decode' ? 'encode' : 'decode' });
+        tool.setInput(text);
+      }
+    }
+  });
+})();
+</script>
+</body>
+</html>

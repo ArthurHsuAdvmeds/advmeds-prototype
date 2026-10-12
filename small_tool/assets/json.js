@@ -1,5 +1,5 @@
 /* ============================================================================
-   small_tool 共用：JSON 解析／輸出，以及各工具頁共用的畫面接線
+   small_tool 共用：JSON 解析／輸出（兩個 JSON 工具頁用，要先載入 tool.js）
    ----------------------------------------------------------------------------
    排版不走 JSON.parse → JSON.stringify，因為那樣會改到資料的寫法：
    40.0 會變成 40、超過 2^53 的整數會失真、重複的鍵會被吃掉。
@@ -16,19 +16,16 @@
    ============================================================================ */
 (function (global) {
   'use strict';
+  var T = global.SmallTool;
 
   /* ---------- 解析 ---------- */
 
+  // 是 tool.js 的 InputError，狀態列才會標出錯誤位置
   function JsonError(message, pos, src) {
+    T.InputError.call(this, message, pos, src);
     this.name = 'JsonError';
-    this.message = message;
-    this.pos = pos;
-    this.src = src;
-    var before = src.slice(0, pos).split('\n');
-    this.line = before.length;
-    this.col = before[before.length - 1].length + 1;
   }
-  JsonError.prototype = Object.create(Error.prototype);
+  JsonError.prototype = Object.create(T.InputError.prototype);
   JsonError.prototype.constructor = JsonError;
 
   var RE_WS = /[ \t\n\r]*/y;
@@ -151,9 +148,6 @@
 
   /* ---------- 輸出 ---------- */
 
-  function escapeHtml(s) {
-    return s.replace(/[&<>]/g, function (c) { return c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;'; });
-  }
   function byKey(a, b) { return a.key < b.key ? -1 : a.key > b.key ? 1 : 0; }
 
   // indent 給空字串就是壓成一行；html 為 true 時每個值包一層 <span class="j-…"> 供上色
@@ -164,7 +158,7 @@
     var out = [];
 
     function tok(cls, raw) {
-      out.push(opt.html ? '<span class="j-' + cls + '">' + escapeHtml(raw) + '</span>' : raw);
+      out.push(opt.html ? '<span class="j-' + cls + '">' + T.escapeHtml(raw) + '</span>' : raw);
     }
     function walk(node, pad) {
       var inner = pad + indent, k;
@@ -200,312 +194,41 @@
     return out.join('');
   }
 
-  /* ---------- 小工具 ---------- */
-
-  function formatBytes(text) {
-    var b = new Blob([text]).size;
-    if (b < 1024) return b + ' B';
-    if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
-    return (b / 1024 / 1024).toFixed(2) + ' MB';
-  }
-  function lineCount(text) {
-    var count = 1;
-    for (var p = text.indexOf('\n'); p >= 0; p = text.indexOf('\n', p + 1)) count++;
-    return count;
-  }
-
-  function legacyCopy(text) {
-    return new Promise(function (resolve, reject) {
-      var ta = document.createElement('textarea');
-      ta.value = text;
-      ta.setAttribute('readonly', '');
-      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
-      document.body.appendChild(ta);
-      ta.select();
-      var ok = false;
-      try { ok = document.execCommand('copy'); } catch (e) {}
-      document.body.removeChild(ta);
-      if (ok) resolve(); else reject(new Error('copy failed'));
-    });
-  }
-  function copyText(text) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      return navigator.clipboard.writeText(text).catch(function () { return legacyCopy(text); });
-    }
-    return legacyCopy(text);
-  }
-
-  function download(text, name) {
-    var url = URL.createObjectURL(new Blob([text], { type: 'application/json;charset=utf-8' }));
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-  }
-
-  var toastTimer = 0;
-  function toast(message) {
-    var el = document.getElementById('toast');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'toast';
-      el.setAttribute('role', 'status');
-      document.body.appendChild(el);
-      el.offsetWidth;   // 先排版一次，第一次出現才有淡入
-    }
-    el.textContent = message;
-    el.classList.add('on');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { el.classList.remove('on'); }, 2000);
-  }
-
-  // file:// 下瀏覽器不會自動載入目錄裡的 index.html，本機直接開檔時把結尾是 / 的相對連結補上
-  function fixLocalLinks(root) {
-    if (location.protocol !== 'file:') return;
-    (root || document).querySelectorAll('a[href^="./"],a[href^="../"]').forEach(function (a) {
-      var href = a.getAttribute('href');
-      if (href.slice(-1) === '/') a.setAttribute('href', href + 'index.html');
-    });
-  }
-
   /* ---------- 工具頁接線 ----------
-     頁面要有 #input、#output、#status、#inMeta、#outMeta，
-     按鈕用 data-act（paste / sample / clear / copy / download），
-     選項用 data-opt（radio 取 value、checkbox 取 checked），選項會記在 localStorage，輸入內容不會。
+     兩個 JSON 工具頁共用。cfg.convert(src, opts) 回傳 { node | text, notes, error, hint }，或直接丟 JsonError：
+       node → 依縮排、排序選項排版並上色；text → 原樣顯示（解開後不是 JSON 的字串）
+     狀態列、按鈕、選項記憶等其餘的事交給 tool.js 的 SmallTool.mount()，notes / error / hint 的意思見該檔開頭。 */
 
-     cfg.convert(src, opts) 回傳 { node | text, notes, error, hint }，或直接丟 JsonError：
-       node  → 依選項排版並上色；text → 原樣顯示（解開後不是 JSON 的字串）
-       notes → 狀態列的說明；error → 有結果但內容有問題時附上的 JsonError
-       hint  → { text, link, href }，點連結會把目前輸入帶到另一個工具頁                       */
-
-  var OPT_KEY = 'small_tool.json.opts';
-  var HANDOFF_KEY = 'small_tool.json.handoff';
   var HIGHLIGHT_LIMIT = 2000000;      // 結果超過這個字數就不上色，避免卡住
-  var CHUNK_LINES = 100;
-  var FILE_LIMIT = 20 * 1024 * 1024;
-  var SNIP_RADIUS = 36;
 
   function mount(cfg) {
-    var input = document.getElementById('input');
-    var output = document.getElementById('output');
-    var status = document.getElementById('status');
-    var inMeta = document.getElementById('inMeta');
-    var outMeta = document.getElementById('outMeta');
-    var optEls = [].slice.call(document.querySelectorAll('[data-opt]'));
-    var needResult = [].slice.call(document.querySelectorAll('[data-act="copy"],[data-act="download"]'));
-    var plain = '', isJson = false, timer = 0;
-
-    function el(tag, cls, text) {
-      var e = document.createElement(tag);
-      if (cls) e.className = cls;
-      if (text != null) e.textContent = text;
-      return e;
-    }
-
-    function storedOpts() {
-      try { return JSON.parse(localStorage.getItem(OPT_KEY)) || {}; } catch (e) { return {}; }
-    }
-    function readOpts() {
-      var o = {};
-      optEls.forEach(function (c) {
-        if (c.type === 'radio') { if (c.checked) o[c.dataset.opt] = c.value; }
-        else o[c.dataset.opt] = c.checked;
-      });
-      return o;
-    }
-    function saveOpts() {
-      var all = storedOpts(), now = readOpts();
-      for (var k in now) all[k] = now[k];
-      try { localStorage.setItem(OPT_KEY, JSON.stringify(all)); } catch (e) {}
-    }
-    function applyOpts(o) {
-      optEls.forEach(function (c) {
-        if (!(c.dataset.opt in o)) return;
-        if (c.type === 'radio') { if (c.value === o[c.dataset.opt]) c.checked = true; }
-        else c.checked = !!o[c.dataset.opt];
-      });
-    }
-
-    // 結果每 CHUNK_LINES 行包成一塊，畫面外的區塊靠 CSS content-visibility 略過排版，幾 MB 的內容才不會卡住。
-    // 值都不含換行（JSON 字串裡的換行一定是 \n 寫法），所以照行切不會切到 <span> 中間
-    function chunked(html) {
-      var lines = html.split('\n'), parts = [];
-      for (var k = 0; k < lines.length; k += CHUNK_LINES) {
-        var n = Math.min(CHUNK_LINES, lines.length - k);
-        parts.push('<div class="chunk" style="--n:' + n + '">' + lines.slice(k, k + n).join('\n') + '</div>');
-      }
-      return parts.join('');
-    }
-
-    function setResult(text, json, html) {
-      plain = text;
-      isJson = json;
-      if (html != null) output.innerHTML = chunked(html); else output.textContent = text;
-      outMeta.textContent = text ? lineCount(text) + ' 行 · ' + formatBytes(text) : '';
-      needResult.forEach(function (b) { b.disabled = !text; });
-    }
-
-    // 錯誤位置前後各取一小段，把出錯的那個字標起來
-    function snippet(err) {
-      var src = err.src, pos = err.pos;
-      var ls = src.lastIndexOf('\n', pos - 1) + 1;
-      var le = src.indexOf('\n', pos);
-      if (le < 0) le = src.length;
-      if (src[le - 1] === '\r') le--;
-      var a = Math.max(ls, pos - SNIP_RADIUS), b = Math.min(le, pos + SNIP_RADIUS + 1);
-      var pre = el('pre', 'status-snip');
-      pre.appendChild(document.createTextNode((a > ls ? '…' : '') + src.slice(a, pos)));
-      if (pos < le) {
-        pre.appendChild(el('mark', '', src[pos]));
-        pre.appendChild(document.createTextNode(src.slice(pos + 1, b) + (b < le ? '…' : '')));
-      } else {
-        pre.appendChild(el('mark', 'eof', ' '));
-      }
-      return pre;
-    }
-
-    function showStatus(kind, notes, err, hint) {
-      status.textContent = '';
-      status.className = 'status ' + kind;
-      status.hidden = false;
-      if (notes && notes.length) status.appendChild(el('div', 'status-msg', notes.join(' · ')));
-      if (err) {
-        var where = el('div', 'status-where', '第 ' + err.line + ' 行，第 ' + err.col + ' 個字元：' + err.message + ' ');
-        // 錯誤位置對得上輸入框的原文時才提供跳轉（解開跳脫後的內容對不回去）
-        if (err.src === input.value) {
-          var jump = el('button', '', '跳到該位置');
-          jump.type = 'button';
-          jump.addEventListener('click', function () {
-            input.setSelectionRange(err.pos, Math.min(err.pos + 1, input.value.length));
-            input.blur();     // 先失焦再聚焦，瀏覽器才會把選取處捲進畫面
-            input.focus();
-          });
-          where.appendChild(jump);
+    return T.mount({
+      sample: cfg.sample,
+      fileName: cfg.fileName,
+      optKey: 'small_tool.json.opts',
+      handoffKey: 'small_tool.json.handoff',
+      convert: function (src, opts) {
+        try {
+          var res = cfg.convert(src, opts);
+          if (!res.node) {
+            res.fileName = cfg.fileName.replace(/\.json$/, '.txt');
+            return res;
+          }
+          var o = {
+            indent: opts.indent === 'min' ? '' : opts.indent === 'tab' ? '\t' : opts.indent === '4' ? '    ' : '  ',
+            sortKeys: !!opts.sort
+          };
+          res.text = stringify(res.node, o);
+          o.html = true;
+          // 值都不含換行（JSON 字串裡的換行一定是 \n 寫法），所以每一行都是完整的 HTML
+          res.html = res.text.length <= HIGHLIGHT_LIMIT ? stringify(res.node, o) : null;
+          return res;
+        } catch (e) {
+          if (e instanceof RangeError) throw new T.InputError('巢狀層數太深，瀏覽器處理不了');
+          throw e;
         }
-        status.appendChild(where);
-        status.appendChild(snippet(err));
-      }
-      if (hint) {
-        var line = el('div', 'status-hint', hint.text);
-        var link = el('a', '', hint.link);
-        link.href = hint.href;
-        link.addEventListener('click', function () {
-          try { sessionStorage.setItem(HANDOFF_KEY, input.value); } catch (e) {}
-        });
-        line.appendChild(link);
-        fixLocalLinks(line);
-        status.appendChild(line);
-      }
-    }
-
-    function render() {
-      var src = input.value, opts = readOpts(), res;
-      output.classList.toggle('wrap', !!opts.wrap);
-      inMeta.textContent = src ? formatBytes(src) : '';
-      if (!src.trim()) {
-        status.hidden = true;
-        setResult('', false);
-        return;
-      }
-      try {
-        res = cfg.convert(src, opts);
-      } catch (e) {
-        setResult('', false);
-        if (e instanceof JsonError) showStatus('err', null, e, e.hint);
-        else if (e instanceof RangeError) showStatus('err', ['巢狀層數太深，瀏覽器處理不了']);
-        else throw e;
-        return;
-      }
-      if (res.node) {
-        var o = {
-          indent: opts.indent === 'min' ? '' : opts.indent === 'tab' ? '\t' : opts.indent === '4' ? '    ' : '  ',
-          sortKeys: !!opts.sort
-        };
-        var text = stringify(res.node, o);
-        o.html = true;
-        setResult(text, true, text.length <= HIGHLIGHT_LIMIT ? stringify(res.node, o) : escapeHtml(text));
-      } else {
-        setResult(res.text, false);
-      }
-      showStatus(res.error ? 'warn' : 'ok', res.notes, res.error, res.hint);
-    }
-
-    function setInput(text) {
-      input.value = text;
-      output.scrollTop = 0;
-      render();
-    }
-
-    var actions = {
-      paste: function () {
-        var manual = '請直接在輸入框按 Ctrl + V 貼上';
-        if (!navigator.clipboard || !navigator.clipboard.readText) { toast('這個瀏覽器不能直接讀取剪貼簿，' + manual); return; }
-        navigator.clipboard.readText().then(setInput, function () { toast('沒有取得剪貼簿權限，' + manual); });
-      },
-      sample: function () { setInput(cfg.sample); },
-      clear: function () { setInput(''); input.focus(); },
-      copy: function () {
-        copyText(plain).then(
-          function () { toast('已複製結果'); },
-          function () { toast('複製失敗，請在結果區按 Ctrl + A 全選後複製'); }
-        );
-      },
-      download: function () { download(plain, isJson ? cfg.fileName : cfg.fileName.replace(/\.json$/, '.txt')); }
-    };
-    document.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-act]');
-      if (b && actions[b.dataset.act]) actions[b.dataset.act]();
-    });
-
-    input.addEventListener('input', function () {
-      clearTimeout(timer);
-      timer = setTimeout(render, input.value.length > 200000 ? 350 : 80);
-    });
-    optEls.forEach(function (c) {
-      c.addEventListener('change', function () { saveOpts(); render(); });
-    });
-
-    // 結果區按 Ctrl + A 只選結果，不要選到整頁
-    output.addEventListener('keydown', function (e) {
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) {
-        e.preventDefault();
-        getSelection().selectAllChildren(output);
       }
     });
-
-    // 把檔案拖進輸入區直接讀取
-    var pane = input.closest('.pane');
-    function hasFiles(e) { return e.dataTransfer && [].indexOf.call(e.dataTransfer.types, 'Files') >= 0; }
-    pane.addEventListener('dragover', function (e) {
-      if (!hasFiles(e)) return;
-      e.preventDefault();
-      pane.classList.add('drop');
-    });
-    pane.addEventListener('dragleave', function () { pane.classList.remove('drop'); });
-    pane.addEventListener('drop', function (e) {
-      if (!hasFiles(e)) return;
-      e.preventDefault();
-      pane.classList.remove('drop');
-      var file = e.dataTransfer.files[0];
-      if (!file) return;
-      if (file.size > FILE_LIMIT) { toast('檔案超過 20 MB，瀏覽器處理不了'); return; }
-      var reader = new FileReader();
-      reader.onload = function () { setInput(String(reader.result)); };
-      reader.readAsText(file);
-    });
-
-    applyOpts(storedOpts());
-    fixLocalLinks();
-    var handoff = null;
-    try {
-      handoff = sessionStorage.getItem(HANDOFF_KEY);
-      sessionStorage.removeItem(HANDOFF_KEY);
-    } catch (e) {}
-    if (handoff) input.value = handoff;
-    render();
   }
 
   /* 範例資料（虛構）。checkCode 結尾的 \u001b 是儀器輸出常見的控制字元，用來示範跳脫寫法會原樣保留 */
