@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JSON 美化｜小工具</title>
+<meta name="robots" content="noindex">
+
+<!--
+  ============================================================================
+  JSON 美化：貼上 JSON → 即時排版、上色、檢查語法
+  ----------------------------------------------------------------------------
+  解析、排版與畫面接線都在共用的 ../assets/json.js（說明見該檔開頭），
+  這頁只放版面與這個工具自己的轉換邏輯。資料只在瀏覽器內處理。
+  ============================================================================
+-->
+
+<link rel="stylesheet" href="../assets/tool.css?v=20261012">
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <a class="back" href="../">← 小工具</a>
+    <h1>JSON 美化</h1>
+    <p class="lead">貼上 JSON 就會即時排版並檢查語法。數字與字串保持原本的寫法，資料只在你的瀏覽器裡處理。</p>
+  </header>
+
+  <div class="opts">
+    <div class="opt-group">
+      <span class="opt-label" id="indentLabel">縮排</span>
+      <div class="seg" role="radiogroup" aria-labelledby="indentLabel">
+        <label><input type="radio" name="indent" data-opt="indent" value="2" checked><span>2 空格</span></label>
+        <label><input type="radio" name="indent" data-opt="indent" value="4"><span>4 空格</span></label>
+        <label><input type="radio" name="indent" data-opt="indent" value="tab"><span>Tab</span></label>
+        <label><input type="radio" name="indent" data-opt="indent" value="min"><span>壓成一行</span></label>
+      </div>
+    </div>
+    <label class="chk"><input type="checkbox" data-opt="sort">鍵依字母順序排列</label>
+    <label class="chk"><input type="checkbox" data-opt="wrap" checked>過長自動換行</label>
+  </div>
+
+  <main class="panes">
+    <section class="pane" aria-labelledby="inTitle">
+      <div class="pane-head">
+        <h2 id="inTitle">輸入</h2>
+        <span class="meta" id="inMeta"></span>
+        <button class="btn" type="button" data-act="paste">貼上</button>
+        <button class="btn" type="button" data-act="sample">範例</button>
+        <button class="btn" type="button" data-act="clear">清除</button>
+      </div>
+      <textarea id="input" spellcheck="false" autocomplete="off" autocapitalize="off" aria-labelledby="inTitle"
+        placeholder="在這裡貼上 JSON，或把 .json 檔拖進來"></textarea>
+    </section>
+
+    <section class="pane" aria-labelledby="outTitle">
+      <div class="pane-head">
+        <h2 id="outTitle">結果</h2>
+        <span class="meta" id="outMeta"></span>
+        <button class="btn" type="button" data-act="download" disabled>下載</button>
+        <button class="btn primary" type="button" data-act="copy" disabled>複製</button>
+      </div>
+      <div class="status" id="status" role="status" hidden></div>
+      <pre class="out wrap" id="output" tabindex="0" aria-labelledby="outTitle" data-empty="排版後的結果會顯示在這裡。"></pre>
+    </section>
+  </main>
+
+</div>
+
+<script src="../assets/json.js?v=20261012"></script>
+<script>
+(function () {
+  'use strict';
+  var J = window.JsonTool;
+  var TO_STRING_TOOL = { text: '這看起來是被包成字串的 JSON，', link: '改用「JSON 字串轉 JSON」解開', href: '../jsonString_to_json/' };
+
+  J.mount({
+    sample: J.SAMPLE,
+    fileName: 'formatted.json',
+    convert: function (src) {
+      var node;
+      try {
+        node = J.parse(src);
+      } catch (e) {
+        // 引號前面都帶著反斜線（{\"a\":1}），多半是貼到跳脫過的字串
+        if (e instanceof J.JsonError && src[e.pos] === '\\') e.hint = TO_STRING_TOOL;
+        throw e;
+      }
+      var res = { node: node, notes: ['合法的 JSON'] };
+      if (node.t === 'str' && /^\s*[{\[]/.test(JSON.parse(node.raw))) res.hint = TO_STRING_TOOL;
+      return res;
+    }
+  });
+})();
+</script>
+</body>
+</html>

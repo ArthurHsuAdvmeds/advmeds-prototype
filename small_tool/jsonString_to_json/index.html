@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JSON 字串轉 JSON｜小工具</title>
+<meta name="robots" content="noindex">
+
+<!--
+  ============================================================================
+  JSON 字串轉 JSON：把被跳脫成字串的 JSON（"{\"a\":1}"）解回來並排版
+  ----------------------------------------------------------------------------
+  會處理的輸入：
+    1. 標準的字串字面值      "{\"a\":1}"
+    2. 多跳脫幾層的          "\"{\\\"a\\\":1}\""（一路解到不是字串為止）
+    3. 連鍵名一起複製的      "data":"{\"a\":1}",　或開頭只剩一個冒號  :"{\"a\":1}"
+    4. 少了外層引號的        {\"a\":1}　　或只漏了結尾的引號  "{\"a\":1}
+    5. 本來就是 JSON 的      直接排版
+  解開後不是 JSON（例如一般文字）就原樣顯示解開的內容。
+
+  解析、排版與畫面接線都在共用的 ../assets/json.js，這頁只放版面與解跳脫的邏輯。
+  ============================================================================
+-->
+
+<link rel="stylesheet" href="../assets/tool.css?v=20261012">
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <a class="back" href="../">← 小工具</a>
+    <h1>JSON 字串轉 JSON</h1>
+    <p class="lead">貼上被跳脫成字串的 JSON（<code>"{\"age\":40.0}"</code>），自動解開並排版。開頭多帶到鍵名或冒號也沒關係，資料只在你的瀏覽器裡處理。</p>
+  </header>
+
+  <div class="opts">
+    <div class="opt-group">
+      <span class="opt-label" id="indentLabel">縮排</span>
+      <div class="seg" role="radiogroup" aria-labelledby="indentLabel">
+        <label><input type="radio" name="indent" data-opt="indent" value="2" checked><span>2 空格</span></label>
+        <label><input type="radio" name="indent" data-opt="indent" value="4"><span>4 空格</span></label>
+        <label><input type="radio" name="indent" data-opt="indent" value="tab"><span>Tab</span></label>
+        <label><input type="radio" name="indent" data-opt="indent" value="min"><span>壓成一行</span></label>
+      </div>
+    </div>
+    <label class="chk"><input type="checkbox" data-opt="expand">值裡面的 JSON 字串也一起展開</label>
+    <label class="chk"><input type="checkbox" data-opt="sort">鍵依字母順序排列</label>
+    <label class="chk"><input type="checkbox" data-opt="wrap" checked>過長自動換行</label>
+  </div>
+
+  <main class="panes">
+    <section class="pane" aria-labelledby="inTitle">
+      <div class="pane-head">
+        <h2 id="inTitle">JSON 字串</h2>
+        <span class="meta" id="inMeta"></span>
+        <button class="btn" type="button" data-act="paste">貼上</button>
+        <button class="btn" type="button" data-act="sample">範例</button>
+        <button class="btn" type="button" data-act="clear">清除</button>
+      </div>
+      <textarea id="input" spellcheck="false" autocomplete="off" autocapitalize="off" aria-labelledby="inTitle"
+        placeholder="在這裡貼上 JSON 字串，例如 &quot;{\&quot;age\&quot;:40.0,\&quot;gender\&quot;:\&quot;F\&quot;}&quot;"></textarea>
+    </section>
+
+    <section class="pane" aria-labelledby="outTitle">
+      <div class="pane-head">
+        <h2 id="outTitle">JSON</h2>
+        <span class="meta" id="outMeta"></span>
+        <button class="btn" type="button" data-act="download" disabled>下載</button>
+        <button class="btn primary" type="button" data-act="copy" disabled>複製</button>
+      </div>
+      <div class="status" id="status" role="status" hidden></div>
+      <pre class="out wrap" id="output" tabindex="0" aria-labelledby="outTitle" data-empty="解開後的 JSON 會顯示在這裡。"></pre>
+    </section>
+  </main>
+
+</div>
+
+<script src="../assets/json.js?v=20261012"></script>
+<script>
+(function () {
+  'use strict';
+  var J = window.JsonTool;
+  var MAX_LAYERS = 16;
+
+  // 從開頭的引號找到這個字串字面值在哪裡結束（\" 這類跳脫不算結尾）
+  function readLiteral(t) {
+    for (var i = 1; i < t.length; i++) {
+      if (t[i] === '\\') i++;
+      else if (t[i] === '"') return { body: t.slice(1, i), end: i + 1 };
+    }
+    return null;
+  }
+
+  // 把字串字面值的內容還原成實際文字。刻意寬鬆：不認得的跳脫照原樣留著，內容裡直接換行也接受
+  var SIMPLE = { n: '\n', r: '\r', t: '\t', b: '\b', f: '\f', '"': '"', '\\': '\\', '/': '/' };
+  function unescapeBody(body) {
+    return body.replace(/\\(u[0-9a-fA-F]{4}|[\s\S])/g, function (all, e) {
+      if (e.length === 5) return String.fromCharCode(parseInt(e.slice(1), 16));
+      return SIMPLE.hasOwnProperty(e) ? SIMPLE[e] : all;
+    });
+  }
+
+  // 從別的 JSON 或 log 連著鍵一起複製時，開頭會多出「"data":」「data=」或只剩一個冒號，結尾可能多一個逗號
+  function stripWrapper(src, notes) {
+    var t = src.replace(/^﻿/, '').trim();
+    var i = 0;
+    if (t[0] === '"') {
+      var lit = readLiteral(t);
+      if (lit) i = lit.end;
+    } else {
+      var id = /^[A-Za-z_$][\w$.\-]*/.exec(t);
+      if (id) i = id[0].length;
+    }
+    var sep = /\s*[:=]\s*/y;
+    sep.lastIndex = i;
+    if (sep.test(t) && sep.lastIndex < t.length) {
+      var head = t.slice(0, sep.lastIndex).trim();
+      notes.push('已略過開頭的「' + (head.length > 24 ? head.slice(0, 24) + '…' : head) + '」');
+      t = t.slice(sep.lastIndex);
+    }
+    return t.replace(/[,;]\s*$/, '');
+  }
+
+  function tryParse(text) {
+    try { return J.parse(text); }
+    catch (e) { if (e instanceof J.JsonError) return null; throw e; }
+  }
+
+  // 把「內容本身是 JSON 物件或陣列」的字串值換成解析後的結構，回傳展開了幾個
+  function expandNested(root) {
+    var count = 0;
+    function walk(node) {
+      if (node.t === 'obj') {
+        node.members.forEach(function (m) { m.value = walk(m.value); });
+      } else if (node.t === 'arr') {
+        node.items = node.items.map(walk);
+      } else if (node.t === 'str') {
+        var inner = JSON.parse(node.raw).trim();
+        var parsed = /^[{\[]/.test(inner) ? tryParse(inner) : null;
+        if (parsed) { count++; return walk(parsed); }
+      }
+      return node;
+    }
+    return { node: walk(root), count: count };
+  }
+
+  function convert(src, opts) {
+    var notes = [];
+    var text = stripWrapper(src, notes);
+    var layers = 0, node = null, error = null, patched = false;
+
+    for (var guard = 0; guard < MAX_LAYERS && !node && !error; guard++) {
+      var t = text.trim();
+      var lit = t[0] === '"' ? readLiteral(t) : null;
+      if (lit && lit.end === t.length) {
+        text = unescapeBody(lit.body);
+        layers++;
+        continue;
+      }
+      // 開頭有引號但找不到結尾（複製時漏了最後一個引號）：整段都算字串內容，照樣解開
+      if (t[0] === '"' && !lit && t.length > 1) {
+        text = unescapeBody(t.slice(1));
+        layers++;
+        if (!patched) notes.push('結尾少了引號，已自動補上');
+        patched = true;
+        continue;
+      }
+      try {
+        node = J.parse(t);
+      } catch (e) {
+        if (!(e instanceof J.JsonError)) throw e;
+        // 少了外層引號、但裡面的引號都帶反斜線（{\"a\":1}）：解析會卡在反斜線上，照樣解一層再試
+        var loose = t[e.pos] === '\\' ? unescapeBody(t) : t;
+        // 有外層引號、但裡面的引號沒跳脫（"{"a":1}"）：拿掉外層引號直接讀
+        var bare = t.length > 1 && t[0] === '"' && t[t.length - 1] === '"' ? tryParse(t.slice(1, -1)) : null;
+        if (loose !== t) { text = loose; layers++; }
+        else if (bare) { node = bare; notes.push('外層引號裡的內容沒有跳脫，已直接當成 JSON 讀取'); }
+        else error = e;
+      }
+    }
+    if (!node && !error) error = new J.JsonError('跳脫超過 ' + MAX_LAYERS + ' 層，解不開', 0, text);
+
+    if (layers) notes.unshift('已解開 ' + layers + ' 層跳脫');
+    if (!node) {
+      if (!layers) throw error;     // 什麼都沒解開：單純的語法錯誤
+      if (!/^\s*[{\[]/.test(text)) {
+        // 字串裡裝的本來就不是 JSON，顯示解開後的文字就好，不必報語法錯誤
+        notes.push(text.trim() ? '內容是一般文字，不是 JSON' : '內容是空字串');
+        return { text: text, notes: notes };
+      }
+      notes.push('解開後的內容不是合法的 JSON，以下原樣顯示');
+      return { text: text, notes: notes, error: error };
+    }
+    if (!layers && notes.length === 0) notes.push('輸入本來就是 JSON，沒有需要解開的跳脫');
+    if (opts.expand) {
+      var ex = expandNested(node);
+      node = ex.node;
+      if (ex.count) notes.push('展開了 ' + ex.count + ' 個值裡面的 JSON 字串');
+    }
+    return { node: node, notes: notes };
+  }
+
+  J.mount({
+    // 把範例 JSON 再包成字串，前面帶鍵名，模擬從 API 回應裡整段複製出來的樣子
+    sample: '"payload":' + JSON.stringify(J.SAMPLE),
+    fileName: 'converted.json',
+    convert: convert
+  });
+})();
+</script>
+</body>
+</html>

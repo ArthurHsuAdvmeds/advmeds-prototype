@@ -1,0 +1,176 @@
+/* ============================================================================
+   small_tool 共用樣式
+   ----------------------------------------------------------------------------
+   設計 token 與根目錄總覽頁同一組（工具類用藍色當強調色），
+   後半是各工具頁共用的版面：頁首、選項列、左輸入／右結果兩欄。
+   ≤760px 兩欄改成上下排，頁面本身捲動。
+   ============================================================================ */
+
+:root{
+  --blue-50:#E6EFFC;--blue-500:#2F6FCF;--blue-700:#1F4F99;
+  --grey-0:#FFFFFF;--grey-100:#F0F0F0;--grey-200:#E0E0E0;--grey-400:#C4C4C4;
+  --grey-600:#818181;--grey-700:#666666;--grey-900:#333333;
+  --bg:var(--grey-100);--panel:var(--grey-0);--line:var(--grey-200);--line-strong:var(--grey-400);
+  --ink:var(--grey-900);--ink-2:var(--grey-700);--ink-3:var(--grey-600);
+  --chip-bg:var(--grey-100);
+  --accent:var(--blue-500);--accent-soft:var(--blue-50);--accent-ink:var(--blue-700);
+  --ok-bg:#F0FBD7;--ok-ink:#3B7A12;
+  --warn-bg:#FDF1E4;--warn-ink:#A85A12;
+  --err-bg:#FDECEC;--err-ink:#B3261E;
+  /* JSON 語法上色 */
+  --j-key:#1F4F99;--j-str:#3B7A12;--j-num:#A85A12;--j-bool:#7A3FC4;--j-null:#6B6B6B;
+  --radius-md:4px;--radius-lg:5px;
+  --shadow-card:0px 4px 6px -4px rgba(0,0,0,.1),0px 10px 15px -3px rgba(0,0,0,.1);
+  --font-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,"Cascadia Mono",Menlo,Consolas,"Microsoft JhengHei",monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#16191d;--panel:#1f2328;--line:#30363d;--line-strong:#444c56;
+    --ink:#e6e8ea;--ink-2:#a8b0b8;--ink-3:#7d8590;
+    --chip-bg:#2a2f36;
+    --accent-soft:#1b2a44;--accent-ink:#9dbcf0;
+    --ok-bg:#223317;--ok-ink:#b3e07a;
+    --warn-bg:#3a2816;--warn-ink:#f3b77a;
+    --err-bg:#3b1d1d;--err-ink:#f5a3a0;
+    --j-key:#9dbcf0;--j-str:#b3e07a;--j-num:#f3b77a;--j-bool:#c9a5f5;--j-null:#8b949e;
+    --shadow-card:0 1px 2px rgba(0,0,0,.4);
+    color-scheme:dark;
+  }
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+}
+code,pre,textarea{font-variant-ligatures:none}
+
+/* ---------- 按鈕、選項 ---------- */
+.btn{
+  font:inherit;font-size:13px;font-weight:500;line-height:1;white-space:nowrap;
+  color:var(--ink-2);background:var(--panel);border:0;border-radius:var(--radius-md);
+  box-shadow:inset 0 0 0 1px var(--line-strong);padding:8px 12px;cursor:pointer;
+  transition:background .15s,color .15s,box-shadow .15s;
+}
+.btn:hover{color:var(--accent-ink);box-shadow:inset 0 0 0 1px var(--accent)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn.primary{background:var(--accent);color:#fff;box-shadow:none;font-weight:700}
+.btn.primary:hover{background:var(--blue-700);color:#fff;box-shadow:none}
+.btn:disabled{opacity:.45;cursor:default;pointer-events:none}
+
+.seg{
+  display:inline-flex;overflow:hidden;background:var(--panel);
+  border-radius:var(--radius-md);box-shadow:inset 0 0 0 1px var(--line-strong);
+}
+.seg label{position:relative;cursor:pointer}
+.seg input{position:absolute;inset:0;margin:0;opacity:0;cursor:pointer}
+.seg span{display:block;padding:8px 12px;font-size:13px;line-height:1;color:var(--ink-2);white-space:nowrap}
+.seg label + label span{border-left:1px solid var(--line-strong)}
+.seg input:checked + span{background:var(--accent-soft);color:var(--accent-ink);font-weight:700}
+.seg input:focus-visible + span{outline:2px solid var(--accent);outline-offset:-2px}
+
+.chk{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.chk input{width:16px;height:16px;margin:0;accent-color:var(--accent);cursor:pointer}
+
+/* ---------- 工具頁版面 ---------- */
+.app{
+  display:flex;flex-direction:column;gap:12px;
+  height:100vh;height:100dvh;max-width:1680px;margin:0 auto;padding:16px 20px 20px;
+}
+.top{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 14px}
+.back{
+  font-size:13px;font-weight:500;color:var(--ink-2);text-decoration:none;
+  padding:6px 10px;border-radius:100px;background:var(--panel);box-shadow:inset 0 0 0 1px var(--line);
+}
+.back:hover{color:var(--accent-ink);box-shadow:inset 0 0 0 1px var(--accent)}
+.back:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.top h1{margin:0;font-size:20px;font-weight:700}
+.lead{margin:0;font-size:13px;color:var(--ink-2);line-height:1.6}
+.lead code{
+  font-family:var(--font-mono);font-size:12px;padding:2px 6px;
+  background:var(--panel);border-radius:var(--radius-md);box-shadow:inset 0 0 0 1px var(--line);
+}
+
+.opts{display:flex;align-items:center;flex-wrap:wrap;gap:10px 20px;font-size:13px;color:var(--ink-2)}
+.opt-group{display:inline-flex;align-items:center;gap:8px}
+.opt-label{font-weight:700}
+
+.panes{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.pane{
+  display:flex;flex-direction:column;min-height:0;overflow:hidden;
+  background:var(--panel);border-radius:var(--radius-lg);
+  box-shadow:inset 0 0 0 1px var(--line),var(--shadow-card);
+}
+.pane:focus-within,.pane.drop{box-shadow:inset 0 0 0 1px var(--accent),var(--shadow-card)}
+.pane-head{
+  display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;
+  min-height:48px;padding:8px 10px 8px 14px;border-bottom:1px solid var(--line);
+}
+.pane-head h2{margin:0;font-size:14px;font-weight:700}
+.meta{margin-right:auto;font-size:12px;color:var(--ink-3)}
+
+#input{
+  flex:1;min-height:0;width:100%;resize:none;border:0;outline:none;
+  padding:14px;background:transparent;color:inherit;word-break:break-all;
+  font-family:var(--font-mono);font-size:13px;line-height:1.6;
+}
+#input::placeholder{color:var(--ink-3);font-family:var(--font-body)}
+
+.out{
+  flex:1;min-height:0;margin:0;padding:14px;overflow:auto;outline:none;
+  font-family:var(--font-mono);font-size:13px;line-height:1.6;white-space:pre;tab-size:4;
+}
+.out.wrap{white-space:pre-wrap;overflow-wrap:anywhere}
+/* 每塊 --n 行（json.js 的 chunked()）；畫面外的區塊不排版，先用行數估高度 */
+.out .chunk{content-visibility:auto;contain-intrinsic-block-size:auto calc(var(--n) * 1.6em)}
+.out:empty::before{
+  content:attr(data-empty);color:var(--ink-3);font-family:var(--font-body);white-space:normal;
+}
+.status:not([hidden]) + .out:empty::before{content:none}
+.j-key{color:var(--j-key)}
+.j-str{color:var(--j-str)}
+.j-num{color:var(--j-num)}
+.j-bool{color:var(--j-bool)}
+.j-null{color:var(--j-null)}
+
+/* ---------- 結果上方的狀態列 ---------- */
+.status{padding:9px 14px;font-size:13px;line-height:1.6;border-bottom:1px solid var(--line)}
+.status[hidden]{display:none}
+.status.ok{background:var(--ok-bg);color:var(--ok-ink)}
+.status.warn{background:var(--warn-bg);color:var(--warn-ink)}
+.status.err{background:var(--err-bg);color:var(--err-ink)}
+.status-msg{font-weight:700}
+.status-where{margin-top:2px}
+.status a,.status button{
+  font:inherit;color:inherit;background:none;border:0;padding:0;
+  text-decoration:underline;text-underline-offset:2px;cursor:pointer;
+}
+.status-snip{
+  margin:6px 0 2px;padding:6px 10px;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;
+  background:var(--panel);color:var(--ink);border-radius:var(--radius-md);
+  font-family:var(--font-mono);font-size:12.5px;line-height:1.6;
+}
+.status-snip mark{background:var(--err-ink);color:var(--panel);border-radius:2px;padding:0 1px}
+.status-snip mark.eof{padding:0 4px}
+
+/* ---------- 提示訊息 ---------- */
+#toast{
+  position:fixed;left:50%;bottom:28px;z-index:10;transform:translate(-50%,16px);
+  max-width:calc(100vw - 32px);padding:9px 16px;border-radius:var(--radius-lg);
+  background:#22272e;color:#fff;font-size:13px;line-height:1.5;
+  opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;
+}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:760px){
+  .app{height:auto;min-height:100vh;min-height:100dvh;padding:14px 12px 24px}
+  .panes{grid-template-columns:minmax(0,1fr)}
+  /* 16px 以上 iOS 才不會在點輸入框時自動放大畫面 */
+  #input{flex:none;height:34vh;min-height:180px;font-size:16px}
+  .out{min-height:180px}
+}
+@media (prefers-reduced-motion:reduce){
+  .btn,#toast{transition:none}
+}
