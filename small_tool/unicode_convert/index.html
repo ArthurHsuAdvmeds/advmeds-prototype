@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unicode 編碼轉換｜小工具</title>
+<meta name="robots" content="noindex">
+
+<!--
+  ============================================================================
+  Unicode 編碼轉換：文字 ↔ \uXXXX（JSON／JavaScript／Java 的 Unicode 跳脫寫法）
+  ----------------------------------------------------------------------------
+  轉成 \uXXXX：一個 UTF-16 碼元寫一個，超出 FFFF 的字（表情符號等）拆成代理對寫兩個。
+               預設英數字與符號（ASCII）不轉；取消後連換行都會轉。
+  解回文字：   只認 \uXXXX 與 \u{…}，其他跳脫（\n、\"）不動。前面多了反斜線的
+               （多跳脫一層的 \\uXXXX）也一併解開；落單的代理對、寫到一半的原樣留著並指出位置。
+
+  畫面接線在共用的 ../assets/tool.js（說明見該檔開頭），這頁只放版面與轉換邏輯。
+  HTML 裡要顯示「反斜線 u 加四個十六進位數字」時，反斜線寫成 &#92;，
+  JS 裡則用 BS 常數去接，避免編輯工具把它當成跳脫、直接換成那個字。
+  ============================================================================
+-->
+
+<link rel="stylesheet" href="../assets/tool.css?v=20261012c">
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <a class="back" href="../">← 小工具</a>
+    <h1>Unicode 編碼轉換</h1>
+    <p class="lead">文字與 <code>&#92;u4e2d&#92;u6587</code> 這種 Unicode 寫法互轉，JSON、JavaScript、Java 裡的中文常被寫成這樣。資料只在你的瀏覽器裡處理。</p>
+  </header>
+
+  <div class="opts">
+    <div class="opt-group">
+      <span class="opt-label" id="modeLabel">方向</span>
+      <div class="seg" role="radiogroup" aria-labelledby="modeLabel">
+        <label><input type="radio" name="mode" data-opt="mode" value="encode" checked><span>文字 → Unicode</span></label>
+        <label><input type="radio" name="mode" data-opt="mode" value="decode"><span>Unicode → 文字</span></label>
+      </div>
+    </div>
+    <label class="chk"><input type="checkbox" data-opt="skip" id="skipOpt" checked>英數字與符號不轉換</label>
+    <label class="chk"><input type="checkbox" data-opt="upper" id="upperOpt">十六進位用大寫</label>
+    <label class="chk"><input type="checkbox" data-opt="wrap" checked>過長自動換行</label>
+  </div>
+
+  <main class="panes">
+    <section class="pane" aria-labelledby="inTitle">
+      <div class="pane-head">
+        <h2 id="inTitle">輸入</h2>
+        <span class="meta" id="inMeta"></span>
+        <button class="btn" type="button" data-act="paste">貼上</button>
+        <button class="btn" type="button" data-act="sample">範例</button>
+        <button class="btn" type="button" data-act="clear">清除</button>
+      </div>
+      <textarea id="input" spellcheck="false" autocomplete="off" autocapitalize="off" aria-labelledby="inTitle"></textarea>
+    </section>
+
+    <section class="pane" aria-labelledby="outTitle">
+      <div class="pane-head">
+        <h2 id="outTitle">結果</h2>
+        <span class="meta" id="outMeta"></span>
+        <button class="btn" type="button" data-act="swap" data-needs-result id="swapBtn" disabled>拿去轉回文字</button>
+        <button class="btn primary" type="button" data-act="copy" disabled>複製</button>
+      </div>
+      <div class="status" id="status" role="status" hidden></div>
+      <pre class="out wrap" id="output" tabindex="0" aria-labelledby="outTitle" data-empty="結果會顯示在這裡。"></pre>
+    </section>
+  </main>
+
+</div>
+
+<script src="../assets/tool.js?v=20261012c"></script>
+<script>
+(function () {
+  'use strict';
+  var T = window.SmallTool;
+  var input = document.getElementById('input');
+  var skipOpt = document.getElementById('skipOpt');
+  var upperOpt = document.getElementById('upperOpt');
+  var swapBtn = document.getElementById('swapBtn');
+
+  var BS = '\\';
+  var NAME = BS + 'uXXXX';
+  var HAS_ESCAPE = /\\u(?:[0-9a-fA-F]{4}|\{[0-9a-fA-F]{1,6}\})/;
+
+  /* ---------- 文字 → Unicode ---------- */
+
+  function unit(code, upper) {
+    var h = code.toString(16);
+    if (upper) h = h.toUpperCase();
+    return BS + 'u' + '0000'.slice(h.length) + h;
+  }
+
+  function encode(src, o) {
+    var count = 0, pairs = 0;
+    // u 旗標讓每次取到的是一個完整的字，超出 FFFF 的字（表情符號等）才不會被算成兩個
+    var text = src.replace(o.skip ? /[^\x00-\x7f]/gu : /[\s\S]/gu, function (ch) {
+      count++;
+      if (ch.length === 1) return unit(ch.charCodeAt(0), o.upper);
+      // 一個 \uXXXX 只裝得下一個 UTF-16 碼元，這種字要拆成代理對寫兩個
+      pairs++;
+      return unit(ch.charCodeAt(0), o.upper) + unit(ch.charCodeAt(1), o.upper);
+    });
+
+    var res = { text: text, notes: [] };
+    if (!count) {
+      res.notes.push('沒有需要轉換的字元，內容不變');
+      res.hint = HAS_ESCAPE.test(src)
+        ? { text: '輸入裡已經是 ' + NAME + ' 的寫法，如果是要解開，', link: '改成 Unicode → 文字', action: function (tool) { tool.setOpts({ mode: 'decode' }); } }
+        : { text: '英數字與符號目前不轉換，', link: '也一起轉換', action: function (tool) { tool.setOpts({ skip: false }); } };
+      return res;
+    }
+    res.notes.push('已把 ' + count + ' 個字元轉成 ' + NAME);
+    if (pairs) res.notes.push(pairs + ' 個超出 FFFF 的字（表情符號等）寫成兩個一組的代理對');
+    if (!o.skip && /[\r\n]/.test(src)) res.notes.push('換行也轉換了（' + BS + 'u000a）');
+    return res;
+  }
+
+  /* ---------- Unicode → 文字 ---------- */
+
+  // 依序是：前後半成對的代理對（一次吃兩個）、一般的 4 位數、JavaScript 的 \u{…}，
+  // 最後是寫到一半的（\u 後面有十六進位數字但不滿 4 個），抓出來標成解不開。
+  // 開頭的反斜線不只一個時（多跳脫一層的 \\uXXXX）整串一起吃掉
+  var ESCAPE = /(\\+)u(?:([dD][89abAB][0-9a-fA-F]{2})\\+u([dD][c-fC-F][0-9a-fA-F]{2})|([0-9a-fA-F]{4})|\{([0-9a-fA-F]{1,6})\}|(?=[0-9a-fA-F{]))/g;
+
+  function decode(src) {
+    var count = 0, deep = 0, bad = [];
+
+    var text = src.replace(ESCAPE, function (raw, slashes, high, low, single, braced, pos) {
+      var out, message = '';
+      if (high) {
+        out = String.fromCharCode(parseInt(high, 16), parseInt(low, 16));
+      } else if (single) {
+        var code = parseInt(single, 16);
+        // 代理對要前半、後半緊接著才湊得成一個字，落單的解出來只會是亂碼
+        if (code >= 0xDC00 && code <= 0xDFFF) message = '這是代理對的後半，前面沒有配對的前半';
+        else if (code >= 0xD800 && code <= 0xDBFF) message = '這是代理對的前半，後面沒有緊接著後半';
+        else out = String.fromCharCode(code);
+      } else if (braced) {
+        var point = parseInt(braced, 16);
+        if (point > 0x10FFFF || (point >= 0xD800 && point <= 0xDFFF)) message = '這不是合法的 Unicode 碼位';
+        else out = String.fromCodePoint(point);
+      } else {
+        message = BS + 'u 後面要接滿 4 個十六進位數字';
+      }
+      if (message) {
+        bad.push({ pos: pos, message: message });
+        return raw;
+      }
+      count++;
+      if (slashes.length > 1) deep++;
+      return out;
+    });
+
+    var res = { text: text, notes: [] };
+    if (count) {
+      res.notes.push('已解回 ' + count + ' 個字元');
+      if (deep) res.notes.push(deep + ' 個前面多了反斜線（多跳脫一層），也一併解開');
+    } else if (!bad.length) {
+      res.notes.push('沒有找到 ' + NAME + ' 的寫法，內容不變');
+      if (/[^\x00-\x7f]/.test(src)) {
+        res.hint = { text: '如果是要把文字轉成 ' + NAME + '，', link: '改成 文字 → Unicode', action: function (tool) { tool.setOpts({ mode: 'encode' }); } };
+      }
+    }
+    if (bad.length) {
+      res.notes.push('有 ' + bad.length + ' 處解不開，已原樣保留');
+      res.error = new T.InputError(bad[0].message, bad[0].pos, src);
+    } else if (count && HAS_ESCAPE.test(text)) {
+      res.hint = { text: '結果裡還有 ' + NAME + '，可能轉了不只一次，', link: '再解一次', action: function (tool) { tool.setInput(tool.result()); } };
+    }
+    return res;
+  }
+
+  /* ---------- 畫面 ---------- */
+
+  // 範例的姓名與內容都是虛構的；解碼範例做成後端回傳的 JSON 常見的樣子
+  function escaped(text) { return encode(text, { skip: true }).text; }
+  var ENCODE_SAMPLE = '王小明的檢驗報告：血糖 98 mg/dL，已安排複診 😀';
+  var DECODE_SAMPLE = '{"name":"' + escaped('王小明') + '","note":"' + escaped('血糖偏高，已安排複診 😀') + '"}';
+
+  T.mount({
+    optKey: 'small_tool.unicode.opts',
+    fileName: 'unicode.txt',
+    sample: function (o) { return o.mode === 'decode' ? DECODE_SAMPLE : ENCODE_SAMPLE; },
+    convert: function (src, o) { return o.mode === 'decode' ? decode(src) : encode(src, o); },
+    onOptions: function (o) {
+      var decoding = o.mode === 'decode';
+      input.placeholder = decoding ? '在這裡貼上 ' + NAME + ' 的內容，例如 ' + escaped('中文') : '在這裡貼上要轉換的文字';
+      // 這兩個選項只決定「轉成 Unicode」時怎麼寫，解回文字時大小寫都認
+      skipOpt.disabled = decoding;
+      upperOpt.disabled = decoding;
+      swapBtn.textContent = decoding ? '拿去轉成 Unicode' : '拿去轉回文字';
+    },
+    actions: {
+      // 把結果放回輸入框、方向反過來，用來檢查轉回去是不是原本的內容
+      swap: function (tool) {
+        var text = tool.result();
+        tool.setOpts({ mode: tool.opts().mode === 'decode' ? 'encode' : 'decode' });
+        tool.setInput(text);
+      }
+    }
+  });
+})();
+</script>
+</body>
+</html>

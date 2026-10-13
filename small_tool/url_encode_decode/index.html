@@ -10,17 +10,19 @@
   ============================================================================
   URL 編碼／解碼：文字 ↔ %XX（percent-encoding，UTF-8）
   ----------------------------------------------------------------------------
-  範圍兩種，對應瀏覽器內建的兩組函式：
-    參數值    encodeURIComponent／decodeURIComponent，連 : / ? & = # 都處理
-    整段網址  encodeURI／decodeURI，上面這些網址符號保持原樣
-  解碼刻意寬鬆：內建函式遇到一個不完整的 %XX 就整段丟錯，
+  編碼的範圍兩種，對應瀏覽器內建的兩個函式：
+    參數值    encodeURIComponent，連 : / ? & = # 都編碼
+    整段網址  encodeURI，上面這些網址符號保持原樣
+  解碼不分範圍，%XX 一律全部解開（不要用 decodeURI：它會留著 %3A、%2F 這類符號不解，
+  貼整段網址進來時參數裡的 {"type"%3A2} 會解不乾淨）。
+  解碼也刻意寬鬆：內建函式遇到一個不完整的 %XX 就整段丟錯，
   這裡改成解得開的照解、解不開的原樣留著，再指出第一處在哪裡。
 
   畫面接線在共用的 ../assets/tool.js（說明見該檔開頭），這頁只放版面與編解碼的邏輯。
   ============================================================================
 -->
 
-<link rel="stylesheet" href="../assets/tool.css?v=20261012b">
+<link rel="stylesheet" href="../assets/tool.css?v=20261012c">
 </head>
 <body>
 <div class="app">
@@ -28,7 +30,7 @@
   <header class="top">
     <a class="back" href="../">← 小工具</a>
     <h1>URL 編碼／解碼</h1>
-    <p class="lead">文字與 <code>%E4%B8%AD</code> 這種網址編碼互轉。「參數值」連 <code>/ ? &amp; =</code> 都會處理，適合要放進參數裡的內容；「整段網址」會保留這些符號。資料只在你的瀏覽器裡處理。</p>
+    <p class="lead">文字與 <code>%E4%B8%AD</code> 這種網址編碼互轉。編碼時「參數值」連 <code>/ ? &amp; =</code> 都會編碼，適合要放進參數裡的內容；「整段網址」會保留這些符號。解碼一律全部解開。資料只在你的瀏覽器裡處理。</p>
   </header>
 
   <div class="opts">
@@ -40,7 +42,7 @@
       </div>
     </div>
     <div class="opt-group">
-      <span class="opt-label" id="scopeLabel">範圍</span>
+      <span class="opt-label" id="scopeLabel">編碼範圍</span>
       <div class="seg" role="radiogroup" aria-labelledby="scopeLabel">
         <label><input type="radio" name="scope" data-opt="scope" value="component" checked><span>參數值</span></label>
         <label><input type="radio" name="scope" data-opt="scope" value="url"><span>整段網址</span></label>
@@ -77,7 +79,7 @@
 
 </div>
 
-<script src="../assets/tool.js?v=20261012b"></script>
+<script src="../assets/tool.js?v=20261012c"></script>
 <script>
 (function () {
   'use strict';
@@ -87,8 +89,9 @@
   var linesOpt = document.getElementById('linesOpt');
   var swapBtn = document.getElementById('swapBtn');
 
+  var scopeOpts = [].slice.call(document.querySelectorAll('[data-opt="scope"]'));
+
   var HEX2 = /%[0-9A-Fa-f]{2}/;
-  var RESERVED = /%(?:2[346BCF]|3[ABDF]|40)/i;      // ; / ? : @ & = + $ , # 的編碼，decodeURI 不會解開
   var RUN = /(?:%[0-9A-Fa-f]{2})+|%/g;               // 連續的 %XX，或落單的 %
   var LONE = /[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDFFF]/g;
 
@@ -106,7 +109,7 @@
       } catch (e) {
         // 落單的代理字元（例如只剩半個的表情符號）編不成 UTF-8，換成 � 再編
         if (!(e instanceof URIError)) throw e;
-        out = fn(text.replace(LONE, function (m) { return m.length === 2 ? m : '�'; }));
+        out = fn(text.replace(LONE, function (m) { return m.length === 2 ? m : String.fromCharCode(0xFFFD); }));
         broken = true;
       }
       return o.plus ? out.replace(/%20/g, '+') : out;
@@ -139,8 +142,6 @@
   }
 
   function decode(src, o) {
-    var whole = o.scope === 'url';
-    var fn = whole ? decodeURI : decodeURIComponent;
     var bad = [];     // 解不開的地方 { pos, end, message }，相鄰的併成一處
 
     function flag(pos, length, message) {
@@ -155,14 +156,14 @@
         flag(pos, 1, '% 後面要接兩個十六進位數字');
         return run;
       }
-      try { return fn(run); } catch (e) { if (!(e instanceof URIError)) throw e; }
+      try { return decodeURIComponent(run); } catch (e) { if (!(e instanceof URIError)) throw e; }
       // 整段解不開：一個字元一個字元試，湊不成 UTF-8 字元的位元組原樣留著
       var out = '';
       for (var k = 0; k < run.length;) {
         var length = sequenceLength(parseInt(run.slice(k + 1, k + 3), 16)) * 3;
         var ch = null;
         if (length && k + length <= run.length) {
-          try { ch = fn(run.slice(k, k + length)); } catch (e) { if (!(e instanceof URIError)) throw e; }
+          try { ch = decodeURIComponent(run.slice(k, k + length)); } catch (e) { if (!(e instanceof URIError)) throw e; }
         }
         if (ch == null) {
           flag(pos + k, 3, '這裡的位元組湊不成 UTF-8 字元（可能被截斷，或原本不是用 UTF-8 編碼）');
@@ -177,15 +178,14 @@
     });
 
     var res = { text: text, notes: [] };
-    if (text !== src) res.notes.push('已用 ' + (whole ? 'decodeURI' : 'decodeURIComponent') + ' 解碼' + (o.plus && src.indexOf('+') >= 0 ? '，+ 換成空格' : ''));
+    if (text !== src) res.notes.push('已解碼' + (o.plus && src.indexOf('+') >= 0 ? '，+ 換成空格' : ''));
     else if (!bad.length) res.notes.push('沒有需要解碼的內容，內容不變');
     if (!o.plus && src.indexOf('+') >= 0) res.notes.push('+ 保持原樣（代表空格的話請勾「+ 當成空格」）');
-    if (whole && RESERVED.test(text)) res.notes.push('/ ? & = 這類網址符號的 %XX 維持原樣');
 
     if (bad.length) {
       res.notes.push('有 ' + bad.length + ' 處解不開，已原樣保留');
       res.error = new T.InputError(bad[0].message, bad[0].pos, src);
-    } else if (HEX2.test(whole ? text.replace(new RegExp(RESERVED.source, 'gi'), '') : text)) {
+    } else if (HEX2.test(text)) {
       // 解完還有 %XX：原本的 %25 解成了 %，多半是被編碼了不只一次
       res.hint = { text: '結果裡還有 %XX，可能被編碼了不只一次，', link: '再解一次', action: function (tool) { tool.setInput(tool.result()); } };
     }
@@ -209,7 +209,9 @@
       var decoding = o.mode === 'decode';
       input.placeholder = decoding ? '在這裡貼上編碼過的文字，例如 %E4%B8%AD%E6%96%87' : '在這裡貼上要編碼的文字或網址';
       plusText.textContent = decoding ? '+ 當成空格' : '空格編成 +';
-      linesOpt.disabled = decoding;     // 解碼不會動到換行，這個選項只對編碼有意義
+      // 解碼一律全部解開、也不會動到換行，這兩個選項只對編碼有意義
+      scopeOpts.forEach(function (r) { r.disabled = decoding; });
+      linesOpt.disabled = decoding;
       swapBtn.textContent = decoding ? '拿去編碼' : '拿去解碼';
     },
     actions: {

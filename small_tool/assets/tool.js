@@ -210,7 +210,7 @@
         pre.appendChild(el('mark', '', src[pos]));
         pre.appendChild(document.createTextNode(src.slice(pos + 1, b) + (b < le ? '…' : '')));
       } else {
-        pre.appendChild(el('mark', 'eof', ' '));   // 內容到這裡就沒了：標一格不會被吃掉的空白
+        pre.appendChild(el('mark', 'eof', String.fromCharCode(0xA0)));   // 內容到這裡就沒了：標一格不會被吃掉的空白
       }
       return pre;
     }

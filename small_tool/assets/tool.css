@@ -73,8 +73,8 @@ code,pre,textarea{font-variant-ligatures:none}
 
 .chk{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
 .chk input{width:16px;height:16px;margin:0;accent-color:var(--accent);cursor:pointer}
-.chk:has(input:disabled){opacity:.45;cursor:default}
-.chk input:disabled{cursor:default}
+.chk:has(input:disabled),.opt-group:has(input:disabled){opacity:.45;cursor:default}
+.chk input:disabled,.seg input:disabled{cursor:default}
 
 /* ---------- 工具頁版面 ---------- */
 .app{

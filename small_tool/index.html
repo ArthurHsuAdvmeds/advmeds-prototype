@@ -15,7 +15,7 @@
   ============================================================================
 -->
 
-<link rel="stylesheet" href="./assets/tool.css?v=20261012b">
+<link rel="stylesheet" href="./assets/tool.css?v=20261012c">
 <style>
   body{min-height:100vh;padding:56px 20px 64px}
   .wrap{max-width:960px;margin:0 auto}
@@ -117,11 +117,28 @@
         </div>
         <div class="body">
           <a class="main" href="./url_encode_decode/">URL 編碼／解碼</a>
-          <div class="desc">文字與 <code>%E4%B8%AD</code> 這種網址編碼互轉。可選只處理參數值或整段網址、空格要不要用 <code>+</code>；編碼不完整或被編了不只一次時會指出來。</div>
+          <div class="desc">文字與 <code>%E4%B8%AD</code> 這種網址編碼互轉。編碼可選只處理參數值或整段網址、空格要不要用 <code>+</code>；解碼時編碼不完整或被編了不只一次會指出來。</div>
         </div>
         <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
       <div class="foot"><code>url_encode_decode/</code></div>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <div class="icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 6v7a4 4 0 0 0 8 0V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M18 9v8M14 13h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="body">
+          <a class="main" href="./unicode_convert/">Unicode 編碼轉換</a>
+          <div class="desc">文字與 <code>&#92;u4e2d&#92;u6587</code> 這種 Unicode 寫法互轉。可選英數字要不要轉、十六進位大小寫；表情符號的代理對、多跳脫一層的寫法都能解回來。</div>
+        </div>
+        <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="foot"><code>unicode_convert/</code></div>
     </div>
 
   </div>
