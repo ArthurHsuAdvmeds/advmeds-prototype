@@ -17,7 +17,7 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
 
 | 資料夾 | 客戶 | 內容 | 技術 | 詳細文件 |
 | --- | --- | --- | --- | --- |
-| `tsghb-dashboard/` | 三總北投 | 精神健康個案通報管理儀表板，`v1/`–`v4/` 各版並存；入口 `index.html` 自動轉址到最新版；`release-note/` 為 V2 以後的版本說明；`db_desc/` 為資料庫規劃（DBML＋規格頁） | 單檔 HTML + D3 / topojson（CDN） | — |
+| `tsghb-dashboard/` | 三總北投 | 精神健康個案通報管理儀表板，`v1/`–`v7/` 各版並存；入口 `index.html` 自動轉址到最新版；`release-note/` 為 V2 以後的版本說明；`db_desc/` 為資料庫規劃（DBML＋規格頁） | 單檔 HTML + D3 / topojson（CDN） | — |
 | `tsghb-landing-page/` | 三總北投 | 各角色登入後的入口頁，一個角色一個子資料夾（`doctor/`、`orgMag/`），共用 `assets/`，另附規格下載 zip | dc-runtime + React | [CLAUDE.md](tsghb-landing-page/CLAUDE.md)、各角色資料夾內 CLAUDE.md |
 | `tsghb-quick-report/` | 三總北投 | 快速通報頁面（無追蹤需求的網絡通報前臺）：選通報類型 → 登入 → 比對身分證字號 → 新增個案 → 填寫表單，五個畫面都在同一份 `index.html`、用網址 `#` 切換；設計稿與流程在 `design/` | dc-runtime + React | [CLAUDE.md](tsghb-quick-report/CLAUDE.md) |
 | `tsghb-doctor-landing-page/` | 三總北投 | **舊版**醫師入口頁，僅保留對照，**不要再改**（改 `tsghb-landing-page/doctor/`） | dc-runtime + React | [CLAUDE.md](tsghb-doctor-landing-page/CLAUDE.md) |
@@ -77,11 +77,23 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
 
 ---
 
-## 3. 目前狀況（2026-09-29）
+## 3. 目前狀況（2026-10-16）
 
-- **`tsghb-dashboard` 最新版是 `v6/`**（以 v5 為基礎的手機 RWD 版：≤899px 主選單改黏頂下拉、第二層頁籤換行、長條圖改橫向、
+- **`tsghb-dashboard` 最新版是 `v7/`**（以 v6 為基礎，只放大各頁過濾器按鈕的文字）。
+  入口轉址頁 `LATEST = 7`，canonical、`<noscript>`、手動連結都指向 `v7/`。
+- v7 的修改只有檔尾的 `<style id="v7-filter-text">`（與 `<title>`、版本註記），v6 以下的說明對 v7 仍然適用。
+  - 範圍：時間篩選（日期欄位、套用、本日／本月／本季／本年度）、通報類別（含「通報類別分析」標籤）、指揮儀表板同期比較的比較方式與選擇月份、
+    熱點地圖彈窗的初評風險、成效個案明細彈窗的狀態鈕。主選單與各頁子頁籤不算過濾器，沒有動。
+  - 字級集中在 `:root` 的 `--v7-filter-btn`／`-input`／`-label`／`-cap`／`--v7-geo-btn`：≥1200px 按鈕為 `clamp(15px,1.05vw,16px)`，
+    900–1199px 與 ≤899px 為 15px；≤899px 的日期欄位維持 16px（iOS 聚焦防縮放）。
+    頁面上的按鈕高度不變（兩個彈窗的按鈕沒有固定高，會高 3–5px）；桌機版面除了過濾器內部，其餘元素的位置與尺寸都和 v6 逐一比對過相同。
+  - 權重：選擇器以 `html body .dashboard .page.active:is(頁面 id)` 再接過濾器容器的 id（如 `#riskTimeFilter`、`#reporterTypeFilter`）起頭，
+    才壓得過舊層最高的 (2,4,0)＋`!important`；兩個彈窗在 `.dashboard` 外，改用 `html body #彈窗 #容器`。新增過濾器時要把容器 id 加進對應清單。
+  - 一併修正：681–899px 時風險、醫療機構端、SNQ 三頁的通報類別外框（32px）比按鈕（40px）矮，按鈕凸出 8px；
+    ≤599px 同期比較的三顆比較方式鈕改為可換行（320px 時「其他月份比較」換到第二列撐滿）。
+  - 熱點地圖工具列在 >820px 是固定高度、換行會被切掉；初評風險鈕放到 14px 後在 821–1920px 仍維持一列（最窄是側欄出現的 985px）。
+- v6（以 v5 為基礎的手機 RWD 版：≤899px 主選單改黏頂下拉、第二層頁籤換行、長條圖改橫向、
   指揮板流程卡片改直式、熱點地圖改直式畫布並支援觸控手勢；醫療機構端「優化計畫無法收案」與 AI「預測吻合程度」的可點擊提示改為按鈕，桌機同步）。
-  入口轉址頁 `LATEST = 6`，canonical、`<noscript>`、手動連結都指向 `v6/`。
 - v6 的修改：主選單後的 `.v6-nav-select` 容器、兩張可點擊卡片裡的 `.v6-open-hint`、檔尾 `<style id="v6-mobile-nav-select">`／`<style id="v6-mobile-rwd">`
   與各自的 `-behavior` 腳本，以及地圖模組內標註 `v6` 的程式（`geoCanvasBox()`：≤899px 畫布高度依地圖框比例、`translateExtent`、觸控雙擊放大、旋轉時重畫）。
   - 主選單下拉：選項由 `.tabs` 內的按鈕自動產生，切頁一律觸發對應 `.tab` 的 click；新增的控制項**不可帶 `tab` class**，否則會被 `querySelectorAll('.tab')` 當成頁籤。
@@ -96,7 +108,7 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
 - v5 的修改都集中在檔尾的 `<style id="v5-…">` 區塊（字級層 `v5-typography-1920` 只在 ≥1200px 生效，以 125% 縮放的 1536px 視窗為主要驗證尺寸）與地圖、SNQ 的 JS；
   模擬資料的「今天」是 2026-09-25，本年度總數仍為 420 件（只更新了 9 月的本月／本季／本日數字）。
 - `tsghb-dashboard/release-note/` 記錄 V2 以後各版差異與點選路徑。
-- **發佈新版（v7…）時要一起做**：更新版本說明頁、在根目錄總覽頁儀表板卡片加版本 chip、
+- **發佈新版（v8…）時要一起做**：更新版本說明頁、在根目錄總覽頁儀表板卡片加版本 chip、
   更新轉址頁的 `LATEST` / canonical / `<noscript>` / 手動連結。
 - `tsghb-dashboard/test_data.json` 為測試資料，目前沒有頁面引用。
 - **`tsghb-dashboard/kpi/` 整個資料夾不進版控、不部署**（已列入根目錄 `.gitignore`），內容只存在使用者本機；不要 `git add -f` 加回來。

@@ -301,7 +301,8 @@ footer{
     </p>
 
     <nav class="entries" aria-label="版本入口">
-      <a class="entry current" href="../v6/index.html"><b>V6</b><span>2026-09-29｜目前版本</span></a>
+      <a class="entry current" href="../v7/index.html"><b>V7</b><span>2026-10-16｜目前版本</span></a>
+      <a class="entry" href="../v6/index.html"><b>V6</b><span>2026-09-29</span></a>
       <a class="entry" href="../v5/index.html"><b>V5</b><span>2026-09-25</span></a>
       <a class="entry" href="../v4/index.html"><b>V4</b><span>2026-09-25</span></a>
       <a class="entry" href="../v3/index.html"><b>V3</b><span>2026-09-06 ～ 09-08</span></a>
@@ -318,6 +319,89 @@ footer{
     深色標籤是頁首下方主選單的頁面名稱，橘色標籤是頁面內的子頁籤或按鈕，灰色標籤是卡片或區塊名稱。
     依序點下去就會看到該項變更。
   </div>
+
+  <!-- ===================== V7 ===================== -->
+  <section class="release" id="v7">
+    <div class="release-head">
+      <h2 class="release-ver">V7</h2>
+      <span class="release-date">2026-10-16</span>
+      <span class="release-vs">相較 V6</span>
+    </div>
+    <p class="release-summary">
+      以 V6 為基礎，放大各頁過濾器按鈕的文字（日期區間、本日／本月／本季／本年度、通報類別等），桌機、平板、手機都已調整。
+      頁面上的按鈕高度不變，桌機版面不會位移；另外修正兩處手機版過濾器的排版。各頁內容與資料均未更動。
+    </p>
+
+    <div class="group">
+      <h3 class="group-title">全站</h3>
+      <ul class="items">
+        <li class="item">
+          <div class="item-head">
+            <span class="item-no">1</span>
+            <h3>各頁過濾器按鈕文字放大<span class="tag fix">字級</span></h3>
+          </div>
+          <p>
+            AI 模型預測準確率頁沒有過濾器，其餘八頁頁首下方的過濾器文字都放大，彈窗內的篩選按鈕也一併調整：
+          </p>
+          <div class="detail">
+            <ul>
+              <li><b>時間篩選</b>：開始／結束日期、套用、本日／本月／本季／本年度</li>
+              <li><b>通報類別</b>：全部／緊急醫療／優化計畫，以及左側的「通報類別分析」</li>
+              <li><b>指揮儀表板 › 同期比較</b>：同月比較／同期累計／其他月份比較、選擇月份</li>
+              <li><b>彈窗</b>：案件熱點地圖的初評風險（全部／高風險／中風險／低風險）、精神症狀改善成效指標個案明細的全部／改善／持平／變差</li>
+              <li>主選單與各頁的第二層頁籤不屬於過濾器，維持原字級</li>
+            </ul>
+          </div>
+          <div class="detail">
+            <ul>
+              <li><b>桌機</b>：1920×1080 螢幕（含 Windows 125% 縮放）由 14px 放大為 16px；1280–1440 寬的桌機由約 12.5–13.5px 放大為 15px</li>
+              <li><b>平板（900–1199 px）</b>：按鈕由 11px 放大為 15px，「開始日期／結束日期」由 9px 放大為 12px</li>
+              <li><b>手機（899 px 以下）</b>：按鈕由 11px 放大為 15px，「開始日期／結束日期」由 11px 放大為 13px（日期欄位原本就是 16px）</li>
+              <li><b>其他</b>：同期比較、個案明細的篩選鈕由 12px 放大為 15–16px；熱點地圖的初評風險由 11px 放大為 14px</li>
+            </ul>
+          </div>
+          <div class="path">
+            <span class="path-label">點選路徑</span>
+            <span class="crumb nav">各頁</span>
+            <span class="sep">›</span>
+            <span class="crumb">頁首下方的過濾器</span>
+          </div>
+          <div class="path">
+            <span class="path-label">另見</span>
+            <span class="crumb nav">指揮儀表板</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">同期比較</span>
+          </div>
+        </li>
+
+        <li class="item">
+          <div class="item-head">
+            <span class="item-no">2</span>
+            <h3>手機版過濾器排版修正<span class="tag fix">修正</span></h3>
+          </div>
+          <p>
+            （1）螢幕寬度 681–899 px（大手機橫放、直式平板）時，通報案件風險分析、醫療機構端處理成效分析、醫院內控指標(SNQ)
+            三頁的「全部／緊急醫療／優化計畫」按鈕會凸出所在列約 8px、貼到下方卡片，已修正。
+            （2）320 px 的小手機上，同期比較的「其他月份比較」會折成兩行並超出工具列；改為一列放不下時換到下一列並撐滿寬度。
+          </p>
+          <div class="path">
+            <span class="path-label">點選路徑</span>
+            <span class="crumb nav">通報案件風險分析</span>
+            <span class="sep">／</span>
+            <span class="crumb nav">醫療機構端處理成效分析</span>
+            <span class="sep">／</span>
+            <span class="crumb nav">醫院內控指標(SNQ)</span>
+          </div>
+          <div class="path">
+            <span class="path-label">另見</span>
+            <span class="crumb nav">指揮儀表板</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">同期比較</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
 
   <!-- ===================== V6 ===================== -->
   <section class="release" id="v6">
