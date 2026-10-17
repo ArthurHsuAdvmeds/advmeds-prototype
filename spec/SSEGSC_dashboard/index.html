@@ -892,10 +892,11 @@ function buildThemes(view) {
   const pushReach = new Set(push.map(p => p.userId)).size;
   const countTypes = types => push.filter(p => types.indexOf(p.type) >= 0).length;
   const careIds = new Set(push.filter(p => AI_CARE_TYPES.indexOf(p.type) >= 0).map(p => p.userId));
+  // 2026-10-17 調整：依數量由多到少排序（隨期間重算），「其他推播」固定在最後
   const pushTypes = rowsWithTotal(PUSH_CATEGORIES.map(c => ({
     name: c.name, color: c.color,
     value: c.types ? countTypes(c.types) : push.filter(p => !NAMED_PUSH_TYPES.has(p.type)).length
-  })));
+  })), true);
 
   return {
     measure: {
