@@ -368,18 +368,19 @@ const LINE_SOURCES = [
   { id: '活動', label: '健康活動' }, { id: '轉介', label: '醫療轉介／專業諮詢' }, { id: '親友', label: '親友分享' },
   { id: '自然', label: '自然加入' }, { id: '其他', label: '其他' }
 ];
-// 推播類型：照護站預約、健康商城通知為 2026-10-17 調整新增，其餘沿用原站
+// 推播類型：照護站預約、健康商城通知、AI 關懷為 2026-10-17 調整新增，其餘沿用原站
 const PUSH_TYPES = ['AI 健康報告', '健康異常提醒', '異常轉介', '個人化健康建議', '健康衛教', '再次量測提醒', '健康追蹤提醒', '活動／健康促進',
-  '照護站預約', '健康商城通知'];
-// 「推播內容類型分布」的五類與推播類型的對應；AI 關懷這組同時用來算「AI 關懷總人數」
+  '照護站預約', '健康商城通知', 'AI 關懷'];
+// 「推播內容類型分布」的五類與推播類型的對應；types 為 null 的「其他推播」收其餘所有類型
 const PUSH_CATEGORIES = [
   { name: '照護站預約', types: ['照護站預約'], color: C.teal },
   { name: '健康商城通知', types: ['健康商城通知'], color: C.orange },
-  { name: 'AI 關懷', types: ['健康異常提醒', '異常轉介', '再次量測提醒', '健康追蹤提醒'], color: C.cyan },
+  { name: 'AI 關懷', types: ['AI 關懷'], color: C.cyan },
   { name: '生理量測結果', types: ['AI 健康報告'], color: C.green },
-  { name: '其他推播', types: ['健康衛教', '個人化健康建議', '活動／健康促進'], color: C.brand }
+  { name: '其他推播', types: null, color: C.brand }
 ];
-const AI_CARE_TYPES = PUSH_CATEGORIES.find(c => c.name === 'AI 關懷').types;
+const NAMED_PUSH_TYPES = new Set(PUSH_CATEGORIES.flatMap(c => c.types || []));
+const AI_CARE_TYPES = ['AI 關懷']; // 「AI 關懷總人數」只看這個類型
 const FUNDUS_RISKS = ['青光眼風險', '黃斑部病變風險', '糖尿病視網膜病變風險', '其他眼底異常', '影像品質不足'];
 const SAT_DIMS = ['操作便利性', '智慧設備體驗', '健康資訊實用性', '服務人員專業度', 'AI 報告易理解度', 'LINE 健康服務便利性', '整體服務體驗']; // 原站：gN
 
@@ -892,7 +893,10 @@ function buildThemes(view) {
   const countTypes = types => push.filter(p => types.indexOf(p.type) >= 0).length;
   const alertCount = countTypes(['健康異常提醒']);
   const careIds = new Set(push.filter(p => AI_CARE_TYPES.indexOf(p.type) >= 0).map(p => p.userId));
-  const pushTypes = rowsWithTotal(PUSH_CATEGORIES.map(c => ({ name: c.name, value: countTypes(c.types), color: c.color })));
+  const pushTypes = rowsWithTotal(PUSH_CATEGORIES.map(c => ({
+    name: c.name, color: c.color,
+    value: c.types ? countTypes(c.types) : push.filter(p => !NAMED_PUSH_TYPES.has(p.type)).length
+  })));
 
   return {
     measure: {

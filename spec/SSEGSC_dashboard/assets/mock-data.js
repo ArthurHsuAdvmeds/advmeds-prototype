@@ -82,12 +82,15 @@
     'AI 報告易理解度': 4.365, 'LINE 健康服務便利性': 4.713, '整體服務體驗': 4.722 };
   var EYE_RISK_WATCH = [['影像品質不足', 13], ['其他眼底異常', 10], ['青光眼風險', 4], ['黃斑部病變風險', 4], ['糖尿病視網膜病變風險', 4]];
   var EYE_RISK_ABNORMAL = [['其他眼底異常', 10], ['糖尿病視網膜病變風險', 4], ['青光眼風險', 3], ['黃斑部病變風險', 3]];
-  // 推播（2026-10-17 調整：新增照護站預約、健康商城通知，總量維持與原站相近，約 8,400 則）
-  // 儀表板分類：照護站預約、健康商城通知、AI 關懷（異常提醒／轉介／再次量測／追蹤）、生理量測結果（AI 健康報告）、其他
+  // 推播（2026-10-17 調整：新增照護站預約、健康商城通知、AI 關懷三種類型，總量維持與原站相近，約 8,400 則）
+  // 儀表板分類：照護站預約、健康商城通知、AI 關懷、生理量測結果（AI 健康報告）、其他（其餘所有類型）
   // 第一次量測當天一定收到一則，類型依下列權重
-  var PUSH_FIRST_VISIT = [['AI 健康報告', 36], ['再次量測提醒', 23], ['健康追蹤提醒', 10], ['健康衛教', 14], ['個人化健康建議', 12], ['活動／健康促進', 5]];
+  var PUSH_FIRST_VISIT = [['AI 健康報告', 36], ['AI 關懷', 44], ['再次量測提醒', 5], ['健康追蹤提醒', 2], ['健康衛教', 6],
+    ['個人化健康建議', 5], ['活動／健康促進', 2]];
   var PUSH_REVISIT_RESULT_P = 0.4; // 回訪量測當天收到 AI 健康報告的機率
-  var PUSH_LINE_ONLY_P = 0.15;     // 只加 LINE、還沒量測的人收到衛教類推播
+  var PUSH_REVISIT_CARE_P = 0.1;   // 回訪量測當天收到 AI 關懷的機率
+  var ALERT_P = 0.3, REFER_P = 0.15; // 量測異常的當天收到健康異常提醒／異常轉介的機率
+  var PUSH_LINE_ONLY_P = 0.1;      // 只加 LINE、還沒量測的人收到衛教類推播
   var PUSH_LINE_ONLY = [['健康衛教', 300], ['活動／健康促進', 150], ['個人化健康建議', 50]];
   var BOOKING_REVISIT_P = 0.7;     // 回訪前 0–3 天收到照護站預約通知
   var BOOKING_LINE_ONLY_P = 0.15;  // 只加 LINE、還沒量測的人收到預約通知
@@ -285,9 +288,10 @@
         else {
           if (chance(BOOKING_REVISIT_P)) pushes.push(makePush(maxDate(first, addDays(date, -int(0, 3))), '照護站預約'));
           if (chance(PUSH_REVISIT_RESULT_P)) pushes.push(makePush(date, 'AI 健康報告'));
+          if (chance(PUSH_REVISIT_CARE_P)) pushes.push(makePush(date, 'AI 關懷'));
         }
-        if (dayAbnormal && chance(0.36)) pushes.push(makePush(date, '健康異常提醒'));
-        if (dayAbnormal && chance(0.18)) pushes.push(makePush(date, '異常轉介'));
+        if (dayAbnormal && chance(ALERT_P)) pushes.push(makePush(date, '健康異常提醒'));
+        if (dayAbnormal && chance(REFER_P)) pushes.push(makePush(date, '異常轉介'));
       });
       user.records = records;
       var last = dayList[dayList.length - 1];
