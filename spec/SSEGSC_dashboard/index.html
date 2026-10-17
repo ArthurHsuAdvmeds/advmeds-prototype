@@ -1476,8 +1476,8 @@ function DrillDrawer({ open, onClose, view }) {
   const { byId } = BASE;
   let title = '', body = null;
   if (open.type === 'risk') {
+    // 2026-10-17 調整：只保留年齡、性別分布（原站另有「風險類型」與「後續照護狀態」：已收到健康推播／已進入持續追蹤／已完成再次量測）
     const ids = [...view.cur.riskUsers];
-    const pushed = new Set(view.cur.push.map(p => p.userId));
     title = `健康風險發現 · ${fmtInt(ids.length)} 人`;
     body = html`<${Fragment}>
       <${Panel} title="年齡分布" pad=${14}>
@@ -1485,16 +1485,6 @@ function DrillDrawer({ open, onClose, view }) {
       <//>
       <${Panel} title="性別分布" pad=${14}>
         <${HBarList} rows=${['男', '女'].map(g => ({ name: g, value: ids.filter(id => byId[id].gender === g).length }))} total=${ids.length} color=${C.teal} />
-      <//>
-      <${Panel} title="風險類型" pad=${14}>
-        <${HBarList} rows=${view.riskRows.filter(r => r.value)} color=${C.orange} />
-      <//>
-      <${Panel} title="後續照護狀態" pad=${14}>
-        <${HBarList} unit="人" color=${C.green} total=${ids.length} rows=${[
-          { name: '已收到健康推播', value: ids.filter(id => pushed.has(id)).length },
-          { name: '已進入持續追蹤', value: ids.filter(id => byId[id].followUp).length },
-          { name: '已完成再次量測', value: ids.filter(id => ((view.cur.dayCount[id] && view.cur.dayCount[id].size) || 0) > 1).length }
-        ]} />
       <//>
     <//>`;
   }
@@ -1578,7 +1568,7 @@ function App() {
                 <div className="num" style=${{ fontSize: 56, fontWeight: 700, color: C.cyan, lineHeight: 1, marginTop: 6 }}>${fmtPct(view.cur.riskUsers.size / (view.validTested.size || 1))}</div>
                 <div className="faint" style=${{ fontSize: 11, marginTop: 6 }}>發現風險人數 ÷ 完成有效檢測人數 × 100%</div>
               </div>
-              <div className="faint" style=${{ fontSize: 11.5, marginTop: 14 }}>點擊展開年齡、性別、風險類型與後續照護狀態 →</div>
+              <div className="faint" style=${{ fontSize: 11.5, marginTop: 14 }}>點擊展開年齡與性別分布 →</div>
             </div>
             <${Panel} title="健康風險 TOP 5" sub="依發現人數排序，點擊可展開明細">
               <${HBarList} rows=${view.riskRows.slice(0, 5)} total=${view.cur.riskUsers.size} color=${C.orange} onClick=${() => setDrill({ type: 'risk' })} />
