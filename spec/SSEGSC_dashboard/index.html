@@ -922,13 +922,13 @@ function buildThemes(view) {
       title: '健康風險分析', sub: '結合健康量測與 AI 分析，辨識潛在健康風險',
       kpiLabel: '健康風險評估人次', value: aiRecs.length, unit: '人次', hint: '發現了什麼',
       mini: [
-        { l: '異常風險人次', v: fmtInt(nWatch + nAbn), c: C.orange },
+        { l: '中／高風險人次', v: fmtInt(nWatch + nAbn), c: C.orange },
         { l: '高風險比例', v: fmtPct(nAbn / aiN, 1), c: C.red }
       ],
       spark: spark(riskDaily, '風險評估'),
       kpis: [
         { l: '健康風險評估人次', v: fmtInt(aiRecs.length), u: '人次', c: C.teal },
-        { l: '異常風險人次', v: fmtInt(nWatch + nAbn), u: '人次', c: C.orange },
+        { l: '中／高風險人次', v: fmtInt(nWatch + nAbn), u: '人次', c: C.orange },
         { l: '高風險比例', v: fmtPct(nAbn / aiN, 1), c: C.red }
       ],
       daily: riskDaily, areaKey: '風險評估', lineKey: '異常風險', trendTitle: null, windowDays: days,
