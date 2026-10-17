@@ -28,6 +28,7 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
 | `spec/nhri_ms/` | 國衛院 | 肌少症評估量表（AWGS 2025），`write/` 填寫頁、`result/` 結果頁 | dc-runtime + React | [CLAUDE.md](spec/nhri_ms/CLAUDE.md) |
 | `spec/nhri_elearing_room/` | 國衛院 | ICOPE 學習小教室 | 單檔 HTML | — |
 | `spec/nhri_elearing/` | 國衛院 | ICOPE 衛教推播邏輯一覽（給 PM 對照） | 單檔 HTML | — |
+| `spec/SSEGSC_dashboard/` | 沙崙智慧健康照護站 | 智慧健康成果儀表板的**復刻版**（原站 `https://shalun-care.docloop.pro/`），作為開調整規格給功能師的現況基準；畫面、互動與指標算法照原站移植，資料改由 `assets/mock-data.js` 以固定種子產生虛構資料（原站的 user.json **不可進 repo**）。指標定義、判定門檻、原站已知問題見子文件 | React 18 + htm + Recharts 2（皆 UMD／CDN，不需編譯） | [CLAUDE.md](spec/SSEGSC_dashboard/CLAUDE.md) |
 | `spec/sc_app_transfer/` | 未分類（總覽頁暫放「工具與其他」） | Health Go 健康夠 App 下載轉址頁：手機依裝置自動轉到 App Store／Google Play，電腦顯示兩個商店的 QR Code（`assets/qr-*.png`，內容即商店網址，改網址要換圖）；網址加 `?preview=ios`、`android` 或 `desktop` 可預覽該畫面且不跳轉 | 單檔 HTML | — |
 | `thai/qc-model/` | 泰國 | QC 品質管制模組（Levey-Jennings 管制圖，EN / ไทย / 中） | 單檔 HTML | — |
 | `flow-chart/` | 內部工具 | FlowScript 文字語法流程圖：說明頁、`edit/`、`view/`，共用 `flowchart.js` | HTML + 共用 JS | [README.md](flow-chart/README.md) |

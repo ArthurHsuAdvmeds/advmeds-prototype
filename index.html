@@ -25,6 +25,7 @@
     --green-50:#F0FBD7;--green-300:#7BC235;--green-700:#478B1A;
     --blue-50:#E6EFFC;--blue-500:#2F6FCF;--blue-700:#1F4F99;
     --orange-50:#FDF1E4;--orange-400:#E8872E;--orange-700:#A85A12;
+    --purple-50:#F1EDFC;--purple-400:#8B6CD9;--purple-700:#5B3FA8;
     --grey-0:#FFFFFF;--grey-100:#F0F0F0;--grey-200:#E0E0E0;--grey-400:#C4C4C4;
     --grey-600:#818181;--grey-700:#666666;--grey-900:#333333;
     --bg:var(--grey-100);--panel:var(--grey-0);--line:var(--grey-200);
@@ -45,6 +46,7 @@
       --green-50:#223317;--green-700:#b3e07a;
       --blue-50:#1b2a44;--blue-700:#9dbcf0;
       --orange-50:#3a2816;--orange-700:#f3b77a;
+      --purple-50:#2a2142;--purple-700:#c4b1f2;
       --shadow-card:0 1px 2px rgba(0,0,0,.4);
       color-scheme:dark;
     }
@@ -77,6 +79,7 @@
   .tsghb{--accent:var(--teal-300);--accent-soft:var(--teal-50);--accent-ink:var(--teal-700)}
   .nhri {--accent:var(--green-300);--accent-soft:var(--green-50);--accent-ink:var(--green-700)}
   .thai {--accent:var(--orange-400);--accent-soft:var(--orange-50);--accent-ink:var(--orange-700)}
+  .shalun{--accent:var(--purple-400);--accent-soft:var(--purple-50);--accent-ink:var(--purple-700)}
   .tools{--accent:var(--blue-500);--accent-soft:var(--blue-50);--accent-ink:var(--blue-700)}
 
   .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
@@ -406,6 +409,36 @@
           <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div class="foot"><code>spec/nhri_elearing/</code></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       沙崙智慧健康照護站
+       ==================================================================== -->
+  <section class="shalun" aria-labelledby="h-shalun">
+    <div class="section-head">
+      <h2 id="h-shalun">沙崙智慧健康照護站</h2>
+      <span class="section-desc">智慧健康成果儀表板</span>
+    </div>
+    <div class="grid">
+
+      <div class="card">
+        <div class="row">
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+              <path d="M7 16v-3M12 16V8M17 16v-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="body">
+            <div class="title"><a class="main" href="./spec/SSEGSC_dashboard/">智慧健康成果儀表板</a><span class="badge">復刻</span></div>
+            <div class="desc">復刻線上版成果儀表板，作為調整規格的現況基準：四大主題卡與明細抽屜、健康風險發現、健康改善追蹤、服務滿意度。資料為虛構。</div>
+          </div>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="foot"><code>spec/SSEGSC_dashboard/</code></div>
       </div>
 
     </div>

@@ -1,0 +1,1680 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>沙崙智慧健康照護站｜智慧健康成果儀表板</title>
+<meta name="description" content="Shalun AI Smart Health Station — 智慧健康量測、AI 風險評估、LINE 健康推播與持續追蹤的場域成果展示平台。">
+<meta name="robots" content="noindex">
+<link rel="icon" href="./assets/logo.png">
+
+<!--
+  ============================================================================
+  沙崙智慧健康照護站｜智慧健康成果儀表板（復刻版）
+  ----------------------------------------------------------------------------
+  復刻對象：https://shalun-care.docloop.pro/（2026-10-16 版，Vite + React 19 + Recharts 2 打包的單檔）
+  用途：作為「儀表板調整規格」的現況基準，畫面、互動與指標算法都照原站移植。
+
+  - 不需編譯：React 18 UMD + htm（樣板字串取代 JSX）+ Recharts 2 UMD，皆走 jsDelivr。
+  - 資料：原站從 S3 讀 user.json；這裡改讀 ./assets/mock-data.js 產生的虛構資料
+    （同格式、同量級，種子固定），放在 window.SL_USER_DATA。
+  - 指標定義、判定門檻與原站的已知問題整理在同資料夾的 CLAUDE.md。
+  - 程式分段：①常數與判定門檻 ②資料檢核 ③資料整理與指標計算 ④共用元件
+    ⑤首頁單屏總覽 ⑥抽屜 ⑦主頁面。區段標題前的「原站：xx」是打包檔裡的變數名，
+    方便回頭對照原站程式。
+  ============================================================================
+-->
+
+<style>
+  :root{
+    /* 原站色票（JS 端的 C 物件與這裡同步） */
+    --bg0:#050A14;--bg1:#081426;
+    --ink:#E8F4F8;--dim:#8FA8BF;--faint:#5B7490;
+    --brand:#11A9C5;--cyan:#38E1F0;--teal:#2DD4BF;--green:#4ADE80;
+    --purple:#A78BFA;--orange:#FBA94C;--red:#F87171;--line:#06C755;
+  }
+  body{margin:0;background:var(--bg0);}
+  /* 資料載入前（以及載入失敗時）的佔位畫面，React 掛載後即被取代 */
+  .boot-msg{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    background:var(--bg0);color:var(--dim);font:15px/1.6 system-ui,"Noto Sans TC",sans-serif;text-align:center;padding:0 20px;}
+  .boot-msg p{margin:0;font-size:13px;word-break:break-all;}
+  .boot-error strong{color:var(--red);}
+
+  /* ===== 以下為原站樣式（原站：sP），內容未改，只把色碼換成上方 token =====
+     注意：原站在這段中間寫了 @import Google Fonts（Noto Sans TC、Barlow Semi Condensed），
+     但 @import 不在樣式表開頭會被瀏覽器忽略，原站實際上沒有載入任何網路字型，
+     文字與數字都是用使用者電腦上的字型。復刻版維持相同結果，所以拿掉了那行。 */
+
+  /* 版面工具類（自帶，不依賴外部 CSS 框架） */
+  .flex{display:flex}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}
+  .items-center{align-items:center}.items-baseline{align-items:baseline}
+  .items-start{align-items:flex-start}.items-end{align-items:flex-end}
+  .justify-between{justify-content:space-between}.justify-center{justify-content:center}
+  .gap-1{gap:4px}.gap-1\.5{gap:6px}.gap-2{gap:8px}.gap-3{gap:12px}.gap-4{gap:16px}
+  .sl-root{background:
+    radial-gradient(1200px 700px at 18% -8%, rgba(17,169,197,.20), transparent 62%),
+    radial-gradient(900px 600px at 88% 6%, rgba(45,212,191,.13), transparent 60%),
+    linear-gradient(180deg,#050A14 0%,#071120 42%,#050A14 100%);
+    color:var(--ink);font-family:'Noto Sans TC',system-ui,sans-serif;min-height:100vh;}
+  .sl-root *{box-sizing:border-box;}
+  .num{font-family:'Barlow Semi Condensed','Noto Sans TC',sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.01em;}
+  .card{background:linear-gradient(160deg,rgba(19,42,68,.72),rgba(9,20,35,.62));
+    border:1px solid rgba(56,225,240,.14);border-radius:16px;backdrop-filter:blur(10px);
+    box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 18px 40px -30px rgba(0,0,0,.9);position:relative;}
+  .card:before{content:'';position:absolute;inset:0;border-radius:16px;pointer-events:none;
+    background:linear-gradient(120deg,rgba(56,225,240,.06),transparent 42%);}
+  .card-h{border-color:rgba(56,225,240,.14);transition:border-color .25s,transform .25s,box-shadow .25s;}
+  .card-h:hover{border-color:rgba(56,225,240,.42);transform:translateY(-2px);box-shadow:0 22px 50px -30px rgba(56,225,240,.5);}
+  .eyebrow{font-size:11px;letter-spacing:.28em;color:var(--faint);text-transform:uppercase;}
+  .dim{color:var(--dim);}.faint{color:var(--faint);}
+  .rule{height:1px;background:linear-gradient(90deg,rgba(56,225,240,.5),rgba(56,225,240,0));}
+  .chip{border:1px solid rgba(56,225,240,.2);background:rgba(9,24,42,.7);border-radius:999px;
+    padding:5px 12px;font-size:12px;color:var(--dim);cursor:pointer;transition:.18s;white-space:nowrap;}
+  .chip:hover{border-color:rgba(56,225,240,.55);color:var(--ink);}
+  .chip.on{background:linear-gradient(120deg,rgba(17,169,197,.9),rgba(45,212,191,.75));color:#04121C;border-color:transparent;font-weight:700;}
+  .sel{background:rgba(9,24,42,.85);border:1px solid rgba(56,225,240,.22);color:var(--ink);
+    border-radius:10px;padding:7px 10px;font-size:13px;font-family:inherit;outline:none;cursor:pointer;}
+  .sel:focus-visible,.chip:focus-visible,button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;}
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s cubic-bezier(.2,.7,.3,1),transform .7s cubic-bezier(.2,.7,.3,1);}
+  .reveal.in{opacity:1;transform:none;}
+  .tt{position:relative;}
+  .tt .tt-b{visibility:hidden;opacity:0;position:absolute;z-index:60;bottom:130%;left:50%;transform:translateX(-50%);
+    width:230px;background:rgba(6,16,28,.97);border:1px solid rgba(56,225,240,.3);border-radius:10px;padding:9px 11px;
+    font-size:11.5px;line-height:1.7;color:var(--dim);transition:.18s;box-shadow:0 12px 30px -12px #000;font-weight:400;}
+  .tt:hover .tt-b{visibility:visible;opacity:1;}
+  .pulse{animation:pl 2.6s ease-in-out infinite;}
+  @keyframes pl{0%,100%{opacity:.35;r:3}50%{opacity:1;r:5}}
+  .flow{stroke-dasharray:5 9;animation:fl 1.6s linear infinite;}
+  @keyframes fl{to{stroke-dashoffset:-14}}
+  .spin-slow{animation:sp 26s linear infinite;transform-origin:center;}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .hud{animation:fo 5s ease-in-out infinite;}
+  @keyframes fo{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+  .grid-kpi{display:grid;gap:12px;grid-template-columns:repeat(2,1fr);}
+  @media(min-width:760px){.grid-kpi{grid-template-columns:repeat(3,1fr);}}
+  @media(min-width:1180px){.grid-kpi{grid-template-columns:repeat(5,1fr);}}
+  .g2{display:grid;gap:16px;grid-template-columns:1fr;}
+  @media(min-width:1000px){.g2{grid-template-columns:1fr 1fr;}}
+  .g3{display:grid;gap:16px;grid-template-columns:1fr;}
+  @media(min-width:760px){.g3{grid-template-columns:1fr 1fr;}}
+  @media(min-width:1180px){.g3{grid-template-columns:repeat(3,1fr);}}
+  .g23{display:grid;gap:16px;grid-template-columns:1fr;}
+  @media(min-width:1000px){.g23{grid-template-columns:1.55fr 1fr;}}
+  .g32{display:grid;gap:16px;grid-template-columns:1fr;}
+  @media(min-width:1000px){.g32{grid-template-columns:0.8fr 1.55fr 1fr;}}
+  .devgrid{display:grid;gap:10px;grid-template-columns:repeat(2,1fr);}
+  @media(min-width:700px){.devgrid{grid-template-columns:repeat(4,1fr);}}
+  @media(min-width:1280px){.devgrid{grid-template-columns:repeat(8,1fr);}}
+  .chain{display:grid;gap:8px;grid-template-columns:repeat(2,1fr);}
+  @media(min-width:820px){.chain{grid-template-columns:repeat(5,1fr);}}
+  @media(min-width:1340px){.chain{grid-template-columns:repeat(10,1fr);}}
+  .drawer{position:fixed;top:0;right:0;height:100%;width:min(460px,100%);z-index:120;
+    background:linear-gradient(180deg,#08182B,#050C16);border-left:1px solid rgba(56,225,240,.28);
+    box-shadow:-30px 0 70px -30px #000;overflow-y:auto;animation:sl .3s cubic-bezier(.2,.8,.3,1);}
+  @keyframes sl{from{transform:translateX(100%)}to{transform:none}}
+  .mask{position:fixed;inset:0;background:rgba(2,7,14,.62);z-index:110;backdrop-filter:blur(2px);}
+  .hb{height:9px;border-radius:5px;background:rgba(56,225,240,.09);overflow:hidden;}
+  .hb>i{display:block;height:100%;border-radius:5px;transition:width .8s cubic-bezier(.2,.8,.3,1);}
+  .clickable{cursor:pointer;}
+  .skel{background:linear-gradient(90deg,rgba(56,225,240,.05),rgba(56,225,240,.13),rgba(56,225,240,.05));
+    background-size:200% 100%;animation:sk 1.3s linear infinite;border-radius:8px;}
+  @keyframes sk{to{background-position:-200% 0}}
+
+  /* ---- 首頁單屏總覽 ---- */
+  .hero-screen{height:100vh;max-height:100vh;min-height:660px;display:flex;flex-direction:column;
+    gap:clamp(10px,1.4vh,20px);padding:clamp(12px,2vh,22px) 0 clamp(10px,1.6vh,18px);}
+  .hs-top{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:clamp(10px,1.6vw,26px);}
+  .hs-range{flex-wrap:wrap;justify-content:center;}
+  .hs-logo-img{height:clamp(32px,2.6vw,42px);width:auto;display:block;
+    filter:drop-shadow(0 5px 16px rgba(34,181,214,.4));}
+  .hs-name{font-size:clamp(16px,1.35vw,21px);font-weight:800;letter-spacing:.015em;line-height:1.2;white-space:nowrap;}
+  .hs-top>div:last-child{display:flex;}
+  .hs-logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#11A9C5,#2DD4BF);
+    display:grid;place-items:center;font-weight:900;color:#04121C;font-size:18px;}
+  .hs-main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(280px,21%) 1fr minmax(280px,21%);gap:clamp(12px,1.4vw,26px);}
+  .hs-col{display:flex;flex-direction:column;gap:clamp(10px,1.4vh,18px);min-height:0;}
+  .hs-center{display:flex;flex-direction:column;align-items:center;justify-content:space-between;min-height:0;gap:8px;}
+  .hs-sub{font-size:clamp(17px,1.55vw,24px);font-weight:700;letter-spacing:.16em;
+    background:linear-gradient(100deg,#38E1F0,#2DD4BF);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .hs-twin{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;}
+  .hs-flow{display:flex;align-items:center;justify-content:center;gap:clamp(8px,1.1vw,18px);flex-wrap:wrap;
+    padding:9px 16px;border-top:1px solid rgba(56,225,240,.1);}
+  .hs-step{display:flex;align-items:baseline;gap:7px;font-size:12.5px;}
+  .hs-step b{color:#E8F4F8;font-weight:700;}.hs-step span{font-size:11px;}
+  .hs-jump{display:flex;gap:clamp(9px,1vw,16px);flex-wrap:wrap;justify-content:center;}
+  .hs-jump button{font-family:inherit;font-size:clamp(13px,1.05vw,15.5px);font-weight:600;color:#CFE9F2;
+    background:linear-gradient(160deg,rgba(56,225,240,.15),rgba(9,20,35,.62));
+    border:1px solid rgba(56,225,240,.34);border-radius:999px;padding:clamp(9px,1vh,13px) clamp(18px,1.6vw,28px);
+    cursor:pointer;display:inline-flex;align-items:center;gap:9px;white-space:nowrap;
+    transition:transform .2s,background .2s,color .2s,border-color .2s,box-shadow .2s;}
+  .hs-jump button span{opacity:.65;font-size:.9em;}
+  .hs-jump button:hover{color:#04121C;background:linear-gradient(120deg,#38E1F0,#2DD4BF);border-color:transparent;
+    transform:translateY(-2px);box-shadow:0 16px 34px -18px rgba(56,225,240,.8);}
+  .hs-jump button:hover span{opacity:.85;}
+  .hs-scroll{font-family:inherit;background:rgba(9,24,42,.6);font-size:11.5px;color:#5B7490;cursor:pointer;border:1px solid rgba(56,225,240,.18);
+    border-radius:999px;padding:5px 13px;transition:.2s;}
+  .hs-scroll:hover{color:#38E1F0;border-color:rgba(56,225,240,.5);}
+
+  /* ---- 四大主題卡 ---- */
+  .tcard{--tc:#38E1F0;flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-between;
+    gap:10px;text-align:left;font:inherit;color:inherit;cursor:pointer;padding:clamp(13px,1.6vh,20px) clamp(14px,1vw,20px);
+    border-radius:16px;border:1px solid rgba(56,225,240,.15);
+    background:linear-gradient(160deg,rgba(19,42,68,.7),rgba(9,20,35,.6));backdrop-filter:blur(10px);
+    transition:transform .22s cubic-bezier(.2,.8,.3,1),border-color .22s,box-shadow .22s,background .22s;}
+  .tcard:hover,.tcard.on{border-color:var(--tc);transform:translateY(-3px);
+    background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 14%,rgba(19,42,68,.7)),rgba(9,20,35,.66));
+    box-shadow:0 26px 60px -34px var(--tc);}
+  .tcard:hover .tc-cta,.tcard.on .tc-cta{color:var(--tc);border-top-color:color-mix(in srgb,var(--tc) 40%,transparent);}
+  .tc-ico{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+    background:color-mix(in srgb,var(--tc) 16%,transparent);border:1px solid color-mix(in srgb,var(--tc) 34%,transparent);}
+  .tc-num{font-size:clamp(34px,3vw,52px);font-weight:700;line-height:1;}
+  .tc-cta{margin-top:8px;padding-top:9px;border-top:1px solid rgba(56,225,240,.12);color:#5B7490;transition:.22s;}
+
+  /* ---- 主題 Drawer ---- */
+  .tmask{position:fixed;inset:0;background:rgba(3,9,17,.42);z-index:110;animation:fade .25s;}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .tdrawer{position:fixed;top:0;height:100%;width:clamp(480px,46vw,940px);z-index:120;display:flex;flex-direction:column;
+    background:linear-gradient(180deg,#08182B,#050C16);}
+  .tdrawer-r{right:0;border-left:1px solid rgba(56,225,240,.3);box-shadow:-40px 0 90px -40px #000;animation:slR .34s cubic-bezier(.2,.8,.25,1);}
+  .tdrawer-l{left:0;border-right:1px solid rgba(56,225,240,.3);box-shadow:40px 0 90px -40px #000;animation:slL .34s cubic-bezier(.2,.8,.25,1);}
+  @keyframes slR{from{transform:translateX(100%)}to{transform:none}}
+  @keyframes slL{from{transform:translateX(-100%)}to{transform:none}}
+  .td-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:24px 28px 18px;
+    border-bottom:1px solid rgba(56,225,240,.12);}
+  .td-body{flex:1;overflow-y:auto;padding:20px 28px 32px;display:flex;flex-direction:column;gap:18px;}
+  .td-body h3{font-size:16px;}
+  .td-body .eyebrow{font-size:12px;}
+  .td-hero{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px;}
+  .kgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .td-feature{padding:16px 18px;background:linear-gradient(150deg,rgba(56,225,240,.1),rgba(9,20,35,.66));}
+  .kbox{border:1px solid rgba(56,225,240,.12);border-radius:12px;padding:15px 17px;background:rgba(10,24,42,.5);}
+  .td-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(56,225,240,.07);}
+  .td-row:last-child{border-bottom:0;}
+
+  @media(max-width:1180px){
+    .hero-screen{height:auto;max-height:none;min-height:0;}
+    .hs-main{grid-template-columns:1fr;}
+    .hs-col{flex-direction:row;}
+    .tcard{min-height:200px;}
+    .hs-twin{min-height:320px;}
+    .hs-top{grid-template-columns:1fr;justify-items:center;text-align:center;}
+    .hs-top>div:last-child{justify-content:center;}
+  }
+  @media(max-width:720px){.hs-col{flex-direction:column;}.tdrawer{width:100%;}.kgrid{grid-template-columns:repeat(2,1fr);}}
+  /* ---- 設備使用概況總表 ---- */
+  .dtable{width:100%;border-collapse:collapse;min-width:840px;font-size:12.5px;}
+  .dtable th{font-weight:500;color:#5B7490;font-size:11.5px;text-align:right;padding:0 11px 10px;
+    border-bottom:1px solid rgba(56,225,240,.14);white-space:nowrap;}
+  .dtable th:first-child,.dtable td:first-child{text-align:left;}
+  .dtable td{padding:11px;border-bottom:1px solid rgba(56,225,240,.06);text-align:right;white-space:nowrap;}
+  .dtable tbody tr{cursor:pointer;transition:background .18s;}
+  .dtable tbody tr:hover{background:rgba(56,225,240,.06);}
+  .dtable tbody tr.on{background:rgba(56,225,240,.1);}
+  .dtable tbody tr:last-child td{border-bottom:0;}
+  .dtable-sm{min-width:0;font-size:13px;}
+  .dtable-sm th{padding:0 8px 10px;font-size:11.5px;}
+  .dtable-sm td{padding:11px 8px;}
+  .mini-bar{display:inline-flex;height:5px;width:66px;border-radius:3px;overflow:hidden;vertical-align:middle;margin-left:8px;}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div id="root"><div class="boot-msg">資料載入中…</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prop-types@15.8.1/prop-types.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/recharts@2.15.4/umd/Recharts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
+<script src="./assets/mock-data.js"></script>
+
+<script>
+(function () {
+'use strict';
+
+const DATA_SOURCE = './assets/mock-data.js';
+
+// 載入失敗時的錯誤畫面（原站：pN）
+function showBootError(message) {
+  const root = document.getElementById('root');
+  if (!root) return;
+  root.innerHTML = '';
+  const box = document.createElement('div');
+  box.className = 'boot-msg boot-error';
+  box.innerHTML = '<strong>資料載入失敗</strong><p></p><p>請確認網路連線後重新整理頁面。</p>';
+  box.querySelector('p').textContent = DATA_SOURCE + '：' + message;
+  root.append(box);
+}
+if (!window.React || !window.ReactDOM || !window.Recharts || !window.htm) {
+  showBootError('React／Recharts 套件沒有載入（需要連網）');
+  return;
+}
+const RAW = window.SL_USER_DATA;
+if (!RAW || typeof RAW !== 'object') {
+  showBootError('找不到 window.SL_USER_DATA');
+  return;
+}
+
+const { useState, useEffect, useRef, useMemo, Fragment } = React;
+const h = React.createElement;
+const html = htm.bind(h);
+const {
+  ResponsiveContainer, AreaChart, ComposedChart, PieChart, Area, Line, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend
+} = Recharts;
+
+/* ============================================================================
+   ① 常數與判定門檻
+   ============================================================================ */
+
+// 色票（原站：$），與 CSS :root token 同步；圖表與 `${色}1f` 這類透明度寫法需要實際色碼
+const C = {
+  bg0: '#050A14', bg1: '#081426', ink: '#E8F4F8', dim: '#8FA8BF', faint: '#5B7490',
+  brand: '#11A9C5', cyan: '#38E1F0', teal: '#2DD4BF', green: '#4ADE80',
+  purple: '#A78BFA', orange: '#FBA94C', red: '#F87171', line: '#06C755'
+};
+const SERIES = [C.cyan, C.teal, C.brand, C.green, C.purple, C.orange, C.red, '#7DD3FC']; // 原站：wN
+
+/* ---------- 圖示：lucide（原站：LM），SVG 路徑取自原站打包檔 ---------- */
+function makeIcon(nodes) {
+  return function Icon({ size = 24, color = 'currentColor', className = '', style }) {
+    return h('svg', {
+      xmlns: 'http://www.w3.org/2000/svg', width: size, height: size, viewBox: '0 0 24 24',
+      fill: 'none', stroke: color, strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round',
+      className: ('lucide ' + className).trim(), style
+    }, nodes.map(([tag, attrs], i) => h(tag, Object.assign({ key: i }, attrs))));
+  };
+}
+const P = d => ['path', { d }];
+const Icons = {
+  heartPulse: makeIcon([P('M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5'), P('M3.22 13H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27')]),
+  activity: makeIcon([P('M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2')]),
+  scale: makeIcon([P('M12 3v18'), P('m19 8 3 8a5 5 0 0 1-6 0zV7'), P('M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1'), P('m5 8 3 8a5 5 0 0 1-6 0zV7'), P('M7 21h10')]),
+  droplets: makeIcon([P('M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z'), P('M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97')]),
+  thermometer: makeIcon([P('M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z')]),
+  eye: makeIcon([P('M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0'), ['circle', { cx: 12, cy: 12, r: 3 }]]),
+  hand: makeIcon([P('M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2'), P('M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2'), P('M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8'), P('M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15')]),
+  brain: makeIcon([P('M12 18V5'), P('M15 13a4.17 4.17 0 0 1-3-4 4.17 4.17 0 0 1-3 4'), P('M17.598 6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5'), P('M17.997 5.125a4 4 0 0 1 2.526 5.77'), P('M18 18a4 4 0 0 0 2-7.464'), P('M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517'), P('M6 18a4 4 0 0 1-2-7.464'), P('M6.003 5.125a4 4 0 0 0-2.526 5.77')]),
+  circleDot: makeIcon([['circle', { cx: 12, cy: 12, r: 1 }], ['circle', { cx: 12, cy: 12, r: 10 }]]),
+  arrowRight: makeIcon([P('M5 12h14'), P('m12 5 7 7-7 7')]),
+  chevronRight: makeIcon([P('m9 18 6-6-6-6')]),
+  repeat: makeIcon([P('m17 2 4 4-4 4'), P('M3 11v-1a4 4 0 0 1 4-4h14'), P('m7 22-4-4 4-4'), P('M21 13v1a4 4 0 0 1-4 4H3')]),
+  users: makeIcon([P('M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'), P('M16 3.128a4 4 0 0 1 0 7.744'), P('M22 21v-2a4 4 0 0 0-3-3.87'), ['circle', { cx: 9, cy: 7, r: 4 }]]),
+  trendingUp: makeIcon([P('M16 7h6v6'), P('m22 7-8.5 8.5-5-5L2 17')]),
+  bell: makeIcon([P('M10.268 21a2 2 0 0 0 3.464 0'), P('M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326')]),
+  x: makeIcon([P('M18 6 6 18'), P('m6 6 12 12')]),
+  shieldCheck: makeIcon([P('M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z'), P('m9 12 2 2 4-4')]),
+  wifi: makeIcon([P('M12 20h.01'), P('M2 8.82a15 15 0 0 1 20 0'), P('M5 12.859a10 10 0 0 1 14 0'), P('M8.5 16.429a5 5 0 0 1 7 0')]),
+  triangleAlert: makeIcon([P('m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3'), P('M12 9v4'), P('M12 17h.01')]),
+  calendar: makeIcon([P('M8 2v3'), P('M16 2v3'), ['rect', { x: 3, y: 3, width: 18, height: 18, rx: 2 }], P('M3 9h18')])
+};
+
+/* ---------- 日期：所有紀錄換算成「第幾天」，0 = 截止日往前 364 天，364 = 截止日 ---------- */
+const DAYS = 365;                                                     // 原站：DN
+const parseDate = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }; // 原站：TN
+const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; // 原站：EN
+const DATA_THROUGH = RAW.dataThrough;                                 // 原站：NN
+const END = parseDate(DATA_THROUGH);                                  // 原站：ON
+const dayToDate = i => new Date(END.getTime() - (364 - i) * 864e5);   // 原站：kN
+const dayLabel = i => { const t = dayToDate(i); return `${t.getMonth() + 1}/${String(t.getDate()).padStart(2, '0')}`; }; // 原站：AN
+const dayMonth = i => { const t = dayToDate(i); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}`; }; // 原站：jN
+const monthLabel = ym => `${Number(ym.split('-')[1])}月`;             // 原站：MN
+
+const AGE_BANDS = ['<30', '30-39', '40-49', '50-59', '60-69', '≥70'];  // 原站：PN
+const ageBand = a => a < 30 ? 0 : a < 40 ? 1 : a < 50 ? 2 : a < 60 ? 3 : a < 70 ? 4 : 5; // 原站：FN
+
+// 八項設備（原站：IN）。w 為原站保留的權重欄位，畫面沒有用到
+const DEVICES = [
+  { id: 'bp', name: '血壓', icon: Icons.heartPulse, w: 24.5, color: C.cyan, metrics: ['收縮壓', '舒張壓', '脈搏'] },
+  { id: 'inbody', name: 'InBody 身體組成', short: 'InBody', icon: Icons.activity, w: 15.5, color: C.teal, metrics: ['體脂率', '內臟脂肪', '骨骼肌', 'BMI'] },
+  { id: 'bmi', name: '身高體重', icon: Icons.scale, w: 15, color: C.brand, metrics: ['身高', '體重', 'BMI'] },
+  { id: 'spo2', name: '血氧', icon: Icons.droplets, w: 14.5, color: '#7DD3FC', metrics: ['SpO₂'] },
+  { id: 'temp', name: '體溫', icon: Icons.thermometer, w: 9, color: C.orange, metrics: ['體溫'] },
+  { id: 'fundus', name: 'AI 眼底鏡', short: 'AI眼底', icon: Icons.eye, w: 8.5, color: C.purple, metrics: ['眼底影像 AI 判讀'] },
+  { id: 'grip', name: '握力', icon: Icons.hand, w: 7.5, color: C.green, metrics: ['左手握力', '右手握力'] },
+  { id: 'cog', name: '認知檢測', icon: Icons.brain, w: 5.5, color: '#F0ABFC', metrics: ['反應力', '注意力', '協調力', '記憶力'] }
+];
+const DEVICE_BY_ID = Object.fromEntries(DEVICES.map(d => [d.id, d]));  // 原站：zN
+const deviceShort = id => DEVICE_BY_ID[id].short || DEVICE_BY_ID[id].name; // 原站：BN
+
+// 各設備可填的量測項目（原站：LN）：n 名稱、u 單位、d 小數位
+const DEVICE_ITEMS = {
+  bp: [{ n: '收縮壓', u: 'mmHg', d: 0 }, { n: '舒張壓', u: 'mmHg', d: 0 }, { n: '脈搏', u: 'bpm', d: 0 }],
+  spo2: [{ n: 'SpO₂', u: '%', d: 1 }],
+  temp: [{ n: '體溫', u: '°C', d: 1 }],
+  grip: [{ n: '左手握力', u: 'kg', d: 1 }, { n: '右手握力', u: 'kg', d: 1 }],
+  bmi: [{ n: '身高', u: 'cm', d: 1 }, { n: '體重', u: 'kg', d: 1 }, { n: 'BMI', u: 'kg/m²', d: 1 }],
+  inbody: [{ n: '體脂肪', u: 'kg', d: 1 }, { n: '體脂率', u: '%', d: 1 }, { n: '內臟脂肪', u: '級', d: 1 }, { n: '骨骼肌', u: 'kg', d: 1 },
+    { n: '肌肉量', u: 'kg', d: 1 }, { n: '體水分', u: 'L', d: 1 }, { n: '基礎代謝', u: 'kcal', d: 0 }, { n: 'BMI', u: 'kg/m²', d: 1 },
+    { n: 'SMI', u: 'kg/m²', d: 2 }, { n: '蛋白質', u: 'kg', d: 1 }, { n: '礦物質', u: 'kg', d: 1 }, { n: '身體年齡', u: '歲', d: 0 }],
+  cog: [{ n: '反應力', u: '分', d: 0 }, { n: '注意力', u: '分', d: 0 }, { n: '協調力', u: '分', d: 0 }, { n: '記憶力', u: '分', d: 0 }, { n: '總體認知表現', u: '分', d: 0 }],
+  fundus: []
+};
+
+// 眼底判讀結果的顯示文字（原站：RN 只剩 fundus 這組有用到）
+const FUNDUS_STATUS = [
+  { l: '正常', k: 'normal', c: C.green }, { l: '需追蹤', k: 'watch', c: C.orange }, { l: '建議進一步就醫', k: 'abnormal', c: C.red }
+];
+
+// 健康風險九類（原站：VN）與設備對應（原站：HN）
+const RISK_NAMES = ['血壓異常', 'BMI 過重／肥胖', '體脂異常', '內臟脂肪偏高', '骨骼肌不足', '握力不足', '血氧偏低', 'AI 眼底風險', '認知需關注'];
+const DEVICE_RISK = { bp: '血壓異常', bmi: 'BMI 過重／肥胖', spo2: '血氧偏低', grip: '握力不足', fundus: 'AI 眼底風險', cog: '認知需關注' };
+
+// 資料允許值（原站：UN、WN、GN、KN），只用在資料檢核
+const VISITOR_SOURCES = ['自主到站', '社區導流', '企業健康促進', '活動／講座', '醫療單位轉介', '親友推薦', '其他'];
+const LINE_SOURCES = [
+  { id: '現場', label: '照護站現場 QR Code' }, { id: '社區', label: '社區訪視' }, { id: '企業', label: '企業健康促進' },
+  { id: '活動', label: '健康活動' }, { id: '轉介', label: '醫療轉介／專業諮詢' }, { id: '親友', label: '親友分享' },
+  { id: '自然', label: '自然加入' }, { id: '其他', label: '其他' }
+];
+const PUSH_TYPES = ['AI 健康報告', '健康異常提醒', '異常轉介', '個人化健康建議', '健康衛教', '再次量測提醒', '健康追蹤提醒', '活動／健康促進'];
+const FUNDUS_RISKS = ['青光眼風險', '黃斑部病變風險', '糖尿病視網膜病變風險', '其他眼底異常', '影像品質不足'];
+const SAT_DIMS = ['操作便利性', '智慧設備體驗', '健康資訊實用性', '服務人員專業度', 'AI 報告易理解度', 'LINE 健康服務便利性', '整體服務體驗']; // 原站：gN
+
+// 整體滿意度：原站寫死 4.7，不是由問卷計算（原站：XN）
+const OVERALL_SAT = 4.7;
+
+/* ---------- 單筆量測的判定（原站：qN）：s = normal／watch／abnormal ---------- */
+function classify(device, v, user) {
+  switch (device) {
+    case 'bp':
+      return v.收縮壓 >= 140 || v.舒張壓 >= 90 ? { s: 'abnormal', tag: '高血壓風險' }
+        : v.收縮壓 >= 130 || v.舒張壓 >= 85 ? { s: 'watch', tag: '偏高' } : { s: 'normal', tag: '正常' };
+    case 'spo2':
+      return v['SpO₂'] < 94 ? { s: 'abnormal', tag: '異常' } : v['SpO₂'] < 96 ? { s: 'watch', tag: '偏低' } : { s: 'normal', tag: '正常' };
+    case 'temp':
+      return v.體溫 >= 37.5 ? { s: 'abnormal', tag: '異常' } : { s: 'normal', tag: '正常' };
+    case 'grip':
+      return Math.max(v.左手握力, v.右手握力) < (user.gender === '男' ? 28 : 18) ? { s: 'abnormal', tag: '肌力不足' } : { s: 'normal', tag: '正常' };
+    case 'bmi':
+      return v.BMI >= 27 ? { s: 'abnormal', tag: '肥胖' } : v.BMI >= 24 ? { s: 'watch', tag: '過重' } : { s: 'normal', tag: '正常' };
+    case 'inbody': {
+      const fatHigh = v.體脂率 >= (user.gender === '男' ? 27 : 35);
+      const viscHigh = v.內臟脂肪 >= 12;
+      const smmLow = v.骨骼肌 < (user.gender === '男' ? 25 : 18);
+      return fatHigh || viscHigh || smmLow
+        ? { s: 'abnormal', tag: fatHigh ? '體脂偏高' : viscHigh ? '內臟脂肪偏高' : '骨骼肌不足', fatHigh, viscHigh, smmLow }
+        : { s: 'normal', tag: '正常' };
+    }
+    case 'cog':
+      return v.總體認知表現 < 60 ? { s: 'abnormal', tag: '需關注' } : v.總體認知表現 < 70 ? { s: 'watch', tag: '略低於同齡' } : { s: 'normal', tag: '正常' };
+    default:
+      return { s: 'normal', tag: '正常' };
+  }
+}
+
+/* ============================================================================
+   ② 資料檢核（原站：bN）：有錯誤時頁首顯示紅色提示，數字仍照常計算
+   ============================================================================ */
+const _DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+function isValidDate(s) { // 原站：vN
+  if (typeof s !== 'string' || !_DATE_RE.test(s)) return false;
+  const [y, m, d] = s.split('-').map(Number), t = new Date(y, m - 1, d);
+  return t.getFullYear() === y && t.getMonth() === m - 1 && t.getDate() === d;
+}
+const listOf = (arr, max = 8) => arr.length <= max ? arr.join('、') : arr.slice(0, max).join('、') + ` 等 ${arr.length} 種`; // 原站：yN
+
+function validateData(data, ref, opt = {}) {
+  const maxIssues = opt.maxIssues ?? 200, errors = [], warnings = [];
+  let truncated = false;
+  const err = (where, message) => { if (errors.length >= maxIssues) { truncated = true; return; } errors.push({ where, message }); };
+  const warn = (where, message) => { if (warnings.length >= maxIssues) { truncated = true; return; } warnings.push({ where, message }); };
+  const summary = { users: 0, records: 0, pushes: 0, proRecords: 0, satForms: 0, latestRecordDate: null };
+  if (!data || typeof data !== 'object') {
+    err('檔案', 'user.json 的內容不是一個物件，可能是格式壞掉了（例如少了大括號或多了逗號）。');
+    return { ok: false, errors, warnings, summary, truncated };
+  }
+  const deviceIds = (ref.DEVICES ?? []).map(d => d.id);
+  const deviceName = Object.fromEntries((ref.DEVICES ?? []).map(d => [d.id, d.short || d.name]));
+  const itemSets = Object.fromEntries(Object.entries(ref.DEV_ITEMS ?? {}).map(([k, v]) => [k, new Set(v.map(x => x.n))]));
+  const visitorSet = new Set(ref.VISITOR_SOURCES ?? []);
+  const lineSet = new Set((ref.LINE_SOURCES ?? []).map(x => x.id));
+  const pushSet = new Set(ref.PUSH_TYPES ?? []);
+  const eyeSet = new Set(ref.FUNDUS_RISKS ?? []);
+  const statusSet = new Set(['normal', 'watch', 'abnormal']);
+  const through = data.dataThrough;
+  if (!isValidDate(through)) err('檔案開頭', `dataThrough 是 ${JSON.stringify(through)}，不是合法日期。格式必須是 YYYY-MM-DD，例如 "2026-09-08"。`);
+  if (!Array.isArray(data.users)) {
+    err('檔案開頭', '找不到 users 陣列。user.json 必須有一個 users 欄位，內容是所有居民的清單。');
+    return { ok: errors.length === 0, errors, warnings, summary, truncated };
+  }
+  const seen = new Map();
+  for (let i = 0; i < data.users.length; i++) {
+    const u = data.users[i], who = u && u.id ? `居民 ${u.id}` : `第 ${i + 1} 位居民`;
+    summary.users++;
+    if (!u || typeof u !== 'object') { err(who, '這一筆不是物件，可能是多了逗號或括號沒閉合。'); continue; }
+    if (typeof u.id !== 'string' || !u.id) err(who, '缺少 id。每位居民都要有唯一的識別碼，例如 "SL-10018"。');
+    else if (seen.has(u.id)) err(who, `id 與第 ${seen.get(u.id) + 1} 位居民重複。每個 id 只能出現一次。`);
+    else seen.set(u.id, i);
+    if (u.gender !== '男' && u.gender !== '女') err(who, `性別是 ${JSON.stringify(u.gender)}，只能填「男」或「女」。`);
+    if (!Number.isInteger(u.age) || u.age < 1 || u.age > 120) err(who, `年齡是 ${JSON.stringify(u.age)}，必須是 1 到 120 之間的整數。`);
+    if (!visitorSet.has(u.visitorSource)) err(who, `來源 ${JSON.stringify(u.visitorSource)} 不存在。可用的來源為 ${listOf([...visitorSet])}。`);
+    if (!isValidDate(u.visitDate)) err(who, `visitDate 是 ${JSON.stringify(u.visitDate)}，不是合法日期（格式 YYYY-MM-DD）。每位居民都要有首次到站日期。`);
+    else if (isValidDate(through) && u.visitDate > through) err(who, `首次到站日期 ${u.visitDate} 晚於資料截止日 ${through}。`);
+    if (u.line !== undefined) {
+      if (typeof u.line !== 'object' || u.line === null) err(who, 'line 必須是物件，例如 { "source": "社區", "joinDate": "2026-02-20", "bound": true }。未加入 LINE 就整個省略。');
+      else {
+        if (!lineSet.has(u.line.source)) err(who, `LINE 來源 ${JSON.stringify(u.line.source)} 不存在。可用的為 ${listOf([...lineSet])}。`);
+        if (!isValidDate(u.line.joinDate)) err(who, `LINE 加入日期 ${JSON.stringify(u.line.joinDate)} 不是合法日期（格式 YYYY-MM-DD）。`);
+        else if (isValidDate(through) && u.line.joinDate > through) err(who, `LINE 加入日期 ${u.line.joinDate} 晚於資料截止日 ${through}。`);
+      }
+    }
+    if (u.records !== undefined) {
+      if (!Array.isArray(u.records)) err(who, 'records 必須是陣列。沒有量測紀錄就整個省略。');
+      else {
+        let prev = null;
+        for (let j = 0; j < u.records.length; j++) {
+          const r = u.records[j], where = `${who} 第 ${j + 1} 筆紀錄`;
+          summary.records++;
+          if (!r || typeof r !== 'object') { err(where, '這一筆不是物件。'); continue; }
+          if (isValidDate(r.date)) {
+            if (isValidDate(through) && r.date > through) err(where, `日期 ${r.date} 晚於資料截止日 ${through}。資料截止日之後不應有紀錄。`);
+            if (!summary.latestRecordDate || r.date > summary.latestRecordDate) summary.latestRecordDate = r.date;
+            if (prev && r.date < prev) warn(where, `日期 ${r.date} 早於前一筆的 ${prev}。建議依日期由舊到新排列（不影響計算，只是比較好讀）。`);
+            prev = r.date;
+            if (isValidDate(u.visitDate) && r.date < u.visitDate) warn(where, `日期 ${r.date} 早於這位居民的首次到站日 ${u.visitDate}。`);
+          } else err(where, `日期 ${JSON.stringify(r.date)} 不是合法日期（格式 YYYY-MM-DD）。`);
+          if (!deviceIds.includes(r.device)) { err(where, `設備 ${JSON.stringify(r.device)} 不存在。可用的設備代號為 ${deviceIds.join('、')}。`); continue; }
+          if (r.device === 'fundus') {
+            if (!statusSet.has(r.status)) err(where, `眼底紀錄缺少判讀結果或值不正確（目前是 ${JSON.stringify(r.status)}）。眼底沒有數值，要直接填 status：normal（正常）、watch（需追蹤）或 abnormal（建議進一步就醫）。`);
+            else if (r.status !== 'normal' && !eyeSet.has(r.eyeRisk)) err(where, `眼底判讀為 ${r.status} 但風險類型 ${JSON.stringify(r.eyeRisk)} 不正確。可用的為 ${listOf([...eyeSet])}。`);
+            if (r.values !== undefined) warn(where, '眼底紀錄不需要 values，判讀結果由 status 決定。');
+          } else if (!r.values || typeof r.values !== 'object') {
+            err(where, `${deviceName[r.device]} 的紀錄缺少 values。量測值要放在 values 裡，例如 { "收縮壓": 145, "舒張壓": 92 }。`);
+          } else {
+            const items = itemSets[r.device];
+            for (const [k, v] of Object.entries(r.values)) {
+              if (items && !items.has(k)) err(where, `${deviceName[r.device]} 沒有「${k}」這個量測項目。可填的項目為 ${listOf([...items], 12)}。`);
+              else if (typeof v !== 'number' || !Number.isFinite(v)) err(where, `「${k}」的值是 ${JSON.stringify(v)}，必須是數字（不要加引號或單位）。`);
+            }
+            if (Object.keys(r.values).length === 0) warn(where, `${deviceName[r.device]} 的 values 是空的，這筆紀錄不會計入任何統計。`);
+          }
+        }
+      }
+    }
+    if (u.pushes !== undefined) {
+      if (!Array.isArray(u.pushes)) err(who, 'pushes 必須是陣列。沒有推播就整個省略。');
+      else for (let j = 0; j < u.pushes.length; j++) {
+        const p = u.pushes[j], where = `${who} 第 ${j + 1} 筆推播`;
+        summary.pushes++;
+        if (!p || typeof p !== 'object') { err(where, '這一筆不是物件。'); continue; }
+        if (!isValidDate(p.date)) err(where, `日期 ${JSON.stringify(p.date)} 不是合法日期（格式 YYYY-MM-DD）。`);
+        else if (isValidDate(through) && p.date > through) err(where, `日期 ${p.date} 晚於資料截止日 ${through}。`);
+        if (!pushSet.has(p.type)) err(where, `推播類型 ${JSON.stringify(p.type)} 不存在。可用的為 ${listOf([...pushSet])}。`);
+        if (!p.opened && (p.reportViewed || p.revisited)) warn(where, '標記了已看報告或已回訪，但 opened 不是 true。未開啟的推播不會產生後續行為。');
+      }
+    }
+    if (u.sat !== undefined) {
+      if (typeof u.sat !== 'object' || u.sat === null) err(who, 'sat 必須是物件。沒有填問卷就整個省略。');
+      else {
+        summary.satForms++;
+        if (!isValidDate(u.sat.date)) err(who, `滿意度的填答日期 ${JSON.stringify(u.sat.date)} 不是合法日期（格式 YYYY-MM-DD）。`);
+        else if (isValidDate(through) && u.sat.date > through) err(who, `滿意度填答日期 ${u.sat.date} 晚於資料截止日 ${through}。`);
+        const missing = SAT_DIMS.filter(k => !(k in u.sat));
+        if (missing.length) err(who, `滿意度缺少維度：${missing.join('、')}。七個維度必須齊全，缺一個會讓儀表板整個面板變成 NaN。`);
+        const unknown = Object.keys(u.sat).filter(k => k !== 'date' && !SAT_DIMS.includes(k));
+        if (unknown.length) err(who, `滿意度有不認得的維度：${unknown.join('、')}。名稱必須與儀表板的七個維度完全一致。`);
+        for (const [k, v] of Object.entries(u.sat)) {
+          if (k !== 'date' && (typeof v !== 'number' || !(v >= 1 && v <= 5))) err(who, `滿意度「${k}」是 ${JSON.stringify(v)}，超出範圍。滿意度是 1.0 到 5.0 分。`);
+        }
+      }
+    }
+    if (u.nps !== undefined) {
+      if (!Number.isInteger(u.nps) || u.nps < 0 || u.nps > 10) err(who, `nps 是 ${JSON.stringify(u.nps)}，必須是 0 到 10 之間的整數。`);
+      if (u.sat === undefined) warn(who, '有 nps 但沒有 sat。推薦度通常跟滿意度問卷一起填。');
+    }
+  }
+  if (data.proRecords !== undefined) {
+    if (!Array.isArray(data.proRecords)) err('檔案開頭', 'proRecords 必須是陣列。');
+    else for (let j = 0; j < data.proRecords.length; j++) {
+      const p = data.proRecords[j], where = `第 ${j + 1} 筆專業服務場次`;
+      summary.proRecords++;
+      if (!p || typeof p !== 'object') { err(where, '這一筆不是物件。'); continue; }
+      if (!isValidDate(p.date)) err(where, `日期 ${JSON.stringify(p.date)} 不是合法日期（格式 YYYY-MM-DD）。`);
+      else if (isValidDate(through) && p.date > through) err(where, `日期 ${p.date} 晚於資料截止日 ${through}。`);
+      if (!Number.isInteger(p.people) || p.people < 0) err(where, `參加人數是 ${JSON.stringify(p.people)}，必須是 0 以上的整數。`);
+      if (p.sat !== undefined && (typeof p.sat !== 'number' || !(p.sat >= 1 && p.sat <= 5))) err(where, `滿意度是 ${JSON.stringify(p.sat)}，超出範圍。滿意度是 1.0 到 5.0 分。`);
+      if (typeof p.type !== 'string' || !p.type) err(where, '缺少服務項目名稱（type）。');
+    }
+  }
+  if (isValidDate(through) && summary.latestRecordDate && summary.latestRecordDate > through) {
+    err('檔案開頭', `dataThrough 是 ${through}，但最新的紀錄是 ${summary.latestRecordDate}。dataThrough 應該是資料完整到的那一天，不能早於最後一筆紀錄。`);
+  }
+  return { ok: errors.length === 0, errors, warnings, summary, truncated };
+}
+
+// 距今天數（原站：xN）：截止日距離瀏覽器今天幾天，> 14 天會顯示「未更新」提示
+function daysSince(s, now = new Date()) {
+  if (!isValidDate(s)) return null;
+  const [y, m, d] = s.split('-').map(Number);
+  const a = new Date(y, m - 1, d).getTime(), b = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  return Math.max(0, Math.round((b - a) / 864e5));
+}
+
+const CHECK = validateData(RAW, {                                     // 原站：JN
+  DEVICES, DEV_ITEMS: DEVICE_ITEMS, VISITOR_SOURCES, LINE_SOURCES, PUSH_TYPES, FUNDUS_RISKS
+}, { maxIssues: 20 });
+const STALE_DAYS = daysSince(DATA_THROUGH);                           // 原站：YN
+
+/* ============================================================================
+   ③ 資料整理與指標計算
+   ============================================================================ */
+
+// 把 user.json 攤平成 users／records／pushes 三張表，日期換成第幾天（原站：QN）
+// 截止日往前 365 天以外的紀錄直接略過
+function buildBase() {
+  const dayIndex = new Map();
+  for (let i = 0; i < DAYS; i++) dayIndex.set(fmtDate(dayToDate(i)), i);
+  const toDay = s => s && dayIndex.has(s) ? dayIndex.get(s) : -1;
+  const users = [], records = [], pushes = [];
+  const known = new Set(DEVICES.map(d => d.id)), seen = new Set();
+  const skipped = { users: 0, records: 0 };
+  for (const raw of RAW.users) {
+    if (!(raw && typeof raw.id === 'string' && raw.id && !seen.has(raw.id) && (raw.gender === '男' || raw.gender === '女') && Number.isFinite(raw.age))) {
+      skipped.users++; continue;
+    }
+    seen.add(raw.id);
+    const u = {
+      id: raw.id, gender: raw.gender, age: raw.age, band: ageBand(raw.age),
+      visitDay: toDay(raw.visitDate), visitorSource: raw.visitorSource,
+      lineJoined: !!raw.line, lineSource: raw.line ? raw.line.source : null,
+      lineJoinDay: raw.line ? toDay(raw.line.joinDate) : null, bound: !!(raw.line && raw.line.bound),
+      served: !!(raw.records && raw.records.length), followUp: !!raw.followUp,
+      revisitCount: 0, satisfaction: null, sat: null, satDay: -1
+    };
+    if (raw.sat) {
+      const { date, ...dims } = raw.sat;
+      u.satDay = toDay(date);
+      u.sat = dims;
+      u.satisfaction = Math.round(Object.values(dims).reduce((a, b) => a + b, 0) / 7 * 10) / 10;
+      u.nps = raw.nps;
+    }
+    const visitDays = new Set();
+    for (const r of raw.records || []) {
+      const day = toDay(r.date);
+      if (day < 0) continue;
+      if (!r || !known.has(r.device)) { skipped.records++; continue; }
+      visitDays.add(day);
+      let status, tag, eyeRisk = null, fatHigh = false, viscHigh = false, smmLow = false;
+      if (r.device === 'fundus') {
+        status = r.status;
+        tag = (FUNDUS_STATUS.find(x => x.k === status) || {}).l || '正常';
+        eyeRisk = r.eyeRisk || null;
+      } else {
+        const c = classify(r.device, r.values, u);
+        status = c.s; tag = c.tag; fatHigh = !!c.fatHigh; viscHigh = !!c.viscHigh; smmLow = !!c.smmLow;
+      }
+      records.push({
+        userId: raw.id, day, month: dayMonth(day), device: r.device, values: r.values || {},
+        status, tag, eyeRisk, fatHigh, viscHigh, smmLow,
+        // InBody、認知、眼底一律算 AI 分析，其餘設備看紀錄上的 aiAnalysis
+        aiAnalysis: r.device === 'fundus' || r.device === 'inbody' || r.device === 'cog' || !!r.aiAnalysis
+      });
+    }
+    u.revisitCount = Math.max(0, visitDays.size - 1);
+    for (const p of raw.pushes || []) {
+      const day = toDay(p.date);
+      if (day < 0 || !p || typeof p.type !== 'string') continue;
+      pushes.push({ userId: raw.id, day, month: dayMonth(day), type: p.type, opened: !!p.opened, reportViewed: !!p.reportViewed, revisited: !!p.revisited });
+    }
+    users.push(u);
+  }
+  return { users, records, pushes, byId: Object.fromEntries(users.map(u => [u.id, u])), skipped };
+}
+const BASE = buildBase();                                             // 原站：$N
+
+// 全期間每日量測次數（原站：eP.daily）：「智慧健康設備使用」卡片的趨勢線用這份，不受期間切換影響
+const DAILY_ALL = (() => {
+  const people = Array.from({ length: DAYS }, () => new Set()), visitors = Array.from({ length: DAYS }, () => new Set());
+  const count = Array(DAYS).fill(0);
+  for (const r of BASE.records) { people[r.day].add(r.userId); count[r.day]++; }
+  for (const u of BASE.users) if (u.visitDay >= 0) visitors[u.visitDay].add(u.id);
+  return Array.from({ length: DAYS }, (_, i) => ({
+    day: i, label: dayLabel(i),
+    服務人次: new Set([...people[i], ...visitors[i]]).size, 量測次數: count[i], 使用人數: people[i].size
+  }));
+})();
+
+// 資料期間（原站：nP）：都是「截止日往前推」，不是瀏覽器的今天
+const LAST_DAY = dayToDate(364);
+const RANGES = [
+  { id: '7d', label: '近7日', days: 7, note: '近 7 日' },
+  { id: '30d', label: '近30日', days: 30, note: '近 30 日' },
+  { id: 'ytd', label: '今年', days: Math.round((LAST_DAY - new Date(LAST_DAY.getFullYear(), 0, 1)) / 864e5) + 1, note: '今年 1 月 1 日至今' }
+];
+
+// 健康改善追蹤的六項指標（原站：rP）：dir = -1 越低越好、1 越高越好
+const IMPROVE_METRICS = [
+  { key: 'bp', label: '血壓', devices: ['bp'], field: '收縮壓', pair: '舒張壓', dir: -1, unit: 'mmHg' },
+  { key: 'bmi', label: 'BMI', devices: ['bmi', 'inbody'], field: 'BMI', dir: -1, unit: 'kg/m²' },
+  { key: 'fat', label: '體脂率', devices: ['inbody'], field: '體脂率', dir: -1, unit: '%' },
+  { key: 'visc', label: '內臟脂肪', devices: ['inbody'], field: '內臟脂肪', dir: -1, unit: '級' },
+  { key: 'smm', label: '骨骼肌', devices: ['inbody'], field: '骨骼肌', dir: 1, unit: 'kg' },
+  { key: 'grip', label: '握力', devices: ['grip'], field: '右手握力', dir: 1, unit: 'kg' }
+];
+// 改善追蹤的「異常」門檻（原站：iP）：血壓用 ≥130/85、BMI 用 ≥24，比風險判定寬
+function isImproveTarget(m, rec, user) {
+  const v = rec.values[m.field];
+  switch (m.key) {
+    case 'bp': return v >= 130 || rec.values.舒張壓 >= 85;
+    case 'bmi': return v >= 24;
+    case 'fat': return v >= (user.gender === '男' ? 27 : 35);
+    case 'visc': return v >= 12;
+    case 'smm': return v < (user.gender === '男' ? 25 : 18);
+    case 'grip': return v < (user.gender === '男' ? 28 : 18);
+  }
+  return false;
+}
+
+// 依篩選條件與日期區間（第 from 天到第 to 天）彙總（原站：aP）
+// f.gender／band／source／device 目前畫面上沒有控制項，固定為 'all'
+function aggregate(f, from, to) {
+  const { users, records, pushes } = BASE;
+  const pass = u => (f.gender === 'all' || u.gender === f.gender) && (f.band === 'all' || AGE_BANDS[u.band] === f.band) && (f.source === 'all' || u.lineSource === f.source);
+  const inRange = d => d >= from && d <= to;
+  const uSet = users.filter(pass);
+  const uIds = new Set(uSet.map(u => u.id));
+  const recs = records.filter(r => inRange(r.day) && uIds.has(r.userId) && (f.device === 'all' || r.device === f.device));
+  const push = pushes.filter(p => inRange(p.day) && uIds.has(p.userId));
+  const visitors = uSet.filter(u => inRange(u.visitDay));                       // 首次到站落在期間內
+  const lineNew = uSet.filter(u => u.lineJoined && inRange(u.lineJoinDay));     // 期間內加入 LINE
+  const lineCum = uSet.filter(u => u.lineJoined && u.lineJoinDay <= to);        // 截至期末累計加入 LINE
+  const bound = lineCum.filter(u => u.bound);
+  const servedIds = new Set(recs.map(r => r.userId));                           // 期間內有量測的人
+  const visitKeys = new Set(recs.map(r => `${r.userId}|${r.day}`));             // 人 × 日
+  const lineIds = new Set(lineCum.map(u => u.id));
+  const activeIds = new Set([...recs.map(r => r.userId), ...push.filter(p => p.opened).map(p => p.userId)].filter(id => lineIds.has(id)));
+  const riskUsers = new Set(recs.filter(r => r.status === 'abnormal').map(r => r.userId)); // 期間內有任一筆 abnormal
+  const dayCount = {};
+  recs.forEach(r => { (dayCount[r.userId] = dayCount[r.userId] || new Set()).add(r.day); });
+  const revisitors = Object.values(dayCount).filter(s => s.size > 1).length;   // 期間內 2 天以上有量測
+  const satUsers = uSet.filter(u => u.sat && servedIds.has(u.id));             // 有問卷且期間內有量測（不看填答日）
+  const satAvg = satUsers.length ? satUsers.reduce((a, u) => a + u.satisfaction, 0) / satUsers.length : 0;
+  const recByUser = {};
+  recs.forEach(r => { (recByUser[r.userId] = recByUser[r.userId] || []).push(r); });
+  return {
+    from, to, uSet, uIds, recs, recByUser, push, visitors, lineNew, lineCum, bound, servedIds, visitKeys,
+    activeIds, riskUsers, dayCount, revisitors, satUsers, satAvg,
+    kpi: {
+      visitors: visitors.length, servedPeople: servedIds.size, servedVisits: visitKeys.size, measurements: recs.length,
+      ai: recs.filter(r => r.aiAnalysis).length, risk: riskUsers.size, lineCum: lineCum.length, lineNew: lineNew.length,
+      bound: bound.length, mau: activeIds.size, push: push.length,
+      pushOpen: push.length ? push.filter(p => p.opened).length / push.length : 0,
+      reportView: push.length ? push.filter(p => p.reportViewed).length / push.length : 0,
+      revisitRate: servedIds.size ? revisitors / servedIds.size : 0,
+      sat: satAvg
+    }
+  };
+}
+
+// 依篩選條件算出整頁要用的資料（原站：oP）。期間一律到截止日為止
+function computeView(f) {
+  const range = RANGES.find(r => r.id === f.date) || RANGES[RANGES.length - 1];
+  const days = Math.min(DAYS, Math.max(1, range.days));
+  const from = Math.max(0, DAYS - days);
+  const cur = aggregate(f, from, 364);
+  const recs = cur.recs, { byId } = BASE;
+
+  // 期間趨勢分桶：≤14 天逐日、≤60 天每 2 天、≤200 天每週、更長固定 12 桶
+  const nb = days <= 14 ? days : days <= 60 ? Math.ceil(days / 2) : days <= 200 ? Math.ceil(days / 7) : 12;
+  const step = days / nb;
+  const bucketOf = d => Math.min(nb - 1, Math.max(0, Math.floor((d - from) / step)));
+  const trend = Array.from({ length: nb }, (_, i) => {
+    const last = from + Math.floor((i + 1) * step) - 1;
+    const b = { label: dayLabel(Math.min(364, last)), people: 0, visits: 0, total: 0 };
+    DEVICES.forEach(d => { b[d.id] = 0; });
+    return b;
+  });
+  const bPeople = trend.map(() => new Set()), bVisits = trend.map(() => new Set());
+  recs.forEach(r => {
+    const i = bucketOf(r.day);
+    trend[i].total++; trend[i][r.device]++; bPeople[i].add(r.userId); bVisits[i].add(`${r.userId}|${r.day}`);
+  });
+  trend.forEach((b, i) => { b.people = bPeople[i].size; b.visits = bVisits[i].size; });
+
+  // 各設備量測次數（由多到少）
+  const byDevice = {};
+  DEVICES.forEach(d => { byDevice[d.id] = []; });
+  recs.forEach(r => byDevice[r.device].push(r));
+  const devStats = DEVICES.map(d => {
+    const list = byDevice[d.id], n = list.length || 1;
+    return {
+      ...d, records: list.length, people: new Set(list.map(r => r.userId)).size,
+      visits: new Set(list.map(r => `${r.userId}|${r.day}`)).size,
+      normal: list.filter(r => r.status === 'normal').length / n,
+      watch: list.filter(r => r.status === 'watch').length / n,
+      abnormal: list.filter(r => r.status === 'abnormal').length / n,
+      recs: list
+    };
+  }).sort((a, b) => b.records - a.records);
+
+  // 九類健康風險的人數（同一人可落在多類）
+  const riskSets = {};
+  RISK_NAMES.forEach(n => { riskSets[n] = new Set(); });
+  recs.forEach(r => {
+    if (r.device === 'inbody') {
+      if (r.fatHigh) riskSets['體脂異常'].add(r.userId);
+      if (r.viscHigh) riskSets['內臟脂肪偏高'].add(r.userId);
+      if (r.smmLow) riskSets['骨骼肌不足'].add(r.userId);
+      if (r.values.BMI >= 27) riskSets['BMI 過重／肥胖'].add(r.userId); // InBody 的 BMI 也算
+    } else if (r.device === 'fundus') {
+      // 眼底：建議就醫，或「需追蹤」但不是影像品質不足
+      if (r.status === 'abnormal' || (r.status === 'watch' && r.eyeRisk !== '影像品質不足')) riskSets['AI 眼底風險'].add(r.userId);
+    } else if (r.status === 'abnormal' && DEVICE_RISK[r.device]) {
+      riskSets[DEVICE_RISK[r.device]].add(r.userId); // 體溫沒有對應的風險類別
+    }
+  });
+  const riskRows = RISK_NAMES.map(n => ({ name: n, value: riskSets[n].size })).sort((a, b) => b.value - a.value);
+  const validTested = new Set(recs.map(r => r.userId)); // 完成有效檢測人數 = 期間內有量測的人
+
+  // 服務對象年齡層（人數依期間內有量測的人）
+  const bands = AGE_BANDS.map(b => ({ band: b, 男: 0, 女: 0, people: 0, recs: 0, pairs: new Set() }));
+  cur.servedIds.forEach(id => { const u = byId[id]; bands[u.band].people++; bands[u.band][u.gender]++; });
+  recs.forEach(r => { const u = byId[r.userId]; bands[u.band].recs++; bands[u.band].pairs.add(r.userId + r.device); });
+
+  // 改善率：期間內同一指標至少 2 天有量測、且第一天落在異常門檻的人為分母；
+  // 最後一天比第一天往好的方向改善 ≥ 3%，或最後一天已不在異常門檻，就算改善（同一天多筆取平均）
+  const improvement = IMPROVE_METRICS.map(m => {
+    let den = 0, imp = 0, firstSum = 0, lastSum = 0, firstPairSum = 0, lastPairSum = 0;
+    Object.keys(cur.recByUser).forEach(uid => {
+      const u = byId[uid], perDay = new Map();
+      for (const r of cur.recByUser[uid]) {
+        if (!m.devices.includes(r.device) || r.values[m.field] === undefined) continue;
+        let x = perDay.get(r.day);
+        if (!x) perDay.set(r.day, x = { day: r.day, sum: 0, n: 0, pSum: 0, pN: 0 });
+        x.sum += r.values[m.field]; x.n++;
+        if (m.pair && r.values[m.pair] !== undefined) { x.pSum += r.values[m.pair]; x.pN++; }
+      }
+      const list = [...perDay.values()].sort((a, b) => a.day - b.day);
+      if (list.length < 2) return;
+      const avg = x => ({ values: { [m.field]: x.sum / x.n, ...(x.pN ? { [m.pair]: x.pSum / x.pN } : {}) } });
+      const first = avg(list[0]), latest = avg(list[list.length - 1]);
+      if (!isImproveTarget(m, first, u)) return;
+      den++;
+      const change = (latest.values[m.field] - first.values[m.field]) * m.dir / Math.abs(first.values[m.field] || 1);
+      if (change >= 0.03 || !isImproveTarget(m, latest, u)) imp++;
+      firstSum += first.values[m.field]; lastSum += latest.values[m.field];
+      if (m.pair) { firstPairSum += first.values[m.pair]; lastPairSum += latest.values[m.pair]; }
+    });
+    const mean = x => Math.round(x / (den || 1) * 10) / 10;
+    return {
+      ...m, den, imp, rate: den ? imp / den : 0, first: mean(firstSum), latest: mean(lastSum),
+      firstPair: m.pair ? mean(firstPairSum) : null, latestPair: m.pair ? mean(lastPairSum) : null
+    };
+  });
+
+  return {
+    cur, days, trend, devStats, riskRows, validTested,
+    profileAge: bands.map(b => ({
+      band: b.band, 男: b.男, 女: b.女, people: b.people,
+      avgUse: b.people ? Math.round(b.recs / b.people * 10) / 10 : 0,
+      avgItems: b.people ? Math.round(b.pairs.size / b.people * 10) / 10 : 0
+    })),
+    genderSplit: ['男', '女'].map(g => ({ name: g, value: [...cur.servedIds].filter(id => byId[id].gender === g).length })),
+    improvement,
+    satDims: SAT_DIMS.map(n => ({
+      name: n,
+      value: cur.satUsers.length ? Math.round(cur.satUsers.reduce((a, u) => a + u.sat[n], 0) / cur.satUsers.length * 10) / 10 : 0
+    }))
+  };
+}
+
+const fmtInt = n => n.toLocaleString();                               // 原站：cP
+const fmtPct = (x, d = 1) => `${(x * 100).toFixed(d)}%`;              // 原站：lP
+
+// 四大主題卡與其抽屜的內容（原站：EP）
+function buildThemes(view) {
+  const kpi = view.cur.kpi, recs = view.cur.recs, days = view.days;
+  const dailyTable = keys => Array.from({ length: DAYS }, (_, i) => {
+    const row = { day: i, label: dayLabel(i) };
+    keys.forEach(k => { row[k] = 0; });
+    return row;
+  });
+  const rowsWithTotal = (rows, sort) => {
+    let out = rows;
+    if (sort) out = rows.slice().sort((a, b) => /^其他/.test(a.name) ? 1 : /^其他/.test(b.name) ? -1 : b.value - a.value);
+    return { rows: out, total: rows.reduce((a, r) => a + r.value, 0) || 1 };
+  };
+  // 卡片上的迷你趨勢：≤30 天逐日，否則按月加總
+  const spark = (daily, key) => {
+    const slice = daily.slice(-days);
+    if (days <= 30) return slice.map(r => ({ v: r[key] }));
+    const byMonth = {};
+    slice.forEach(r => { const m = dayMonth(r.day); byMonth[m] = (byMonth[m] || 0) + r[key]; });
+    return Object.values(byMonth).map(v => ({ v }));
+  };
+
+  // 01 健康服務觸及
+  const ageColors = ['#7DD3FC', C.cyan, C.teal, C.green, C.brand, C.purple];
+  const ageRows = view.profileAge.map((b, i) => ({ name: `${b.band} 歲`, value: b.people, color: ageColors[i] }));
+  const servedTotal = ageRows.reduce((a, r) => a + r.value, 0) || 1;
+  const boundNew = view.cur.lineNew.filter(u => u.bound).length;      // 期間內加入 LINE 且已綁定
+  const newUsers = dailyTable(['新增使用人數']);
+  view.cur.uSet.forEach(u => {
+    if (u.visitDay >= 0) newUsers[u.visitDay].新增使用人數++;
+    if (u.lineJoined && u.bound && u.lineJoinDay >= 0) newUsers[u.lineJoinDay].新增使用人數++;
+  });
+
+  // 04 健康風險分析：以「AI 分析」的量測筆數為人次
+  const aiRecs = recs.filter(r => r.aiAnalysis);
+  const riskDaily = dailyTable(['風險評估', '異常風險']);
+  aiRecs.forEach(r => { riskDaily[r.day].風險評估++; if (r.status !== 'normal') riskDaily[r.day].異常風險++; });
+  const aiN = aiRecs.length || 1;
+  const nNormal = aiRecs.filter(r => r.status === 'normal').length;
+  const nWatch = aiRecs.filter(r => r.status === 'watch').length;
+  const nAbn = aiRecs.filter(r => r.status === 'abnormal').length;
+  const eyeCount = name => recs.filter(r => r.eyeRisk === name).length;
+  const riskTypes = rowsWithTotal([
+    { name: '高血壓', value: recs.filter(r => r.device === 'bp' && r.status === 'abnormal').length, color: C.red },
+    { name: 'BMI／體組成異常', value: recs.filter(r => (r.device === 'bmi' || r.device === 'inbody') && r.status === 'abnormal').length, color: C.orange },
+    { name: '青光眼', value: eyeCount('青光眼風險'), color: C.purple },
+    { name: '黃斑部病變', value: eyeCount('黃斑部病變風險'), color: '#F0ABFC' },
+    { name: '糖尿病視網膜病變', value: eyeCount('糖尿病視網膜病變風險'), color: C.brand }
+  ], true);
+
+  // 02 健康推播與提醒
+  const push = view.cur.push;
+  const pushDaily = dailyTable(['推播次數', '開啟次數']);
+  push.forEach(p => { pushDaily[p.day].推播次數++; if (p.opened) pushDaily[p.day].開啟次數++; });
+  const pushReach = new Set(push.map(p => p.userId)).size;
+  const countTypes = types => push.filter(p => types.indexOf(p.type) >= 0).length;
+  const alertCount = countTypes(['健康異常提醒']);
+  const referCount = countTypes(['異常轉介']);
+  const FOLLOW_TYPES = ['健康異常提醒', '異常轉介', '再次量測提醒', '健康追蹤提醒'];
+  const followIds = new Set(push.filter(p => FOLLOW_TYPES.indexOf(p.type) >= 0).map(p => p.userId));
+  const followOpened = new Set(push.filter(p => FOLLOW_TYPES.indexOf(p.type) >= 0 && p.opened).map(p => p.userId));
+  const pushTypes = rowsWithTotal([
+    { name: '衛教推播', value: countTypes(['健康衛教']), color: C.green },
+    { name: '異常提醒', value: alertCount, color: C.orange },
+    { name: '異常轉介', value: referCount, color: C.red },
+    { name: 'AI 健康報告', value: countTypes(['AI 健康報告']), color: C.cyan },
+    { name: '再次量測提醒', value: countTypes(['再次量測提醒']), color: C.teal },
+    { name: '其他推播', value: countTypes(['個人化健康建議', '健康追蹤提醒', '活動／健康促進']), color: C.brand }
+  ]);
+
+  return {
+    measure: {
+      id: 'measure', side: 'left', ord: 1, color: C.cyan, icon: Icons.users, code: '01 REACH',
+      title: '健康服務觸及', sub: '有多少民眾走進場域、接受服務並成為數位健康會員',
+      kpiLabel: '累計使用人數', value: kpi.visitors + boundNew, unit: '人', hint: '',
+      mini: [
+        { l: '新增訪客人數', v: fmtInt(kpi.visitors), u: '人' },
+        { l: '完成會員綁定', v: fmtInt(boundNew), u: '人', c: C.teal },
+        { l: '加入 LINE 人數', v: fmtInt(view.cur.lineNew.length), u: '人', c: C.line }
+      ],
+      spark: spark(newUsers, '新增使用人數'),
+      kpis: [
+        { l: '新增訪客人數', v: fmtInt(kpi.visitors), u: '人' },
+        { l: '完成會員綁定', v: fmtInt(boundNew), u: '人', c: C.teal },
+        { l: '加入 LINE 人數', v: fmtInt(view.cur.lineNew.length), u: '人', c: C.line }
+      ],
+      daily: newUsers, areaKey: '新增使用人數', trendTitle: '新增使用人數趨勢', windowDays: days,
+      dist: { title: '使用者年齡分布', kind: 'bar', unit: '人', total: servedTotal, rows: ageRows },
+      dist2: { title: '使用者性別分布', kind: 'donut', unit: ' 人', rows: view.genderSplit, colors: [C.cyan, C.purple], center: fmtInt(servedTotal), sub: '服務人數' }
+    },
+    risk: {
+      id: 'risk', side: 'right', ord: 2, color: C.teal, icon: Icons.brain, code: '04 RISK ANALYSIS',
+      title: '健康風險分析', sub: '結合健康量測與 AI 分析，辨識潛在健康風險',
+      kpiLabel: '健康風險評估人次', value: aiRecs.length, unit: '人次', hint: '發現了什麼',
+      mini: [
+        { l: '異常風險人次', v: fmtInt(nWatch + nAbn), c: C.orange },
+        { l: '高風險比例', v: fmtPct(nAbn / aiN, 1), c: C.red }
+      ],
+      spark: spark(riskDaily, '風險評估'),
+      kpis: [
+        { l: '健康風險評估人次', v: fmtInt(aiRecs.length), u: '人次', c: C.teal },
+        { l: '異常風險人次', v: fmtInt(nWatch + nAbn), u: '人次', c: C.orange },
+        { l: '高風險比例', v: fmtPct(nAbn / aiN, 1), c: C.red }
+      ],
+      daily: riskDaily, areaKey: '風險評估', lineKey: '異常風險', trendTitle: null, windowDays: days,
+      dist: {
+        title: '風險等級分布', kind: 'donut', unit: ' 人次',
+        rows: [{ name: '低風險（正常）', value: nNormal }, { name: '中風險（需追蹤）', value: nWatch }, { name: '高風險（異常）', value: nAbn }],
+        colors: [C.green, C.orange, C.red], center: fmtInt(aiRecs.length), sub: '風險評估人次'
+      },
+      dist2: { title: '各健康風險類型分布', kind: 'bar', rows: riskTypes.rows, total: riskTypes.total, unit: '人次' }
+    },
+    outreach: {
+      id: 'outreach', side: 'left', ord: 2, color: C.purple, icon: Icons.bell, code: '02 OUTREACH',
+      title: '健康推播與提醒', sub: '主動提供衛教、健康報告、異常提醒與轉介建議',
+      kpiLabel: '累積健康推播次數', value: kpi.push, unit: '次', hint: '做了什麼介入',
+      mini: [
+        { l: '推播觸及人數', v: fmtInt(pushReach) },
+        { l: '異常提醒數', v: fmtInt(alertCount), c: C.orange }
+      ],
+      spark: spark(pushDaily, '推播次數'),
+      kpis: [
+        { l: '累積健康推播次數', v: fmtInt(kpi.push), u: '次', c: C.purple },
+        { l: '推播觸及人數', v: fmtInt(pushReach), u: '人' },
+        { l: '異常提醒數', v: fmtInt(alertCount), u: '次', c: C.orange },
+        { l: '轉介推播次數', v: fmtInt(referCount), u: '次', c: C.red }
+      ],
+      feature: {
+        label: 'AI 追管總人數', value: followIds.size, unit: '人', color: C.cyan,
+        desc: `由 AI 判讀結果觸發追蹤腳本（異常提醒、異常轉介、再次量測提醒、健康追蹤提醒）而納入追蹤的不重複人數；其中 ${fmtInt(followOpened.size)} 人已開啟追蹤訊息，佔 ${fmtPct(followOpened.size / (followIds.size || 1), 1)}。`
+      },
+      daily: pushDaily, areaKey: '推播次數', trendTitle: '健康推播趨勢', windowDays: days,
+      dist: { title: '推播內容類型分布', kind: 'bar', rows: pushTypes.rows, total: pushTypes.total, unit: '次' }
+    },
+    device: {
+      id: 'device', side: 'right', ord: 1, color: C.brand, icon: Icons.activity, code: '03 DEVICES',
+      title: '智慧健康設備使用', sub: '八項智慧健康設備的使用量與使用趨勢',
+      kpiLabel: '累積量測次數', value: kpi.measurements, unit: '次', hint: '量測了什麼',
+      mini: [], spark: spark(DAILY_ALL, '量測次數'), kpis: [],
+      daily: DAILY_ALL, areaKey: '量測次數', trendTitle: '設備量測趨勢', windowDays: days,
+      dist: {
+        title: '各設備使用量分布', kind: 'bar', unit: '次', total: kpi.measurements,
+        rows: view.devStats.map(d => ({ name: deviceShort(d.id), value: d.records, color: d.color }))
+      }
+    }
+  };
+}
+
+/* ============================================================================
+   ④ 共用元件
+   ============================================================================ */
+
+// 數字從上一個值滾動到新值（原站：uP），回傳已格式化的字串
+function useCountUp(target, dec = 0, dur = 1100) {
+  const [val, setVal] = useState(0);
+  const from = useRef(0);
+  useEffect(() => {
+    const start = from.current, delta = target - start, t0 = performance.now();
+    let raf;
+    const tick = now => {
+      const p = Math.min(1, (now - t0) / dur), e = 1 - (1 - p) ** 3;
+      setVal(start + delta * e);
+      if (p < 1) raf = requestAnimationFrame(tick); else from.current = target;
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, dur]);
+  return dec ? val.toFixed(dec) : Math.round(val).toLocaleString();
+}
+function CountUp({ value, dec = 0, style, cls = 'num' }) { // 原站：dP
+  return html`<span className=${cls} style=${style}>${useCountUp(value, dec)}</span>`;
+}
+
+// 捲動到畫面內才淡入（原站：fP）
+function useReveal() {
+  const ref = useRef(null);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { setShown(true); io.unobserve(el); } }), { threshold: 0.08 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return [ref, shown ? 'reveal in' : 'reveal'];
+}
+
+// 滑過顯示說明（原站：pP）
+function Tip({ text, children }) {
+  return html`<span className="tt" style=${{ display: 'inline-flex', alignItems: 'center' }}>${children}<span className="tt-b">${text}</span></span>`;
+}
+const InfoDot = ({ fs = 11 }) => html`<span className="faint" style=${{ fontSize: fs, border: `1px solid ${C.faint}66`, borderRadius: 99, width: 15, height: 15, display: 'grid', placeItems: 'center', cursor: 'help' }}>i</span>`;
+
+// 主頁面的大區段（原站：mP）
+function Section({ id, eyebrow, title, sub, right, children, tight }) {
+  const [ref, cls] = useReveal();
+  return html`<section id=${id} ref=${ref} className=${cls} style=${{ padding: tight ? '26px 0' : '44px 0' }}>
+    <div className="flex flex-wrap items-end justify-between gap-3" style=${{ marginBottom: 18 }}>
+      <div>
+        ${eyebrow && html`<div className="eyebrow" style=${{ marginBottom: 7 }}>${eyebrow}</div>`}
+        <h2 className="num" style=${{ fontSize: 'clamp(21px,2.5vw,30px)', fontWeight: 700, letterSpacing: '.01em', fontFamily: "'Noto Sans TC',sans-serif" }}>${title}</h2>
+        ${sub && html`<p className="dim" style=${{ fontSize: 13, marginTop: 6, maxWidth: 720, lineHeight: 1.8 }}>${sub}</p>`}
+      </div>
+      ${right}
+    </div>
+    <div className="rule" style=${{ marginBottom: 20 }}></div>
+    ${children}
+  </section>`;
+}
+
+// 迷你趨勢線（原站：gP）
+function Sparkline({ data, color = C.cyan, k = 'v' }) {
+  const gid = `sp-${color.replace('#', '')}`;
+  return html`<div style=${{ height: 34, marginTop: 8 }}>
+    <${ResponsiveContainer} width="100%" height="100%">
+      <${AreaChart} data=${data} margin=${{ top: 2, right: 0, bottom: 0, left: 0 }}>
+        <defs><linearGradient id=${gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor=${color} stopOpacity=${0.45} /><stop offset="100%" stopColor=${color} stopOpacity=${0} />
+        </linearGradient></defs>
+        <${Area} type="monotone" dataKey=${k} stroke=${color} strokeWidth=${1.6} fill=${`url(#${gid})`} isAnimationActive=${false} dot=${false} />
+      <//>
+    <//>
+  </div>`;
+}
+
+// KPI 小卡（原站：_P）
+function KpiCard({ icon: IconC, label, value, unit, spark, color = C.cyan, tip, onClick, dec = 0 }) {
+  const shown = useCountUp(typeof value === 'number' ? value : 0, dec);
+  return html`<div className=${`card card-h ${onClick ? 'clickable' : ''}`} style=${{ padding: '15px 16px 12px' }} onClick=${onClick}>
+    <div className="flex items-center justify-between" style=${{ marginBottom: 10 }}>
+      <div className="flex items-center gap-2">
+        <span style=${{ width: 27, height: 27, borderRadius: 8, background: `${color}1f`, border: `1px solid ${color}44`, display: 'grid', placeItems: 'center' }}>
+          <${IconC} size=${14} color=${color} />
+        </span>
+        <span style=${{ fontSize: 12.5, color: C.dim, fontWeight: 500 }}>${label}</span>
+      </div>
+      ${tip && html`<${Tip} text=${tip}><${InfoDot} /><//>`}
+    </div>
+    <div className="flex items-baseline gap-1.5">
+      <span className="num" style=${{ fontSize: 30, fontWeight: 700, color: C.ink, lineHeight: 1 }}>${shown}</span>
+      <span className="faint" style=${{ fontSize: 12 }}>${unit}</span>
+    </div>
+    <div style=${{ marginTop: 7 }}></div>
+    ${spark && html`<${Sparkline} data=${spark} color=${color} />`}
+  </div>`;
+}
+
+// 卡片外框 + 標題（原站：vP）
+function Panel({ title, sub, right, children, pad = 18, tip }) {
+  return html`<div className="card" style=${{ padding: pad, display: 'flex', flexDirection: 'column' }}>
+    ${(title || right) && html`<div className="flex items-start justify-between gap-3" style=${{ marginBottom: 14 }}>
+      <div>
+        <div className="flex items-center gap-2">
+          <span style=${{ width: 3, height: 14, background: C.cyan, borderRadius: 2, display: 'inline-block' }}></span>
+          <h3 style=${{ fontSize: 14.5, fontWeight: 700 }}>${title}</h3>
+          ${tip && html`<${Tip} text=${tip}><${InfoDot} fs=${10.5} /><//>`}
+        </div>
+        ${sub && html`<div className="faint" style=${{ fontSize: 11.5, marginTop: 5, paddingLeft: 11 }}>${sub}</div>`}
+      </div>
+      ${right}
+    </div>`}
+    ${children}
+  </div>`;
+}
+
+// 圖表滑過提示（原站：yP）
+function ChartTooltip({ active, payload, label, unit = '' }) {
+  if (!active || !payload || !payload.length) return null;
+  return html`<div style=${{ background: 'rgba(5,14,26,.97)', border: `1px solid ${C.cyan}55`, borderRadius: 10, padding: '9px 12px', fontSize: 12 }}>
+    <div className="num" style=${{ color: C.ink, marginBottom: 5, fontWeight: 600 }}>${label}</div>
+    ${payload.map((p, i) => html`<div key=${i} className="flex items-center justify-between gap-4">
+      <span style=${{ color: p.color || p.stroke || C.dim }}>${p.name}</span>
+      <span className="num" style=${{ color: C.ink }}>${typeof p.value === 'number' ? p.value.toLocaleString() : p.value}${unit}</span>
+    </div>`)}
+  </div>`;
+}
+
+// 水平長條清單（原站：bP）：長條長度以最大值為 100%，有 total 時顯示佔比
+function HBarList({ rows, total, color = C.cyan, unit = '人', onClick, fs = 12.5 }) {
+  const max = Math.max(1, ...rows.map(r => r.value));
+  return html`<div className="flex flex-col" style=${{ gap: 11 }}>
+    ${rows.map(r => html`<div key=${r.name} className=${onClick ? 'clickable' : ''} onClick=${() => onClick && onClick(r)}>
+      <div className="flex items-baseline justify-between" style=${{ marginBottom: 5 }}>
+        <span style=${{ fontSize: fs, color: C.ink }}>${r.name}</span>
+        <span className="num faint" style=${{ fontSize: fs - 0.5 }}>
+          <b style=${{ color: C.ink, fontWeight: 600 }}>${fmtInt(r.value)}</b> ${unit}${total ? ` · ${fmtPct(r.value / (total || 1))}` : ''}
+        </span>
+      </div>
+      <div className="hb"><i style=${{ width: `${r.value / max * 100}%`, background: `linear-gradient(90deg,${r.color || color},${r.color || color}66)` }}></i></div>
+    </div>`)}
+  </div>`;
+}
+
+// 環圈圖 + 圖例（原站：xP）
+function Donut({ data, colors = SERIES, center, sub, h: height = 210, inner = 62, outer = 88, unit = '', fs = 12, w = 190 }) {
+  const total = data.reduce((a, r) => a + r.value, 0) || 1;
+  return html`<div className="flex items-center" style=${{ gap: 14, flexWrap: 'wrap' }}>
+    <div style=${{ width: w, height, position: 'relative', flexShrink: 0 }}>
+      <${ResponsiveContainer} width="100%" height="100%">
+        <${PieChart}>
+          <${Pie} data=${data} dataKey="value" innerRadius=${inner} outerRadius=${outer} paddingAngle=${2} stroke="none" startAngle=${90} endAngle=${-270}>
+            ${data.map((_, i) => html`<${Cell} key=${i} fill=${colors[i % colors.length]} />`)}
+          <//>
+          <${Tooltip} content=${html`<${ChartTooltip} unit=${unit} />`} />
+        <//>
+      <//>
+      <div style=${{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', pointerEvents: 'none' }}>
+        <div style=${{ textAlign: 'center' }}>
+          <div className="num" style=${{ fontSize: 25, fontWeight: 700 }}>${center}</div>
+          <div className="faint" style=${{ fontSize: 11 }}>${sub}</div>
+        </div>
+      </div>
+    </div>
+    <div className="flex flex-col" style=${{ gap: 8, flex: 1, minWidth: 170 }}>
+      ${data.map((r, i) => html`<div key=${r.name} className="flex items-center justify-between" style=${{ fontSize: fs }}>
+        <span className="flex items-center gap-2" style=${{ color: C.dim }}>
+          <i style=${{ width: 8, height: 8, borderRadius: 2, background: colors[i % colors.length], display: 'inline-block' }}></i>${r.name}
+        </span>
+        <span className="num" style=${{ color: C.ink }}>${fmtPct(r.value / total)} <span className="faint">(${fmtInt(r.value)})</span></span>
+      </div>`)}
+    </div>
+  </div>`;
+}
+
+/* ============================================================================
+   ⑤ 首頁單屏總覽
+   ============================================================================ */
+
+// 中央的照護站立體示意圖（原站：SP），hover = 目前滑過或開啟的主題 id，對應的引線會亮起
+function TwinIllustration({ hover }) {
+  const TOP = { l: [104, 234], a: [436, 146], r: [744, 226] };   // 屋頂三個角：左、轉角、右
+  const BOT = { l: [118, 392], a: [436, 448], r: [726, 382] };   // 地面三個角
+  const LEVELS = [0, .15, .3, .445, .6, 1];                      // 各樓層分界（0 = 屋頂、1 = 地面）
+  const lerp = (p, q, t) => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t];
+  const level = t => ({ l: lerp(TOP.l, BOT.l, t), a: lerp(TOP.a, BOT.a, t), r: lerp(TOP.r, BOT.r, t) });
+  const pt = p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+  const toward = (p, q, dist) => { const dx = q[0] - p[0], dy = q[1] - p[1], len = Math.hypot(dx, dy) || 1; return [p[0] + dx / len * dist, p[1] + dy / len * dist]; };
+  const along = (lv, t) => t <= .5 ? lerp(lv.l, lv.a, t * 2) : lerp(lv.a, lv.r, (t - .5) * 2);
+  const edge = lv => `M ${pt(lv.l)} L ${pt(toward(lv.a, lv.l, 30))} Q ${pt(lv.a)} ${pt(toward(lv.a, lv.r, 30))} L ${pt(lv.r)}`;
+  const band = (t0, t1) => {
+    const a = level(t0), b = level(t1);
+    return [
+      `M ${pt(a.l)} L ${pt(toward(a.a, a.l, 30))} Q ${pt(a.a)} ${pt(toward(a.a, a.r, 30))} L ${pt(a.r)}`,
+      `Q ${(Math.max(a.r[0], b.r[0]) + 15).toFixed(1)},${((a.r[1] + b.r[1]) / 2).toFixed(1)} ${pt(b.r)}`,
+      `L ${pt(toward(b.a, b.r, 30))} Q ${pt(b.a)} ${pt(toward(b.a, b.l, 30))} L ${pt(b.l)}`,
+      `Q ${(Math.min(a.l[0], b.l[0]) - 15).toFixed(1)},${((a.l[1] + b.l[1]) / 2).toFixed(1)} ${pt(a.l)} Z`
+    ].join(' ');
+  };
+  const leftFace = (t0, t1) => { const a = level(t0), b = level(t1); return `M ${pt(a.l)} L ${pt(a.a)} L ${pt(b.a)} L ${pt(b.l)} Z`; };
+  const CALLOUTS = [
+    { id: 'measure', p: along(level(.16), .02), dir: -1, y2: 116 },
+    { id: 'outreach', p: along(level(.52), .02), dir: -1, y2: 374 },
+    { id: 'device', p: along(level(.16), .98), dir: 1, y2: 116 },
+    { id: 'risk', p: along(level(.52), .98), dir: 1, y2: 374 }
+  ];
+  const TREES = [.05, .15, .26, .37, .64, .75, .86, .95].map((t, i) => {
+    const q = along(level(1), t);
+    return { x: q[0] + (t < .5 ? -16 : 16), y: q[1] + 10 + (i % 2 ? 5 : 0), s: t > .35 && t < .72 ? 1.15 : .85 };
+  });
+  const SKY = [[132, 74], [244, 46], [606, 62], [700, 98], [352, 40], [512, 30]];
+
+  const entrance = (() => {
+    const g = level(1), p = along(g, .56), q = along(level(.78), .56);
+    return html`<g>
+      <path d=${`M ${pt(along(level(.78), .47))} L ${pt(along(level(.78), .66))} L ${pt(along(g, .66))} L ${pt(along(g, .47))} Z`} fill="#8FD6EE" opacity=".16" />
+      <line x1=${p[0]} y1=${p[1]} x2=${q[0]} y2=${q[1]} stroke="#CFEFFA" strokeOpacity=".5" strokeWidth="1.5" />
+      <circle cx=${p[0]} cy=${p[1] - 4} r="16" fill="#7FE4F5" opacity=".2" filter="url(#soft)" />
+    </g>`;
+  })();
+
+  return html`<svg viewBox="0 0 820 556" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="沙崙 AI 智慧健康照護站數位孿生示意圖">
+    <defs>
+      <linearGradient id="slabG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#F2FAFD" stopOpacity=".95" /><stop offset="100%" stopColor="#9FC7D8" stopOpacity=".72" /></linearGradient>
+      <linearGradient id="glassG" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stopColor="#0A2A42" stopOpacity=".97" /><stop offset="42%" stopColor="#134F6D" stopOpacity=".9" />
+        <stop offset="72%" stopColor="#0E3E58" stopOpacity=".93" /><stop offset="100%" stopColor="#0A2437" stopOpacity=".97" />
+      </linearGradient>
+      <linearGradient id="podG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#1B6A8C" stopOpacity=".82" /><stop offset="62%" stopColor="#2E88A6" stopOpacity=".5" /><stop offset="100%" stopColor="#0A2437" stopOpacity=".9" />
+      </linearGradient>
+      <radialGradient id="groundG"><stop offset="0%" stopColor=${C.cyan} stopOpacity=".26" /><stop offset="100%" stopColor=${C.cyan} stopOpacity="0" /></radialGradient>
+      <filter id="soft"><feGaussianBlur stdDeviation="10" /></filter>
+    </defs>
+    ${SKY.map((p, i) => html`<g key=${i} opacity=".5">
+      <circle className="pulse" cx=${p[0]} cy=${p[1]} r="2.6" fill=${i % 2 ? C.teal : C.cyan} style=${{ animationDelay: `${i * .45}s` }} />
+      <line x1=${p[0]} y1=${p[1]} x2=${p[0] + (i % 2 ? 42 : -38)} y2=${p[1] + 26} stroke=${C.cyan} strokeOpacity=".18" />
+    </g>`)}
+    <ellipse cx="436" cy="452" rx="352" ry="66" fill="url(#groundG)" />
+    ${[1, 2, 3].map(i => html`<ellipse key=${i} cx="436" cy="452" rx=${150 + i * 78} ry=${26 + i * 14} fill="none" stroke=${C.cyan} strokeOpacity=${.3 - i * .07} strokeWidth="1" strokeDasharray=${i === 2 ? '5 13' : 'none'} />`)}
+    <g className="spin-slow" style=${{ transformOrigin: '436px 452px' }}>
+      <ellipse cx="436" cy="452" rx="306" ry="54" fill="none" stroke=${C.teal} strokeOpacity=".45" strokeWidth="1.4" strokeDasharray="58 400" />
+    </g>
+    ${Array.from({ length: 14 }).map((_, i) => {
+      const a = Math.PI / 13 * i;
+      return html`<line key=${i} x1=${436 - Math.cos(a) * 150} y1=${452 + Math.sin(a) * 26} x2=${436 - Math.cos(a) * 380} y2=${452 + Math.sin(a) * 68} stroke=${C.brand} strokeOpacity=".12" strokeWidth="1" />`;
+    })}
+    <ellipse cx="436" cy="448" rx="230" ry="34" fill="#04101C" opacity=".55" filter="url(#soft)" />
+    <g filter="url(#soft)" opacity=".38"><path d=${band(.02, .96)} fill=${C.brand} /></g>
+    ${LEVELS.slice(0, -1).map((t0, i) => {
+      const t1 = LEVELS[i + 1], top = level(t0), bot = level(t1), last = i === LEVELS.length - 2;
+      const n = last ? 34 : 30;
+      return html`<g key=${i}>
+        <defs><clipPath id=${`bc${i}`}><path d=${band(t0, t1)} /></clipPath></defs>
+        <path d=${band(t0, t1)} fill=${last ? 'url(#podG)' : 'url(#glassG)'} stroke=${C.cyan} strokeOpacity=".3" strokeWidth="1" />
+        <g clipPath=${`url(#bc${i})`}>
+          <path d=${leftFace(t0, t1)} fill="#04121F" opacity=".26" />
+          ${Array.from({ length: n }).map((_, j) => {
+            const u = .03 + j / (n - 1) * .94, a = along(top, u), b = along(bot, u);
+            return html`<line key=${j} x1=${a[0]} y1=${a[1] + 3} x2=${b[0]} y2=${b[1] - 1} stroke=${last ? '#BEE9F7' : C.cyan}
+              strokeOpacity=${j % 4 === 0 ? (last ? .5 : .34) : (last ? .22 : .13)} strokeWidth="1" />`;
+          })}
+        </g>
+        <path d=${edge(top)} fill="none" stroke="url(#slabG)" strokeWidth=${last ? 6 : 7} strokeLinecap="round" strokeLinejoin="round" />
+        <path d=${edge(top)} fill="none" stroke="#EAF7FC" strokeOpacity=".5" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" transform="translate(0,4)" />
+        ${i > 0 && !last && html`<path d=${edge(top)} fill="none" stroke="#3FA98A" strokeOpacity=".62" strokeWidth="4" strokeLinecap="round" strokeDasharray="13 19" transform="translate(0,7)" />`}
+      </g>`;
+    })}
+    <path d=${edge(level(1))} fill="none" stroke="#9FC7D8" strokeOpacity=".55" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    ${entrance}
+    ${TREES.map((t, i) => html`<g key=${i} opacity=".9">
+      <line x1=${t.x} y1=${t.y} x2=${t.x} y2=${t.y - 13 * t.s} stroke="#123B44" strokeWidth="1.6" />
+      <ellipse cx=${t.x} cy=${t.y - 19 * t.s} rx=${7.5 * t.s} ry=${10 * t.s} fill="#12463F" />
+      <ellipse cx=${t.x - 2.5 * t.s} cy=${t.y - 22 * t.s} rx=${5 * t.s} ry=${6.5 * t.s} fill="#1A6152" opacity=".85" />
+      <ellipse cx=${t.x + 3 * t.s} cy=${t.y - 16 * t.s} rx=${4 * t.s} ry=${5 * t.s} fill="#0E3A38" opacity=".9" />
+    </g>`)}
+    ${[.14, .3, .5, .7, .88].map((t, i) => {
+      const p = along(level(0), t);
+      return html`<line key=${t} className="flow" x1=${p[0]} y1=${p[1] - 4} x2=${p[0]} y2=${96 - i * 5} stroke=${i % 2 ? C.teal : C.cyan} strokeOpacity=".42" strokeWidth="1.2" />`;
+    })}
+    ${CALLOUTS.map(c => {
+      const on = hover === c.id, x = c.dir < 0 ? 26 : 794;
+      return html`<g key=${c.id} opacity=${hover && !on ? .26 : 1} style=${{ transition: 'opacity .25s' }}>
+        <polyline points=${`${pt(c.p)} ${(c.p[0] + c.dir * 44).toFixed(1)},${c.y2} ${x},${c.y2}`} fill="none"
+          stroke=${on ? C.cyan : C.brand} strokeOpacity=${on ? .95 : .42} strokeWidth=${on ? 1.8 : 1.1} className=${on ? 'flow' : ''} />
+        <circle className="pulse" cx=${x} cy=${c.y2} r="4" fill=${on ? C.cyan : C.brand} />
+        <circle cx=${c.p[0]} cy=${c.p[1]} r=${on ? 5 : 3.5} fill=${on ? C.cyan : C.brand} />
+        ${on && html`<circle cx=${c.p[0]} cy=${c.p[1]} r="11" fill="none" stroke=${C.cyan} strokeOpacity=".45" />`}
+      </g>`;
+    })}
+  </svg>`;
+}
+
+// 主題卡（原站：CP）
+function ThemeCard({ t, active, onOpen, onHover }) {
+  const IconC = t.icon;
+  const shown = useCountUp(t.value, t.dec || 0);
+  return html`<button className=${`tcard ${active ? 'on' : ''}`} style=${{ '--tc': t.color }}
+      onClick=${() => onOpen(t.id)} onMouseEnter=${() => onHover(t.id)} onMouseLeave=${() => onHover(null)} aria-label=${`${t.title}，點擊查看明細`}>
+    <div className="flex items-center justify-between" style=${{ width: '100%' }}>
+      <span className="flex items-center gap-2">
+        <span className="tc-ico"><${IconC} size=${16} color=${t.color} /></span>
+        <span style=${{ fontSize: 14.5, fontWeight: 700, letterSpacing: '.02em' }}>${t.title}</span>
+      </span>
+      <span className="num faint" style=${{ fontSize: 10.5, letterSpacing: '.18em' }}>${t.code}</span>
+    </div>
+    <div style=${{ width: '100%' }}>
+      <div className="faint" style=${{ fontSize: 11.5, marginBottom: 2 }}>${t.kpiLabel}</div>
+      <div className="flex items-baseline" style=${{ gap: 7 }}>
+        <span className="num tc-num" style=${{ color: t.color }}>${shown}</span>
+        <span className="dim" style=${{ fontSize: 14 }}>${t.unit}</span>
+      </div>
+      ${t.note && html`<div className="faint" style=${{ fontSize: 10.5, marginTop: 4, lineHeight: 1.6 }}>${t.note}</div>`}
+      <div className="flex" style=${{ gap: 20, marginTop: 12 }}>
+        ${t.mini.map(m => html`<div key=${m.l}>
+          <div className="faint" style=${{ fontSize: 11 }}>${m.l}</div>
+          <div className="num" style=${{ fontSize: 17, fontWeight: 600, color: m.c || C.ink, marginTop: 2 }}>${m.v}</div>
+        </div>`)}
+      </div>
+    </div>
+    <div style=${{ width: '100%' }}>
+      <${Sparkline} data=${t.spark} color=${t.color} />
+      <div className="tc-cta flex items-center justify-between">
+        <span style=${{ fontSize: 11.5 }}>${t.hint}</span>
+        <span className="flex items-center gap-1" style=${{ fontSize: 11.5 }}>查看明細 <${Icons.chevronRight} size=${13} /></span>
+      </div>
+    </div>
+  </button>`;
+}
+
+// 首頁單屏（原站：wP）：左右各兩張主題卡，中間示意圖與快速捲動鈕
+function HeroScreen({ themes, onOpen, active, filter, setFilter }) {
+  const [hover, setHover] = useState(null);
+  const side = s => themes.filter(t => t.side === s).sort((a, b) => a.ord - b.ord)
+    .map(t => html`<${ThemeCard} key=${t.id} t=${t} active=${active === t.id} onOpen=${onOpen} onHover=${setHover} />`);
+  return html`<section className="hero-screen">
+    <div className="hs-top">
+      <div className="flex items-center gap-3">
+        <img className="hs-logo-img" src="./assets/logo.png" alt="" />
+        <div>
+          <h1 className="hs-name">沙崙智慧健康照護站</h1>
+          <div className="eyebrow" style=${{ fontSize: 9.5, marginTop: 3 }}>SHALUN AI SMART HEALTH STATION</div>
+        </div>
+      </div>
+      <div className="hs-range flex items-center gap-2">
+        <span className="faint" style=${{ fontSize: 11.5, whiteSpace: 'nowrap' }}>資料期間</span>
+        ${RANGES.map(r => html`<button key=${r.id} className=${`chip ${filter.date === r.id ? 'on' : ''}`} onClick=${() => setFilter({ ...filter, date: r.id })}>${r.label}</button>`)}
+      </div>
+      <div className="flex items-center gap-2" style=${{ justifyContent: 'flex-end' }}>
+        <span className="flex items-center gap-1.5" style=${{ fontSize: 11.5, color: C.green }}><${Icons.circleDot} size=${11} className="pulse" />系統正常</span>
+      </div>
+    </div>
+    <div className="hs-main">
+      <div className="hs-col">${side('left')}</div>
+      <div className="hs-center">
+        <div style=${{ textAlign: 'center' }}>
+          <div className="hs-sub">沙崙智慧健康照護 生態中樞</div>
+          <div className="dim" style=${{ fontSize: 13, marginTop: 6 }}>從民眾觸及、智慧量測、AI 風險辨識到主動健康介入</div>
+        </div>
+        <div className="hs-twin"><${TwinIllustration} hover=${hover || active} /></div>
+        <div className="hs-jump">
+          ${[['risk', '健康風險發現'], ['improve', '健康改善追蹤'], ['sat', '服務體驗滿意度']].map(([id, label]) => html`<button key=${id}
+              onClick=${() => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>
+            ${label}<span aria-hidden="true">↓</span>
+          </button>`)}
+        </div>
+      </div>
+      <div className="hs-col">${side('right')}</div>
+    </div>
+    <div className="hs-flow">
+      ${[['訪客觸及', '多少人走進場域'], ['智慧量測', '用了哪些設備'], ['AI 分析', '發現了什麼風險'], ['健康推播', '做了什麼介入']].map((s, i, all) => html`<${Fragment} key=${s[0]}>
+        <span className="hs-step"><b>${s[0]}</b><span className="faint">${s[1]}</span></span>
+        ${i < all.length - 1 && html`<${Icons.arrowRight} size=${13} color=${C.faint} />`}
+      <//>`)}
+    </div>
+  </section>`;
+}
+
+/* ============================================================================
+   ⑥ 抽屜
+   ============================================================================ */
+
+function useEscape(onClose) {
+  useEffect(() => {
+    const k = e => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', k);
+    return () => window.removeEventListener('keydown', k);
+  }, [onClose]);
+}
+
+// 主題抽屜（原站：TP）：左側主題從左滑出、右側主題從右滑出
+// 趨勢圖預設近 30 日；可選的區間不超過首頁選的資料期間；選「今年」時改成按月加總
+function ThemeDrawer({ themeId, onClose, themes }) {
+  const [win, setWin] = useState(30);
+  useEscape(onClose);
+  useEffect(() => { setWin(30); }, [themeId]);
+  if (!themeId) return null;
+  const t = themes[themeId], IconC = t.icon;
+  const maxDays = t.windowDays || 30;
+  const opts = RANGES.filter(r => r.days <= maxDays);
+  const days = opts.length ? Math.min(win, maxDays) : maxDays;
+  const ytd = RANGES.find(r => r.id === 'ytd');
+  const monthly = opts.includes(ytd) && days === ytd.days;
+  const slice = t.daily.slice(-days);
+  const data = monthly ? Object.values(slice.reduce((acc, row) => {
+    const m = dayMonth(row.day), o = acc[m] || (acc[m] = { label: monthLabel(m) });
+    Object.keys(row).forEach(k => { if (k !== 'day' && k !== 'label') o[k] = (o[k] || 0) + row[k]; });
+    return acc;
+  }, {})) : slice;
+  const gid = `tdg${themeId}`;
+
+  return html`<${Fragment}>
+    <div className="tmask" onClick=${onClose}></div>
+    <aside className=${`tdrawer ${t.side === 'left' ? 'tdrawer-l' : 'tdrawer-r'}`} role="dialog" aria-label=${t.title}>
+      <div className="td-head">
+        <div className="flex items-center gap-2">
+          <span className="tc-ico" style=${{ '--tc': t.color }}><${IconC} size=${16} color=${t.color} /></span>
+          <div>
+            <h3 style=${{ fontSize: 20, fontWeight: 700 }}>${t.title}</h3>
+            <div className="faint" style=${{ fontSize: 12.5, marginTop: 3 }}>${t.sub}</div>
+          </div>
+        </div>
+        <button onClick=${onClose} className="chip" style=${{ padding: 8 }} aria-label="關閉"><${Icons.x} size=${14} /></button>
+      </div>
+      <div className="td-body">
+        <div className="card td-hero" style=${{ borderColor: `${t.color}44` }}>
+          <div>
+            <div className="faint" style=${{ fontSize: 13.5 }}>${t.kpiLabel}</div>
+            <div className="flex items-baseline gap-2" style=${{ marginTop: 6 }}>
+              <${CountUp} value=${t.value} dec=${t.dec || 0} style=${{ fontSize: 54, fontWeight: 700, color: t.color, lineHeight: 1 }} />
+              <span className="dim" style=${{ fontSize: 16 }}>${t.unit}</span>
+            </div>
+            ${t.note && html`<div className="faint" style=${{ fontSize: 11, marginTop: 5, lineHeight: 1.7 }}>${t.note}</div>`}
+          </div>
+          <div style=${{ width: 168 }}><${Sparkline} data=${t.spark} color=${t.color} /></div>
+        </div>
+
+        ${t.feature && html`<div className="card td-feature" style=${{ borderColor: `${t.feature.color}55` }}>
+          <div className="flex items-center justify-between" style=${{ gap: 14 }}>
+            <div className="flex items-center" style=${{ gap: 12 }}>
+              <span style=${{ width: 34, height: 34, borderRadius: 10, background: `${t.feature.color}1f`, border: `1px solid ${t.feature.color}44`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                <${Icons.repeat} size=${16} color=${t.feature.color} />
+              </span>
+              <div>
+                <div style=${{ fontSize: 13.5, fontWeight: 600 }}>${t.feature.label}</div>
+                <div className="faint" style=${{ fontSize: 11, marginTop: 2 }}>AI SCRIPT FOLLOW-UP</div>
+              </div>
+            </div>
+            <div className="flex items-baseline" style=${{ gap: 5 }}>
+              <${CountUp} value=${t.feature.value} style=${{ fontSize: 40, fontWeight: 700, color: t.feature.color, lineHeight: 1 }} />
+              <span className="dim" style=${{ fontSize: 14 }}>${t.feature.unit}</span>
+            </div>
+          </div>
+          <p className="faint" style=${{ fontSize: 11.5, lineHeight: 1.9, marginTop: 12, marginBottom: 0 }}>${t.feature.desc}</p>
+        </div>`}
+
+        ${t.kpis.length > 0 && html`<div className="kgrid">
+          ${t.kpis.map(k => html`<div key=${k.l} className="kbox">
+            <div className="faint" style=${{ fontSize: 11.5 }}>${k.l}</div>
+            <div className="num" style=${{ fontSize: 21, fontWeight: 700, color: k.c || C.ink, marginTop: 4 }}>
+              ${k.v}<span className="faint" style=${{ fontSize: 11, marginLeft: 3 }}>${k.u || ''}</span>
+            </div>
+          </div>`)}
+        </div>`}
+
+        ${t.trendTitle && html`<${Panel} title=${t.trendTitle} pad=${16}
+            right=${opts.length > 1
+              ? html`<div className="flex" style=${{ gap: 6 }}>${opts.map(r => html`<button key=${r.id} className=${`chip ${days === r.days ? 'on' : ''}`} onClick=${() => setWin(r.days)}>${r.label}</button>`)}</div>`
+              : html`<span className="faint" style=${{ fontSize: 12 }}>${(RANGES.find(r => r.days === maxDays) || {}).label || `近${maxDays}日`}</span>`}>
+          <div style=${{ height: 240 }}>
+            <${ResponsiveContainer}>
+              <${ComposedChart} data=${data}>
+                <defs><linearGradient id=${gid} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor=${t.color} stopOpacity=".45" /><stop offset="100%" stopColor=${t.color} stopOpacity="0" />
+                </linearGradient></defs>
+                <${CartesianGrid} stroke="rgba(56,225,240,.08)" vertical=${false} />
+                <${XAxis} dataKey="label" tick=${{ fill: C.faint, fontSize: 12 }} axisLine=${false} tickLine=${false}
+                  interval=${monthly || days <= 7 ? 0 : days <= 30 ? 4 : Math.ceil(days / 8) - 1}
+                  padding=${monthly ? { left: 14, right: 14 } : undefined} />
+                <${YAxis} tick=${{ fill: C.faint, fontSize: 12 }} axisLine=${false} tickLine=${false} width=${40} />
+                <${Tooltip} content=${html`<${ChartTooltip} />`} cursor=${{ stroke: t.color, strokeOpacity: .35 }} />
+                <${Legend} wrapperStyle=${{ fontSize: 13 }} />
+                <${Area} type="monotone" dataKey=${t.areaKey} stroke=${t.color} strokeWidth=${2} fill=${`url(#${gid})`} />
+                ${t.lineKey && html`<${Line} type="monotone" dataKey=${t.lineKey} stroke=${C.teal} strokeWidth=${1.8} dot=${false} />`}
+              <//>
+            <//>
+          </div>
+        <//>`}
+
+        ${[t.dist, t.dist2].filter(Boolean).map(d => html`<${Panel} key=${d.title} title=${d.title} pad=${16}>
+          ${d.kind === 'donut'
+            ? html`<${Donut} data=${d.rows} colors=${d.colors} center=${d.center} sub=${d.sub} unit=${d.unit} h=${230} inner=${66} outer=${96} fs=${13.5} w=${230} />`
+            : html`<${HBarList} rows=${d.rows} unit=${d.unit} color=${t.color} total=${d.total} fs=${14} />`}
+        <//>`)}
+      </div>
+    </aside>
+  <//>`;
+}
+
+// 下鑽抽屜（原站：DP）。原站另有 AI 眼底、單一設備、chain 三種下鑽，畫面上沒有入口，復刻版未移植
+function DrillDrawer({ open, onClose, view }) {
+  useEscape(onClose);
+  if (!open) return null;
+  const { byId } = BASE;
+  let title = '', body = null;
+  if (open.type === 'risk') {
+    const ids = [...view.cur.riskUsers];
+    const pushed = new Set(view.cur.push.map(p => p.userId));
+    title = `健康風險發現 · ${fmtInt(ids.length)} 人`;
+    body = html`<${Fragment}>
+      <${Panel} title="年齡分布" pad=${14}>
+        <${HBarList} rows=${AGE_BANDS.map((b, i) => ({ name: b + ' 歲', value: ids.filter(id => byId[id].band === i).length }))} total=${ids.length} />
+      <//>
+      <${Panel} title="性別分布" pad=${14}>
+        <${HBarList} rows=${['男', '女'].map(g => ({ name: g, value: ids.filter(id => byId[id].gender === g).length }))} total=${ids.length} color=${C.teal} />
+      <//>
+      <${Panel} title="風險類型" pad=${14}>
+        <${HBarList} rows=${view.riskRows.filter(r => r.value)} color=${C.orange} />
+      <//>
+      <${Panel} title="後續照護狀態" pad=${14}>
+        <${HBarList} unit="人" color=${C.green} total=${ids.length} rows=${[
+          { name: '已收到健康推播', value: ids.filter(id => pushed.has(id)).length },
+          { name: '已進入持續追蹤', value: ids.filter(id => byId[id].followUp).length },
+          { name: '已完成再次量測', value: ids.filter(id => ((view.cur.dayCount[id] && view.cur.dayCount[id].size) || 0) > 1).length }
+        ]} />
+      <//>
+    <//>`;
+  }
+  return html`<${Fragment}>
+    <div className="mask" onClick=${onClose}></div>
+    <aside className="drawer" role="dialog" aria-label=${title}>
+      <div className="flex items-start justify-between" style=${{ padding: '18px 18px 12px', position: 'sticky', top: 0, background: 'linear-gradient(180deg,#08182B,rgba(8,24,43,.9))', zIndex: 2 }}>
+        <div>
+          <div className="eyebrow" style=${{ marginBottom: 6 }}>DRILL DOWN</div>
+          <h3 style=${{ fontSize: 17, fontWeight: 700 }}>${title}</h3>
+        </div>
+        <button onClick=${onClose} className="chip" style=${{ padding: 7 }} aria-label="關閉"><${Icons.x} size=${14} /></button>
+      </div>
+      <div className="flex flex-col" style=${{ gap: 12, padding: '0 18px 24px' }}>
+        ${body}
+        <p className="faint" style=${{ fontSize: 11, lineHeight: 1.9 }}>
+          <${Icons.shieldCheck} size=${11} style=${{ display: 'inline', marginRight: 4 }} />本區僅呈現去識別化統計結果，不顯示姓名、身分證字號等個人資料。
+        </p>
+      </div>
+    </aside>
+  <//>`;
+}
+
+/* ============================================================================
+   ⑦ 主頁面
+   ============================================================================ */
+
+// 頁首資料提示（原站：OP）：資料檢核有錯→紅色；截止日距今 > 14 天→橘色
+function DataBanner() {
+  const [open, setOpen] = useState(false);
+  const bad = !CHECK.ok;
+  if (!bad && !(STALE_DAYS !== null && STALE_DAYS > 14)) return null;
+  const tone = bad
+    ? { bg: 'rgba(248,113,113,.12)', border: 'rgba(248,113,113,.45)', fg: C.red, icon: Icons.triangleAlert }
+    : { bg: 'rgba(251,169,76,.10)', border: 'rgba(251,169,76,.40)', fg: C.orange, icon: Icons.calendar };
+  const IconC = tone.icon;
+  return html`<div style=${{ margin: '10px 0 4px', border: `1px solid ${tone.border}`, background: tone.bg, borderRadius: 12, padding: '11px 15px' }}>
+    <div className="flex items-center" style=${{ gap: 10, flexWrap: 'wrap' }}>
+      <${IconC} size=${15} style=${{ color: tone.fg, flexShrink: 0 }} />
+      <span style=${{ fontSize: 13, color: tone.fg, fontWeight: 600 }}>
+        ${bad ? `資料有 ${CHECK.errors.length} 個問題${CHECK.truncated ? '（僅列出前 20 個）' : ''}` : `資料更新於 ${DATA_THROUGH}，已 ${STALE_DAYS} 天未更新`}
+      </span>
+      <span className="faint" style=${{ fontSize: 12 }}>
+        ${bad ? '以下數字仍照常顯示，但請先修正 data/user.json' : '「近7日」「近30日」會以該日期往前算，不是真實的近 7 日'}
+      </span>
+      ${bad && html`<button onClick=${() => setOpen(o => !o)} style=${{ marginLeft: 'auto', font: 'inherit', fontSize: 12, color: tone.fg, background: 'none', border: `1px solid ${tone.border}`, borderRadius: 999, padding: '3px 12px', cursor: 'pointer' }}>
+        ${open ? '收合' : '查看明細'}
+      </button>`}
+    </div>
+    ${bad && open && html`<ul style=${{ margin: '10px 0 2px', paddingLeft: 20, fontSize: 12, lineHeight: 1.75, color: C.dim }}>
+      ${CHECK.errors.map((e, i) => html`<li key=${i}><span style=${{ color: C.ink }}>${e.where}</span>：${e.message}</li>`)}
+    </ul>`}
+  </div>`;
+}
+
+const scrollToId = id => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth' }); };
+
+// 原站：kP
+function App() {
+  // 篩選條件：畫面上只有「資料期間」可切換，其餘固定為全部
+  const [filter, setFilter] = useState({ date: 'ytd', gender: 'all', band: 'all', device: 'all', source: 'all' });
+  const [drill, setDrill] = useState(null);   // 下鑽抽屜
+  const [theme, setTheme] = useState(null);   // 主題抽屜
+  const view = useMemo(() => computeView(filter), [filter]);
+  const themes = useMemo(() => buildThemes(view), [view]);
+  const kpi = view.cur.kpi;
+  const trendSpark = key => view.trend.map(b => ({ v: b[key] ?? b.total }));
+
+  return html`<div className="sl-root">
+    <div style=${{ maxWidth: 1720, margin: '0 auto', padding: '0 clamp(14px,2.4vw,40px) 0' }}>
+      <${DataBanner} />
+      <${HeroScreen} themes=${Object.values(themes)} onOpen=${setTheme} active=${theme} filter=${filter} setFilter=${setFilter} />
+
+      <${Section} id="risk" eyebrow="01 / RISK" title="健康風險發現" sub="以各項量測的臨床判定標準辨識異常，並串接後續健康建議、推播與追蹤。">
+        <div className="g23">
+          <div className="flex flex-col" style=${{ gap: 16 }}>
+            <div className="card clickable" style=${{ padding: 22 }} onClick=${() => setDrill({ type: 'risk' })}>
+              <div className="eyebrow" style=${{ marginBottom: 10 }}>RISK DISCOVERY</div>
+              <div>
+                <div className="dim" style=${{ fontSize: 13 }}>健康風險發現率</div>
+                <div className="num" style=${{ fontSize: 56, fontWeight: 700, color: C.cyan, lineHeight: 1, marginTop: 6 }}>${fmtPct(view.cur.riskUsers.size / (view.validTested.size || 1))}</div>
+                <div className="faint" style=${{ fontSize: 11, marginTop: 6 }}>發現風險人數 ÷ 完成有效檢測人數 × 100%</div>
+              </div>
+              <div className="faint" style=${{ fontSize: 11.5, marginTop: 14 }}>點擊展開年齡、性別、風險類型與後續照護狀態 →</div>
+            </div>
+            <${Panel} title="健康風險 TOP 5" sub="依發現人數排序，點擊可展開明細">
+              <${HBarList} rows=${view.riskRows.slice(0, 5)} total=${view.cur.riskUsers.size} color=${C.orange} onClick=${() => setDrill({ type: 'risk' })} />
+            <//>
+          </div>
+          <${Panel} title="全部健康風險分布">
+            <${HBarList} rows=${view.riskRows} color=${C.red} />
+            <p className="faint" style=${{ fontSize: 11, marginTop: 14, lineHeight: 1.9 }}>同一位民眾可能同時具有多項健康風險，故各項人數加總會大於風險發現總人數。</p>
+          <//>
+        </div>
+      <//>
+
+      <${Section} id="improve" eyebrow="02 / OUTCOME" title="健康改善追蹤" sub="持續量測，看見健康改善的每一步。改善率＝首次異常後最新量測正常人數 ÷ 首次量測異常人數 × 100%。">
+        <div className="grid-kpi" style=${{ gridTemplateColumns: 'repeat(auto-fit,minmax(186px,1fr))' }}>
+          <${KpiCard} icon=${Icons.repeat} label="回訪人數" value=${view.cur.revisitors} unit="人" color=${C.cyan} spark=${trendSpark('people')}
+            tip=${`期間內於 2 天以上使用健康服務的人數，佔服務人數的 ${fmtPct(kpi.revisitRate, 1)}。`} />
+          <${KpiCard} icon=${Icons.users} label="回訪率" value=${kpi.revisitRate * 100} dec=${1} unit="%" color=${C.teal} spark=${trendSpark('people')} tip="回訪人數 ÷ 期間內服務人數。" />
+          ${view.improvement.map(m => html`<${KpiCard} key=${m.key} icon=${Icons.trendingUp} label=${`${m.label}改善率`} value=${m.rate * 100} dec=${1} unit="%" color=${C.green} spark=${trendSpark('people')} />`)}
+        </div>
+      <//>
+
+      <${Section} id="sat" eyebrow="03 / EXPERIENCE" title="服務體驗滿意度">
+        <div className="g32">
+          <${Panel} title="整體滿意度">
+            <div className="flex flex-col" style=${{ gap: 22, height: '100%' }}>
+              <div style=${{ position: 'relative', width: 116, height: 116, flexShrink: 0 }}>
+                <svg width="116" height="116">
+                  <circle cx="58" cy="58" r="48" fill="none" stroke="rgba(56,225,240,.12)" strokeWidth="9" />
+                  <circle cx="58" cy="58" r="48" fill="none" stroke=${C.orange} strokeWidth="9" strokeLinecap="round"
+                    strokeDasharray=${`${OVERALL_SAT / 5 * 301} 301`} transform="rotate(-90 58 58)" style=${{ transition: 'stroke-dasharray .9s' }} />
+                </svg>
+                <div style=${{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
+                  <div style=${{ textAlign: 'center' }}>
+                    <div className="num" style=${{ fontSize: 30, fontWeight: 700 }}>${OVERALL_SAT.toFixed(1)}</div>
+                    <div className="faint" style=${{ fontSize: 11 }}>/ 5</div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col" style=${{ gap: 10 }}>
+                <div className="faint" style=${{ fontSize: 11.5, lineHeight: 1.9 }}>
+                  有效回收 <span className="num" style=${{ color: C.ink }}>${fmtInt(view.cur.satUsers.length)}</span> 份
+                </div>
+              </div>
+            </div>
+          <//>
+          <${Panel} title="細項滿意度">
+            <div className="flex flex-col" style=${{ gap: 10 }}>
+              ${view.satDims.map(d => html`<div key=${d.name}>
+                <div className="flex justify-between" style=${{ fontSize: 12, marginBottom: 4 }}>
+                  <span className="dim">${d.name}</span>
+                  <span className="num" style=${{ color: C.orange }}>${'★'.repeat(Math.round(d.value))}<span className="faint" style=${{ marginLeft: 5 }}>${d.value.toFixed(1)}</span></span>
+                </div>
+                <div className="hb" style=${{ height: 6 }}><i style=${{ width: `${d.value / 5 * 100}%`, background: `linear-gradient(90deg,${C.orange},${C.teal})` }}></i></div>
+              </div>`)}
+            </div>
+          <//>
+        </div>
+      <//>
+
+      <footer style=${{ padding: '30px 0 44px', marginTop: 20, borderTop: '1px solid rgba(56,225,240,.12)' }}>
+        <div className="flex flex-wrap justify-between" style=${{ gap: 20 }}>
+          <div style=${{ maxWidth: 480 }}>
+            <div className="flex items-center gap-2" style=${{ marginBottom: 10 }}>
+              <img src="./assets/logo.png" alt="" style=${{ height: 26, width: 'auto', display: 'block' }} />
+              <span style=${{ fontSize: 13, fontWeight: 600 }}>沙崙智慧健康照護站</span>
+            </div>
+            <p className="faint" style=${{ fontSize: 11.5, lineHeight: 2 }}>本儀表板為成果展示用途，數據採去識別化統計呈現，不含可識別個人身分之資訊；部分數據經模擬及統計處理，僅供成果展示與趨勢參考。 AI 分析結果僅供健康風險參考，不作為醫療診斷依據，如有健康疑慮請諮詢專業醫事人員。</p>
+          </div>
+          <div className="flex flex-wrap" style=${{ gap: 26 }}>
+            <div>
+              <div className="eyebrow" style=${{ marginBottom: 8 }}>快速前往</div>
+              ${[['risk', '健康風險'], ['improve', '健康改善'], ['sat', '服務體驗']].map(([id, label]) => html`<div key=${id}>
+                <button className="faint clickable" style=${{ background: 'none', border: 0, fontSize: 12, padding: '3px 0', fontFamily: 'inherit', color: C.dim }} onClick=${() => scrollToId(id)}>${label}</button>
+              </div>`)}
+            </div>
+            <div>
+              <div className="eyebrow" style=${{ marginBottom: 8 }}>資料期間</div>
+              <div className="faint num" style=${{ fontSize: 12, lineHeight: 2 }}>
+                ${(RANGES.find(r => r.id === filter.date) || {}).label}<br />
+                <span style=${{ color: C.green }}><${Icons.wifi} size=${11} style=${{ display: 'inline', marginRight: 4 }} />資料源：沙崙智慧健康平台</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="faint" style=${{ fontSize: 11, marginTop: 22, textAlign: 'center' }}>© 2026 台灣先進醫資股份有限公司 Advmeds · Shalun AI Smart Health Station</div>
+      </footer>
+    </div>
+    <${DrillDrawer} open=${drill} onClose=${() => setDrill(null)} view=${view} />
+    <${ThemeDrawer} themeId=${theme} onClose=${() => setTheme(null)} themes=${themes} />
+  </div>`;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(html`<${App} />`);
+})();
+</script>
+</body>
+</html>
