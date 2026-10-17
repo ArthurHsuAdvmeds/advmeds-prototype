@@ -54,6 +54,7 @@
   function daysAgo(n) { return fmt(new Date(END.getFullYear(), END.getMonth(), END.getDate() - n)); }
   function addDays(s, n) { var d = parse(s); return fmt(new Date(d.getFullYear(), d.getMonth(), d.getDate() + n)); }
   function minDate(a, b) { return a < b ? a : b; }
+  function maxDate(a, b) { return a > b ? a : b; }
 
   /* ---------- 分布參數（依原站資料調整） ---------- */
   // 原站資料分成兩段：截止日前 30 天以前每週約 300 位新訪客、每次到站量 3–4 項；
@@ -81,10 +82,16 @@
     'AI 報告易理解度': 4.365, 'LINE 健康服務便利性': 4.713, '整體服務體驗': 4.722 };
   var EYE_RISK_WATCH = [['影像品質不足', 13], ['其他眼底異常', 10], ['青光眼風險', 4], ['黃斑部病變風險', 4], ['糖尿病視網膜病變風險', 4]];
   var EYE_RISK_ABNORMAL = [['其他眼底異常', 10], ['糖尿病視網膜病變風險', 4], ['青光眼風險', 3], ['黃斑部病變風險', 3]];
-  var PUSH_ON_VISIT = [['AI 健康報告', 1600], ['健康衛教', 1450], ['再次量測提醒', 1000], ['個人化健康建議', 900],
-    ['健康追蹤提醒', 300], ['活動／健康促進', 250]];
-  var PUSH_LATER = [['健康衛教', 400], ['活動／健康促進', 300], ['健康追蹤提醒', 343], ['再次量測提醒', 292], ['個人化健康建議', 216]];
-  var PUSH_LINE_ONLY = [['健康衛教', 351], ['活動／健康促進', 290], ['個人化健康建議', 94]];
+  // 推播（2026-10-17 調整：新增照護站預約、健康商城通知，總量維持與原站相近，約 8,400 則）
+  // 儀表板分類：照護站預約、健康商城通知、AI 關懷（異常提醒／轉介／再次量測／追蹤）、生理量測結果（AI 健康報告）、其他
+  // 第一次量測當天一定收到一則，類型依下列權重
+  var PUSH_FIRST_VISIT = [['AI 健康報告', 36], ['再次量測提醒', 23], ['健康追蹤提醒', 10], ['健康衛教', 14], ['個人化健康建議', 12], ['活動／健康促進', 5]];
+  var PUSH_REVISIT_RESULT_P = 0.4; // 回訪量測當天收到 AI 健康報告的機率
+  var PUSH_LINE_ONLY_P = 0.15;     // 只加 LINE、還沒量測的人收到衛教類推播
+  var PUSH_LINE_ONLY = [['健康衛教', 300], ['活動／健康促進', 150], ['個人化健康建議', 50]];
+  var BOOKING_REVISIT_P = 0.7;     // 回訪前 0–3 天收到照護站預約通知
+  var BOOKING_LINE_ONLY_P = 0.15;  // 只加 LINE、還沒量測的人收到預約通知
+  var MALL_P = 0.26;               // 有加 LINE 的人收到健康商城通知（加入後越久越少，平均 45 天）
 
   /* ---------- 個人基準值與每次量測 ---------- */
   function makeProfile(gender, age) {
@@ -274,16 +281,14 @@
           records.push(rec);
         });
         anyAbnormal = anyAbnormal || dayAbnormal;
-        if (chance(0.9)) pushes.push(makePush(date, pick(PUSH_ON_VISIT)));
+        if (idx === 0) pushes.push(makePush(date, pick(PUSH_FIRST_VISIT)));
+        else {
+          if (chance(BOOKING_REVISIT_P)) pushes.push(makePush(maxDate(first, addDays(date, -int(0, 3))), '照護站預約'));
+          if (chance(PUSH_REVISIT_RESULT_P)) pushes.push(makePush(date, 'AI 健康報告'));
+        }
         if (dayAbnormal && chance(0.36)) pushes.push(makePush(date, '健康異常提醒'));
         if (dayAbnormal && chance(0.18)) pushes.push(makePush(date, '異常轉介'));
       });
-      if (!pushes.length) pushes.push(makePush(first, 'AI 健康報告'));
-      var later = chance(0.32) ? (chance(0.15) ? 2 : 1) : 0;
-      for (var k = 0; k < later; k++) {
-        var ld = addDays(first, Math.min(150, 1 + Math.floor(-Math.log(1 - rand()) * 35))); // 到站後越久越少，平均約 35 天
-        if (ld <= DATA_THROUGH && (!isRecent(ld) || chance(RECENT_REVISIT_KEEP))) pushes.push(makePush(ld, pick(PUSH_LATER)));
-      }
       user.records = records;
       var last = dayList[dayList.length - 1];
       if (chance(0.372)) {
@@ -293,11 +298,24 @@
         user.nps = pick([[10, 770], [9, 813], [8, 3], [7, 2]]);
       }
       if (chance(anyAbnormal ? 0.7 : 0.115)) user.followUp = true;
-    } else if (user.line && chance(0.46)) {
-      var n2 = chance(0.75) ? 1 : 2;
-      for (var j = 0; j < n2; j++) {
-        var pd = addDays(user.line.joinDate, int(0, 60));
-        if (pd <= DATA_THROUGH) pushes.push(makePush(pd, pick(PUSH_LINE_ONLY)));
+    } else if (user.line) {
+      if (chance(PUSH_LINE_ONLY_P)) {
+        var n2 = chance(0.75) ? 1 : 2;
+        for (var j = 0; j < n2; j++) {
+          var pd = addDays(user.line.joinDate, int(0, 60));
+          if (pd <= DATA_THROUGH) pushes.push(makePush(pd, pick(PUSH_LINE_ONLY)));
+        }
+      }
+      if (chance(BOOKING_LINE_ONLY_P)) {
+        var bd = addDays(user.line.joinDate, int(0, 14));
+        if (bd <= DATA_THROUGH) pushes.push(makePush(bd, '照護站預約'));
+      }
+    }
+    if (user.line && chance(MALL_P)) {
+      var nm = chance(0.15) ? 2 : 1;
+      for (var m = 0; m < nm; m++) {
+        var md = addDays(user.line.joinDate, Math.min(150, 1 + Math.floor(-Math.log(1 - rand()) * 45)));
+        if (md <= DATA_THROUGH && (!isRecent(md) || chance(RECENT_REVISIT_KEEP))) pushes.push(makePush(md, '健康商城通知'));
       }
     }
     if (pushes.length) {
