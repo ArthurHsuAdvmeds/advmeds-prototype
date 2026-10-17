@@ -891,7 +891,6 @@ function buildThemes(view) {
   push.forEach(p => { pushDaily[p.day].推播次數++; if (p.opened) pushDaily[p.day].開啟次數++; });
   const pushReach = new Set(push.map(p => p.userId)).size;
   const countTypes = types => push.filter(p => types.indexOf(p.type) >= 0).length;
-  const alertCount = countTypes(['健康異常提醒']);
   const careIds = new Set(push.filter(p => AI_CARE_TYPES.indexOf(p.type) >= 0).map(p => p.userId));
   const pushTypes = rowsWithTotal(PUSH_CATEGORIES.map(c => ({
     name: c.name, color: c.color,
@@ -942,11 +941,10 @@ function buildThemes(view) {
     },
     outreach: {
       id: 'outreach', side: 'left', ord: 2, color: C.purple, icon: Icons.bell, code: '02 OUTREACH',
-      title: '健康推播與提醒', sub: '主動提供衛教、健康報告、異常提醒與轉介建議',
+      title: '健康推播與提醒', sub: '照護站平台自動推送給民眾的通知／提醒',
       kpiLabel: '累積推播次數', value: kpi.push, unit: '次', hint: '做了什麼介入',
       mini: [
-        { l: '推播觸及人數', v: fmtInt(pushReach) },
-        { l: '異常提醒數', v: fmtInt(alertCount), c: C.orange }
+        { l: '推播觸及人數', v: fmtInt(pushReach) } // 2026-10-17 調整：移除「異常提醒數」
       ],
       spark: spark(pushDaily, '推播次數'),
       kpis: [], // 2026-10-17 調整：抽屜的四個小方塊移除
