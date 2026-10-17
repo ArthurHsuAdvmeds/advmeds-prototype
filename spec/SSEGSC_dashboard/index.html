@@ -900,18 +900,18 @@ function buildThemes(view) {
       kpiLabel: '累計使用人數', value: kpi.visitors + boundNew, unit: '人', hint: '',
       mini: [
         { l: '新增訪客人數', v: fmtInt(kpi.visitors), u: '人' },
-        { l: '完成會員綁定', v: fmtInt(boundNew), u: '人', c: C.teal },
+        { l: '新增會員人數', v: fmtInt(boundNew), u: '人', c: C.teal },
         { l: '加入 LINE 人數', v: fmtInt(view.cur.lineNew.length), u: '人', c: C.line }
       ],
       spark: spark(newUsers, '新增使用人數'),
       kpis: [
         { l: '新增訪客人數', v: fmtInt(kpi.visitors), u: '人' },
-        { l: '完成會員綁定', v: fmtInt(boundNew), u: '人', c: C.teal },
+        { l: '新增會員人數', v: fmtInt(boundNew), u: '人', c: C.teal },
         { l: '加入 LINE 人數', v: fmtInt(view.cur.lineNew.length), u: '人', c: C.line }
       ],
       daily: newUsers, areaKey: '新增使用人數', trendTitle: '新增使用人數趨勢', windowDays: days,
-      dist: { title: '使用者年齡分布', kind: 'bar', unit: '人', total: servedTotal, rows: ageRows },
-      dist2: { title: '使用者性別分布', kind: 'donut', unit: ' 人', rows: view.genderSplit, colors: [C.cyan, C.purple], center: fmtInt(servedTotal), sub: '服務人數' }
+      dist: { title: '會員年齡分布', kind: 'bar', unit: '人', total: servedTotal, rows: ageRows },
+      dist2: { title: '會員性別分布', kind: 'donut', unit: ' 人', rows: view.genderSplit, colors: [C.cyan, C.purple], center: fmtInt(servedTotal), sub: '服務人數' }
     },
     risk: {
       id: 'risk', side: 'right', ord: 2, color: C.teal, icon: Icons.brain, code: '04 RISK ANALYSIS',
