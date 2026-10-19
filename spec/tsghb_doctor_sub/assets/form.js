@@ -16,7 +16,7 @@
 
   // 前臺與後臺改的是同一個帳號：存在 sessionStorage，兩頁讀同一份，關掉分頁就清空。資料為虛構
   var STORE_KEY = "tsghb-doctor-sub:profile";
-  var DEFAULT_PROFILE = { name: "王大明", mobile: "0911223345", area: "", tel: "", email: "wang.daming@example.com", sub: [] };
+  var DEFAULT_PROFILE = { name: "王大明", mobile: "0911223345", area: "", tel: "", ext: "", email: "wang.daming@example.com", sub: [] };
 
   var ICON = {
     tag: '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">' +
@@ -236,6 +236,7 @@
     mobile: document.getElementById("f-mobile"),
     area: document.getElementById("f-area"),
     tel: document.getElementById("f-tel"),
+    ext: document.getElementById("f-ext"),
     email: document.getElementById("f-email")
   };
   var nameError = document.getElementById("f-name-error");
@@ -311,6 +312,7 @@
       mobile: f.mobile.value.trim(),
       area: f.area.value,
       tel: f.tel.value.trim(),
+      ext: f.ext.value.trim(),
       email: f.email.value.trim(),
       sub: sub.get()
     };

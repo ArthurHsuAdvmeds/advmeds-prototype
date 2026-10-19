@@ -53,6 +53,16 @@ select.f-input option { color: var(--grey-900); }
 .f-row > .f-input:not(.f-area) { flex: 1; min-width: 0; }
 @media (max-width: 600px) { .f-row > .f-area { width: 86px; } }
 
+/* 市話分機：跟在市內電話後面同一列，前面一個「分機」字；≤600px 放不下，換到第二列並撐滿 */
+.f-ext { flex: none; display: flex; align-items: center; gap: 8px; }
+.f-ext > label { white-space: nowrap; }
+.f-ext > .f-input { width: 120px; }
+@media (max-width: 600px) {
+  .f-row { flex-wrap: wrap; }
+  .f-ext { flex: 1 1 100%; }
+  .f-ext > .f-input { flex: 1; width: auto; min-width: 0; }
+}
+
 .f-error { margin: 4px 0 0; font-size: 12px; line-height: 18px; color: var(--red-500); }
 .f-hint { margin: 0 0 7px; font-size: 12px; line-height: 18px; color: var(--grey-500); }
 
