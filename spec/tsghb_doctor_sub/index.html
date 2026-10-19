@@ -77,24 +77,25 @@
     <button type="button" data-device="desktop">電腦</button>
     <button type="button" data-device="mobile">手機</button>
   </div>
-  <a class="open" id="open" href="./front/index.html" target="_blank" rel="noopener">
+  <a class="open" id="open" href="./front/index.html?v=20261019" target="_blank" rel="noopener">
     開新分頁
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
   </a>
 </header>
 
 <main class="stage" id="stage" data-device="desktop">
-  <iframe id="view" title="通報前臺 編輯帳號" src="./front/index.html"></iframe>
+  <iframe id="view" title="通報前臺 編輯帳號" src="./front/index.html?v=20261019"></iframe>
 </main>
 
 <script>
 (function () {
   "use strict";
 
-  // 路徑寫到 index.html，本機用 file:// 開也能載入
+  // 路徑寫到 index.html，本機用 file:// 開也能載入。
+  // ?v= 是版本號：front／back 或 assets/ 有改就換掉（連同各頁的 form.css／form.js），瀏覽器才不會拿快取的舊頁配新的 form.js
   var PAGES = {
-    front: { src: "./front/index.html", title: "通報前臺 編輯帳號" },
-    back: { src: "./back/index.html", title: "後臺 基本資料" }
+    front: { src: "./front/index.html?v=20261019", title: "通報前臺 編輯帳號" },
+    back: { src: "./back/index.html?v=20261019", title: "後臺 基本資料" }
   };
 
   var stage = document.getElementById("stage");

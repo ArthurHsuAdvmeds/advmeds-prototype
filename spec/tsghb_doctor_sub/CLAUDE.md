@@ -131,7 +131,7 @@ spec/tsghb_doctor_sub/
 - 狀態記在網址 `#`：`#front`、`#back`、`#front/mobile`、`#back/mobile`，可以直接分享連結。
 - 只切寬度時不會重新載入 iframe，頁面上填到一半的內容會留著。
 - 視窗寬度 ≤700px 時不顯示「電腦／手機」，iframe 直接佔滿。
-- iframe 的路徑寫到 `index.html`（`./front/index.html`），本機用 `file://` 開才載得進來。
+- iframe 的路徑寫到 `index.html`（`./front/index.html?v=…`），本機用 `file://` 開才載得進來。
 
 ---
 
@@ -152,6 +152,9 @@ spec/tsghb_doctor_sub/
 
 - 改選項或顏色：只改 `form.js` 的 `SUB_SPECIALTIES`，並同步本文件 2.2 的表。
 - 改欄位：`front/index.html`、`back/index.html` 兩份表單一起改，欄位 `id` 不要改名。
+- **改了 `front/`、`back/` 或 `assets/` 就換版本號 `?v=`**（日期，同一天第二次就在後面加字母），一共六處：兩頁的 `form.css`、`form.js`，
+  切換頁的 `PAGES`（兩處）、iframe 的 `src` 與「開新分頁」的 `href`。
+  GitHub Pages 讓瀏覽器快取 10 分鐘，沒換的話可能拿快取的舊頁配新的 `form.js`：`form.js` 找不到新欄位就在半路出錯，後面的欄位都沒填、次專科也不會出現（加分機時發生過）。
 - 顏色用 `form.css` `:root` 的設計 token；token 沒有的（`--bk-brand`、`--fr-page`）定義在該頁 `<style>` 的開頭。
 - 這個 repo 是公開的：`DEFAULT_PROFILE` 只能放虛構資料；`design/` 的截圖也會被部署，放進去前確認沒有真實帳號或個資。
 - 改完用瀏覽器實際開啟：兩頁各看電腦與手機寬度，把次專科選幾個、搜尋、移除、儲存後到另一頁確認資料有帶過去，並檢查 console 無錯誤。
