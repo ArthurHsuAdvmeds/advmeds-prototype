@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>網址偽裝字元檢查</title>
+<meta name="robots" content="noindex">
+
+<!--
+  ============================================================================
+  網址偽裝字元檢查（IDN homograph）
+  ----------------------------------------------------------------------------
+  找出網域裡「不是英文字母、但長得像英文字母」的字，例如西里爾字母 U+0430 冒充英文 a。
+  流程（analyze()）：
+    1. parseHost()：從輸入抽出網域（去掉協定、@ 前的帳號欄位、連接埠、路徑），
+       %XX 先解開，xn-- 開頭的 Punycode 標籤解回 Unicode，再做 NFC。
+    2. classify()：逐字分類
+         ascii      一般英文、數字、符號
+         homoglyph  外觀幾乎一樣的別種文字（LOOKALIKE 表）→ 紅
+         variant    帶附加符號或筆畫的字母（é 用 NFD 判斷，ł ø 這類查 VARIANT 表）→ 橘
+         latin      其他非英文的拉丁字母 → 橘
+         mapped     全形、數學字體等，瀏覽器會自動轉成一般英文（以 NFKC 判斷）→ 藍
+         hidden / space / mark / symbol  看不見的字、空白、單獨的附加符號、符號 → 橘
+         foreign    中文、日文等其他語言的字 → 灰
+    3. checkLabel()：逐段（以 . 分段）判斷，英文字母裡混入仿冒字、整段都是仿冒字、
+       混用文字系統（中日韓的常見組合除外）→ 高風險；用俄文等寫的網域只有部分字像英文 → 注意。
+    4. 「實際網域」一律交給瀏覽器的網址解析（new URL）算，不自己實作 IDNA 對照表。
+  LOOKALIKE / VARIANT 是常見字元的整理，不是 Unicode confusables.txt 全表；沒標紅不代表一定安全。
+  表裡只寫碼位、不放字元本身：那些字在原始碼裡和英文字母分不出來，改檔時很容易改錯。
+  輸入的網址不存 localStorage（可能帶著登入連結的 token）。
+  ============================================================================
+-->
+
+<style>
+:root{
+  --blue-50:#E6EFFC;--blue-500:#2F6FCF;--blue-700:#1F4F99;
+  --grey-0:#FFFFFF;--grey-100:#F0F0F0;--grey-200:#E0E0E0;--grey-400:#C4C4C4;
+  --grey-600:#818181;--grey-700:#666666;--grey-900:#333333;
+  --bg:var(--grey-100);--panel:var(--grey-0);--line:var(--grey-200);--line-strong:var(--grey-400);
+  --ink:var(--grey-900);--ink-2:var(--grey-700);--ink-3:var(--grey-600);
+  --chip-bg:var(--grey-100);
+  --accent:var(--blue-500);--accent-soft:var(--blue-50);--accent-ink:var(--blue-700);
+  --ok-bg:#F0FBD7;--ok-ink:#3B7A12;
+  --warn-bg:#FDF1E4;--warn-ink:#A85A12;
+  --err-bg:#FDECEC;--err-ink:#B3261E;
+  --radius-md:4px;--radius-lg:5px;
+  --shadow-card:0px 4px 6px -4px rgba(0,0,0,.1),0px 10px 15px -3px rgba(0,0,0,.1);
+  --font-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,"Cascadia Mono",Menlo,Consolas,"Microsoft JhengHei",monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#16191d;--panel:#1f2328;--line:#30363d;--line-strong:#444c56;
+    --ink:#e6e8ea;--ink-2:#a8b0b8;--ink-3:#7d8590;
+    --chip-bg:#2a2f36;
+    --accent-soft:#1b2a44;--accent-ink:#9dbcf0;
+    --ok-bg:#223317;--ok-ink:#b3e07a;
+    --warn-bg:#3a2816;--warn-ink:#f3b77a;
+    --err-bg:#3b1d1d;--err-ink:#f5a3a0;
+    --shadow-card:0 1px 2px rgba(0,0,0,.4);
+    color-scheme:dark;
+  }
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+}
+code,textarea{font-variant-ligatures:none}
+
+.app{display:flex;flex-direction:column;gap:14px;max-width:1080px;margin:0 auto;padding:16px 20px 40px}
+
+/* ---------- 頁首 ---------- */
+.top{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 14px}
+.back{
+  font-size:13px;font-weight:500;color:var(--ink-2);text-decoration:none;
+  padding:6px 10px;border-radius:100px;background:var(--panel);box-shadow:inset 0 0 0 1px var(--line);
+}
+.back:hover{color:var(--accent-ink);box-shadow:inset 0 0 0 1px var(--accent)}
+.back:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.top h1{margin:0;font-size:20px;font-weight:700}
+.lead{margin:0;font-size:13px;color:var(--ink-2);line-height:1.7}
+.lead code{
+  font-family:var(--font-mono);font-size:12px;padding:2px 6px;white-space:nowrap;
+  background:var(--panel);border-radius:var(--radius-md);box-shadow:inset 0 0 0 1px var(--line);
+}
+
+/* ---------- 按鈕 ---------- */
+.btn{
+  font:inherit;font-size:13px;font-weight:500;line-height:1;white-space:nowrap;
+  color:var(--ink-2);background:var(--panel);border:0;border-radius:var(--radius-md);
+  box-shadow:inset 0 0 0 1px var(--line-strong);padding:8px 12px;cursor:pointer;
+  transition:background .15s,color .15s,box-shadow .15s;
+}
+.btn:hover{color:var(--accent-ink);box-shadow:inset 0 0 0 1px var(--accent)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn.sm{font-size:12px;padding:5px 8px}
+
+/* ---------- 輸入 ---------- */
+.panel{
+  background:var(--panel);border-radius:var(--radius-lg);
+  box-shadow:inset 0 0 0 1px var(--line),var(--shadow-card);
+}
+.input-panel:focus-within{box-shadow:inset 0 0 0 1px var(--accent),var(--shadow-card)}
+.pane-head{
+  display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;
+  min-height:48px;padding:8px 10px 8px 14px;border-bottom:1px solid var(--line);
+}
+.pane-head h2{margin:0;font-size:14px;font-weight:700}
+.meta{margin-right:auto;font-size:12px;color:var(--ink-3)}
+#input{
+  display:block;width:100%;height:140px;min-height:84px;resize:vertical;border:0;outline:none;
+  padding:12px 14px;background:transparent;color:inherit;word-break:break-all;
+  font-family:var(--font-mono);font-size:14px;line-height:1.6;
+}
+#input::placeholder{color:var(--ink-3);font-family:var(--font-body)}
+
+/* ---------- 結果上方：統計與圖例 ---------- */
+.bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px 18px;font-size:12px;color:var(--ink-2)}
+.summary{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-right:auto;font-size:13px;color:var(--ink)}
+.summary b{font-weight:700;margin-right:2px}
+.sum-chip{font-size:12px;font-weight:700;padding:3px 8px;border-radius:100px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px}
+.legend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px}
+.legend .k-foreign,.about .k-foreign{box-shadow:inset 0 0 0 1px var(--line-strong)}
+
+/* ---------- 結果卡片 ---------- */
+.results{display:flex;flex-direction:column;gap:12px}
+.empty{padding:32px 16px;text-align:center;color:var(--ink-3);font-size:13px;line-height:1.8}
+.res{overflow:hidden}
+.res-head{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.badge{flex:none;font-size:12px;font-weight:700;line-height:1;padding:5px 9px;border-radius:100px;color:var(--panel)}
+.res-title{margin:0;font-size:15px;font-weight:700;white-space:nowrap}
+.res-src{
+  min-width:0;margin-left:auto;font-family:var(--font-mono);font-size:12px;color:var(--ink-2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.res-body{display:flex;flex-direction:column;gap:14px;padding:14px}
+
+.lv-danger .res-head,.sum-chip.lv-danger{background:var(--err-bg);color:var(--err-ink)}
+.lv-warn .res-head,.sum-chip.lv-warn{background:var(--warn-bg);color:var(--warn-ink)}
+.lv-ok .res-head,.sum-chip.lv-ok{background:var(--ok-bg);color:var(--ok-ink)}
+.lv-error .res-head,.sum-chip.lv-error{background:var(--chip-bg);color:var(--ink-2)}
+.lv-danger .badge{background:var(--err-ink)}
+.lv-warn .badge{background:var(--warn-ink)}
+.lv-ok .badge{background:var(--ok-ink)}
+.lv-error .badge{background:var(--ink-3)}
+
+/* 網域逐字顯示：用內文字型，跟使用者在連結、網址列看到的樣子比較接近 */
+.domain{font-size:26px;font-weight:500;line-height:1.5;word-break:break-all;letter-spacing:.01em}
+.ch{border-radius:3px;padding:0 1px}
+
+/* 各類字元的顏色：網域、逐字清單、圖例共用 */
+.k-homoglyph{background:var(--err-bg);color:var(--err-ink);box-shadow:inset 0 -2px 0 var(--err-ink)}
+.k-variant,.k-latin,.k-symbol{background:var(--warn-bg);color:var(--warn-ink);box-shadow:inset 0 -2px 0 var(--warn-ink)}
+.k-mapped{background:var(--accent-soft);color:var(--accent-ink);box-shadow:inset 0 -2px 0 var(--accent)}
+.k-foreign{background:var(--chip-bg)}
+.k-hidden{
+  display:inline-block;vertical-align:middle;margin:0 2px;padding:3px 4px;
+  font-family:var(--font-mono);font-size:11px;font-weight:400;line-height:1;letter-spacing:0;
+  color:var(--warn-ink);background:var(--warn-bg);border:1px dashed var(--warn-ink);border-radius:3px;
+}
+
+.facts{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 16px;margin:0;align-items:baseline}
+.facts dt{font-size:13px;font-weight:700;color:var(--ink-3);white-space:nowrap}
+.facts dd{margin:0;font-family:var(--font-mono);font-size:14px;line-height:1.6;word-break:break-all}
+.facts dd .btn{margin-left:8px;vertical-align:1px;font-family:var(--font-body)}
+.facts .hint{display:block;margin-top:2px;font-family:var(--font-body);font-size:12px;color:var(--ink-3);word-break:normal}
+.lv-danger .facts .looks{color:var(--err-ink);font-weight:700}
+
+.findings{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none;font-size:13px;line-height:1.7}
+.findings li{padding:7px 12px;border-radius:var(--radius-md);border-left:3px solid}
+.findings .f-danger{background:var(--err-bg);color:var(--err-ink)}
+.findings .f-warn{background:var(--warn-bg);color:var(--warn-ink)}
+.findings .f-info{background:var(--chip-bg);color:var(--ink-2)}
+
+.chars{margin:0;padding:0;list-style:none;border-top:1px solid var(--line)}
+.chars li{
+  display:grid;grid-template-columns:44px 16px 44px minmax(0,1fr);align-items:center;gap:0 8px;
+  padding:10px 0;border-bottom:1px solid var(--line);
+}
+.chars li:last-child{border-bottom:0;padding-bottom:0}
+.glyph,.look{
+  display:grid;place-items:center;width:44px;height:44px;border-radius:var(--radius-md);
+  font-size:26px;line-height:1;
+}
+.look{background:var(--chip-bg);box-shadow:inset 0 0 0 1px var(--line)}
+.glyph.k-hidden{margin:0;padding:0;font-size:10px;line-height:1.2;text-align:center}
+.approx{text-align:center;color:var(--ink-3);font-size:15px}
+.ch-info{min-width:0}
+.ch-meta{font-size:12px;color:var(--ink-3);font-family:var(--font-mono)}
+.ch-desc{font-size:13px;line-height:1.6;margin-top:1px}
+.more{font-size:12px;color:var(--ink-3);padding-top:8px}
+
+/* ---------- 說明 ---------- */
+.about{padding:4px 16px;font-size:13px;line-height:1.8;color:var(--ink-2)}
+.about summary{padding:10px 0;font-weight:700;color:var(--ink);cursor:pointer}
+.about h3{margin:6px 0 2px;font-size:13px;color:var(--ink)}
+.about ul{margin:0 0 12px;padding-left:20px}
+.about .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:0}
+.about code{font-family:var(--font-mono);font-size:12px;padding:1px 5px;border-radius:var(--radius-md);background:var(--chip-bg)}
+
+/* ---------- 提示訊息 ---------- */
+#toast{
+  position:fixed;left:50%;bottom:28px;z-index:10;transform:translate(-50%,16px);
+  max-width:calc(100vw - 32px);padding:9px 16px;border-radius:var(--radius-lg);
+  background:#22272e;color:#fff;font-size:13px;line-height:1.5;
+  opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;
+}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:640px){
+  .app{padding:14px 16px 28px}
+  /* 16px 以上 iOS 才不會在點輸入框時自動放大畫面 */
+  #input{font-size:16px}
+  .res-head{flex-wrap:wrap;gap:6px 10px}
+  .res-src{flex-basis:100%;margin-left:0}
+  .domain{font-size:21px}
+  .facts{grid-template-columns:minmax(0,1fr);gap:2px}
+  .facts dd + dt{margin-top:8px}
+}
+@media (prefers-reduced-motion:reduce){
+  .btn,#toast{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <a class="back" href="../" id="back">← 原型總覽</a>
+    <h1>網址偽裝字元檢查</h1>
+    <p class="lead">貼上網址或網域，檢查網域裡有沒有「長得像英文字母、其實不是」的字，例如把英文的 a 換成外觀一模一樣的西里爾字母，並列出瀏覽器實際會連到的網域。一行一個，可以一次檢查多個；網址前後夾著其他文字時，<code>https://</code> 開頭的網址會自動抓出來。資料只在你的瀏覽器裡處理，不會上傳也不會保存。</p>
+  </header>
+
+  <section class="panel input-panel" aria-labelledby="inTitle">
+    <div class="pane-head">
+      <h2 id="inTitle">網址</h2>
+      <span class="meta" id="inMeta"></span>
+      <button class="btn" type="button" data-act="paste">貼上</button>
+      <button class="btn" type="button" data-act="sample">範例</button>
+      <button class="btn" type="button" data-act="clear">清除</button>
+    </div>
+    <textarea id="input" spellcheck="false" autocomplete="off" autocapitalize="off" aria-labelledby="inTitle"
+      placeholder="在這裡貼上網址，例如 https://www.example.com/login（一行一個）"></textarea>
+  </section>
+
+  <div class="bar" id="bar" hidden>
+    <div class="summary" id="summary" role="status"></div>
+    <div class="legend" aria-label="字元顏色說明">
+      <span><i class="k-homoglyph"></i>冒充英文的字</span>
+      <span><i class="k-variant"></i>相似字、看不見的字</span>
+      <span><i class="k-mapped"></i>會被自動轉成英文</span>
+      <span><i class="k-foreign"></i>其他語言的字</span>
+    </div>
+  </div>
+
+  <main class="results" id="results">
+    <div class="empty panel">貼上網址後會即時顯示檢查結果。<br>不知道要貼什麼的話，可以先按「範例」看看各種情況。</div>
+  </main>
+
+  <details class="panel about">
+    <summary>怎麼判斷的</summary>
+    <h3>顏色</h3>
+    <ul>
+      <li><span class="sw k-homoglyph"></span><b>紅色</b>：外觀和英文字母、數字幾乎一樣，但其實是別種文字的字，例如西里爾字母、希臘字母、亞美尼亞字母、切羅基文、拉丁小型大寫字母；也包括冒充 <code>.</code> <code>-</code> <code>/</code> 的符號（例如除號斜線）。</li>
+      <li><span class="sw k-variant"></span><b>橘色</b>：帶附加符號或筆畫的字母（例如 é、ü、ł、ø）、其他非英文的拉丁字母、看不見的字（零寬空格等）、單獨的附加符號、符號。</li>
+      <li><span class="sw k-mapped"></span><b>藍色</b>：全形、數學粗體等特殊寫法，瀏覽器會自動轉成一般英文，實際網域不受影響，但正常網址不會這樣寫。</li>
+      <li><span class="sw k-foreign"></span><b>灰色</b>：中文、日文等其他語言的字，屬於正常的國際化網域。</li>
+    </ul>
+    <h3>判定</h3>
+    <ul>
+      <li><b>高風險</b>：同一段網域（以 <code>.</code> 分段）裡英文字母混入紅色的字、整段都是紅色的字，或混用多種文字系統。</li>
+      <li><b>注意</b>：有橘色、藍色的字；用俄文、希臘文等寫的網域只有部分字像英文；網址的 <code>@</code> 前面放了文字（瀏覽器其實會連到 <code>@</code> 後面）。</li>
+      <li><b>實際網域</b>是瀏覽器把網域轉成 Punycode（<code>xn--</code> 開頭）後的結果，DNS 查的就是這一串；它是用瀏覽器本身的網址解析算出來的。</li>
+    </ul>
+    <h3>限制</h3>
+    <ul>
+      <li>只檢查網域（<code>://</code> 與 <code>@</code> 之後、第一個 <code>/</code> 之前），不看路徑與參數。</li>
+      <li>不檢查全用英文、數字的仿冒，例如數字 1 冒充 l、rn 冒充 m、多一個字母或換了頂級網域。</li>
+      <li>紅色的字是常見仿冒字元的整理，不是 Unicode 全部的相似字；沒有標紅不代表網站一定可信。</li>
+    </ul>
+  </details>
+
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var cp = String.fromCodePoint;
+
+  /* ---------- 字元表 ---------- */
+
+  // 外觀和英文字母、數字或網址符號幾乎一樣的字。鍵是「看起來像」的字，值是碼位（十六進位）。
+  // 小型大寫字母（U+1D00 這類）與西里爾小寫 U+043A、U+043C、U+0442 這種長得像縮小大寫的字歸在大寫鍵。
+  var LOOKALIKE = {
+    a: '0430 0251 03B1 237A',
+    A: '0410 0391 13AA 15C5 A4EE 1D00',
+    b: '13CF 15AF 0184 0185 042C 044C',
+    B: '0412 0392 13F4 15F7 A4D0 0299 0432',
+    c: '0441 03F2 1D04 2CA5',
+    C: '0421 03F9 13DF A4DA 2CA4',
+    d: '0501 13E7 146F A4D2',
+    D: '13A0 15EA A4D3 1D05',
+    e: '0435 04BD 212E',
+    E: '0415 0395 13AC 2D39 A4F0 1D07',
+    f: '0584 A799',
+    F: '03DC 15B4 A4DD A730',
+    g: '0261 0581',
+    G: '050C 13C0 13F3 A4D6 0262',
+    h: '04BB 0570 13C2',
+    H: '041D 0397 13BB 157C A4E7 2C8E 029C 043D',
+    i: '0456 03B9 0131 0269 13A5 2C93',
+    I: '0406 0399 A4F2 026A',
+    j: '0458 03F3 0237',
+    J: '0408 037F 13AB 148D A4D9 1D0A',
+    K: '041A 039A 13E6 16D5 2C94 A4D7 1D0B 043A 03BA 0138',
+    l: '04CF 04C0 05C0 05D5 05DF 0627 0661 06F1 01C0 2223 07CA 2D4F 16C1',
+    L: '13DE 14AA 2CD0 A4E1 029F',
+    M: '041C 039C 03FA 13B7 15F0 16D6 2C98 A4DF 1D0D 043C',
+    n: '0578 057C 03B7',
+    N: '039D 2C9A A4E0 0274',
+    o: '043E 03BF 0585 03C3 0D20 0D66 0966 0A66 0AE6 0B66 0BE6 0C66 0CE6 0E50 0ED0 101D 1040 0665 0647 06BE 06C1 05E1 1D0F 1D11 2C9F',
+    O: '041E 039F 0555 2C9E A4F3 0B20 3007 2D54 12D0',
+    p: '0440 03C1 2CA3',
+    P: '0420 03A1 13E2 146D 2CA2 A4D1 1D18',
+    q: '051B 0563 0566',
+    Q: '051A 2D55',
+    r: '0433 1D26 2C85',
+    R: '13A1 13D2 1587 A4E3 0280',
+    s: '0455 01BD A731',
+    S: '0405 054F 13D5 13DA A4E2',
+    T: '0422 03A4 13A2 22A4 2CA6 A4D4 1D1B 0442 03C4',
+    u: '057D 028B 03C5 1D1C',
+    U: '054D A4F4 144C 222A',
+    v: '03BD 0475 05D8 1D20',
+    V: '0474 13D9 142F 2D38 A4E6',
+    w: '0461 051D 0561 1D21 03C9 026F',
+    W: '051C 13B3 13D4 A4EA',
+    x: '0445 03C7 00D7 157D',
+    X: '0425 03A7 2CAC 2D5D 16B7 A4EB 166D',
+    y: '0443 04AF 03B3 10E7',
+    Y: '0423 04AE 03A5 13A9 13BD A4EC 2CA8 028F',
+    z: '1D22',
+    Z: '0396 13C3 A4DC',
+    2: '01A7 03E8 A644',
+    3: '01B7 0417 0437 04E0 021C A76A 2CCC',
+    4: '13CE',
+    5: '01BC',
+    6: '0431 13EE 2CD2',
+    8: '0222 0223 09EA 0A6A',
+    9: '0A67 09ED 0B68 2CCA A76E',
+    '.': '00B7 0660 06F0 0701 0702 06D4 A4F8 2219 22C5 30FB',
+    '-': '2010 2012 2013 2014 2015 2212 2043 02D7',
+    '/': '2215 2044 29F8 3033 2571 1735'
+  };
+
+  // 帶筆畫、勾、尾巴的字母（ł ø đ ħ 這類）：拆不成「英文字母＋附加符號」，
+  // 但跟 é 一樣是「相似、細看分得出來」，歸在注意而不是高風險（波蘭文、丹麥文等網域本來就會用）。
+  var VARIANT = {
+    b: '0180 0253 0183',
+    B: '00DF',
+    c: '0188 023C 0255',
+    d: '0111 0257 0256 018C 00F0',
+    D: '0110 0189 00D0',
+    e: '0247',
+    f: '0192',
+    g: '01E5 0260 1D83',
+    h: '0127 0266',
+    H: '0126',
+    i: '0268',
+    j: '0249 029D',
+    k: '0199',
+    l: '0142 019A 026B 026C 026D 0140',
+    L: '0141',
+    m: '0271',
+    n: '0272 0273 019E 014B',
+    o: '00F8 0275 04E9',
+    O: '00D8',
+    p: '01A5 1D7D 00FE',
+    q: '024B 02A0',
+    r: '024D 027C 027D 027E',
+    s: '0282 023F',
+    t: '0167 01AB 01AD 0288',
+    T: '0166',
+    u: '0289',
+    x: '04B3',
+    y: '01B4 024F',
+    z: '01B6 0225 0290 0291 0240'
+  };
+
+  function codeMap(table) {
+    var map = {};
+    Object.keys(table).forEach(function (look) {
+      table[look].split(' ').forEach(function (h) { map[parseInt(h, 16)] = look; });
+    });
+    return map;
+  }
+  var LOOK = codeMap(LOOKALIKE);
+  var VAR = codeMap(VARIANT);
+  var SEPARATORS = ['.', '-', '/'];
+
+  // IDNA 會當成「.」的三個字（中文句點、全形句點、半形句點）
+  var IDNA_DOTS = [0x3002, 0xFF0E, 0xFF61];
+  var DOTS = IDNA_DOTS.map(function (c) { return cp(c); }).join('');
+  var DOT_SPLIT = new RegExp('([.' + DOTS + '])');
+  var HAS_DOT = new RegExp('[.' + DOTS + ']');
+
+  var HIDDEN_NAMES = {
+    '00AD': '軟連字號', '034F': '組合用字形連接符', '061C': '阿拉伯字母標記', '180E': '蒙古文母音分隔符',
+    '200B': '零寬空格', '200C': '零寬不連字', '200D': '零寬連字', '200E': '左至右標記', '200F': '右至左標記',
+    '2060': '字詞連接符', 'FEFF': '零寬不換行空格', '115F': '韓文填充字元', '1160': '韓文填充字元',
+    '3164': '韓文填充字元', 'FFA0': '韓文填充字元'
+  };
+
+  // 逐字標出文字系統用；Common、Inherited 不算一種文字，判斷混用時略過
+  var SCRIPTS = [
+    ['Latin', '拉丁字母'], ['Cyrillic', '西里爾字母'], ['Greek', '希臘字母'], ['Armenian', '亞美尼亞字母'],
+    ['Cherokee', '切羅基文'], ['Coptic', '科普特字母'], ['Georgian', '喬治亞字母'], ['Hebrew', '希伯來字母'],
+    ['Arabic', '阿拉伯字母'], ['Syriac', '敘利亞字母'], ['Han', '漢字'], ['Hiragana', '平假名'],
+    ['Katakana', '片假名'], ['Hangul', '韓文'], ['Bopomofo', '注音符號'], ['Thai', '泰文'], ['Lao', '寮文'],
+    ['Devanagari', '天城文'], ['Bengali', '孟加拉文'], ['Gurmukhi', '古木基文'], ['Gujarati', '古吉拉特文'],
+    ['Oriya', '奧里亞文'], ['Tamil', '坦米爾文'], ['Telugu', '泰盧固文'], ['Kannada', '卡納達文'],
+    ['Malayalam', '馬拉雅拉姆文'], ['Myanmar', '緬甸文'], ['Ethiopic', '衣索比亞文'], ['Lisu', '傈僳文'],
+    ['Canadian_Aboriginal', '加拿大原住民音節文字'], ['Tifinagh', '提非納文'], ['Runic', '盧恩字母'],
+    ['Common', '符號'], ['Inherited', '附加符號']
+  ].map(function (s) {
+    try { return { key: s[0], label: s[1], re: new RegExp('^\\p{Script=' + s[0] + '}$', 'u') }; }
+    catch (e) { return null; }
+  }).filter(Boolean);
+  var SCRIPT_LABEL = {};
+  SCRIPTS.forEach(function (s) { SCRIPT_LABEL[s.key] = s.label; });
+  SCRIPT_LABEL.Latin = '英文字母';
+  SCRIPT_LABEL.Other = '其他文字';
+
+  var HIDDEN_RE = /[\p{Default_Ignorable_Code_Point}\p{Cf}]/u;
+  var SPACE_RE = /\p{Z}/u;
+  var MARK_RE = /^\p{M}$/u;
+  var LETTER_RE = /\p{L}/u;
+  var WORD_RE = /[\p{L}\p{N}]/u;
+
+  /* ---------- 小工具 ---------- */
+
+  function hex(c) {
+    var h = c.toString(16).toUpperCase();
+    return h.length < 4 ? ('0000' + h).slice(-4) : h;
+  }
+  function uniq(list) {
+    return list.filter(function (v, i) { return list.indexOf(v) === i; });
+  }
+
+  function scriptOf(ch) {
+    if (ch.charCodeAt(0) < 0x80) {
+      return { key: /[A-Za-z]/.test(ch) ? 'Latin' : null, label: /[A-Za-z]/.test(ch) ? '英文字母' : /[0-9]/.test(ch) ? '數字' : '符號' };
+    }
+    for (var i = 0; i < SCRIPTS.length; i++) {
+      var s = SCRIPTS[i];
+      if (!s.re.test(ch)) continue;
+      if (s.key === 'Common' || s.key === 'Inherited') return { key: null, label: s.label };
+      return { key: s.key, label: s.key === 'Latin' ? '非英文的拉丁字母' : s.label };
+    }
+    return { key: 'Other', label: '其他文字' };
+  }
+
+  function lookName(look) {
+    if (look === '.') return '句點「.」';
+    if (look === '-') return '連字號「-」';
+    if (look === '/') return '斜線「/」';
+    if (/^[0-9]$/.test(look)) return '數字 ' + look;
+    if (/^[A-Z]$/.test(look)) return '英文大寫 ' + look;
+    if (/^[a-z]$/.test(look)) return '英文 ' + look;
+    return '「' + look + '」';
+  }
+
+  function mappedKind(c) {
+    if (IDNA_DOTS.indexOf(c) >= 0) return '中文或全形句點';
+    if (c >= 0xFF01 && c <= 0xFF5E) return '全形字';
+    if (c >= 0x1D400 && c <= 0x1D7FF) return '數學字體';
+    if (c >= 0x2460 && c <= 0x24FF) return '圈圈字';
+    if (c >= 0x2160 && c <= 0x217F) return '羅馬數字';
+    if (c >= 0x2070 && c <= 0x209F || c >= 0x1D2C && c <= 0x1D6A || c >= 0x00B2 && c <= 0x00BA) return '上下標字';
+    if (c >= 0x2100 && c <= 0x214F) return '字母式符號';
+    if (c >= 0xFB00 && c <= 0xFB06) return '連字';
+    return '相容字元';
+  }
+
+  function hiddenName(c) {
+    var name = HIDDEN_NAMES[hex(c)];
+    if (name) return name;
+    if (c >= 0x202A && c <= 0x202E || c >= 0x2066 && c <= 0x2069) return '文字方向控制字元';
+    if (c >= 0xFE00 && c <= 0xFE0F || c >= 0xE0100 && c <= 0xE01EF) return '異體字選擇器';
+    if (c >= 0xE0000 && c <= 0xE007F) return '標籤字元';
+    return '看不見的控制字元';
+  }
+
+  /* ---------- Punycode ---------- */
+
+  // RFC 3492 解碼（xn-- 後面那段 → Unicode）。編碼方向交給瀏覽器的 URL 解析。
+  function punyDecode(input) {
+    var BASE = 36, TMIN = 1, TMAX = 26, SKEW = 38, DAMP = 700;
+    var out = [], n = 128, bias = 72, i = 0;
+    var basic = input.lastIndexOf('-');
+    for (var j = 0; j < basic; j++) {
+      if (input.charCodeAt(j) >= 0x80) throw new Error('非 ASCII');
+      out.push(input.charCodeAt(j));
+    }
+    for (var at = basic > 0 ? basic + 1 : 0; at < input.length;) {
+      var oldi = i, w = 1;
+      for (var k = BASE; ; k += BASE) {
+        if (at >= input.length) throw new Error('不完整');
+        var d = digit(input.charCodeAt(at++));
+        if (d < 0) throw new Error('不是 Punycode 字元');
+        i += d * w;
+        var t = k <= bias ? TMIN : k >= bias + TMAX ? TMAX : k - bias;
+        if (d < t) break;
+        w *= BASE - t;
+      }
+      var len = out.length + 1;
+      bias = adapt(i - oldi, len, oldi === 0);
+      n += Math.floor(i / len);
+      i %= len;
+      if (n > 0x10FFFF) throw new Error('超出範圍');
+      out.splice(i++, 0, n);
+    }
+    return cp.apply(null, out);
+
+    function digit(c) {
+      return c >= 48 && c <= 57 ? c - 22 : c >= 65 && c <= 90 ? c - 65 : c >= 97 && c <= 122 ? c - 97 : -1;
+    }
+    function adapt(delta, points, first) {
+      delta = Math.floor(delta / (first ? DAMP : 2));
+      delta += Math.floor(delta / points);
+      var k = 0;
+      while (delta > (BASE - TMIN) * TMAX / 2) {
+        delta = Math.floor(delta / (BASE - TMIN));
+        k += BASE;
+      }
+      return k + Math.floor((BASE - TMIN + 1) * delta / (delta + SKEW));
+    }
+  }
+
+  /* ---------- 抽出網域 ---------- */
+
+  function parseHost(src) {
+    var out = { scheme: '', userinfo: '', host: '' };
+    var s = src;
+    var m = /^(?:(https?|ftp|wss?):[\/\\]*|([A-Za-z][A-Za-z0-9+.\-]*):\/\/|(mailto):)/i.exec(s);
+    if (m) {
+      out.scheme = (m[1] || m[2] || m[3]).toLowerCase();
+      s = s.slice(m[0].length);
+    } else {
+      s = s.replace(/^[\/\\]+/, '');
+    }
+    // 瀏覽器對 http(s) 網址把 \ 當成 /，網域到第一個 / \ ? # 為止
+    var end = s.search(/[\/\\?#]/);
+    var auth = end < 0 ? s : s.slice(0, end);
+    var at = auth.lastIndexOf('@');
+    if (at >= 0) {
+      out.userinfo = auth.slice(0, at);
+      auth = auth.slice(at + 1);
+    }
+    if (auth.charAt(0) === '[') {
+      var close = auth.indexOf(']');
+      out.host = close < 0 ? auth : auth.slice(0, close + 1);
+    } else {
+      out.host = auth.replace(/:[0-9]*$/, '');
+    }
+    return out;
+  }
+
+  /* ---------- 逐字分類 ---------- */
+
+  function classify(ch) {
+    var c = ch.codePointAt(0);
+    var x = { ch: ch, cp: c, kind: 'ascii', look: ch };
+    function as(kind, look, accent) {
+      x.kind = kind;
+      x.look = look;
+      x.accent = !!accent;
+      return x;
+    }
+    if (c < 0x80) return x;
+    if (IDNA_DOTS.indexOf(c) >= 0) return as('mapped', '.');
+    if (HIDDEN_RE.test(ch)) return as('hidden', '');
+    if (SPACE_RE.test(ch)) return as('space', '');
+
+    // NFKC 後變成 ASCII 的（全形、數學字體、上標…），瀏覽器轉網域時也會這樣轉
+    var nfkc = ch.normalize('NFKC');
+    if (nfkc !== ch && /^[!-~]+$/.test(nfkc)) return as('mapped', nfkc);
+    if (LOOK[c]) return as('homoglyph', LOOK[c]);
+    var single = Array.from(nfkc);
+    if (single.length === 1 && LOOK[single[0].codePointAt(0)]) return as('homoglyph', LOOK[single[0].codePointAt(0)]);
+    if (VAR[c]) return as('variant', VAR[c]);
+
+    // 拆得開成「字母＋附加符號」的：看底下那個字母
+    var parts = Array.from(ch.normalize('NFD'));
+    if (parts.length > 1 && parts.slice(1).every(function (p) { return MARK_RE.test(p); })) {
+      var base = parts[0], marks = parts.slice(1).join(''), bc = base.codePointAt(0);
+      if (/^[A-Za-z]$/.test(base)) return as('variant', base, true);
+      if (LOOK[bc]) return as('homoglyph', (LOOK[bc] + marks).normalize('NFC'), true);
+      if (VAR[bc]) return as('variant', VAR[bc], true);
+    }
+    if (MARK_RE.test(ch)) return as('mark', '');
+    var script = scriptOf(ch);
+    if (script.key === 'Latin' && LETTER_RE.test(ch)) return as('latin', '');
+    if (script.key && WORD_RE.test(ch)) return as('foreign', '');
+    return as('symbol', '');
+  }
+
+  function describe(x) {
+    var s = x.script.label;
+    // 「英文 a」後面接中文時補一個空格
+    var look = lookName(x.look);
+    if (/[A-Za-z0-9]$/.test(look)) look += ' ';
+    switch (x.kind) {
+      case 'homoglyph':
+        return s + '，外觀和' + look + '幾乎一樣' + (x.accent ? '（多了附加符號）' : '');
+      case 'variant':
+        return x.accent ? look + '加上附加符號' : s + '，是帶筆畫或勾的字母，和' + look + '很像';
+      case 'latin': return '不是英文的拉丁字母';
+      case 'mapped': return mappedKind(x.cp) + '，瀏覽器會轉成一般的「' + x.look + '」';
+      case 'hidden': return hiddenName(x.cp) + '，畫面上看不到';
+      case 'space': return '空白字元，網域裡不該出現';
+      case 'mark': return '單獨的附加符號，會疊在前一個字上';
+      case 'symbol': return '符號';
+      default: return s;
+    }
+  }
+
+  /* ---------- 判斷 ---------- */
+
+  // 中日韓網域常見的混用（英文＋漢字＋假名／注音／韓文）不算可疑
+  function allowedMix(names) {
+    var rest = names.filter(function (n) { return n !== 'Latin' && n !== 'Han'; });
+    function only(set) { return rest.every(function (n) { return set.indexOf(n) >= 0; }); }
+    return only(['Hiragana', 'Katakana']) || only(['Bopomofo']) || only(['Hangul']);
+  }
+
+  function scriptList(names) {
+    return names.map(function (n) { return SCRIPT_LABEL[n] || n; }).join('、');
+  }
+
+  function checkLabel(chars, add) {
+    var text = chars.map(function (x) { return x.ch; }).join('');
+    var scripts = {}, letters = 0, ascii = 0, homo = [], homoLetters = 0, fakeSep = [];
+    chars.forEach(function (x) {
+      if (x.kind === 'ascii' || x.kind === 'mapped') {
+        if (/[A-Za-z]/.test(x.look)) { ascii++; letters++; scripts.Latin = true; }
+        return;
+      }
+      var letter = LETTER_RE.test(x.ch);
+      if (letter) {
+        letters++;
+        if (x.script.key) scripts[x.script.key] = true;
+      }
+      if (x.kind !== 'homoglyph') return;
+      if (SEPARATORS.indexOf(x.look) >= 0) fakeSep.push(x);
+      else { homo.push(x); if (letter) homoLetters++; }
+    });
+
+    var names = Object.keys(scripts);
+    var mixed = names.length > 1 && !allowedMix(names);
+    if (homo.length) {
+      var who = uniq(homo.map(function (x) { return x.script.label; })).join('、');
+      if (ascii) {
+        add('danger', '「' + text + '」在英文字母中混入了 ' + homo.length + ' 個' + who + '（標紅的字），只是長得像英文，網域已經不是看起來的那一個。');
+      } else if (homoLetters === letters) {
+        var skel = chars.map(function (x) { return x.kind === 'homoglyph' ? x.look : x.ch; }).join('');
+        add('danger', '「' + text + '」整段都是' + who + '，但每個字都長得像英文，看起來就像「' + skel + '」。');
+      } else if (mixed) {
+        add('danger', '「' + text + '」混用了' + scriptList(names) + '，標紅的字長得像英文字母。');
+      } else {
+        add('warn', '「' + text + '」是用' + scriptList(names) + '寫的，其中 ' + homo.length + ' 個字長得像英文字母；如果你預期的是英文網址，這就不是。');
+      }
+    } else if (mixed) {
+      add('warn', '「' + text + '」混用了' + scriptList(names) + '，正常網域很少這樣寫。');
+    }
+    if (fakeSep.length) {
+      add(ascii ? 'danger' : 'warn', '「' + text + '」裡標紅的 ' + fakeSep.length + ' 個符號看起來像' +
+        uniq(fakeSep.map(function (x) { return lookName(x.look); })).join('、') + '，其實是網域的一部分，網址並不是在那裡斷開。');
+    }
+    return homo.length + fakeSep.length;
+  }
+
+  function isIp(host) {
+    return host.charAt(0) === '[' || /^[0-9]+(\.[0-9]+){3}$/.test(host);
+  }
+
+  function analyze(src) {
+    var r = { src: src, level: 'ok', findings: [], infos: [], display: '', skeleton: '', ascii: '' };
+    function add(level, text) { r.findings.push({ level: level, text: text }); }
+
+    var p = parseHost(src);
+    if (!p.host) {
+      r.level = 'error';
+      add('info', '找不到網域。請貼上完整網址（例如 https://www.example.com/）或網域本身。');
+      return r;
+    }
+
+    if (p.userinfo) {
+      if (p.scheme === 'mailto' || !p.scheme && !HAS_DOT.test(p.userinfo)) {
+        add('info', '看起來是電子郵件地址，檢查的是 @ 後面的網域。');
+      } else {
+        add('warn', '網址裡有 @：前面的「' + p.userinfo + '」只是帳號欄位、不是網域，瀏覽器實際會連到 @ 後面的「' + p.host + '」。');
+      }
+    }
+
+    var host = p.host;
+    if (/%[0-9A-Fa-f]{2}/.test(host)) {
+      try {
+        host = decodeURIComponent(host);
+        add('warn', '網域用了 %XX 編碼，解開後是「' + host + '」；正常網址不需要這樣寫。');
+      } catch (e) { /* 解不開就照原樣檢查 */ }
+    }
+
+    // xn-- 標籤解回 Unicode：畫面上顯示、逐字檢查的都是解開後的樣子
+    var puny = [], bad = [];
+    r.display = host.split(DOT_SPLIT).map(function (part, i) {
+      if (i % 2 || !/^xn--/i.test(part)) return part;
+      try {
+        var u = punyDecode(part.slice(4));
+        // 解出來全是 ASCII 的（例如 xn--zz-）不是正常的 Punycode，照原樣顯示才不會藏掉 xn--
+        if (/^[!-~]*$/.test(u)) throw new Error('沒有非 ASCII 的字');
+        puny.push(part);
+        return u;
+      } catch (e) {
+        bad.push(part);
+        return part;
+      }
+    }).join('').normalize('NFC');
+    if (puny.length) add('info', '輸入裡有 Punycode（' + puny.join('、') + '），已解回實際的字來檢查。');
+    if (bad.length) add('warn', '「' + bad.join('、') + '」不是正確的 Punycode，無法解回原本的字。');
+
+    // 實際網域交給瀏覽器算：大小寫、全形、看不見的字怎麼處理，都以瀏覽器為準
+    try { r.ascii = new URL('http://' + p.host + '/').hostname; } catch (e) { r.ascii = ''; }
+    if (!r.ascii) add('warn', '瀏覽器無法把這個網域轉成有效網址（含網域不允許的字），點了多半打不開，或會被當成搜尋文字。');
+    else if (isIp(r.ascii)) add('info', r.ascii === host ? '這是 IP 位址，沒有網域名稱可以比對。' : '瀏覽器會把它當成 IP 位址 ' + r.ascii + '。');
+
+    r.infos = Array.from(r.display).map(function (ch, i) {
+      var x = classify(ch);
+      x.pos = i + 1;
+      x.script = scriptOf(ch);
+      return x;
+    });
+    r.skeleton = r.infos.map(function (x) {
+      if (x.kind === 'homoglyph' || x.kind === 'mapped') return x.look;
+      if (x.kind === 'hidden' || x.kind === 'space' || x.kind === 'mark') return '';
+      return x.ch;
+    }).join('');
+
+    // 逐段檢查
+    var label = [], flagged = 0;
+    r.infos.concat([null]).forEach(function (x) {
+      if (x && !(x.ch === '.' || x.kind === 'mapped' && x.look === '.')) { label.push(x); return; }
+      if (label.length) flagged += checkLabel(label, add);
+      label = [];
+    });
+
+    // 整個網域一起數的
+    function kinds() {
+      var list = [].slice.call(arguments);
+      return r.infos.filter(function (x) { return list.indexOf(x.kind) >= 0; });
+    }
+    function chars(xs) { return uniq(xs.map(function (x) { return x.ch; })).join('、'); }
+    var variant = kinds('variant', 'latin');
+    if (variant.length) add('warn', '有 ' + variant.length + ' 個帶附加符號、筆畫，或其他非英文的拉丁字母（' + chars(variant) + '），外觀接近英文字母。法文、德文等網域本來就會這樣寫，請確認是不是你預期的網域。');
+    var mapped = kinds('mapped');
+    if (mapped.length) add('warn', '有 ' + mapped.length + ' 個全形或特殊字體的字（標藍），瀏覽器會自動轉成一般的英文、數字或符號' + (r.ascii ? '，實際網域是「' + r.ascii + '」' : '') + '；正常網址不會這樣寫。');
+    var hidden = kinds('hidden', 'space');
+    if (hidden.length) add('warn', '有 ' + hidden.length + ' 個看不見的字（' + uniq(hidden.map(function (x) { return x.kind === 'space' ? '空白' : hiddenName(x.cp); })).join('、') + '），畫面上看不出來，正常網址不會有。');
+    var marks = kinds('mark');
+    if (marks.length) add('warn', '有 ' + marks.length + ' 個單獨的附加符號，會疊在前一個字上，讓它看起來像別的字。');
+    var symbols = kinds('symbol');
+    if (symbols.length) add('warn', '有 ' + symbols.length + ' 個符號（' + chars(symbols) + '），一般網域只會有英文字母、數字與連字號。');
+    var foreign = kinds('foreign');
+    if (foreign.length && !flagged) {
+      add('info', '含 ' + foreign.length + ' 個' + uniq(foreign.map(function (x) { return x.script.label; })).join('、') + '（標灰），屬於國際化網域，不是長得像英文的字。');
+    }
+    if (r.infos.every(function (x) { return x.kind === 'ascii'; }) && !isIp(r.ascii || host)) {
+      add('info', '網域全部是一般的英文字母、數字與符號。');
+    }
+
+    var RANK = { danger: 2, warn: 1, info: 0 };
+    r.findings.sort(function (a, b) { return RANK[b.level] - RANK[a.level]; });
+    r.level = r.findings.some(function (f) { return f.level === 'danger'; }) ? 'danger'
+      : r.findings.some(function (f) { return f.level === 'warn'; }) ? 'warn' : 'ok';
+    return r;
+  }
+
+  /* ---------- 從輸入找出網址 ---------- */
+
+  var URL_IN_TEXT = /[A-Za-z][A-Za-z0-9+.\-]*:\/\/[^\s<>"'「」『』【】（）]+/g;
+  var LEAD = /^[<("'「『【（]+/;
+  var TRAIL = /[>)"'」』】），,;；。、!！?？.:：]+$/;
+  var MAX = 50;
+
+  function tokens(text) {
+    var out = [];
+    text.split(/\r\n|\r|\n/).forEach(function (line) {
+      line = line.trim();
+      if (!line) return;
+      var found = line.match(URL_IN_TEXT);
+      var parts = found || line.split(/\s+/);
+      // 沒有 https:// 又有好幾段時，只留像網域的（有點或 xn--）
+      if (!found && parts.length > 1) parts = parts.filter(function (t) { return HAS_DOT.test(t) || /xn--/i.test(t); });
+      parts.forEach(function (t) {
+        t = t.replace(LEAD, '').replace(TRAIL, '');
+        if (t) out.push(t);
+      });
+    });
+    return out;
+  }
+
+  /* ---------- 畫面 ---------- */
+
+  var LEVEL = {
+    danger: { badge: '高風險', title: '有偽裝成英文字母的字' },
+    warn: { badge: '注意', title: '有需要留意的地方' },
+    ok: { badge: '正常', title: '沒有發現偽裝字元' },
+    error: { badge: '無法判讀', title: '找不到網域' }
+  };
+  var BOXED = { hidden: 1, space: 1, mark: 1 };
+  var DOTTED = cp(0x25CC);   // 附加符號底下墊的虛線圓圈
+
+  var input = document.getElementById('input');
+  var results = document.getElementById('results');
+  var bar = document.getElementById('bar');
+  var summary = document.getElementById('summary');
+  var inMeta = document.getElementById('inMeta');
+  var emptyState = results.firstElementChild;
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  function glyphText(x) {
+    if (x.kind === 'mark') return DOTTED + x.ch;
+    if (BOXED[x.kind]) return hex(x.cp);
+    return x.ch;
+  }
+
+  function renderDomain(infos) {
+    var box = el('div', 'domain');
+    var plain = '';
+    function flush() {
+      if (plain) box.appendChild(document.createTextNode(plain));
+      plain = '';
+    }
+    infos.forEach(function (x) {
+      if (x.kind === 'ascii') { plain += x.ch; return; }
+      flush();
+      var s = el('span', 'ch k-' + (BOXED[x.kind] ? 'hidden' : x.kind), glyphText(x));
+      s.title = 'U+' + hex(x.cp) + ' · ' + describe(x);
+      box.appendChild(s);
+    });
+    flush();
+    return box;
+  }
+
+  function renderChars(infos) {
+    // 同一個字出現好幾次只列一行，位置合在一起
+    var list = [], seen = {};
+    infos.forEach(function (x) {
+      if (x.kind === 'ascii' || x.kind === 'foreign') return;
+      if (seen[x.ch]) { seen[x.ch].at.push(x.pos); return; }
+      seen[x.ch] = x;
+      x.at = [x.pos];
+      list.push(x);
+    });
+    if (!list.length) return null;
+    var ol = el('ol', 'chars');
+    ol.setAttribute('aria-label', '逐字說明');
+    list.slice(0, 40).forEach(function (x) {
+      var li = el('li');
+      li.appendChild(el('span', 'glyph k-' + (BOXED[x.kind] ? 'hidden' : x.kind), glyphText(x)));
+      if (x.look) {
+        li.appendChild(el('span', 'approx', '≈'));
+        var look = el('span', 'look', x.look);
+        look.setAttribute('aria-label', '看起來像 ' + x.look);
+        li.appendChild(look);
+      } else {
+        li.appendChild(el('span'));
+        li.appendChild(el('span'));
+      }
+      var info = el('div', 'ch-info');
+      info.appendChild(el('div', 'ch-meta', '第 ' + x.at.join('、') + ' 字 · U+' + hex(x.cp) + ' · ' + x.script.label));
+      info.appendChild(el('div', 'ch-desc', describe(x)));
+      li.appendChild(info);
+      ol.appendChild(li);
+    });
+    if (list.length > 40) ol.appendChild(el('li', 'more', '還有 ' + (list.length - 40) + ' 種字沒有列出。'));
+    return ol;
+  }
+
+  function fact(dl, term, value, cls) {
+    dl.appendChild(el('dt', null, term));
+    var dd = el('dd', cls, value);
+    dl.appendChild(dd);
+    return dd;
+  }
+
+  function renderCard(r) {
+    var card = el('article', 'panel res lv-' + r.level);
+    var head = el('header', 'res-head');
+    head.appendChild(el('span', 'badge', LEVEL[r.level].badge));
+    head.appendChild(el('h2', 'res-title', LEVEL[r.level].title));
+    var src = el('span', 'res-src', r.src);
+    src.title = r.src;
+    head.appendChild(src);
+    card.appendChild(head);
+
+    var body = el('div', 'res-body');
+    if (r.display) {
+      body.appendChild(renderDomain(r.infos));
+      var dl = el('dl', 'facts');
+      // 俄文等網域只有部分字像英文時，換掉一半的字串沒有參考價值，不顯示
+      if (r.skeleton !== r.display && (r.level === 'danger' || /^[!-~]*$/.test(r.skeleton))) fact(dl, '看起來像', r.skeleton, 'looks');
+      var real = fact(dl, '實際網域', r.ascii || '無法轉換');
+      if (r.ascii) {
+        var copy = el('button', 'btn sm', '複製');
+        copy.type = 'button';
+        copy.setAttribute('data-copy', r.ascii);
+        real.appendChild(copy);
+        if (/(^|\.)xn--/i.test(r.ascii)) real.appendChild(el('span', 'hint', '有非英文的字，瀏覽器與 DNS 用的是這串 xn-- 開頭的 Punycode。'));
+      }
+      body.appendChild(dl);
+    }
+    var ul = el('ul', 'findings');
+    r.findings.forEach(function (f) { ul.appendChild(el('li', 'f-' + f.level, f.text)); });
+    body.appendChild(ul);
+    var chars = renderChars(r.infos);
+    if (chars) body.appendChild(chars);
+    card.appendChild(body);
+    return card;
+  }
+
+  function run() {
+    var list = tokens(input.value);
+    results.textContent = '';
+    if (!list.length) {
+      results.appendChild(emptyState);
+      bar.hidden = true;
+      inMeta.textContent = '';
+      return;
+    }
+    var shown = list.slice(0, MAX);
+    var count = { danger: 0, warn: 0, ok: 0, error: 0 };
+    shown.forEach(function (src) {
+      var r = analyze(src);
+      count[r.level]++;
+      results.appendChild(renderCard(r));
+    });
+    inMeta.textContent = list.length > MAX ? '共 ' + list.length + ' 筆，只檢查前 ' + MAX + ' 筆' : shown.length + ' 筆';
+
+    summary.textContent = '';
+    var total = el('b', null, '檢查 ' + shown.length + ' 筆');
+    summary.appendChild(total);
+    ['danger', 'warn', 'ok', 'error'].forEach(function (lv) {
+      if (count[lv]) summary.appendChild(el('span', 'sum-chip lv-' + lv, LEVEL[lv].badge + ' ' + count[lv]));
+    });
+    bar.hidden = false;
+  }
+
+  var timer = 0;
+  input.addEventListener('input', function () {
+    clearTimeout(timer);
+    timer = setTimeout(run, 120);
+  });
+
+  /* ---------- 按鈕 ---------- */
+
+  var toastEl = document.getElementById('toast');
+  var toastTimer = 0;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('on'); }, 1800);
+  }
+
+  function copyText(text) {
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      ta.remove();
+      toast(ok ? '已複製' : '無法複製，請手動選取');
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(function () { toast('已複製'); }, fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  // 範例的網域都是虛構的。會冒充英文的字一律用碼位組出來，原始碼裡看得出是哪個字
+  function sample() {
+    var cocoa = cp(0x0441, 0x043E, 0x0441, 0x043E, 0x0430) + '.example';   // 整段都是西里爾字母
+    try { cocoa = new URL('http://' + cocoa + '/').hostname; } catch (e) { /* 舊瀏覽器就直接顯示原字 */ }
+    var wide = 'example'.replace(/[!-~]/g, function (c) { return cp(c.charCodeAt(0) + 0xFEE0); });
+    return [
+      'https://www.ex' + cp(0x0430) + 'mple.com/login',               // 西里爾字母 a 冒充英文 a
+      'https://' + cocoa + '/',                                       // Punycode，解開後整段都是仿冒字
+      'https://www.example.com' + cp(0x2215) + 'login.example.net/',  // 除號斜線冒充 /
+      'https://caf' + cp(0x00E9) + '.example/menu',                   // 帶附加符號的 e
+      'https://' + wide + '.com/',                                    // 全形字
+      'https://exa' + cp(0x200B) + 'mple.com/',                       // 零寬空格
+      'https://www.example.com@login.example.net/',                   // @ 前面不是網域
+      'https://測試.tw/',
+      'https://www.example.com/'
+    ].join('\n');
+  }
+
+  var ACTIONS = {
+    paste: function () {
+      if (!navigator.clipboard || !navigator.clipboard.readText) { toast('瀏覽器不允許讀取剪貼簿，請在框內按 Ctrl+V 貼上'); return; }
+      navigator.clipboard.readText().then(function (text) {
+        input.value = text;
+        run();
+      }, function () { toast('瀏覽器不允許讀取剪貼簿，請在框內按 Ctrl+V 貼上'); });
+    },
+    sample: function () {
+      input.value = sample();
+      run();
+    },
+    clear: function () {
+      input.value = '';
+      run();
+      input.focus();
+    }
+  };
+
+  document.addEventListener('click', function (e) {
+    var act = e.target.closest('[data-act]');
+    if (act) { ACTIONS[act.getAttribute('data-act')](); return; }
+    var copy = e.target.closest('[data-copy]');
+    if (copy) copyText(copy.getAttribute('data-copy'));
+  });
+
+  // file:// 下瀏覽器不會自動開目錄裡的 index.html
+  if (location.protocol === 'file:') document.getElementById('back').href = '../index.html';
+
+  run();
+
+  window.UrlCheck = { analyze: analyze, punyDecode: punyDecode, classify: classify };
+})();
+</script>
+</body>
+</html>
