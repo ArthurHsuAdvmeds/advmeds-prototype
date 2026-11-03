@@ -28,94 +28,23 @@
   LOOKALIKE / VARIANT 是常見字元的整理，不是 Unicode confusables.txt 全表；沒標紅不代表一定安全。
   表裡只寫碼位、不放字元本身：那些字在原始碼裡和英文字母分不出來，改檔時很容易改錯。
   輸入的網址不存 localStorage（可能帶著登入連結的 token）。
+
+  樣式用共用的 ../assets/tool.css；結果是一張張卡片、不是一段文字，所以不走 tool.js 的 SmallTool.mount()，
+  貼上、範例、清除、複製、提示訊息都在這頁自己接。
   ============================================================================
 -->
 
+<link rel="stylesheet" href="../assets/tool.css?v=20261012c">
 <style>
-:root{
-  --blue-50:#E6EFFC;--blue-500:#2F6FCF;--blue-700:#1F4F99;
-  --grey-0:#FFFFFF;--grey-100:#F0F0F0;--grey-200:#E0E0E0;--grey-400:#C4C4C4;
-  --grey-600:#818181;--grey-700:#666666;--grey-900:#333333;
-  --bg:var(--grey-100);--panel:var(--grey-0);--line:var(--grey-200);--line-strong:var(--grey-400);
-  --ink:var(--grey-900);--ink-2:var(--grey-700);--ink-3:var(--grey-600);
-  --chip-bg:var(--grey-100);
-  --accent:var(--blue-500);--accent-soft:var(--blue-50);--accent-ink:var(--blue-700);
-  --ok-bg:#F0FBD7;--ok-ink:#3B7A12;
-  --warn-bg:#FDF1E4;--warn-ink:#A85A12;
-  --err-bg:#FDECEC;--err-ink:#B3261E;
-  --radius-md:4px;--radius-lg:5px;
-  --shadow-card:0px 4px 6px -4px rgba(0,0,0,.1),0px 10px 15px -3px rgba(0,0,0,.1);
-  --font-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  --font-mono:ui-monospace,SFMono-Regular,"Cascadia Mono",Menlo,Consolas,"Microsoft JhengHei",monospace;
-  color-scheme:light;
-}
-@media (prefers-color-scheme:dark){
-  :root{
-    --bg:#16191d;--panel:#1f2328;--line:#30363d;--line-strong:#444c56;
-    --ink:#e6e8ea;--ink-2:#a8b0b8;--ink-3:#7d8590;
-    --chip-bg:#2a2f36;
-    --accent-soft:#1b2a44;--accent-ink:#9dbcf0;
-    --ok-bg:#223317;--ok-ink:#b3e07a;
-    --warn-bg:#3a2816;--warn-ink:#f3b77a;
-    --err-bg:#3b1d1d;--err-ink:#f5a3a0;
-    --shadow-card:0 1px 2px rgba(0,0,0,.4);
-    color-scheme:dark;
-  }
-}
-
-*{box-sizing:border-box}
-body{
-  margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);
-  -webkit-font-smoothing:antialiased;
-}
-code,textarea{font-variant-ligatures:none}
-
-.app{display:flex;flex-direction:column;gap:14px;max-width:1080px;margin:0 auto;padding:16px 20px 40px}
-
-/* ---------- 頁首 ---------- */
-.top{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 14px}
-.back{
-  font-size:13px;font-weight:500;color:var(--ink-2);text-decoration:none;
-  padding:6px 10px;border-radius:100px;background:var(--panel);box-shadow:inset 0 0 0 1px var(--line);
-}
-.back:hover{color:var(--accent-ink);box-shadow:inset 0 0 0 1px var(--accent)}
-.back:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-.top h1{margin:0;font-size:20px;font-weight:700}
-.lead{margin:0;font-size:13px;color:var(--ink-2);line-height:1.7}
-.lead code{
-  font-family:var(--font-mono);font-size:12px;padding:2px 6px;white-space:nowrap;
-  background:var(--panel);border-radius:var(--radius-md);box-shadow:inset 0 0 0 1px var(--line);
-}
-
-/* ---------- 按鈕 ---------- */
-.btn{
-  font:inherit;font-size:13px;font-weight:500;line-height:1;white-space:nowrap;
-  color:var(--ink-2);background:var(--panel);border:0;border-radius:var(--radius-md);
-  box-shadow:inset 0 0 0 1px var(--line-strong);padding:8px 12px;cursor:pointer;
-  transition:background .15s,color .15s,box-shadow .15s;
-}
-.btn:hover{color:var(--accent-ink);box-shadow:inset 0 0 0 1px var(--accent)}
-.btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+/* 設計 token、按鈕、頁首、輸入框外框（.pane）、提示訊息用共用的 tool.css；
+   這頁的結果是一張張卡片、整頁捲動，不是左右兩欄，所以覆寫 .app 與 #input 的高度 */
+.app{height:auto;min-height:100vh;min-height:100dvh;max-width:1080px;gap:14px;padding-bottom:40px}
+#input{flex:none;height:140px;min-height:84px;resize:vertical;padding:12px 14px;font-size:14px}
 .btn.sm{font-size:12px;padding:5px 8px}
-
-/* ---------- 輸入 ---------- */
 .panel{
   background:var(--panel);border-radius:var(--radius-lg);
   box-shadow:inset 0 0 0 1px var(--line),var(--shadow-card);
 }
-.input-panel:focus-within{box-shadow:inset 0 0 0 1px var(--accent),var(--shadow-card)}
-.pane-head{
-  display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;
-  min-height:48px;padding:8px 10px 8px 14px;border-bottom:1px solid var(--line);
-}
-.pane-head h2{margin:0;font-size:14px;font-weight:700}
-.meta{margin-right:auto;font-size:12px;color:var(--ink-3)}
-#input{
-  display:block;width:100%;height:140px;min-height:84px;resize:vertical;border:0;outline:none;
-  padding:12px 14px;background:transparent;color:inherit;word-break:break-all;
-  font-family:var(--font-mono);font-size:14px;line-height:1.6;
-}
-#input::placeholder{color:var(--ink-3);font-family:var(--font-body)}
 
 /* ---------- 結果上方：統計與圖例 ---------- */
 .bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px 18px;font-size:12px;color:var(--ink-2)}
@@ -203,18 +132,8 @@ code,textarea{font-variant-ligatures:none}
 .about .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:0}
 .about code{font-family:var(--font-mono);font-size:12px;padding:1px 5px;border-radius:var(--radius-md);background:var(--chip-bg)}
 
-/* ---------- 提示訊息 ---------- */
-#toast{
-  position:fixed;left:50%;bottom:28px;z-index:10;transform:translate(-50%,16px);
-  max-width:calc(100vw - 32px);padding:9px 16px;border-radius:var(--radius-lg);
-  background:#22272e;color:#fff;font-size:13px;line-height:1.5;
-  opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;
-}
-#toast.on{opacity:1;transform:translate(-50%,0)}
-
-@media (max-width:640px){
-  .app{padding:14px 16px 28px}
-  /* 16px 以上 iOS 才不會在點輸入框時自動放大畫面 */
+@media (max-width:760px){
+  /* 上面覆寫的 14px 會蓋掉 tool.css 手機版的 16px；16px 以上 iOS 才不會在點輸入框時自動放大畫面 */
   #input{font-size:16px}
   .res-head{flex-wrap:wrap;gap:6px 10px}
   .res-src{flex-basis:100%;margin-left:0}
@@ -222,21 +141,18 @@ code,textarea{font-variant-ligatures:none}
   .facts{grid-template-columns:minmax(0,1fr);gap:2px}
   .facts dd + dt{margin-top:8px}
 }
-@media (prefers-reduced-motion:reduce){
-  .btn,#toast{transition:none}
-}
 </style>
 </head>
 <body>
 <div class="app">
 
   <header class="top">
-    <a class="back" href="../" id="back">← 原型總覽</a>
+    <a class="back" href="../" id="back">← 小工具</a>
     <h1>網址偽裝字元檢查</h1>
     <p class="lead">貼上網址或網域，檢查網域裡有沒有「長得像英文字母、其實不是」的字，例如把英文的 a 換成外觀一模一樣的西里爾字母，並列出瀏覽器實際會連到的網域。一行一個，可以一次檢查多個；網址前後夾著其他文字時，<code>https://</code> 開頭的網址會自動抓出來。資料只在你的瀏覽器裡處理，不會上傳也不會保存。</p>
   </header>
 
-  <section class="panel input-panel" aria-labelledby="inTitle">
+  <section class="pane" aria-labelledby="inTitle">
     <div class="pane-head">
       <h2 id="inTitle">網址</h2>
       <span class="meta" id="inMeta"></span>
