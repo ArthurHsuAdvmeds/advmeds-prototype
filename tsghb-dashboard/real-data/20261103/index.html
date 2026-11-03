@@ -12514,7 +12514,7 @@ document.addEventListener('DOMContentLoaded', () => {
     geoCasePoints = geoCountyCases()
       .filter(c=>c.lat!=null && c.lng!=null)
       .map(c=>({
-        id:c.id, district:c.district || '未填行政區', code:codeByName.get(c.district) || '', level:c.risk || 'none',
+        id:c.id, district:c.district || '行政區不詳', code:codeByName.get(c.district) || '', level:c.risk || 'none',
         lng:c.lng, lat:c.lat, siteKey:c.addressKey || `${c.lat.toFixed(5)},${c.lng.toFixed(5)}`,
         date:c.day.replaceAll('-','/')
       }));
@@ -21248,14 +21248,14 @@ html:not(.rd-ready) .dashboard .page{ visibility:hidden; }
     const kpis=[cases.length,status('pending_assign'),status('assigned'),status('closed'),status('not_referred')];
     $$('#basic .basic-kpi-value').forEach((el,i)=>{ el.textContent=fmtInt(kpis[i]); });
 
-    /* 臺北市 12 區（沒有案件也列出），其後依序是外縣市（行政區對不到臺北市 12 區）、未填行政區 */
+    /* 臺北市 12 區（沒有案件也列出），其後依序是外縣市（行政區對不到臺北市 12 區）、行政區不詳（空值） */
     const tp=cases.filter(c=>c.county==='臺北市');
     const rows=TAIPEI_DISTRICTS.map((name,i)=>({ name:name.replace(/區$/,''), value:count(tp,c=>c.district===name), i }))
       .sort((a,b)=>b.value-a.value || a.i-b.i);
     const outside=count(cases,c=>c.district && c.county!=='臺北市');
     const unknown=count(cases,c=>!c.district);
     if(outside) rows.push({ name:'外縣市', value:outside });
-    if(unknown) rows.push({ name:'未填', value:unknown });
+    if(unknown) rows.push({ name:'不詳', value:unknown });
     const dMax=niceMax(Math.max(1,...rows.map(r=>r.value)));
     const dBars=$('#basic .district-bars');
     if(dBars) dBars.innerHTML=rows.map(r=>
@@ -21265,12 +21265,12 @@ html:not(.rd-ready) .dashboard .page{ visibility:hidden; }
 
     const ages=AGE_BINS.map(([lo,hi,label])=>({ label, value:count(cases,c=>c.age!=null && c.age>=lo && c.age<hi) }));
     const noAge=count(cases,c=>c.age==null || c.age<0);
-    if(noAge) ages.push({ label:'未填', value:noAge });
+    if(noAge) ages.push({ label:'不詳', value:noAge });
     const aMax=niceMax(Math.max(1,...ages.map(a=>a.value)));
     const aBars=$('#basic .age-chart .bars');
     if(aBars) aBars.innerHTML=ages.map(a=>{
       const h=barHeight(a.value,aMax).toFixed(1);
-      const tip=a.label==='未填' ? `未填年齡｜${a.value} 人次` : `${a.label} 歲｜${a.value} 人次`;
+      const tip=a.label==='不詳' ? `年齡不詳｜${a.value} 人次` : `${a.label} 歲｜${a.value} 人次`;
       return `<div class="bar-col" data-tooltip="${tip}" style="--age-bar-height:${h}%"><div class="vbar" style="height:${h}%"></div><span>${a.label}</span></div>`;
     }).join('');
     setAxis($('#basic .age-chart .y-axis'),aMax);

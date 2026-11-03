@@ -116,8 +116,8 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
   主選單只剩基本資料／風險／效率／通報者／指揮儀表板，成效、AI、醫療機構端、SNQ 四頁與指揮板「同期比較」連同專屬 JS 都已刪除。
   畫面數字全部由同資料夾的 `data.json`（`{"emg":[...]}`，一筆緊急醫療通報一個物件，可帶註解）即時計算，原型的模擬資料 JS 已移除；
   欄位、代碼對照（其中網絡代碼、初評風險取 CTRS 等仍待確認）與指標算法見其 [CLAUDE.md](tsghb-dashboard/real-data/20261103/CLAUDE.md)。
-  repo 上的 `data.json` 是 420 筆虛構範例資料（`"sample": true`）；本機已換成使用者提供的 14 筆資料，
-  **是否進版控尚未決定，未經使用者同意不要 commit／push `data.json`**（repo 公開）。
+  目前 `data.json` 是使用者提供的 14 筆資料，由使用者自行 commit 推上（`726145f`）；之後換資料要不要 push 由使用者決定（repo 公開）。
+  先前的 420 筆虛構範例資料留在 commit `b300075`。
 - **`tsghb-dashboard/kpi/` 整個資料夾不進版控、不部署**（已列入根目錄 `.gitignore`），內容只存在使用者本機；不要 `git add -f` 加回來。
 - `tsghb-dashboard/kpi/kpi.csv` 是依 v6 實際畫面整理的各分頁指標清單（UTF-8 含 BOM，供 Excel 直接開啟），
   欄位為項次、主分頁、次分頁、指標名稱、圖表種類、重複項次、計算公式、是否依賴HIS資料。儀表板增刪指標時要同步更新。
