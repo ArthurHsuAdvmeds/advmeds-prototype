@@ -20964,6 +20964,17 @@ html:not(.rd-ready) .dashboard .page{ visibility:hidden; }
   background:#218fee; color:#fff; font-weight:600;
 }
 .rd-pick input{ display:none; }
+/* ≥900px：狀態列疊在頁首右下角，不佔版面高度。舊層在 ≥1500px 把 .dashboard 鎖成視窗高度並 overflow:hidden，
+   狀態列多佔的 22px 會把各頁底部擠出畫面、又捲不到（v7 沒有這一列）。
+   不設 top 時絕對定位留在原本的位置（緊接頁首之後），再往上移自身高度＋4px 貼齊頁首底邊；寬度限制在標題右側的空白內，過長時往上換行。
+   錯誤狀態（含選檔按鈕）維持在原位，那時各頁是隱藏的，不影響版面 */
+@media (min-width:900px){
+  .dashboard{ position:relative; }
+  .rd-status:not(.rd-error){
+    position:absolute; right:0; margin:0; max-width:calc(50% - 190px);
+    transform:translateY(calc(-100% - 4px));
+  }
+}
 
 /* 風險頁：某量表在區間內沒有任何初評資料 */
 #risk .risk-stack.rd-empty{ align-items:center; justify-content:center; }
@@ -20984,6 +20995,23 @@ html:not(.rd-ready) .dashboard .page{ visibility:hidden; }
 @media (min-width:900px){
   html body .dashboard #reporter.page .reporter-bar-chart{ padding-top:24px !important; }
 }
+
+/* 效率頁處理流程：箭頭線上方的數字（top:-33px、行高 normal）與「小時」（top:-12px）互相重疊，「小時」底邊還壓在 4px 的箭頭線上（v7 原型就如此）；
+   兩者改行高 1 並各自上移，「小時」與箭頭線留 2px。
+   ≤760px 是直式流程（數字在 4px 寬的直線右側），「小時」的定位框只有 4px 寬會被擠成兩行、壓到數字，改為不換行並排在數字正下方 */
+@media (min-width:761px){
+  html body .dashboard #efficiency .eff-v79-flow-seg strong{ top:-36px; line-height:1; }
+  html body .dashboard #efficiency .eff-v79-flow-seg>span{ top:-14px; line-height:1; }
+}
+@media (max-width:760px){
+  html body .dashboard #efficiency .eff-v79-flow-seg strong{ top:2px; line-height:1; }
+  html body .dashboard #efficiency .eff-v79-flow-seg>span{ top:24px; line-height:1; white-space:nowrap; }
+}
+
+/* 指揮板「年度結案率」圓環：舊層的圓環寬度跟視窗高度（vh）走、中間數字字級跟視窗寬度（vw）走，≥1200px 時數字比圓環中間的白色區（寬 64%）還寬（v7 原型就如此）。
+   改為字級依圓環本身的寬度（container query 的 cqi）：19cqi 時最長的「100.0%」約為圓環寬的 55%，放得進白色區 */
+html body .dashboard #command .closure-v74-donut{ container-type:inline-size; }
+html body .dashboard #command .closure-v74-donut .closure-v74-donut-center strong{ font-size:19cqi !important; }
 </style>
 
 <script id="real-data">
