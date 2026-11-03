@@ -20978,6 +20978,12 @@ html:not(.rd-ready) .dashboard .page{ visibility:hidden; }
 @media (max-width:899px){
   html body .dashboard #reporter.page #reporterTypeFilter{ grid-template-columns:minmax(0,1fr) !important; }
 }
+
+/* 通報者頁直條圖：數值標在長條上方約 20px，圖區頂端又緊貼軸標題，長條滿格（回收率 100%、5.0 分、件數等於刻度上限）時數值會壓到標題；
+   在圖區上方預留標籤高度，軸刻度與長條一起下移、仍對齊（≤899px 改橫條，不受影響） */
+@media (min-width:900px){
+  html body .dashboard #reporter.page .reporter-bar-chart{ padding-top:24px !important; }
+}
 </style>
 
 <script id="real-data">
