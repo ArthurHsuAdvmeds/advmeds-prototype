@@ -20974,11 +20974,6 @@ html:not(.rd-ready) .dashboard .page{ visibility:hidden; }
 #districtMapDialog .geo-rank-bar.risk>i.none{ background:#c3cad4 !important; }
 #districtMapDialog .geo-tip-risk.none{ color:#667085; }
 
-/* 通報者頁：沒有提供 surveys.json 時的說明 */
-#reporter .rd-empty-note{
-  align-self:center; width:100%; text-align:center; color:#98a2b3; font-size:13px;
-}
-
 /* 通報類別篩選只剩一顆鈕；舊層在 ≤680px 把 #reporterTypeFilter 鎖成三等分，單顆鈕只佔 1/3，改成撐滿（與風險頁一致） */
 @media (max-width:899px){
   html body .dashboard #reporter.page #reporterTypeFilter{ grid-template-columns:minmax(0,1fr) !important; }
@@ -20987,39 +20982,42 @@ html:not(.rd-ready) .dashboard .page{ visibility:hidden; }
 
 <script id="real-data">
 /* =========================================================================
-   real-data：畫面上的數字全部由 data/ 內的 JSON 計算，取代原型的模擬資料
+   real-data：畫面上的數字全部由同資料夾的 data.json 計算，取代原型的模擬資料
    -------------------------------------------------------------------------
-   檔案與欄位定義見同資料夾 CLAUDE.md。重點：
-   ・cases.json 必要；meta.json、assessments.json、surveys.json 缺檔時，用到的圖表顯示「無資料」
-   ・每個檔案可以是陣列，或 {"records":[...]}；最外層有 "sample": true 時頁首標示「範例資料」
-   ・本檔只保留緊急醫療：category_code 不是 emergency 的案件載入時直接排除
-   ・所有日期篩選都以 reported_at（網絡完成通報時間）為準，以臺北時間切日
-   ・以 file:// 開啟時瀏覽器不允許網頁讀取 JSON，頁首改為「選擇 data 資料夾」
+   檔案格式見同資料夾 CLAUDE.md。重點：
+   ・data.json 最外層是 {"emg":[...]}，一筆緊急醫療通報一個物件；本檔只保留緊急醫療，其他鍵（之後的優化計畫）不讀
+   ・允許行註解（//）、區塊註解與結尾多餘的逗號；最外層有 "sample": true 時頁首標示「範例資料」
+   ・最外層可加 "asOf"（資料截止日）、"dataStart"（資料起日），省略時取最晚／最早一筆通報的日期
+   ・所有日期篩選都以 timePoint.reportedAt（網絡完成通報時間）為準，以臺北時間切日
+   ・以 file:// 開啟時瀏覽器不允許網頁讀取 JSON，頁首改為「選擇 data.json」
    地圖模組（主腳本的 geoCases()）透過 window.RD.basicCases() 取基本資料頁目前區間的案件。
    ========================================================================= */
 (()=>{
   'use strict';
 
-  const DATA_DIR = 'data/';
-  const FILES = { meta:'meta.json', cases:'cases.json', assessments:'assessments.json', surveys:'surveys.json' };
+  const DATA_FILE = 'data.json';
+  /* reporterDepartment 代碼 → 網絡。
+     ※ 待確認：data.json 只註明「0-7 為七大網絡、8 為其他」，沒有說哪個代碼是哪個網絡；
+       0–6 暫依 db_desc 的 ref_network_unit 順序對應，7 尚未對應（出現時列為「代碼 7（未對應）」） */
+  const DEPARTMENT = { 0:'social', 1:'police', 2:'civil', 3:'health', 4:'education', 5:'fire', 6:'labor', 8:'other' };
   const NETWORKS = [
     ['social','社政'],['police','警察'],['civil','民政'],['health','衛政'],
-    ['education','教育'],['fire','消防'],['labor','勞政']
+    ['education','教育'],['fire','消防'],['labor','勞政'],['other','其他']
   ];
   const TAIPEI_DISTRICTS = ['松山區','信義區','大安區','中山區','中正區','大同區','萬華區','文山區','南港區','內湖區','士林區','北投區'];
   const AGE_BINS = [[0,10,'0-10'],[10,20,'10-20'],[20,30,'20-30'],[30,40,'30-40'],[40,50,'40-50'],[50,60,'50-60'],[60,70,'60-70'],[70,80,'70-80'],[80,Infinity,'80+']];
-  const LEVELS = ['low','medium','high'];
+  const LEVELS = ['low','medium','high'];   /* assess 的 0／1／2 */
   const LEVEL_LABEL = { low:'輕度／低風險', medium:'中度／中風險', high:'重度／高風險' };
-  /* assessments.json 的 scale_code → 風險頁 .risk-stack[data-key] */
-  const SCALE_ROW = { risk_triage:'scale', gaf:'gaf', bsrs5:'bsrs', cgis:'cgi' };
-  const GENDER = { M:'M', MALE:'M', '男':'M', F:'F', FEMALE:'F', '女':'F' };
+  /* assess 的鍵 → 風險頁 .risk-stack[data-key]；CTRS 是風險檢傷評估 */
+  const SCALE_ROW = { CTRS:'scale', GAF:'gaf', BSRS5:'bsrs', CGIS:'cgi' };
+  const GENDER = { 10:'M', 20:'F' };
+  const ACCEPT_WAY = { 0:'phone', 1:'phone_dispatch' };
   const HOUR = 3600000;
   const TAIPEI_OFFSET = 8*HOUR;   /* 臺北時間固定 UTC+8，沒有日光節約 */
 
   const RD = window.RD = {
     loaded:false,
     cases:[], asOf:null, dataStart:null, sample:false,
-    has:{ assessments:false, surveys:false },
     ranges:{},
     basicCases(){ const r=RD.ranges.basic; return r ? casesIn(r.start,r.end) : []; }
   };
@@ -21035,7 +21033,7 @@ html:not(.rd-ready) .dashboard .page{ visibility:hidden; }
   const pctText = (n,d)=>d>0 ? `${(n/d*100).toFixed(1)}%` : '—';
   const slashDate = d=>d ? d.replaceAll('-','/') : '—';
   const normName = s=>s==null || String(s).trim()==='' ? null : String(s).trim().replace(/台/g,'臺');
-  const toNum = v=>v==null || v==='' || !isFinite(Number(v)) ? null : Number(v);
+  const toNum = v=>v==null || v==='' || typeof v==='boolean' || !isFinite(Number(v)) ? null : Number(v);
   const avg = list=>list.length ? list.reduce((s,v)=>s+v,0)/list.length : null;
   const count = (list,fn)=>list.reduce((n,x)=>n+(fn(x)?1:0),0);
 
@@ -21057,94 +21055,114 @@ html:not(.rd-ready) .dashboard .page{ visibility:hidden; }
   const avgHours = (list,from,to)=>avg(list.map(c=>hoursBetween(c[from],c[to])).filter(v=>v!=null));
 
   /* ---------- 載入 ---------- */
-  const recordsOf = json=>Array.isArray(json) ? json : (json && Array.isArray(json.records) ? json.records : []);
-
-  async function fetchJson(name){
-    const res=await fetch(DATA_DIR+name,{cache:'no-store'});
-    if(res.status===404) return undefined;   /* 缺檔：選填的檔案可以不放 */
-    if(!res.ok) throw new Error(`${name}：HTTP ${res.status}`);
-    try{ return await res.json(); }
+  /* 逐字走過 JSON 文字，字串內容原樣保留，字串外的字元交給 keep(text,i) 決定：回傳下一個位置，或 -1 表示照抄 */
+  function walkOutsideStrings(text,keep){
+    let out='', i=0;
+    while(i<text.length){
+      if(text[i]==='"'){
+        let j=i+1;
+        while(j<text.length && text[j]!=='"') j+=text[j]==='\\' ? 2 : 1;
+        out+=text.slice(i,j+1); i=j+1; continue;
+      }
+      const next=keep(text,i);
+      if(next<0){ out+=text[i]; i++; } else i=next;
+    }
+    return out;
+  }
+  /* 標準 JSON 先直接解析；失敗時去掉註解與結尾逗號再試（範本檔帶有 // 註解） */
+  function parseJsonLoose(text,name){
+    try{ return JSON.parse(text); }catch(_){}
+    let s=walkOutsideStrings(text,(t,i)=>{
+      if(t[i]==='/' && t[i+1]==='/'){ const e=t.indexOf('\n',i); return e<0 ? t.length : e; }
+      if(t[i]==='/' && t[i+1]==='*'){ const e=t.indexOf('*/',i+2); return e<0 ? t.length : e+2; }
+      return -1;
+    });
+    s=walkOutsideStrings(s,(t,i)=>{
+      if(t[i]!==',') return -1;
+      let j=i+1;
+      while(j<t.length && /\s/.test(t[j])) j++;
+      return t[j]==='}' || t[j]===']' ? i+1 : -1;
+    });
+    try{ return JSON.parse(s); }
     catch(err){ throw new Error(`${name} 不是有效的 JSON（${err.message}）`); }
   }
+
   async function loadFromServer(){
-    const raw={};
-    await Promise.all(Object.entries(FILES).map(async([key,name])=>{ raw[key]=await fetchJson(name); }));
-    return raw;
+    const res=await fetch(DATA_FILE,{cache:'no-store'});
+    if(res.status===404) throw new Error(`找不到 ${DATA_FILE}`);
+    if(!res.ok) throw new Error(`${DATA_FILE}：HTTP ${res.status}`);
+    return parseJsonLoose(await res.text(),DATA_FILE);
   }
-  /* file:// 備援：使用者選取 data 資料夾（或直接多選檔案），依檔名對應 */
+  /* file:// 備援：使用者手動選取 data.json（檔名不限，方便測試其他資料檔） */
   async function loadFromPicker(fileList){
-    const byName=new Map([...fileList].map(f=>[f.name.toLowerCase(),f]));
-    const raw={};
-    for(const [key,name] of Object.entries(FILES)){
-      const f=byName.get(name);
-      if(!f){ raw[key]=undefined; continue; }
-      try{ raw[key]=JSON.parse(await f.text()); }
-      catch(err){ throw new Error(`${name} 不是有效的 JSON（${err.message}）`); }
-    }
-    return raw;
+    const f=fileList[0];
+    if(!f) throw new Error('沒有選取檔案');
+    return parseJsonLoose(await f.text(),f.name);
   }
 
-  function normalizeCase(r){
-    const reported=parseTime(r.reported_at);
-    if(reported==null) return null;
-    let county=normName(r.county_name), district=normName(r.district_name);
-    if(!county && TAIPEI_DISTRICTS.includes(district)) county='臺北市';
-    const lat=toNum(r.latitude), lng=toNum(r.longitude), hasCoord=lat!=null && lng!=null;
+  function normalizeCase(r,stats){
+    const tp=r.timePoint || {}, info=r.caseInfo || {}, assess=r.assess || {};
+    const reported=parseTime(tp.reportedAt);
+    if(reported==null){ stats.badTime++; return null; }
+
+    /* caseInfo.dict 是行政區簡稱（例如「大安」）。目前沒有縣市欄位：能對到臺北市 12 區的算臺北市，其餘算外縣市 */
+    let district=normName(info.dict);
+    if(district) district=district.replace(/^臺北市/,'');
+    if(district && !district.endsWith('區') && TAIPEI_DISTRICTS.includes(`${district}區`)) district+='區';
+    const county=TAIPEI_DISTRICTS.includes(district) ? '臺北市' : null;
+    const lat=toNum(info.latitude), lng=toNum(info.longitude), hasCoord=lat!=null && lng!=null;
+
+    const assigned=parseTime(tp.assignedAt);
+    /* status：0 未結案（再依有沒有指派分成待派／已派）、1 已結案、2 未開案／結案 */
+    const st=toNum(r.status);
+    const status=st===1 ? 'closed' : st===2 ? 'not_referred' : st===0 ? (assigned==null ? 'pending_assign' : 'assigned') : null;
+    if(!status) stats.badStatus++;
+
+    const dept=toNum(r.reporterDepartment);
+    const network=dept==null ? null : (DEPARTMENT[dept] || `code:${dept}`);
+    if(dept!=null && !DEPARTMENT[dept]) stats.unmappedDept++;
+
+    const levels={};
+    Object.entries(SCALE_ROW).forEach(([key,row])=>{
+      const v=toNum(assess[key]);
+      if(LEVELS[v]) levels[row]=LEVELS[v];
+    });
+
+    /* 滿意度：問卷於結案時發出，所以已結案（或已有分數）的案件算一份應回收問卷；StatisfactionAvg 有值才算已回收 */
+    const score=toNum(r.StatisfactionAvg ?? r.SatisfactionAvg);
+    const scored=score!=null && score>=1 && score<=5;
+
     const day=dayKey(reported);
     return {
-      id:String(r.case_id ?? ''),
+      id:String(r.reportId ?? ''),
       reported, day, year:Number(day.slice(0,4)),
-      age:toNum(r.age_at_report),
-      gender:GENDER[String(r.gender ?? '').trim().toUpperCase()] || 'U',
-      status:r.status_code || null,
-      risk:LEVELS.includes(r.initial_risk_level) ? r.initial_risk_level : null,
-      network:r.network_code || null,
+      age:toNum(info.age),
+      gender:GENDER[toNum(info.gender)] || 'U',
+      status,
+      risk:levels.scale || null,   /* 初評風險＝風險檢傷評估（CTRS）的等級；效率頁總覽與地圖點位用 */
+      network,
       county, district,
       lat:hasCoord ? lat : null, lng:hasCoord ? lng : null,
-      addressKey:r.address_key || null,
-      assigned:parseTime(r.assigned_at),
-      intakeMethod:r.em_intake_method || null,
-      intake:parseTime(r.em_intake_at),
-      dispatched:parseTime(r.em_dispatched_at),
-      levels:{},      /* 初評量表分級，由 assessments.json 填入：{scale|gaf|bsrs|cgi: low|medium|high} */
-      surveys:[]      /* 滿意度問卷，由 surveys.json 填入 */
+      addressKey:null,             /* 沒有地址雜湊，同址合併改用座標 */
+      assigned,
+      intakeMethod:ACCEPT_WAY[toNum(r.acceptWay)] || null,
+      intake:parseTime(tp.acceptedAt),
+      dispatched:parseTime(tp.outsideAt),
+      levels,
+      surveys:status==='closed' || scored ? [{ completed:scored, scores:scored ? [score] : [] }] : []
     };
   }
 
   function build(raw){
-    if(raw.cases===undefined) throw new Error('找不到 data/cases.json');
-    const meta=raw.meta && !Array.isArray(raw.meta) ? raw.meta : {};
-    const stats={ otherCategory:0, void:0, badTime:0 };
-    const cases=[];
-    recordsOf(raw.cases).forEach(r=>{
-      if(r.is_void===true){ stats.void++; return; }
-      if(r.category_code && r.category_code!=='emergency'){ stats.otherCategory++; return; }
-      const c=normalizeCase(r);
-      if(c) cases.push(c); else stats.badTime++;
-    });
-    const byId=new Map(cases.map(c=>[c.id,c]));
-    recordsOf(raw.assessments).forEach(a=>{
-      if(a.timepoint && a.timepoint!=='initial') return;
-      const c=byId.get(String(a.case_id)), row=SCALE_ROW[a.scale_code];
-      if(c && row && LEVELS.includes(a.severity_level)) c.levels[row]=a.severity_level;
-    });
-    recordsOf(raw.surveys).forEach(s=>{
-      const c=byId.get(String(s.case_id));
-      if(!c) return;
-      const completed=parseTime(s.completed_at)!=null;
-      c.surveys.push({
-        completed,
-        scores:completed ? [toNum(s.ui_score),toNum(s.care_score)].filter(v=>v!=null && v>=1 && v<=5) : []
-      });
-    });
-
+    if(!raw || !Array.isArray(raw.emg)) throw new Error(`${DATA_FILE} 沒有 emg 陣列`);
+    const stats={ badTime:0, badStatus:0, unmappedDept:0 };
+    const cases=raw.emg.map(r=>normalizeCase(r || {},stats)).filter(Boolean);
     const days=cases.map(c=>c.day).sort();
     RD.cases=cases;
     RD.stats=stats;
-    RD.asOf=meta.as_of || days[days.length-1] || dayKey(Date.now());
-    RD.dataStart=meta.data_start || days[0] || RD.asOf;
-    RD.has={ assessments:raw.assessments!==undefined, surveys:raw.surveys!==undefined };
-    RD.sample=Object.values(raw).some(j=>j && !Array.isArray(j) && j.sample===true);
+    RD.asOf=raw.asOf || days[days.length-1] || dayKey(Date.now());
+    RD.dataStart=raw.dataStart || days[0] || RD.asOf;
+    RD.sample=raw.sample===true;
     RD.loaded=true;
   }
 
@@ -21207,11 +21225,11 @@ html:not(.rd-ready) .dashboard .page{ visibility:hidden; }
   }
 
   /* ---------- 長條圖共用 ---------- */
+  /* 座標軸上限＝4 個整齊刻度（刻度間距取下列其一），四等分後每格都是整數 */
+  const NICE_STEPS = [1,2,3,5,10,15,20,25,30,40,50,75,100,150,200,250,300,400,500,750,1000];
   function niceMax(v){
-    if(v<=10) return 10;
-    if(v<=50) return Math.ceil(v/10)*10;
-    if(v<=120) return Math.ceil(v/20)*20;
-    return Math.ceil(v/50)*50;
+    const step=NICE_STEPS.find(s=>s*4>=v) ?? Math.ceil(v/4000)*1000;
+    return step*4;
   }
   const barHeight = (v,max)=>v>0 ? Math.max(2,v/max*100) : 0;
   function setAxis(el,max){
@@ -21224,12 +21242,12 @@ html:not(.rd-ready) .dashboard .page{ visibility:hidden; }
     const kpis=[cases.length,status('pending_assign'),status('assigned'),status('closed'),status('not_referred')];
     $$('#basic .basic-kpi-value').forEach((el,i)=>{ el.textContent=fmtInt(kpis[i]); });
 
-    /* 臺北市 12 區（沒有案件也列出），其後依序是外縣市、未填行政區 */
+    /* 臺北市 12 區（沒有案件也列出），其後依序是外縣市（行政區對不到臺北市 12 區）、未填行政區 */
     const tp=cases.filter(c=>c.county==='臺北市');
     const rows=TAIPEI_DISTRICTS.map((name,i)=>({ name:name.replace(/區$/,''), value:count(tp,c=>c.district===name), i }))
       .sort((a,b)=>b.value-a.value || a.i-b.i);
-    const outside=count(cases,c=>c.county && c.county!=='臺北市');
-    const unknown=count(cases,c=>!c.county) + count(tp,c=>!TAIPEI_DISTRICTS.includes(c.district));
+    const outside=count(cases,c=>c.district && c.county!=='臺北市');
+    const unknown=count(cases,c=>!c.district);
     if(outside) rows.push({ name:'外縣市', value:outside });
     if(unknown) rows.push({ name:'未填', value:unknown });
     const dMax=niceMax(Math.max(1,...rows.map(r=>r.value)));
@@ -21282,7 +21300,7 @@ html:not(.rd-ready) .dashboard .page{ visibility:hidden; }
       cases.forEach(c=>{ const lv=c.levels[key]; if(lv) n[lv]++; });
       const total=n.low+n.medium+n.high;
       stack.classList.toggle('rd-empty',!total);
-      stack.dataset.empty=RD.has.assessments ? '此區間沒有初評資料' : '未提供 assessments.json';
+      stack.dataset.empty='此區間沒有初評資料';
       LEVELS.forEach(lv=>{
         const seg=stack.querySelector(`[data-seg="${lv}"]`);
         if(!seg) return;
@@ -21348,31 +21366,39 @@ html:not(.rd-ready) .dashboard .page{ visibility:hidden; }
   const REPORTER_WARM_PALETTE = ['#8F1D1D','#A92B20','#C23B22','#D95224','#E96B2C','#F1843D','#F6A65A'];
   /* 滿意度分數專用的綠色系，深→淺對應分數高→低 */
   const REPORTER_GREEN_PALETTE = ['#14532D','#166534','#15803D','#16A34A','#22C55E','#4ADE80','#86EFAC'];
+  /* 「其他」與對應不到的代碼不參與排名配色 */
+  const REPORTER_OTHER_COLOR = { warm:'#C9A58C', green:'#9DBFAE' };
   const REPORTER_UNKNOWN_COLOR = '#b8c0cb';
-  /* 排序時「未填」一律放最後，不跟七大網絡比大小 */
-  const unknownLast = cmp=>(a,b)=>(a.unknown-b.unknown) || cmp(a,b);
+  /* tail：0 七大網絡、1 其他、2 未填／代碼未對應。排序時先比 tail，「其他」和未填固定排在後面 */
+  const unknownLast = cmp=>(a,b)=>(a.tail-b.tail) || cmp(a,b);
 
   function reporterRows(cases){
-    const groups=NETWORKS.map(([code,name])=>({ code, name, list:cases.filter(c=>c.network===code) }));
-    const known=new Set(NETWORKS.map(([code])=>code));
-    const unknown=cases.filter(c=>!known.has(c.network));
-    if(unknown.length) groups.push({ code:'unknown', name:'未填', list:unknown });
+    const known=new Map(NETWORKS);
+    const groups=NETWORKS.map(([code,name])=>({ name, tail:code==='other' ? 1 : 0, list:cases.filter(c=>c.network===code) }));
+    const extra=new Map();
+    cases.forEach(c=>{
+      if(known.has(c.network)) return;
+      const key=c.network || 'none';
+      if(!extra.has(key)) extra.set(key,{ name:c.network ? `代碼 ${c.network.slice(5)}（未對應）` : '未填', tail:2, list:[] });
+      extra.get(key).list.push(c);
+    });
+    groups.push(...extra.values());
     const rows=groups.map(g=>{
       const surveys=g.list.flatMap(c=>c.surveys);
       const done=surveys.filter(s=>s.completed);
       const scores=done.flatMap(s=>s.scores);
       return {
-        name:g.name, unknown:g.code==='unknown', count:g.list.length,
-        sent:surveys.length, done:done.length, answers:scores.length,
+        name:g.name, tail:g.tail, count:g.list.length,
+        sent:surveys.length, done:done.length,
         response:surveys.length ? done.length/surveys.length*100 : null,
         score:avg(scores)
       };
     });
-    /* 暖色依轉介數排名：多→深紅、少→淺橘；「未填」固定灰色 */
-    [...rows].filter(r=>!r.unknown).sort((a,b)=>b.count-a.count).forEach((r,i)=>{
+    /* 暖色依轉介數排名：多→深紅、少→淺橘 */
+    [...rows].filter(r=>!r.tail).sort((a,b)=>b.count-a.count).forEach((r,i)=>{
       r.color=REPORTER_WARM_PALETTE[Math.min(i,REPORTER_WARM_PALETTE.length-1)];
     });
-    rows.forEach(r=>{ if(r.unknown) r.color=REPORTER_UNKNOWN_COLOR; });
+    rows.forEach(r=>{ if(r.tail) r.color=r.tail===1 ? REPORTER_OTHER_COLOR.warm : REPORTER_UNKNOWN_COLOR; });
     return rows;
   }
 
@@ -21469,31 +21495,30 @@ html:not(.rd-ready) .dashboard .page{ visibility:hidden; }
     const responseAxis=document.getElementById('reporterResponseYAxis');
     const scoreArea=document.getElementById('reporterScoreBars');
     const scoreAxis=document.getElementById('reporterScoreYAxis');
-    const noFile='<div class="rd-empty-note">未提供 surveys.json</div>';
     /* 沒有問卷的網絡排在最後、顯示「—」 */
     const byDesc=key=>unknownLast((a,b)=>(b[key]??-1)-(a[key]??-1));
 
     if(responseArea && responseAxis){
       buildYAxis(responseAxis,100,5,v=>`${Math.round(v)}%`);
-      responseArea.innerHTML=RD.has.surveys ? '' : noFile;
-      if(RD.has.surveys) [...rows].sort(byDesc('response')).forEach(d=>{
+      responseArea.innerHTML='';
+      [...rows].sort(byDesc('response')).forEach(d=>{
         const v=d.response, h=v==null ? 0 : Math.max(1,v);
         const tip=v==null
-          ? `<strong>${d.name}</strong><br>尚無發出的問卷`
-          : `<strong>${d.name}</strong><br>滿意度調查回收率：${v.toFixed(1)}%<br>已回收 ${d.done} ／ 發出 ${d.sent} 份`;
+          ? `<strong>${d.name}</strong><br>尚無已結案的案件`
+          : `<strong>${d.name}</strong><br>滿意度調查回收率：${v.toFixed(1)}%<br>已回收 ${d.done} ／ 已結案 ${d.sent} 件`;
         responseArea.appendChild(barCol(v==null ? '—' : `${v.toFixed(1)}%`,d.name,h,d.color,'reporter-sat-bar',tip));
       });
     }
 
     if(scoreArea && scoreAxis){
       buildYAxis(scoreAxis,5,5,v=>v.toFixed(0));
-      scoreArea.innerHTML=RD.has.surveys ? '' : noFile;
-      if(RD.has.surveys) [...rows].sort(byDesc('score')).forEach((d,i)=>{
+      scoreArea.innerHTML='';
+      [...rows].sort(byDesc('score')).forEach((d,i)=>{
         const v=d.score, h=v==null ? 0 : Math.max(1,v/5*100);
-        const green=d.unknown ? REPORTER_UNKNOWN_COLOR : REPORTER_GREEN_PALETTE[Math.min(i,REPORTER_GREEN_PALETTE.length-1)];
+        const green=d.tail===1 ? REPORTER_OTHER_COLOR.green : d.tail ? REPORTER_UNKNOWN_COLOR : REPORTER_GREEN_PALETTE[Math.min(i,REPORTER_GREEN_PALETTE.length-1)];
         const tip=v==null
           ? `<strong>${d.name}</strong><br>尚無回收的問卷`
-          : `<strong>${d.name}</strong><br>滿意度調查平均分：${v.toFixed(1)} / 5<br>回收 ${d.done} 份、${d.answers} 題次`;
+          : `<strong>${d.name}</strong><br>滿意度調查平均分：${v.toFixed(1)} / 5<br>已回收 ${d.done} 份（各份平均分再取平均）`;
         scoreArea.appendChild(barCol(v==null ? '—' : v.toFixed(1),d.name,h,green,'reporter-sat-bar',tip));
       });
     }
@@ -21581,18 +21606,18 @@ html:not(.rd-ready) .dashboard .page{ visibility:hidden; }
     if(RD.sample) parts.push('<span class="rd-sample">範例資料（虛構）</span>');
     parts.push(`<span>資料截止 <b>${slashDate(RD.asOf)}</b></span>`);
     parts.push(`<span>緊急醫療通報 <b>${fmtInt(RD.cases.length)}</b> 件（${slashDate(RD.dataStart)} 起）</span>`);
-    const missing=[!RD.has.assessments && 'assessments.json', !RD.has.surveys && 'surveys.json'].filter(Boolean);
-    if(missing.length) parts.push(`<span class="rd-warn">未提供 ${missing.join('、')}</span>`);
-    const s=RD.stats, skipped=[
-      s.otherCategory && `非緊急醫療 ${s.otherCategory} 件`,
-      s.void && `作廢 ${s.void} 件`,
-      s.badTime && `通報時間無法解析 ${s.badTime} 件`
+    /* 資料品質提示：排除的筆數、對不到代碼的筆數 */
+    const s=RD.stats;
+    if(s.badTime) parts.push(`<span class="rd-warn">已排除：通報時間無法解析 ${s.badTime} 件</span>`);
+    const odd=[
+      s.badStatus && `status 無法對應 ${s.badStatus} 件`,
+      s.unmappedDept && `reporterDepartment 未對應 ${s.unmappedDept} 件`
     ].filter(Boolean);
-    if(skipped.length) parts.push(`<span class="rd-warn">已排除：${skipped.join('、')}</span>`);
+    if(odd.length) parts.push(`<span class="rd-warn">${odd.join('、')}</span>`);
     el.innerHTML=parts.join('');
   }
 
-  /* err 為 null：以 file:// 開啟，還沒讀過資料，直接請使用者選資料夾 */
+  /* err 為 null：以 file:// 開啟，還沒讀過資料，直接請使用者選檔 */
   function showError(err){
     if(err) console.error('[real-data]',err);
     const el=document.getElementById('rdStatus');
@@ -21600,10 +21625,10 @@ html:not(.rd-ready) .dashboard .page{ visibility:hidden; }
     const local=location.protocol==='file:';
     const why=err
       ? `資料載入失敗：${esc(err.message || err)}。`
-      : '以 file:// 直接開檔時，瀏覽器不允許網頁讀取 data/ 內的 JSON。';
+      : '以 file:// 直接開檔時，瀏覽器不允許網頁自動讀取同資料夾的 data.json。';
     el.classList.add('rd-error');
     el.innerHTML=`<span>${why}</span>`
-      +`<label class="rd-pick">選擇 data 資料夾<input type="file" webkitdirectory multiple></label>`
+      +`<label class="rd-pick">選擇 data.json<input type="file" accept=".json,application/json"></label>`
       +(local ? '<span>或改用本機伺服器開啟（例如 VS Code Live Server）。</span>' : '');
     el.querySelector('input').addEventListener('change',e=>{
       if(e.target.files.length) loadFromPicker(e.target.files).then(start).catch(showError);
@@ -21623,7 +21648,7 @@ html:not(.rd-ready) .dashboard .page{ visibility:hidden; }
   }
 
   Object.keys(PAGES).forEach(wirePage);
-  /* file:// 下 fetch 一定被擋（還會在 console 留一串 CORS 錯誤），直接改用選資料夾 */
+  /* file:// 下 fetch 一定被擋（還會在 console 留一串 CORS 錯誤），直接改用手動選檔 */
   if(location.protocol==='file:') showError(null);
   else loadFromServer().then(start).catch(showError);
 })();
