@@ -10867,385 +10867,6 @@
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
-<script>
-  // ===== AI model prediction correlation =====
-  const AI_TRAINING_POPULATION = 620;
-  const AI_SCORE_MIN = 3;
-  const AI_SCORE_MAX = 15;
-  let aiCurrentCorrelation = null;
-
-  // Deterministic pseudo-random generator keeps the prototype stable across reloads.
-  function aiRand(seed){
-    let x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
-    return x - Math.floor(x);
-  }
-
-  function buildAiPairs(){
-    const rows=[];
-    for(let i=0;i<AI_TRAINING_POPULATION;i++){
-      const r1=aiRand(i+11);
-      const r2=aiRand(i+101);
-      const r3=aiRand(i+701);
-
-      // 風險檢傷評估為 3–15 分整數，
-      // AI 預測與專業人員實測皆不產生小數分數。
-      const predicted = Math.round(
-        AI_SCORE_MIN + r1*(AI_SCORE_MAX-AI_SCORE_MIN)
-      );
-      const noise = (r2-.5)*2.0 + (r3-.5)*0.7;
-      const measured = Math.round(
-        Math.max(
-          AI_SCORE_MIN,
-          Math.min(AI_SCORE_MAX, predicted*0.94 + 0.55 + noise)
-        )
-      );
-
-      rows.push({predicted,measured,index:i+1});
-    }
-    return rows;
-  }
-
-  function pearsonCorrelation(rows){
-    const n=rows.length;
-    const mx=rows.reduce((s,r)=>s+r.predicted,0)/n;
-    const my=rows.reduce((s,r)=>s+r.measured,0)/n;
-    let num=0, dx=0, dy=0;
-
-    rows.forEach(r=>{
-      const a=r.predicted-mx;
-      const b=r.measured-my;
-      num+=a*b;
-      dx+=a*a;
-      dy+=b*b;
-    });
-
-    return num/Math.sqrt(dx*dy);
-  }
-
-  function svgEl(tag,attrs={}){
-    const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
-    Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,String(v)));
-    return el;
-  }
-
-  function renderAiScatter(){
-    const svg=document.getElementById('aiScatterSvg');
-    if(!svg) return;
-
-    const tooltip=document.getElementById('aiScatterTooltip');
-    if(tooltip) tooltip.hidden=true;
-
-    const data=buildAiPairs();
-    const r=pearsonCorrelation(data);
-    aiCurrentCorrelation=r;
-
-    const corrEl=document.getElementById('aiCorrelation');
-    const popEl=document.getElementById('aiPopulation');
-    if(corrEl) corrEl.textContent=r.toFixed(3);
-    if(popEl) popEl.textContent=data.length.toLocaleString('zh-TW');
-
-    // Simple linear regression: measured = intercept + slope * predicted.
-    const n=data.length;
-    const meanX=data.reduce((s,d)=>s+d.predicted,0)/n;
-    const meanY=data.reduce((s,d)=>s+d.measured,0)/n;
-
-    let numerator=0;
-    let denominator=0;
-    data.forEach(d=>{
-      numerator+=(d.predicted-meanX)*(d.measured-meanY);
-      denominator+=(d.predicted-meanX)*(d.predicted-meanX);
-    });
-
-    const slope=denominator ? numerator/denominator : 1;
-    const intercept=meanY-slope*meanX;
-    const regressionY=x=>Math.max(
-      AI_SCORE_MIN,
-      Math.min(AI_SCORE_MAX, intercept+slope*x)
-    );
-
-    svg.innerHTML='';
-
-    const W=820,H=620;
-    const margin={left:74,right:28,top:24,bottom:70};
-    const pw=W-margin.left-margin.right;
-    const ph=H-margin.top-margin.bottom;
-
-    const sx=v=>margin.left+((v-AI_SCORE_MIN)/(AI_SCORE_MAX-AI_SCORE_MIN))*pw;
-    const sy=v=>margin.top+ph-((v-AI_SCORE_MIN)/(AI_SCORE_MAX-AI_SCORE_MIN))*ph;
-
-    const plot=svgEl('g');
-    svg.appendChild(plot);
-
-    const ticks=[3,5,7,9,11,13,15];
-
-    ticks.forEach(t=>{
-      plot.appendChild(svgEl('line',{
-        x1:sx(t),y1:margin.top,x2:sx(t),y2:margin.top+ph,class:'ai-grid-line'
-      }));
-      plot.appendChild(svgEl('line',{
-        x1:margin.left,y1:sy(t),x2:margin.left+pw,y2:sy(t),class:'ai-grid-line'
-      }));
-
-      const xt=svgEl('text',{
-        x:sx(t),y:H-42,'text-anchor':'middle',class:'ai-axis-text'
-      });
-      xt.textContent=t;
-      plot.appendChild(xt);
-
-      const yt=svgEl('text',{
-        x:margin.left-12,y:sy(t)+4,'text-anchor':'end',class:'ai-axis-text'
-      });
-      yt.textContent=t;
-      plot.appendChild(yt);
-    });
-
-    plot.appendChild(svgEl('line',{
-      x1:margin.left,y1:margin.top+ph,
-      x2:margin.left+pw,y2:margin.top+ph,
-      class:'ai-axis-line'
-    }));
-
-    plot.appendChild(svgEl('line',{
-      x1:margin.left,y1:margin.top,
-      x2:margin.left,y2:margin.top+ph,
-      class:'ai-axis-line'
-    }));
-
-    // Ideal baseline: predicted score = measured score.
-    plot.appendChild(svgEl('line',{
-      x1:sx(AI_SCORE_MIN),y1:sy(AI_SCORE_MIN),
-      x2:sx(AI_SCORE_MAX),y2:sy(AI_SCORE_MAX),
-      class:'ai-baseline-line'
-    }));
-
-    // Regression line derived from all current training samples.
-    plot.appendChild(svgEl('line',{
-      x1:sx(AI_SCORE_MIN),y1:sy(regressionY(AI_SCORE_MIN)),
-      x2:sx(AI_SCORE_MAX),y2:sy(regressionY(AI_SCORE_MAX)),
-      class:'ai-regression-line'
-    }));
-
-    const xTitle=svgEl('text',{
-      x:margin.left+pw/2,y:H-10,'text-anchor':'middle',class:'ai-axis-title'
-    });
-    xTitle.textContent='AI模型預測分數（3–15分）';
-    svg.appendChild(xTitle);
-
-    const yTitle=svgEl('text',{
-      x:18,y:margin.top+ph/2,'text-anchor':'middle',
-      class:'ai-axis-title',
-      transform:`rotate(-90 18 ${margin.top+ph/2})`
-    });
-    yTitle.textContent='專業人員實測分數（3–15分）';
-    svg.appendChild(yTitle);
-  }
-
-
-  function getAiHistoryRows(){
-    const current=Number.isFinite(aiCurrentCorrelation) ? aiCurrentCorrelation : 0.95;
-
-    const correlations=[
-      Math.max(0.70,current-0.120),
-      Math.max(0.72,current-0.090),
-      Math.max(0.74,current-0.060),
-      Math.max(0.76,current-0.035),
-      Math.max(0.78,current-0.015),
-      current
-    ];
-
-    return [
-      {date:'2026/02/16',version:'v0.9',population:180,correlation:correlations[0]},
-      {date:'2026/03/30',version:'v1.0',population:260,correlation:correlations[1]},
-      {date:'2026/05/12',version:'v1.1',population:340,correlation:correlations[2]},
-      {date:'2026/06/23',version:'v1.2',population:430,correlation:correlations[3]},
-      {date:'2026/08/04',version:'v1.3',population:520,correlation:correlations[4]},
-      {date:'2026/09/01',version:'v1.4',population:620,correlation:correlations[5]}
-    ];
-  }
-
-  function renderAiHistoryChart(){
-    const svg=document.getElementById('aiHistorySvg');
-    if(!svg) return;
-
-    const tooltip=document.getElementById('aiHistoryTooltip');
-    const rows=getAiHistoryRows();
-
-    svg.innerHTML='';
-
-    const W=940,H=500;
-    const margin={left:82,right:34,top:30,bottom:74};
-    const pw=W-margin.left-margin.right;
-    const ph=H-margin.top-margin.bottom;
-
-    const minPop=150;
-    const maxPop=650;
-    const minR=0.70;
-    const maxR=1.00;
-
-    const sx=v=>margin.left+((v-minPop)/(maxPop-minPop))*pw;
-    const sy=v=>margin.top+ph-((v-minR)/(maxR-minR))*ph;
-
-    const popTicks=[200,300,400,500,600];
-    const rTicks=[0.70,0.75,0.80,0.85,0.90,0.95,1.00];
-
-    rTicks.forEach(t=>{
-      svg.appendChild(svgEl('line',{
-        x1:margin.left,y1:sy(t),
-        x2:margin.left+pw,y2:sy(t),
-        class:'ai-history-grid'
-      }));
-
-      const label=svgEl('text',{
-        x:margin.left-12,y:sy(t)+4,
-        'text-anchor':'end',
-        class:'ai-history-axis-text'
-      });
-      label.textContent=t.toFixed(2);
-      svg.appendChild(label);
-    });
-
-    popTicks.forEach(t=>{
-      svg.appendChild(svgEl('line',{
-        x1:sx(t),y1:margin.top,
-        x2:sx(t),y2:margin.top+ph,
-        class:'ai-history-grid vertical'
-      }));
-
-      const label=svgEl('text',{
-        x:sx(t),y:H-43,
-        'text-anchor':'middle',
-        class:'ai-history-axis-text'
-      });
-      label.textContent=t;
-      svg.appendChild(label);
-    });
-
-    svg.appendChild(svgEl('line',{
-      x1:margin.left,y1:margin.top+ph,
-      x2:margin.left+pw,y2:margin.top+ph,
-      class:'ai-history-axis'
-    }));
-
-    svg.appendChild(svgEl('line',{
-      x1:margin.left,y1:margin.top,
-      x2:margin.left,y2:margin.top+ph,
-      class:'ai-history-axis'
-    }));
-
-    const pathD=rows.map((row,index)=>
-      `${index===0?'M':'L'} ${sx(row.population)} ${sy(row.correlation)}`
-    ).join(' ');
-
-    svg.appendChild(svgEl('path',{
-      d:pathD,
-      class:'ai-history-line'
-    }));
-
-    rows.forEach(row=>{
-      const g=svgEl('g',{class:'ai-history-point-group'});
-      const point=svgEl('circle',{
-        cx:sx(row.population),
-        cy:sy(row.correlation),
-        r:6,
-        class:'ai-history-point'
-      });
-
-      const value=svgEl('text',{
-        x:sx(row.population),
-        y:sy(row.correlation)-14,
-        'text-anchor':'middle',
-        class:'ai-history-value'
-      });
-      value.textContent=row.correlation.toFixed(3);
-
-      const showTooltip=e=>{
-        if(!tooltip) return;
-        const box=svg.getBoundingClientRect();
-
-        tooltip.hidden=false;
-        tooltip.innerHTML=
-          `<b>${row.version}</b><br>`+
-          `日期：${row.date}<br>`+
-          `累積比對資料：${row.population.toLocaleString('zh-TW')} 筆<br>`+
-          `吻合程度：${row.correlation.toFixed(3)}`;
-
-        let x=e.clientX-box.left+14;
-        let y=e.clientY-box.top+14;
-
-        if(x+190>box.width) x-=204;
-        if(y+105>box.height) y-=116;
-
-        tooltip.style.left=`${Math.max(6,x)}px`;
-        tooltip.style.top=`${Math.max(6,y)}px`;
-      };
-
-      point.addEventListener('mousemove',showTooltip);
-      point.addEventListener('mouseenter',showTooltip);
-      point.addEventListener('mouseleave',()=>{
-        if(tooltip) tooltip.hidden=true;
-      });
-
-      g.appendChild(point);
-      g.appendChild(value);
-      svg.appendChild(g);
-    });
-
-    const xTitle=svgEl('text',{
-      x:margin.left+pw/2,y:H-10,
-      'text-anchor':'middle',
-      class:'ai-history-axis-title'
-    });
-    xTitle.textContent='累積比對資料';
-    svg.appendChild(xTitle);
-
-    const yTitle=svgEl('text',{
-      x:20,y:margin.top+ph/2,
-      'text-anchor':'middle',
-      class:'ai-history-axis-title',
-      transform:`rotate(-90 20 ${margin.top+ph/2})`
-    });
-    yTitle.textContent='吻合程度';
-    svg.appendChild(yTitle);
-  }
-
-  function initAiCorrelationDialog(){
-    const dialog=document.getElementById('aiCorrelationDialog');
-    const openBtn=document.getElementById('openAiCorrelationDialog');
-    const closeBtn=document.getElementById('closeAiCorrelationDialog');
-
-    if(!dialog || !openBtn) return;
-
-    openBtn.addEventListener('click',()=>{
-      renderAiHistoryChart();
-
-      if(typeof dialog.showModal==='function'){
-        dialog.showModal();
-      }else{
-        dialog.setAttribute('open','');
-      }
-    });
-
-    if(closeBtn){
-      closeBtn.addEventListener('click',()=>{
-        if(typeof dialog.close==='function') dialog.close();
-        else dialog.removeAttribute('open');
-      });
-    }
-
-    dialog.addEventListener('click',e=>{
-      if(e.target===dialog){
-        if(typeof dialog.close==='function') dialog.close();
-        else dialog.removeAttribute('open');
-      }
-    });
-  }
-
-  document.addEventListener('DOMContentLoaded',()=>{
-    renderAiScatter();
-    initAiCorrelationDialog();
-  });
-
-</script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 
 <style>
@@ -12065,11 +11686,7 @@
     <button class="tab active" data-page="basic">基本資料</button>
     <button class="tab" data-page="risk">通報案件風險分析</button>
     <button class="tab" data-page="efficiency">案件處理效率指標</button>
-    <button class="tab" data-page="outcome">精神症狀改善成效指標</button>
-    <button class="tab" data-page="ai">AI模型預測準確率</button>
     <button class="tab" data-page="reporter">通報者基本資料分析</button>
-    <button class="tab" data-page="hospital">醫療機構端處理成效分析</button>
-    <button class="tab" data-page="snq">醫院內控指標(SNQ)</button>
     <button class="tab" data-page="command">指揮儀表板</button>
   </nav>
 
@@ -12232,9 +11849,7 @@
     <div class="analysis-filter-row">
       <div class="analysis-filter-label">通報類別分析</div>
       <div class="risk-filter" id="riskFilter">
-        <button type="button" class="risk-filter-btn active" data-filter="all">全部</button>
-        <button type="button" class="risk-filter-btn" data-filter="emergency">緊急醫療</button>
-        <button type="button" class="risk-filter-btn" data-filter="optimized">優化計畫</button>
+        <button type="button" class="risk-filter-btn active" data-filter="emergency">緊急醫療</button>
       </div>
     </div>
 
@@ -12299,8 +11914,6 @@
       <div class="eff-v79-tabs" id="effV79Tabs" role="tablist" aria-label="案件處理效率檢視">
         <button class="eff-v79-tab active" data-eff-view="overview" role="tab" aria-selected="true">總覽</button>
         <button class="eff-v79-tab" data-eff-view="emergency" role="tab">緊急醫療處置效率</button>
-        <button class="eff-v79-tab" data-eff-view="hospital" role="tab">優化計畫醫院端處置效率</button>
-        <button class="eff-v79-tab" data-eff-view="bureau" role="tab">優化計畫衛生局處置效率</button>
       </div>
       <span class="efficiency-range-label" id="efficiencyRangeLabel">2026/01/01－2026/09/25</span>
     </div>
@@ -12322,12 +11935,12 @@
 
     <!-- ===== Tab 1：總覽 ===== -->
     <div class="eff-v79-panel active" data-eff-panel="overview">
-      <div class="eff-v79-section-heading"><div><span>總覽</span><h3>不同風險個案處理時間（平均）</h3></div><small>緊醫完成受理／優化計畫完成首次訪視 － 個案通報時間</small></div>
+      <div class="eff-v79-section-heading"><div><span>總覽</span><h3>不同風險個案處理時間（平均）</h3></div><small>緊醫完成受理 － 個案通報時間</small></div>
 
       <article class="eff-v79-card eff-v79-risk-compare">
-        <div class="eff-v79-risk-row high"><div class="eff-v79-risk-name"><span>高風險</span><small>N = 84</small></div><div class="eff-v79-risk-bar"><i style="width:28%"></i></div><strong data-eff-value="riskHigh">1.6</strong><em>天</em><button class="eff-v79-info" data-metric="高風險個案處理時間(平均)">i</button></div>
-        <div class="eff-v79-risk-row medium"><div class="eff-v79-risk-name"><span>中風險</span><small>N = 156</small></div><div class="eff-v79-risk-bar"><i style="width:59%"></i></div><strong data-eff-value="riskMedium">3.4</strong><em>天</em><button class="eff-v79-info" data-metric="中風險個案處理時間(平均)">i</button></div>
-        <div class="eff-v79-risk-row low"><div class="eff-v79-risk-name"><span>低風險</span><small>N = 101</small></div><div class="eff-v79-risk-bar"><i style="width:100%"></i></div><strong data-eff-value="riskLow">5.8</strong><em>天</em><button class="eff-v79-info" data-metric="低風險個案處理時間(平均)">i</button></div>
+        <div class="eff-v79-risk-row high"><div class="eff-v79-risk-name"><span>高風險</span><small>N = 84</small></div><div class="eff-v79-risk-bar"><i style="width:28%"></i></div><strong data-eff-value="riskHigh">0.6</strong><em>天</em><button class="eff-v79-info" data-metric="高風險個案處理時間(平均)">i</button></div>
+        <div class="eff-v79-risk-row medium"><div class="eff-v79-risk-name"><span>中風險</span><small>N = 156</small></div><div class="eff-v79-risk-bar"><i style="width:59%"></i></div><strong data-eff-value="riskMedium">1.2</strong><em>天</em><button class="eff-v79-info" data-metric="中風險個案處理時間(平均)">i</button></div>
+        <div class="eff-v79-risk-row low"><div class="eff-v79-risk-name"><span>低風險</span><small>N = 101</small></div><div class="eff-v79-risk-bar"><i style="width:100%"></i></div><strong data-eff-value="riskLow">2.0</strong><em>天</em><button class="eff-v79-info" data-metric="低風險個案處理時間(平均)">i</button></div>
       </article>
       <div class="eff-v79-risk-note">條形長度用來比較相對處理時間；實際值以右側平均天數為準。</div>
 
@@ -12338,20 +11951,6 @@
           <div class="eff-v86-jump-metrics">
             <div><b data-eff-value="emergencyClose">88.4</b><em>%</em><small>緊醫案件結案率</small></div>
             <div><b data-eff-value="emergencyTotal">2.5</b><em>小時</em><small>出勤總反應時間</small></div>
-          </div>
-        </button>
-        <button type="button" class="eff-v86-jump hospital" data-eff-jump="hospital">
-          <span class="eff-v86-jump-title">優化計畫醫院端處置效率<i>→</i></span>
-          <div class="eff-v86-jump-metrics">
-            <div><b data-eff-value="hospitalOpen">82.6</b><em>%</em><small>轉介案件開案率</small></div>
-            <div><b data-eff-value="replyBureau">1.5</b><em>天</em><small>回覆衛生局時間</small></div>
-          </div>
-        </button>
-        <button type="button" class="eff-v86-jump bureau" data-eff-jump="bureau">
-          <span class="eff-v86-jump-title">優化計畫衛生局處置效率<i>→</i></span>
-          <div class="eff-v86-jump-metrics">
-            <div><b data-eff-value="bureauToHospital">41.6</b><em>%</em><small>衛生局轉介本院率</small></div>
-            <div><b data-eff-value="bureauReply">1.1</b><em>天</em><small>衛生局回覆通報時間</small></div>
           </div>
         </button>
       </div>
@@ -12411,423 +12010,12 @@
       </div>
     </div>
 
-    <!-- ===== Tab 3：優化計畫衛生局處置效率 ===== -->
-    <div class="eff-v79-panel" data-eff-panel="bureau" hidden>
-      <div class="eff-v79-section-heading"><div><span>優化計畫衛生局處置效率</span><h3>衛生局回覆與轉介</h3></div><small>通報轉介單 → 衛生局回覆單 → 轉介北投／轉介他院／暫不轉介</small></div>
-
-      <article class="eff-v83-routing-card">
-        <div class="eff-v83-routing-head">
-          <div><span>衛生局回覆單分流結果</span><small>以下比例皆以已完成衛生局回覆單案件為基礎</small></div>
-          <strong>500 <em>件已完成回覆</em></strong>
-        </div>
-        <div class="eff-v83-routing-flow">
-          <div class="eff-v83-flow-step source"><b>通報人</b><span>完成優化計畫轉介單</span></div>
-          <i class="eff-v83-flow-arrow">→</i>
-          <div class="eff-v83-flow-step bureau"><b>衛生局</b><span>完成衛生局回覆單</span></div>
-          <i class="eff-v83-flow-arrow">→</i>
-          <div class="eff-v83-routing-results">
-            <div class="beitou"><span>轉介三總北投</span><strong data-eff-value="bureauToHospital">41.6</strong><em>%</em><small>208 件</small></div>
-            <div class="other"><span>轉介他院</span><strong data-eff-computed="otherReferral">16.6</strong><em>%</em><small>83 件</small></div>
-            <div class="hold"><span>暫不轉介</span><strong data-eff-value="nonReferralRate">41.8</strong><em>%</em><small>209 件</small></div>
-          </div>
-        </div>
-      </article>
-
-      <div class="eff-v83-bureau-rate-grid eff-v86-bureau-rate-4">
-        <article class="eff-v86-flagged"><span>衛生局醫療轉介率</span><strong data-eff-value="bureauReferral">58.2</strong><em>%</em><small>轉介醫療機構 ÷ 已完成回覆單<b class="eff-v86-flag" title="分母定義待確認，詳見指標說明">定義待確認</b></small><button class="eff-v79-info" data-metric="衛生局醫療轉介率">i</button></article>
-        <article><span>衛生局轉介本院率</span><strong data-eff-value="bureauToHospital">41.6</strong><em>%</em><small>轉介北投 ÷ 已完成回覆單</small><button class="eff-v79-info" data-metric="衛生局轉介本院率">i</button></article>
-        <article><span>本院醫療轉介占率</span><strong data-eff-value="hospitalShare">71.5</strong><em>%</em><small>轉介北投 ÷ 衛生局轉介醫療機構案件數</small><button class="eff-v79-info" data-metric="本院醫療轉介占率">i</button></article>
-        <article><span>衛生局暫不轉介率</span><strong data-eff-value="nonReferralRate">41.8</strong><em>%</em><small>暫不轉介 ÷ 已完成回覆單</small><button class="eff-v79-info" data-metric="衛生局暫不轉介率">i</button></article>
-      </div>
-
-      <div class="eff-v83-bureau-bottom">
-        <article class="eff-v79-card eff-v83-reason-table-card">
-          <div class="eff-v79-card-title"><div><h4>暫不轉介原因分布</h4><span>依人數由多到少排列</span></div><button class="eff-v79-info text" data-metric="暫不轉介原因分布">指標定義</button></div>
-          <div class="eff-v83-reason-table-wrap">
-            <table class="eff-v83-reason-table">
-              <thead><tr><th>暫不轉介原因</th><th>人數</th><th>百分比</th></tr></thead>
-              <tbody>
-                <tr><td>社區心衛中心個管服務對象</td><td>52</td><td>24.9%</td></tr>
-                <tr><td>已住院／門診／居家治療</td><td>46</td><td>22.0%</td></tr>
-                <tr><td>另行收案</td><td>31</td><td>14.8%</td></tr>
-                <tr><td>非衛生機關之服務項目</td><td>25</td><td>12.0%</td></tr>
-                <tr><td>不符合轉介目的</td><td>21</td><td>10.0%</td></tr>
-                <tr><td>拒訪</td><td>16</td><td>7.7%</td></tr>
-                <tr><td>資料不足</td><td>11</td><td>5.3%</td></tr>
-                <tr><td>其他原因</td><td>7</td><td>3.3%</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="eff-v83-table-foot">百分比＝各原因案件數 ÷ 衛生局暫不轉介案件數</div>
-        </article>
-
-        <article class="eff-v79-card eff-v79-time-stack eff-v83-time-stack">
-          <div class="eff-v79-card-title"><h4>衛生局處理時間</h4><span>平均</span></div>
-          <div class="eff-v79-time-row"><div><b>訪視時間</b><small>網絡完成通報 → 衛生局出勤訪視</small></div><strong data-eff-value="bureauVisit">1.8</strong><em>天</em><button class="eff-v79-info" data-metric="衛生局訪視時間">i</button></div>
-          <div class="eff-v79-time-row"><div><b>分流決策時間</b><small>網絡完成通報 → 衛生局決定是否派案</small></div><strong data-eff-value="bureauDecision">0.9</strong><em>天</em><button class="eff-v79-info" data-metric="衛生局分流決策時間">i</button></div>
-          <div class="eff-v79-time-row"><div><b>回覆通報時間</b><small>網絡完成通報 → 衛生局完成回覆單</small></div><strong data-eff-value="bureauReply">1.1</strong><em>天</em><button class="eff-v79-info" data-metric="衛生局回覆通報時間">i</button></div>
-        </article>
-      </div>
-    </div>
-
-    <!-- ===== Tab 4：優化計畫醫院端處置效率 ===== -->
-    <div class="eff-v79-panel" data-eff-panel="hospital" hidden>
-      <div class="eff-v79-section-heading"><div><span>優化計畫醫院端處置效率</span><h3>開案、覆核與醫療介入</h3></div><small>從衛生局回覆到本院完成專業處置</small></div>
-      <div class="eff-v79-rate-strip hospital">
-        <article><span>轉介案件開案率</span><strong data-eff-value="hospitalOpen">82.6</strong><em>%</em><button class="eff-v79-info" data-metric="衛生局轉介案件開案率">i</button></article>
-        <article><span>暫不轉介覆核同意率</span><strong data-eff-value="reviewAgree">74.1</strong><em>%</em><button class="eff-v79-info" data-metric="暫不轉介覆核同意率">i</button></article>
-        <article><span>暫不轉介覆核駁回率</span><strong data-eff-value="reviewReject">25.9</strong><em>%</em><button class="eff-v79-info" data-metric="暫不轉介覆核駁回率">i</button></article>
-        <article><span>暫不轉介案件醫療介入率</span><strong data-eff-value="nonReferralIntervention">18.7</strong><em>%</em><button class="eff-v79-info" data-metric="暫不轉介案件醫療介入率">i</button></article>
-      </div>
-      <article class="eff-v79-card eff-v79-process-matrix">
-        <div class="eff-v79-card-title"><h4>本院處理時效</h4><span>平均時間</span></div>
-        <div class="eff-v79-process-grid">
-          <div class="eff-v79-process-item"><span>暫不轉介案件覆核時間</span><strong data-eff-value="reviewTime">0.6</strong><em>天</em><button class="eff-v79-info" data-metric="暫不轉介案件覆核時間">i</button></div>
-          <div class="eff-v79-process-item"><span>轉介案件派案時間</span><strong data-eff-value="referralAssign">0.3</strong><em>小時</em><button class="eff-v79-info" data-metric="轉介案件派案時間">i</button></div>
-          <div class="eff-v79-process-item"><span>轉介案件首次聯繫時間</span><strong data-eff-value="referralContact">4.2</strong><em>小時</em><button class="eff-v79-info" data-metric="轉介案件首次聯繫時間">i</button></div>
-          <div class="eff-v79-process-item"><span>派案後首次聯繫時間</span><strong data-eff-value="afterAssignContact">3.1</strong><em>小時</em><button class="eff-v79-info" data-metric="派案後首次聯繫時間">i</button></div>
-          <div class="eff-v79-process-item"><span>首次專業評估時間</span><strong data-eff-value="firstProfessional">1.2</strong><em>天</em><button class="eff-v79-info" data-metric="首次專業評估時間">i</button></div>
-          <div class="eff-v79-process-item"><span>回覆衛生局時間</span><strong data-eff-value="replyBureau">1.5</strong><em>天</em><button class="eff-v79-info" data-metric="回覆衛生局時間">i</button></div>
-        </div>
-      </article>
-    </div>
   </section>
 
   <dialog class="eff-v79-dialog" id="effV79MetricDialog">
     <div class="eff-v79-dialog-shell">
       <div class="eff-v79-dialog-head"><div><span>指標說明</span><h3 id="effV79DialogTitle">指標名稱</h3></div><button type="button" id="effV79DialogClose" aria-label="關閉">×</button></div>
       <div class="eff-v79-dialog-body"><p id="effV79DialogDefinition"></p></div>
-    </div>
-  </dialog>
-
-
-  <!-- 4 -->
-  <section class="page" id="outcome">
-    <div class="outcome-v62-toolbar">
-      <div class="outcome-v62-tabs" id="outcomeViewTabs" role="tablist" aria-label="精神症狀改善成效指標檢視">
-        <button type="button" class="outcome-v62-tab active" data-outcome-tab="improvement" role="tab" aria-selected="true">改善情況</button>
-        <button type="button" class="outcome-v62-tab" data-outcome-tab="followup" role="tab" aria-selected="false">評估表填寫狀況</button>
-        <button type="button" class="outcome-v62-tab" data-outcome-tab="resource" role="tab" aria-selected="false">後續醫療資源使用狀況</button>
-      </div>
-    </div>
-
-    <div class="command-filter-card page-time-filter outcome-time-filter" id="outcomeTimeFilter">
-      <div class="command-date-filter">
-        <label>
-          <span>開始日期</span>
-          <input type="date" id="outcomeStartDate" value="2026-01-01">
-        </label>
-        <span class="command-date-arrow">→</span>
-        <label>
-          <span>結束日期</span>
-          <input type="date" id="outcomeEndDate" value="2026-09-25">
-        </label>
-        <button type="button" class="command-apply-btn" id="outcomeApplyRange">套用</button>
-      </div>
-      <div class="command-quick-filter" id="outcomeQuickFilter">
-        <button type="button" data-outcome-range="today">本日</button>
-        <button type="button" data-outcome-range="month">本月</button>
-        <button type="button" data-outcome-range="quarter">本季</button>
-        <button type="button" class="active" data-outcome-range="year">本年度</button>
-      </div>
-    </div>
-
-    <div class="analysis-filter-row outcome-filter-row">
-      <div class="analysis-filter-label">通報類別分析</div>
-      <div class="risk-filter" id="outcomeFilter" aria-label="通報類別篩選">
-        <button type="button" class="risk-filter-btn active" data-filter="all">全部</button>
-        <button type="button" class="risk-filter-btn" data-filter="emergency">緊急醫療</button>
-        <button type="button" class="risk-filter-btn" data-filter="optimized">優化計畫</button>
-      </div>
-    </div>
-
-    <div class="outcome-v62-panel active" data-outcome-panel="improvement">
-      <div class="outcome-legend">
-        <span><i class="outcome-dot improve"></i>改善</span>
-        <span><i class="outcome-dot flat"></i>持平</span>
-        <span><i class="outcome-dot worse"></i>變差</span>
-        <small>點擊任一圓環圖可下探個案資料</small>
-      </div>
-
-      <div class="outcome-grid" id="outcomeGrid">
-        <article class="outcome-card" data-metric="bsrs3" tabindex="0">
-          <div class="outcome-card-head"><h3>BSRS-5 三個月</h3><span class="outcome-n"></span></div>
-          <button type="button" class="outcome-donut-btn" aria-label="查看 BSRS-5 三個月個案明細">
-            <div class="outcome-donut"><div class="outcome-center"><strong class="outcome-avg"></strong><span>平均改善率</span></div></div>
-          </button>
-          <div class="outcome-breakdown"></div>
-        </article>
-
-        <article class="outcome-card" data-metric="bsrs6" tabindex="0">
-          <div class="outcome-card-head"><h3>BSRS-5 六個月</h3><span class="outcome-n"></span></div>
-          <button type="button" class="outcome-donut-btn" aria-label="查看 BSRS-5 六個月個案明細">
-            <div class="outcome-donut"><div class="outcome-center"><strong class="outcome-avg"></strong><span>平均改善率</span></div></div>
-          </button>
-          <div class="outcome-breakdown"></div>
-        </article>
-
-        <article class="outcome-card" data-metric="cgi3" tabindex="0">
-          <div class="outcome-card-head"><h3>CGI-S 三個月</h3><span class="outcome-n"></span></div>
-          <button type="button" class="outcome-donut-btn" aria-label="查看 CGI-S 三個月個案明細">
-            <div class="outcome-donut"><div class="outcome-center"><strong class="outcome-avg"></strong><span>平均改善率</span></div></div>
-          </button>
-          <div class="outcome-breakdown"></div>
-        </article>
-
-        <article class="outcome-card" data-metric="cgi6" tabindex="0">
-          <div class="outcome-card-head"><h3>CGI-S 六個月</h3><span class="outcome-n"></span></div>
-          <button type="button" class="outcome-donut-btn" aria-label="查看 CGI-S 六個月個案明細">
-            <div class="outcome-donut"><div class="outcome-center"><strong class="outcome-avg"></strong><span>平均改善率</span></div></div>
-          </button>
-          <div class="outcome-breakdown"></div>
-        </article>
-
-        <article class="outcome-card" data-metric="gaf3" tabindex="0">
-          <div class="outcome-card-head"><h3>GAF 三個月</h3><span class="outcome-n"></span></div>
-          <button type="button" class="outcome-donut-btn" aria-label="查看 GAF 三個月個案明細">
-            <div class="outcome-donut"><div class="outcome-center"><strong class="outcome-avg"></strong><span>平均改善率</span></div></div>
-          </button>
-          <div class="outcome-breakdown"></div>
-        </article>
-
-        <article class="outcome-card" data-metric="gaf6" tabindex="0">
-          <div class="outcome-card-head"><h3>GAF 六個月</h3><span class="outcome-n"></span></div>
-          <button type="button" class="outcome-donut-btn" aria-label="查看 GAF 六個月個案明細">
-            <div class="outcome-donut"><div class="outcome-center"><strong class="outcome-avg"></strong><span>平均改善率</span></div></div>
-          </button>
-          <div class="outcome-breakdown"></div>
-        </article>
-
-        <article class="outcome-card" data-metric="risk3" tabindex="0">
-          <div class="outcome-card-head"><h3>風險減傷評估 三個月</h3><span class="outcome-n"></span></div>
-          <button type="button" class="outcome-donut-btn" aria-label="查看風險減傷評估三個月個案明細">
-            <div class="outcome-donut"><div class="outcome-center"><strong class="outcome-avg"></strong><span>平均改善率</span></div></div>
-          </button>
-          <div class="outcome-breakdown"></div>
-        </article>
-
-        <article class="outcome-card" data-metric="risk6" tabindex="0">
-          <div class="outcome-card-head"><h3>風險減傷評估 六個月</h3><span class="outcome-n"></span></div>
-          <button type="button" class="outcome-donut-btn" aria-label="查看風險減傷評估六個月個案明細">
-            <div class="outcome-donut"><div class="outcome-center"><strong class="outcome-avg"></strong><span>平均改善率</span></div></div>
-          </button>
-          <div class="outcome-breakdown"></div>
-        </article>
-      </div>
-    </div>
-
-    <div class="outcome-v62-panel" data-outcome-panel="followup" hidden>
-      <div class="outcome-followup-grid">
-        <article class="outcome-followup-cycle-card">
-          <div class="outcome-v62-card-head">
-            <div>
-              <span class="outcome-v62-eyebrow">追蹤量表</span>
-              <h3>結案後 3 個月</h3>
-            </div>
-            <span class="outcome-v62-denominator" id="followup3Expected">應回收 280 份</span>
-          </div>
-
-          <!-- v4：可追蹤率升為主指標（較重要），回收率降為次要 -->
-          <div class="outcome-followup-main">
-            <div class="outcome-followup-main-copy">
-              <span>追蹤量表可追蹤率</span>
-              <strong id="followup3TrackableRate">84.1%</strong>
-              <small id="followup3TrackableCount">185 / 220</small>
-            </div>
-            <div class="outcome-v62-progress"><i id="followup3TrackableBar" style="width:84.1%"></i></div>
-            <p>填表且有寫分數 ÷ 已回收數量</p>
-          </div>
-
-          <div class="outcome-followup-secondary-grid">
-            <div class="outcome-followup-secondary trackable">
-              <span>追蹤量表回收率</span>
-              <strong id="followup3ReturnRate">78.6%</strong>
-              <small id="followup3ReturnCount">220 / 280</small>
-              <p>有填寫評估量表 ÷ 應該回收的數量</p>
-            </div>
-            <div class="outcome-followup-secondary unable">
-              <span>追蹤量表無法填答率</span>
-              <strong id="followup3UnableRate">15.9%</strong>
-              <small id="followup3UnableCount">35 / 220</small>
-              <p>填表且勾選無法填答 ÷ 已回收數量</p>
-            </div>
-          </div>
-        </article>
-
-        <article class="outcome-followup-cycle-card">
-          <div class="outcome-v62-card-head">
-            <div>
-              <span class="outcome-v62-eyebrow">追蹤量表</span>
-              <h3>結案後 6 個月</h3>
-            </div>
-            <span class="outcome-v62-denominator" id="followup6Expected">應回收 240 份</span>
-          </div>
-
-          <!-- v4：可追蹤率升為主指標（較重要），回收率降為次要 -->
-          <div class="outcome-followup-main">
-            <div class="outcome-followup-main-copy">
-              <span>追蹤量表可追蹤率</span>
-              <strong id="followup6TrackableRate">80.8%</strong>
-              <small id="followup6TrackableCount">139 / 172</small>
-            </div>
-            <div class="outcome-v62-progress"><i id="followup6TrackableBar" style="width:80.8%"></i></div>
-            <p>填表且有寫分數 ÷ 已回收數量</p>
-          </div>
-
-          <div class="outcome-followup-secondary-grid">
-            <div class="outcome-followup-secondary trackable">
-              <span>追蹤量表回收率</span>
-              <strong id="followup6ReturnRate">71.7%</strong>
-              <small id="followup6ReturnCount">172 / 240</small>
-              <p>有填寫評估量表 ÷ 應該回收的數量</p>
-            </div>
-            <div class="outcome-followup-secondary unable">
-              <span>追蹤量表無法填答率</span>
-              <strong id="followup6UnableRate">19.2%</strong>
-              <small id="followup6UnableCount">33 / 172</small>
-              <p>填表且勾選無法填答 ÷ 已回收數量</p>
-            </div>
-          </div>
-        </article>
-      </div>
-    </div>
-
-    <div class="outcome-v62-panel" data-outcome-panel="resource" hidden>
-      <div class="outcome-resource-grid">
-        <article class="outcome-resource-card outcome-resource-monthly">
-          <div class="outcome-v62-card-head">
-            <div>
-              <span class="outcome-v62-eyebrow">已開案後</span>
-              <h3>優化計畫結案每月醫療使用次數變化</h3>
-            </div>
-          </div>
-
-          <div class="outcome-resource-delta-grid">
-            <div class="outcome-resource-delta">
-              <span>每月使用門診次數變化</span>
-              <strong id="resourceOutpatientDelta">−0.8 <em>次 / 月</em></strong>
-              <div class="outcome-resource-axis"><i id="resourceOutpatientMarker" style="left:36%"></i></div>
-              <small>結案時次數 - 第一次評估訪視時次數</small>
-            </div>
-            <div class="outcome-resource-delta">
-              <span>每月使用急診次數變化</span>
-              <strong id="resourceEmergencyDelta">−0.4 <em>次 / 月</em></strong>
-              <div class="outcome-resource-axis"><i id="resourceEmergencyMarker" style="left:43%"></i></div>
-              <small>結案時次數 - 第一次評估訪視時次數</small>
-            </div>
-          </div>
-        </article>
-
-        <article class="outcome-resource-card outcome-resource-aftercare">
-          <div class="outcome-v62-card-head">
-            <div>
-              <span class="outcome-v62-eyebrow">已結案後</span>
-              <h3>後續醫療資源使用成效</h3>
-            </div>
-          </div>
-
-          <div class="outcome-resource-list">
-            <div class="outcome-resource-row">
-              <div><span>個案再住院次數</span><small>結案後住院次數 - 收案/開案時過去一年精神科住院次數</small></div>
-              <strong id="resourceReadmission">−0.38 <em>次 / 人</em></strong>
-            </div>
-            <div class="outcome-resource-row">
-              <div><span>個案身心科門診治療成效</span><small>結案後身心科門診使用次數 - 收案/開案時過去一年精神科門診次數</small></div>
-              <strong id="resourcePsych">+1.60 <em>次 / 人</em></strong>
-            </div>
-            <div class="outcome-resource-row">
-              <div><span>個案居家照護科門診治療成效</span><small>結案後居家照護科門診使用次數 - 收案/開案時過去一年精神科門診次數</small></div>
-              <strong id="resourceHomeCare">+0.72 <em>次 / 人</em></strong>
-            </div>
-          </div>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- 5 -->
-  <section class="page" id="ai">
-<div class="ai-layout">
-      <section class="ai-scatter-card">
-        <div class="ai-card-head">
-                      <div>
-              <h3>AI 預測與專業評估有多接近</h3>
-              <p>每個點代表一筆個案；越接近斜線，代表 AI 預測越接近專業人員評估。</p>
-            </div>
-            <div class="ai-line-legend" aria-label="圖例">
-              <span><i class="regression"></i>整體趨勢</span>
-              <span><i class="baseline"></i>完全一致</span>
-            </div>
-</div>
-        <div class="ai-scatter-wrap">
-          <svg id="aiScatterSvg" class="ai-scatter-svg" viewBox="0 0 820 620" role="img" aria-label="AI 預測分數與專業評估分數比較圖"></svg>
-          <div id="aiScatterTooltip" class="ai-scatter-tooltip" hidden></div>
-        </div>
-      </section>
-
-      <aside class="ai-right">
-        <div class="ai-kpi-grid">
-          <button type="button" class="ai-kpi-card ai-kpi-clickable" id="openAiCorrelationDialog">
-            <span>預測吻合程度</span>
-            <strong id="aiCorrelation">—</strong>
-            <small>越接近 1，整體越一致</small>
-            <span class="v6-open-hint">點擊查看變化 <i aria-hidden="true">›</i></span>
-          </button>
-          <article class="ai-kpi-card">
-            <span>累積比對資料</span>
-            <strong id="aiPopulation">620</strong>
-            <small>筆 AI 預測與專業評估完整資料</small>
-          </article>
-        </div>
-
-        <article class="ai-explain-card">
-          <h3>本頁面說明</h3>
-
-          <div class="ai-explain-item">
-            <b>這個 AI 用來做什麼？</b>
-            <p>AI 會先依通報內容估算風險分數，協助判斷處理優先順序。結果僅供流程參考，最後仍以專業人員評估為準。</p>
-          </div>
-
-          <div class="ai-explain-item">
-            <b>資料怎麼來？</b>
-            <p>系統會累積「AI 預測」和「專業人員評估」都完整的案件，用來持續檢查 AI 的預測表現。</p>
-          </div>
-
-          <div class="ai-explain-item">
-            <b>圖表怎麼看？</b>
-            <p>每個點是一筆案件。點越靠近斜線，代表 AI 預測和專業評估越接近；離得越遠，差異越大。</p>
-          </div>
-
-          <div class="ai-explain-item">
-            <b>「預測吻合程度」代表什麼？</b>
-            <p>數值越接近 1，表示 AI 預測和專業評估的整體趨勢越一致。這不是診斷正確率。</p>
-          </div>
-        </article>
-      </aside>
-    </div>
-  </section>
-
-  <dialog class="ai-history-dialog" id="aiCorrelationDialog">
-    <div class="ai-history-shell">
-      <div class="ai-history-head">
-        <div>
-          <h3>AI 預測吻合程度變化</h3>
-          <p>查看累積比對資料增加後，AI 預測與專業評估的一致程度是否持續改善。</p>
-        </div>
-        <button type="button" id="closeAiCorrelationDialog" aria-label="關閉">×</button>
-      </div>
-
-      <div class="ai-history-body">
-        <div class="ai-history-chart-wrap">
-          <svg id="aiHistorySvg" class="ai-history-svg" viewBox="0 0 940 500" role="img" aria-label="AI 預測吻合程度歷程圖"></svg>
-          <div class="ai-history-tooltip" id="aiHistoryTooltip" hidden></div>
-        </div>
-
-        <div class="ai-history-foot">
-          <span>X 軸：累積比對資料（筆）</span>
-          <span>Y 軸：吻合程度（越接近 1 越一致）</span>
-        </div>
-      </div>
     </div>
   </dialog>
 
@@ -12865,9 +12053,7 @@
     <div class="analysis-filter-row">
       <span class="analysis-filter-label">通報類別分析</span>
       <div class="risk-filter" id="reporterTypeFilter">
-        <button type="button" class="risk-filter-btn active" data-reporter-type="all">全部</button>
-        <button type="button" class="risk-filter-btn" data-reporter-type="emergency">緊急醫療</button>
-        <button type="button" class="risk-filter-btn" data-reporter-type="optimization">優化計畫</button>
+        <button type="button" class="risk-filter-btn active" data-reporter-type="emergency">緊急醫療</button>
       </div>
       <span class="reporter-range-label" id="reporterRangeLabel" hidden>2026/01/01 - 2026/09/25</span>
     </div>
@@ -12940,331 +12126,11 @@
     <div class="reporter-tooltip" id="reporterTooltip" hidden></div>
   </section>
 
-  <!-- 7 -->
-  <section class="page" id="hospital">
-    <div class="command-filter-card page-time-filter" id="hospitalTimeFilter">
-      <div class="command-date-filter">
-        <label>
-          <span>開始日期</span>
-          <input type="date" id="hospitalStartDate" value="2026-01-01" min="2026-01-01" max="2026-09-25">
-        </label>
-        <span class="command-date-arrow">→</span>
-        <label>
-          <span>結束日期</span>
-          <input type="date" id="hospitalEndDate" value="2026-09-25" min="2026-01-01" max="2026-09-25">
-        </label>
-        <button type="button" class="command-apply-btn" id="hospitalApplyRange">套用</button>
-      </div>
-      <div class="command-quick-filter" id="hospitalQuickFilter">
-        <button type="button" data-hospital-range="today">本日</button>
-        <button type="button" data-hospital-range="month">本月</button>
-        <button type="button" data-hospital-range="quarter">本季</button>
-        <button type="button" class="active" data-hospital-range="year">本年度</button>
-      </div>
-    </div>
-
-    <div class="analysis-filter-row">
-      <span class="analysis-filter-label">通報類別分析</span>
-      <div class="risk-filter" id="hospitalTypeFilter">
-        <button type="button" class="risk-filter-btn active" data-hospital-type="all">全部</button>
-        <button type="button" class="risk-filter-btn" data-hospital-type="emergency">緊急醫療</button>
-        <button type="button" class="risk-filter-btn" data-hospital-type="optimization">優化計畫</button>
-      </div>
-    </div>
-
-    <div class="hospital-split-layout" id="hospitalSplitLayout">
-      <!-- Right: HIS outcome indicators -->
-      <section class="hospital-his-section hospital-his-right">
-        <div class="hospital-his-head">
-          <div>
-            <h3>結案後醫療資源使用分析</h3>
-          </div>
-          <button type="button" class="hospital-his-info-btn" id="openHospitalHisInfo">指標計算說明</button>
-        </div>
-
-        <div class="hospital-his-grid hospital-his-grid-right">
-          <article class="hospital-his-card ratio" data-hospital-kind="emergency">
-            <div class="hospital-his-label">緊急醫療結案後轉介至本院醫療系統比例</div>
-            <strong>68.4%</strong>
-            <div class="hospital-his-detail">104 / 152 件</div>
-            <div class="hospital-his-bar"><i style="width:68.4%"></i></div>
-            <small>結案日後有門診、居家或住院就醫紀錄</small>
-          </article>
-
-          <article class="hospital-his-card ratio" data-hospital-kind="optimization">
-            <div class="hospital-his-label">優化計畫結案後轉介至本院醫療系統比例</div>
-            <strong>54.8%</strong>
-            <div class="hospital-his-detail">121 / 221 件</div>
-            <div class="hospital-his-bar"><i style="width:54.8%"></i></div>
-            <small>結案日後有門診、居家或住院就醫紀錄</small>
-          </article>
-
-          <article class="hospital-his-card delta good">
-            <div class="hospital-his-label">已結案後個案再住院次數</div>
-            <strong>−0.38 <em>次 / 人</em></strong>
-            <div class="hospital-his-trend">↓ 較收案前一年減少</div>
-            <small>結案後住院次數 − 收案／開案時過去一年精神科住院次數</small>
-          </article>
-
-          <article class="hospital-his-card delta good">
-            <div class="hospital-his-label">已結案後個案身心科門診治療成效</div>
-            <strong>+1.60 <em>次 / 人</em></strong>
-            <div class="hospital-his-trend">↑ 結案後門診使用增加</div>
-            <small>結案後身心科門診使用次數 − 收案／開案時過去一年精神科門診次數</small>
-          </article>
-
-          <article class="hospital-his-card delta good">
-            <div class="hospital-his-label">已結案後個案居家照護科門診治療成效</div>
-            <strong>+0.72 <em>次 / 人</em></strong>
-            <div class="hospital-his-trend">↑ 結案後居家照護使用增加</div>
-            <small>結案後居家照護科門診使用次數 − 收案／開案時過去一年精神科門診次數</small>
-          </article>
-
-          <article class="hospital-his-card ratio highlight">
-            <div class="hospital-his-label">結案追蹤率</div>
-            <strong>72.9%</strong>
-            <div class="hospital-his-detail">350 / 480 件</div>
-            <div class="hospital-his-bar"><i style="width:72.9%"></i></div>
-            <small>平台個案轉介至三總北投居家、門診或住院數 ÷ 已結案個案數</small>
-          </article>
-
-          <article class="hospital-his-card unable-summary" data-hospital-kind="optimization" id="hospitalUnableCard" role="button" tabindex="0" aria-haspopup="dialog">
-            <div class="hospital-his-label">優化計畫無法收案</div>
-            <strong><span id="hospitalUnableCardTotal">60</span> <em>件</em></strong>
-            <div class="hospital-his-detail" id="hospitalUnableTop">最多：住院 12 件（20.0%）</div>
-            <span class="v6-open-hint">點擊查看各無法收案原因人數與占比 <i aria-hidden="true">›</i></span>
-          </article>
-        </div>
-      </section>
-    </div>
-
-    <!-- v5：左側「優化計畫無法收案」收成右側一張卡片，點擊後以 dialog 顯示完整原因表 -->
-    <dialog class="v5-dialog hospital-unable-dialog" id="hospitalUnableDialog" aria-labelledby="hospitalUnableDialogTitle">
-      <div class="v5-dialog-shell">
-        <div class="v5-dialog-head">
-          <div>
-            <span class="v5-dialog-eyebrow">醫療機構端處理成效分析</span>
-            <h3 id="hospitalUnableDialogTitle">優化計畫無法收案原因</h3>
-          </div>
-          <button type="button" class="v5-dialog-close" data-close-dialog aria-label="關閉">×</button>
-        </div>
-        <div class="v5-dialog-body">
-          <article class="hospital-card hospital-unable-card hospital-unable-full" data-hospital-kind="optimization">
-            <div class="hospital-card-head hospital-unable-head">
-              <div>
-                <h3>優化計畫無法收案</h3>
-              </div>
-              <div class="hospital-unable-total">
-                <span>總無法收案</span>
-                <strong id="hospitalUnableTotal">60</strong>
-              </div>
-            </div>
-
-            <div class="hospital-unable-table-wrap hospital-unable-table-full">
-              <table class="hospital-unable-table">
-                <thead>
-                  <tr>
-                    <th>無法收案原因</th>
-                    <th class="count-col">
-                      <button type="button" id="hospitalUnableSort">
-                        人數 <span id="hospitalUnableSortIcon">↓</span>
-                      </button>
-                    </th>
-                    <th>百分比</th>
-                  </tr>
-                </thead>
-                <tbody id="hospitalUnableTbody"></tbody>
-              </table>
-            </div>
-
-            <div class="hospital-unable-foot">
-              百分比＝各原因無法收案數量 ÷ 總無法收案數量
-            </div>
-          </article>
-        </div>
-      </div>
-    </dialog>
-  </section>
-
-  <!-- 8: Hospital internal control indicators -->
-  <section class="page" id="snq">
-    <div class="command-filter-card page-time-filter" id="snqTimeFilter">
-      <div class="command-date-filter">
-        <label>
-          <span>開始日期</span>
-          <input type="date" id="snqStartDate" value="2026-01-01" min="2026-01-01" max="2026-09-25">
-        </label>
-        <span class="command-date-arrow">→</span>
-        <label>
-          <span>結束日期</span>
-          <input type="date" id="snqEndDate" value="2026-09-25" min="2026-01-01" max="2026-09-25">
-        </label>
-        <button type="button" class="command-apply-btn" id="snqApplyRange">套用</button>
-      </div>
-      <div class="command-quick-filter" id="snqQuickFilter">
-        <button type="button" data-snq-range="today">本日</button>
-        <button type="button" data-snq-range="month">本月</button>
-        <button type="button" data-snq-range="quarter">本季</button>
-        <button type="button" class="active" data-snq-range="year">本年度</button>
-      </div>
-    </div>
-
-    <div class="analysis-filter-row">
-      <span class="analysis-filter-label">通報類別分析</span>
-      <div class="risk-filter" id="snqTypeFilter">
-        <button type="button" class="risk-filter-btn active" data-snq-type="all">全部</button>
-        <button type="button" class="risk-filter-btn" data-snq-type="emergency">緊急醫療</button>
-        <button type="button" class="risk-filter-btn" data-snq-type="optimization">優化計畫</button>
-      </div>
-    </div>
-
-    <div class="snq-dashboard">
-      <section class="snq-section snq-core-section">
-        <div class="snq-section-head">
-          <div>
-            <h3>院內追蹤與再住院指標</h3>
-            <p>門診／居家醫療持續治療與再住院情形</p>
-          </div>
-        </div>
-        <div class="snq-grid snq-grid-four">
-          <article class="snq-card" data-snq-kind="shared" data-snq-base="82.6" data-snq-numerator="119" data-snq-denominator="144">
-            <div class="snq-card-title">居家醫療個案門診追蹤率</div>
-            <div class="snq-card-value"><strong>82.6%</strong><span>119 / 144 人</span></div>
-            <div class="snq-progress"><i style="width:82.6%"></i></div>
-            <p>初診為居家醫療個案且在Ｘ年中每年均穩定於門診或居家醫療穩定治療4次以上個案／初診為居家醫療(門診)個案，其中只有中間有中斷即不納入次年計算。</p>
-          </article>
-
-          <article class="snq-card" data-snq-kind="shared" data-snq-base="76.4" data-snq-numerator="84" data-snq-denominator="110">
-            <div class="snq-card-title">強制住院個案出院後門診追蹤率</div>
-            <div class="snq-card-value"><strong>76.4%</strong><span>84 / 110 人</span></div>
-            <div class="snq-progress"><i style="width:76.4%"></i></div>
-            <p>強制住院個案出院後個案且在Ｘ年中每年均穩定於門診或居家醫療穩定治療4次以上個案／強制住院個案出院人數，其中只有中間有中斷即不納入次年計算。</p>
-          </article>
-
-          <article class="snq-card snq-card-alert" data-snq-kind="shared" data-snq-base="18.1" data-snq-numerator="26" data-snq-denominator="144">
-            <div class="snq-card-title">初診為居家醫療病人再住院率</div>
-            <div class="snq-card-value"><strong>18.1%</strong><span>26 / 144 人</span></div>
-            <div class="snq-progress"><i style="width:18.1%"></i></div>
-            <p>再住院個案數／初診為居家醫療病人數。</p>
-          </article>
-
-          <article class="snq-card snq-card-alert" data-snq-kind="shared" data-snq-base="23.6" data-snq-numerator="26" data-snq-denominator="110">
-            <div class="snq-card-title">強制住院病人再住院率</div>
-            <div class="snq-card-value"><strong>23.6%</strong><span>26 / 110 人</span></div>
-            <div class="snq-progress"><i style="width:23.6%"></i></div>
-            <p>再住院個案數／強制住院病人數。</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="snq-section snq-referral-section">
-        <div class="snq-section-head">
-          <div>
-            <h3>通報結案後醫療銜接</h3>
-            <p>結案後是否持續銜接本院 HIS 醫療紀錄</p>
-          </div>
-        </div>
-        <div class="snq-grid snq-grid-two" id="snqReferralGrid">
-          <article class="snq-card snq-card-referral" data-snq-kind="emergency" data-snq-base="68.4" data-snq-numerator="104" data-snq-denominator="152">
-            <div class="snq-card-title">緊急醫療結案後轉介至本院醫療系統比例</div>
-            <div class="snq-card-value"><strong>68.4%</strong><span>104 / 152 件</span></div>
-            <div class="snq-progress"><i style="width:68.4%"></i></div>
-            <span class="snq-open-hint">點擊查看門診／居家／住院各自比例 <i aria-hidden="true">›</i></span>
-            <div class="snq-breakdown" hidden>
-              <div class="snq-breakdown-grid">
-                <div class="snq-sub opd" data-snq-sub-base="62.5" title="(於結案日後在 HIS 系統有門診就醫紀錄之個案數/總通報個案數)*100%">
-                  <span class="snq-sub-label">門診</span>
-                  <strong>62.5%</strong>
-                  <em>95 / 152 件</em>
-                  <div class="snq-sub-bar"><i style="width:62.5%"></i></div>
-                </div>
-                <div class="snq-sub home" data-snq-sub-base="21.1" title="(於結案日後在 HIS 系統有居家就醫紀錄之個案數/總通報個案數)*100%">
-                  <span class="snq-sub-label">居家</span>
-                  <strong>21.1%</strong>
-                  <em>32 / 152 件</em>
-                  <div class="snq-sub-bar"><i style="width:21.1%"></i></div>
-                </div>
-                <div class="snq-sub inpatient" data-snq-sub-base="27.6" title="(於結案日後在 HIS 系統有住院就醫紀錄之個案數/總通報個案數)*100%">
-                  <span class="snq-sub-label">住院</span>
-                  <strong>27.6%</strong>
-                  <em>42 / 152 件</em>
-                  <div class="snq-sub-bar"><i style="width:27.6%"></i></div>
-                </div>
-              </div>
-              <div class="snq-breakdown-note">
-                <b>※ 單一個案可能會有重複醫療處置，所以三項比例相加可能會超過100%</b>
-                <span class="snq-breakdown-sum">三項合計 <em>111.2%</em></span>
-              </div>
-              <div class="snq-breakdown-formula">各項比例＝(於結案日後在 HIS 系統有該項就醫紀錄之個案數/總通報個案數)*100%</div>
-            </div>
-            <p>(於結案日後在 HIS 系統有門診、居家或住院就醫紀錄之總個案數/總通報個案數)*100%</p>
-          </article>
-
-          <article class="snq-card snq-card-referral" data-snq-kind="optimization" data-snq-base="54.8" data-snq-numerator="121" data-snq-denominator="221">
-            <div class="snq-card-title">優化計劃結案後轉介至本院醫療系統比例</div>
-            <div class="snq-card-value"><strong>54.8%</strong><span>121 / 221 件</span></div>
-            <div class="snq-progress"><i style="width:54.8%"></i></div>
-            <span class="snq-open-hint">點擊查看門診／居家／住院各自比例 <i aria-hidden="true">›</i></span>
-            <div class="snq-breakdown" hidden>
-              <div class="snq-breakdown-grid">
-                <div class="snq-sub opd" data-snq-sub-base="54.3" title="(於結案日後在 HIS 系統有門診就醫紀錄之個案數/總通報個案數)*100%">
-                  <span class="snq-sub-label">門診</span>
-                  <strong>54.3%</strong>
-                  <em>120 / 221 件</em>
-                  <div class="snq-sub-bar"><i style="width:54.3%"></i></div>
-                </div>
-                <div class="snq-sub home" data-snq-sub-base="30.8" title="(於結案日後在 HIS 系統有居家就醫紀錄之個案數/總通報個案數)*100%">
-                  <span class="snq-sub-label">居家</span>
-                  <strong>30.8%</strong>
-                  <em>68 / 221 件</em>
-                  <div class="snq-sub-bar"><i style="width:30.8%"></i></div>
-                </div>
-                <div class="snq-sub inpatient" data-snq-sub-base="27.1" title="(於結案日後在 HIS 系統有住院就醫紀錄之個案數/總通報個案數)*100%">
-                  <span class="snq-sub-label">住院</span>
-                  <strong>27.1%</strong>
-                  <em>60 / 221 件</em>
-                  <div class="snq-sub-bar"><i style="width:27.1%"></i></div>
-                </div>
-              </div>
-              <div class="snq-breakdown-note">
-                <b>※ 單一個案可能會有重複醫療處置，所以三項比例相加可能會超過100%</b>
-                <span class="snq-breakdown-sum">三項合計 <em>112.2%</em></span>
-              </div>
-              <div class="snq-breakdown-formula">各項比例＝(於結案日後在 HIS 系統有該項就醫紀錄之個案數/總通報個案數)*100%</div>
-            </div>
-            <p>(於結案日後在 HIS 系統有門診、居家或住院就醫紀錄之總個案數/總通報個案數)*100%</p>
-          </article>
-        </div>
-      </section>
-    </div>
-
-    <!-- v5：點擊「結案後轉介至本院醫療系統比例」卡片開啟 -->
-    <dialog class="v5-dialog snq-referral-dialog" id="snqReferralDialog" aria-labelledby="snqReferralDialogTitle">
-      <div class="v5-dialog-shell">
-        <div class="v5-dialog-head">
-          <div>
-            <span class="v5-dialog-eyebrow">醫院內控指標(SNQ)｜轉介去向</span>
-            <h3 id="snqReferralDialogTitle">結案後轉介至本院醫療系統比例</h3>
-          </div>
-          <button type="button" class="v5-dialog-close" data-close-dialog aria-label="關閉">×</button>
-        </div>
-        <div class="v5-dialog-body">
-          <div class="snq-dialog-summary">
-            <div><span>任一項（門診、居家或住院）</span><strong id="snqReferralDialogValue">68.4%</strong></div>
-            <em id="snqReferralDialogCount">104 / 152 件</em>
-          </div>
-          <div class="snq-dialog-breakdown" id="snqReferralDialogBody"></div>
-        </div>
-      </div>
-    </dialog>
-  </section>
-
   <!-- 9 -->
   <section class="page" id="command">
     <div class="command-view-tabs" id="commandViewTabs" role="tablist" aria-label="指揮儀表板檢視">
       <button type="button" class="command-view-tab active" data-command-view="flow" role="tab" aria-selected="true">指揮板</button>
       <button type="button" class="command-view-tab" data-command-view="closure" role="tab" aria-selected="false">結案率</button>
-      <button type="button" class="command-view-tab" data-command-view="comparison" role="tab" aria-selected="false">同期比較</button>
     </div>
 
     <div class="command-view active" id="commandFlowView" data-command-panel="flow">
@@ -13306,36 +12172,36 @@
                     id="commandTotalNode"
                     aria-expanded="true">
               <span>總通報案件</span>
-              <strong id="commandTotal">800</strong>
+              <strong id="commandTotal">220</strong>
               <small>100.0%</small>
             </button>
 
             <article class="interactive-flow-card overall-status pending" id="overallPendingCard">
               <span>待派案件數</span>
-              <strong id="commandPending">35</strong>
-              <small id="commandPendingPct">4.4%</small>
+              <strong id="commandPending">12</strong>
+              <small id="commandPendingPct">5.5%</small>
             </article>
 
             <article class="interactive-flow-card overall-status assigned" id="overallAssignedCard">
               <span>已派案件數</span>
-              <strong id="commandAssigned">145</strong>
-              <small id="commandAssignedPct">18.1%</small>
+              <strong id="commandAssigned">48</strong>
+              <small id="commandAssignedPct">21.8%</small>
             </article>
 
             <article class="interactive-flow-card overall-status closed" id="overallClosedCard">
               <span>結案件數</span>
-              <strong id="commandClosed">480</strong>
-              <small id="commandClosedPct">60.0%</small>
+              <strong id="commandClosed">120</strong>
+              <small id="commandClosedPct">54.5%</small>
             </article>
 
             <article class="interactive-flow-card overall-status notaccepted" id="overallNotAcceptedCard">
               <span>未轉介 / 開案件數</span>
-              <strong id="commandNotAccepted">140</strong>
-              <small id="commandNotAcceptedPct">17.5%</small>
+              <strong id="commandNotAccepted">40</strong>
+              <small id="commandNotAcceptedPct">18.2%</small>
             </article>
           </section>
 
-          <!-- 右側：四種通報類別；總通報案件點擊後才出現 -->
+          <!-- 右側：通報類別（本檔只保留緊急醫療）；總通報案件點擊後才出現 -->
           <section class="interactive-category-column is-open" id="interactiveCategoryColumn">
 
             <div class="interactive-category-row" data-category-row="emergency">
@@ -13346,7 +12212,7 @@
                       aria-expanded="true">
                 <span>緊急醫療</span>
                 <strong id="commandEmergency">220</strong>
-                <small><span id="commandEmergencyPct">27.5%</span></small>
+                <small><span id="commandEmergencyPct">100.0%</span></small>
               </button>
 
               <div class="interactive-detail-group is-open" data-detail-group="emergency">
@@ -13369,111 +12235,6 @@
                   <span>未轉介 / 開案件數</span>
                   <strong id="commandEmergencyNotAccepted">40</strong>
                   <small id="commandEmergencyNotAcceptedPct">18.2%</small>
-                </article>
-              </div>
-            </div>
-
-            <div class="interactive-category-row" data-category-row="class1">
-              <button type="button"
-                      class="interactive-flow-card category-trigger class1"
-                      id="categoryClass1Card"
-                      data-category="class1"
-                      aria-expanded="true">
-                <span>第一類優化計畫</span>
-                <strong id="commandClass1">180</strong>
-                <small><span id="commandClass1Pct">22.5%</span></small>
-              </button>
-
-              <div class="interactive-detail-group is-open" data-detail-group="class1">
-                <article class="interactive-flow-card detail-card pending" id="class1PendingCard">
-                  <span>待派案件數</span>
-                  <strong id="commandClass1Pending">5</strong>
-                  <small id="commandClass1PendingPct">2.8%</small>
-                </article>
-                <article class="interactive-flow-card detail-card assigned" id="class1AssignedCard">
-                  <span>已派案件數</span>
-                  <strong id="commandClass1Assigned">30</strong>
-                  <small id="commandClass1AssignedPct">16.7%</small>
-                </article>
-                <article class="interactive-flow-card detail-card closed" id="class1ClosedCard">
-                  <span>結案件數</span>
-                  <strong id="commandClass1Closed">115</strong>
-                  <small id="commandClass1ClosedPct">63.9%</small>
-                </article>
-                <article class="interactive-flow-card detail-card notaccepted" id="class1NotAcceptedCard">
-                  <span>未轉介 / 開案件數</span>
-                  <strong id="commandClass1NotAccepted">30</strong>
-                  <small id="commandClass1NotAcceptedPct">16.7%</small>
-                </article>
-              </div>
-            </div>
-
-            <div class="interactive-category-row" data-category-row="class2">
-              <button type="button"
-                      class="interactive-flow-card category-trigger class2"
-                      id="categoryClass2Card"
-                      data-category="class2"
-                      aria-expanded="true">
-                <span>第二類優化計畫</span>
-                <strong id="commandClass2">210</strong>
-                <small><span id="commandClass2Pct">26.3%</span></small>
-              </button>
-
-              <div class="interactive-detail-group is-open" data-detail-group="class2">
-                <article class="interactive-flow-card detail-card pending" id="class2PendingCard">
-                  <span>待派案件數</span>
-                  <strong id="commandClass2Pending">8</strong>
-                  <small id="commandClass2PendingPct">3.8%</small>
-                </article>
-                <article class="interactive-flow-card detail-card assigned" id="class2AssignedCard">
-                  <span>已派案件數</span>
-                  <strong id="commandClass2Assigned">38</strong>
-                  <small id="commandClass2AssignedPct">18.1%</small>
-                </article>
-                <article class="interactive-flow-card detail-card closed" id="class2ClosedCard">
-                  <span>結案件數</span>
-                  <strong id="commandClass2Closed">125</strong>
-                  <small id="commandClass2ClosedPct">59.5%</small>
-                </article>
-                <article class="interactive-flow-card detail-card notaccepted" id="class2NotAcceptedCard">
-                  <span>未轉介 / 開案件數</span>
-                  <strong id="commandClass2NotAccepted">39</strong>
-                  <small id="commandClass2NotAcceptedPct">18.6%</small>
-                </article>
-              </div>
-            </div>
-
-            <div class="interactive-category-row" data-category-row="class3">
-              <button type="button"
-                      class="interactive-flow-card category-trigger class3"
-                      id="categoryClass3Card"
-                      data-category="class3"
-                      aria-expanded="true">
-                <span>第三類優化計畫</span>
-                <strong id="commandClass3">190</strong>
-                <small><span id="commandClass3Pct">23.8%</span></small>
-              </button>
-
-              <div class="interactive-detail-group is-open" data-detail-group="class3">
-                <article class="interactive-flow-card detail-card pending" id="class3PendingCard">
-                  <span>待派案件數</span>
-                  <strong id="commandClass3Pending">10</strong>
-                  <small id="commandClass3PendingPct">5.3%</small>
-                </article>
-                <article class="interactive-flow-card detail-card assigned" id="class3AssignedCard">
-                  <span>已派案件數</span>
-                  <strong id="commandClass3Assigned">29</strong>
-                  <small id="commandClass3AssignedPct">15.3%</small>
-                </article>
-                <article class="interactive-flow-card detail-card closed" id="class3ClosedCard">
-                  <span>結案件數</span>
-                  <strong id="commandClass3Closed">120</strong>
-                  <small id="commandClass3ClosedPct">63.2%</small>
-                </article>
-                <article class="interactive-flow-card detail-card notaccepted" id="class3NotAcceptedCard">
-                  <span>未轉介 / 開案件數</span>
-                  <strong id="commandClass3NotAccepted">31</strong>
-                  <small id="commandClass3NotAcceptedPct">16.3%</small>
                 </article>
               </div>
             </div>
@@ -13587,57 +12348,6 @@
         </div>
       </article>
     </div>
-
-    <div class="command-view" id="commandComparisonView" data-command-panel="comparison" hidden>
-      <div class="command-compare-toolbar">
-        <div class="command-compare-mode-wrap">
-          <div class="command-compare-mode" id="commandCompareMode">
-            <button type="button" data-mode="month">同月比較</button>
-            <button type="button" class="active" data-mode="ytd">同期累計</button>
-            <button type="button" data-mode="customMonth">其他月份比較</button>
-          </div>
-
-          <label class="command-compare-month-select" id="commandCompareMonthSelect" hidden>
-            <span>選擇月份</span>
-            <select id="commandCompareMonth">
-              <option value="1">1 月</option>
-              <option value="2">2 月</option>
-              <option value="3">3 月</option>
-              <option value="4">4 月</option>
-              <option value="5">5 月</option>
-              <option value="6">6 月</option>
-              <option value="7">7 月</option>
-              <option value="8">8 月</option>
-              <option value="9" selected>9 月</option>
-              <option value="10">10 月</option>
-              <option value="11">11 月</option>
-              <option value="12">12 月</option>
-            </select>
-          </label>
-        </div>
-        <div class="command-compare-range">
-          <strong id="commandCompareRangeTitle">同期累計｜1/1－9/25</strong>
-          <span>比較近三年相同期間</span>
-        </div>
-      </div>
-
-      <!-- v5：同期比較改為比較「案件處理效率指標」，並可依通報類別篩選 -->
-      <div class="analysis-filter-row command-compare-filter-row">
-        <span class="analysis-filter-label">通報類別分析</span>
-        <div class="risk-filter" id="commandCompareTypeFilter">
-          <button type="button" class="risk-filter-btn active" data-compare-type="all">全部</button>
-          <button type="button" class="risk-filter-btn" data-compare-type="emergency">緊急醫療</button>
-          <button type="button" class="risk-filter-btn" data-compare-type="optimization">優化計畫</button>
-        </div>
-        <span class="command-compare-legend">
-          <i class="better"></i>較去年改善
-          <i class="worse"></i>較去年退步
-          <i class="neutral"></i>僅供參考（占比類）
-        </span>
-      </div>
-
-      <div class="command-compare-metrics" id="commandCompareMetrics"></div>
-    </div>
   </section>
 </div>
 
@@ -13714,46 +12424,6 @@
 </dialog>
 
 
-<dialog class="outcome-dialog" id="outcomeDetailDialog">
-  <div class="outcome-dialog-head">
-    <div>
-      <h3 id="outcomeDialogTitle">BSRS-5 三個月｜個案明細</h3>
-      <p id="outcomeDialogSubtitle">持平閾值：-1.0% ～ +1.0%（含）；&gt; +1.0% 為改善，&lt; -1.0% 為變差。</p>
-    </div>
-    <button type="button" class="outcome-dialog-close" id="closeOutcomeDialog" aria-label="關閉">×</button>
-  </div>
-  <div class="outcome-dialog-toolbar">
-    <div class="outcome-status-filter" id="outcomeStatusFilter">
-      <button type="button" class="outcome-status-btn active" data-status="all">全部</button>
-      <button type="button" class="outcome-status-btn" data-status="改善">改善</button>
-      <button type="button" class="outcome-status-btn" data-status="持平">持平</button>
-      <button type="button" class="outcome-status-btn" data-status="變差">變差</button>
-    </div>
-    <div class="outcome-dialog-summary" id="outcomeDialogSummary"></div>
-  </div>
-  <div class="outcome-table-wrap">
-    <table class="outcome-table">
-      <thead>
-        <tr>
-          <th>
-            <button type="button" class="outcome-sort-btn" data-sort="category">
-              通報類別 <span class="outcome-sort-icon" aria-hidden="true"></span>
-            </button>
-          </th>
-          <th>
-            <button type="button" class="outcome-sort-btn active desc" data-sort="change">
-              改善百分比 <span class="outcome-sort-icon" aria-hidden="true">↓</span>
-            </button>
-          </th>
-          <th>改善類別</th>
-        </tr>
-      </thead>
-      <tbody id="outcomeDetailBody"></tbody>
-    </table>
-    <div class="outcome-dialog-empty" id="outcomeDialogEmpty">目前沒有符合條件的個案</div>
-  </div>
-</dialog>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   // Tabs
@@ -13820,7 +12490,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  let riskCurrentFilter='all';
+  let riskCurrentFilter='emergency';
   let riskTimeMode='year';
   const RISK_DATE_PRESETS={
     today:{start:'2026-09-25',end:'2026-09-25',adjust:4},
@@ -13892,7 +12562,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateRiskRangeLabel(riskStartDate.value,riskEndDate.value);
     renderRiskChart();
   });
-  renderRiskChart('all');
+  renderRiskChart('emergency');
 
 
 
@@ -14860,428 +13530,6 @@ document.addEventListener('DOMContentLoaded', () => {
   effRiskDialogClose?.addEventListener('click',()=>effRiskDialog?.close());
   effRiskDialog?.addEventListener('click',e=>{if(e.target===effRiskDialog)effRiskDialog.close();});
 
-  // ===== Outcome page =====
-  const outcomeMetrics = {
-    bsrs3:{title:'BSRS-5 三個月', base:{all:[126,38,26,18.4], emergency:[34,8,10,11.6], optimized:[92,30,16,20.9]}},
-    bsrs6:{title:'BSRS-5 六個月', base:{all:[104,25,15,25.7], emergency:[27,7,6,17.8], optimized:[77,18,9,28.6]}},
-    cgi3:{title:'CGI-S 三個月', base:{all:[112,44,28,14.2], emergency:[28,10,12,8.7], optimized:[84,34,16,16.0]}},
-    cgi6:{title:'CGI-S 六個月', base:{all:[96,32,16,22.5], emergency:[25,9,7,15.4], optimized:[71,23,9,25.0]}},
-    gaf3:{title:'GAF 三個月', base:{all:[118,36,22,16.9], emergency:[31,10,9,12.1], optimized:[87,26,13,18.5]}},
-    gaf6:{title:'GAF 六個月', base:{all:[101,27,14,27.6], emergency:[26,8,6,19.3], optimized:[75,19,8,30.4]}},
-    risk3:{title:'風險減傷評估 三個月', base:{all:[109,40,31,15.8], emergency:[30,11,14,10.2], optimized:[79,29,17,17.9]}},
-    risk6:{title:'風險減傷評估 六個月', base:{all:[93,29,20,24.3], emergency:[24,8,9,16.5], optimized:[69,21,11,27.0]}}
-  };
-
-  const OUTCOME_CATEGORY_ORDER = [
-    '緊急醫療',
-    '第一類優化計畫',
-    '第二類優化計畫',
-    '第三類優化計畫'
-  ];
-
-  const OUTCOME_FILTER_LABELS = {
-    all:'全部',
-    emergency:'緊急醫療',
-    optimized:'優化計畫'
-  };
-
-  const OUTCOME_FLAT_MIN=-1.0;
-  const OUTCOME_FLAT_MAX=1.0;
-
-  function classifyOutcomeChange(value){
-    return value>OUTCOME_FLAT_MAX ? '改善' : value<OUTCOME_FLAT_MIN ? '變差' : '持平';
-  }
-
-  let outcomeCurrentFilter='all';
-  let outcomeCurrentMetric='bsrs3';
-  let outcomeCurrentStatus='all';
-  let outcomeTimeMode='year';
-  let outcomeTimeFactor=1;
-  const OUTCOME_DATE_PRESETS={
-    today:{start:'2026-09-25',end:'2026-09-25',factor:.16},
-    month:{start:'2026-09-01',end:'2026-09-25',factor:.28},
-    quarter:{start:'2026-07-01',end:'2026-09-25',factor:.58},
-    year:{start:'2026-01-01',end:'2026-09-25',factor:1}
-  };
-
-  // Only one column can own the sort state at a time.
-  // Default: improvement percentage descending.
-  let outcomeSort={column:'change',direction:'desc'};
-
-  function outcomePct(n,total){
-    return total ? (n/total*100) : 0;
-  }
-
-  function metricSummary(metricKey,filterKey){
-    const a=outcomeMetrics[metricKey].base[filterKey];
-    const f=outcomeTimeFactor || 1;
-    const improve=Math.max(1,Math.round(a[0]*f));
-    const flat=Math.max(1,Math.round(a[1]*f));
-    const worse=Math.max(1,Math.round(a[2]*f));
-    const avg=a[3];
-    const total=improve+flat+worse;
-    return {improve,flat,worse,avg,total};
-  }
-
-  function renderOutcomeCards(){
-    document.querySelectorAll('.outcome-card').forEach(card=>{
-      const key=card.dataset.metric;
-      const d=metricSummary(key,outcomeCurrentFilter);
-      const pi=outcomePct(d.improve,d.total);
-      const pf=outcomePct(d.flat,d.total);
-      const pw=100-pi-pf;
-
-      card.querySelector('.outcome-n').textContent=`N=${d.total}`;
-      card.querySelector('.outcome-avg').textContent=`${d.avg.toFixed(1)}%`;
-      card.querySelector('.outcome-donut').style.background=
-        `conic-gradient(#24a66a 0 ${pi.toFixed(3)}%, #f1a23a ${pi.toFixed(3)}% ${(pi+pf).toFixed(3)}%, #df554b ${(pi+pf).toFixed(3)}% 100%)`;
-
-      card.querySelector('.outcome-breakdown').innerHTML=`
-        <div class="improve"><span>改善</span><strong>${d.improve} (${pi.toFixed(1)}%)</strong></div>
-        <div class="flat"><span>持平</span><strong>${d.flat} (${pf.toFixed(1)}%)</strong></div>
-        <div class="worse"><span>變差</span><strong>${d.worse} (${pw.toFixed(1)}%)</strong></div>`;
-    });
-  }
-
-  function outcomeCategoriesForFilter(filterKey){
-    if(filterKey==='emergency') return ['緊急醫療'];
-    if(filterKey==='optimized') return [
-      '第一類優化計畫',
-      '第二類優化計畫',
-      '第三類優化計畫'
-    ];
-    return OUTCOME_CATEGORY_ORDER.slice();
-  }
-
-  function generateOutcomeRows(metricKey,filterKey){
-    const d=metricSummary(metricKey,filterKey);
-    const categories=outcomeCategoriesForFilter(filterKey);
-    const rows=[];
-    let serial=1;
-    let statusOffset=0;
-
-    [['改善',d.improve],['持平',d.flat],['變差',d.worse]].forEach(([status,count])=>{
-      for(let i=0;i<count;i++){
-        const category=categories[(i+statusOffset)%categories.length];
-        let value;
-
-        if(status==='改善'){
-          value=8+((i*7+statusOffset*3)%34)+((i%3)*0.4);
-        }else if(status==='持平'){
-          value=((i%5)-2)*0.5;
-        }else{
-          value=-(4+((i*5+statusOffset)%24)+((i%2)*0.6));
-        }
-
-        rows.push({
-          id:`${metricKey}-${filterKey}-${serial++}`,
-          category,
-          change:value,
-          status:classifyOutcomeChange(value)
-        });
-      }
-      statusOffset++;
-    });
-
-    return rows;
-  }
-
-  function sortOutcomeRows(rows){
-    const direction=outcomeSort.direction==='asc' ? 1 : -1;
-
-    return rows.slice().sort((a,b)=>{
-      let result=0;
-
-      if(outcomeSort.column==='change'){
-        result=a.change-b.change;
-      }else if(outcomeSort.column==='category'){
-        result=OUTCOME_CATEGORY_ORDER.indexOf(a.category)-OUTCOME_CATEGORY_ORDER.indexOf(b.category);
-      }
-
-      if(result===0){
-        // Stable secondary sort only for visual consistency; it does not become an active sort column.
-        result=b.change-a.change;
-      }
-
-      return result*direction;
-    });
-  }
-
-  function updateOutcomeSortHeaders(){
-    document.querySelectorAll('.outcome-sort-btn').forEach(btn=>{
-      const active=btn.dataset.sort===outcomeSort.column;
-      btn.classList.toggle('active',active);
-      btn.classList.toggle('asc',active && outcomeSort.direction==='asc');
-      btn.classList.toggle('desc',active && outcomeSort.direction==='desc');
-
-      const icon=btn.querySelector('.outcome-sort-icon');
-      if(icon){
-        icon.textContent=active ? (outcomeSort.direction==='asc' ? '↑' : '↓') : '';
-      }
-      btn.setAttribute(
-        'aria-label',
-        `${btn.dataset.sort==='category'?'通報類別':'改善百分比'}${active ? `，目前${outcomeSort.direction==='asc'?'正序':'倒序'}` : '，點擊排序'}`
-      );
-    });
-  }
-
-  function renderOutcomeDialog(){
-    let rows=generateOutcomeRows(outcomeCurrentMetric,outcomeCurrentFilter)
-      .filter(r=>outcomeCurrentStatus==='all' || r.status===outcomeCurrentStatus);
-
-    rows=sortOutcomeRows(rows);
-
-    const metric=outcomeMetrics[outcomeCurrentMetric];
-    document.getElementById('outcomeDialogTitle').textContent=`${metric.title}｜個案明細`;
-
-    // Always show the prototype threshold explicitly in the dialog description.
-    document.getElementById('outcomeDialogSubtitle').textContent=
-      '持平閾值：-1.0% ～ +1.0%（含）；> +1.0% 為改善，< -1.0% 為變差。';
-
-    const tbody=document.getElementById('outcomeDetailBody');
-    const empty=document.getElementById('outcomeDialogEmpty');
-
-    tbody.innerHTML=rows.map(r=>{
-      const cls=r.status==='改善' ? 'improve' : r.status==='持平' ? 'flat' : 'worse';
-      const change=(r.change>0?'+':'')+r.change.toFixed(1)+'%';
-
-      return `
-        <tr>
-          <td>${r.category}</td>
-          <td>${change}</td>
-          <td><span class="outcome-badge ${cls}">${r.status}</span></td>
-        </tr>`;
-    }).join('');
-
-    empty.style.display=rows.length ? 'none' : 'block';
-
-    const filterLabel=OUTCOME_FILTER_LABELS[outcomeCurrentFilter];
-    const statusLabel=outcomeCurrentStatus==='all' ? '全部改善類別' : outcomeCurrentStatus;
-    document.getElementById('outcomeDialogSummary').innerHTML=
-      `<span class="filter-chip">${filterLabel}</span><span class="filter-chip">${statusLabel}</span><span>共 ${rows.length} 筆</span>`;
-
-    updateOutcomeSortHeaders();
-  }
-
-  const outcomeFilterEl=document.getElementById('outcomeFilter');
-  if(outcomeFilterEl){
-    outcomeFilterEl.querySelectorAll('.risk-filter-btn').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        outcomeFilterEl.querySelectorAll('.risk-filter-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        outcomeCurrentFilter=btn.dataset.filter;
-        renderOutcomeCards();
-      });
-    });
-  }
-
-  const outcomeDialog=document.getElementById('outcomeDetailDialog');
-
-  document.querySelectorAll('.outcome-donut-btn').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      outcomeCurrentMetric=btn.closest('.outcome-card').dataset.metric;
-      outcomeCurrentStatus='all';
-
-      // Every time a dialog is opened, reset to the requested default:
-      // improvement percentage descending.
-      outcomeSort={column:'change',direction:'desc'};
-
-      document.querySelectorAll('.outcome-status-btn').forEach(b=>{
-        b.classList.toggle('active',b.dataset.status==='all');
-      });
-
-      renderOutcomeDialog();
-
-      if(typeof outcomeDialog.showModal==='function'){
-        outcomeDialog.showModal();
-      }else{
-        outcomeDialog.setAttribute('open','');
-      }
-    });
-  });
-
-  const closeOutcomeDialog=document.getElementById('closeOutcomeDialog');
-  if(closeOutcomeDialog){
-    closeOutcomeDialog.addEventListener('click',()=>outcomeDialog.close());
-  }
-
-  if(outcomeDialog){
-    outcomeDialog.addEventListener('click',e=>{
-      if(e.target===outcomeDialog) outcomeDialog.close();
-    });
-  }
-
-  const outcomeStatusFilter=document.getElementById('outcomeStatusFilter');
-  if(outcomeStatusFilter){
-    outcomeStatusFilter.querySelectorAll('.outcome-status-btn').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        outcomeStatusFilter.querySelectorAll('.outcome-status-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        outcomeCurrentStatus=btn.dataset.status;
-        renderOutcomeDialog();
-      });
-    });
-  }
-
-  document.querySelectorAll('.outcome-sort-btn').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      const column=btn.dataset.sort;
-
-      if(outcomeSort.column===column){
-        outcomeSort.direction=outcomeSort.direction==='asc' ? 'desc' : 'asc';
-      }else{
-        // When switching columns, activate only the clicked column.
-        // Category begins ascending; improvement percentage begins descending.
-        outcomeSort={
-          column,
-          direction:column==='change' ? 'desc' : 'asc'
-        };
-      }
-
-      renderOutcomeDialog();
-    });
-  });
-
-  renderOutcomeCards();
-
-
-  // ===== v62 Outcome tabs + added indicators =====
-  const outcomeV62FollowupData = {
-    all:{m3:{expected:280,returned:220,trackable:185,unable:35},m6:{expected:240,returned:172,trackable:139,unable:33}},
-    emergency:{m3:{expected:82,returned:68,trackable:55,unable:13},m6:{expected:70,returned:53,trackable:41,unable:12}},
-    optimized:{m3:{expected:198,returned:152,trackable:130,unable:22},m6:{expected:170,returned:119,trackable:98,unable:21}}
-  };
-
-  const outcomeV62ResourceData = {
-    all:{outpatient:-0.80,emergency:-0.40,readmission:-0.38,psych:1.60,home:0.72},
-    emergency:{outpatient:-1.10,emergency:-0.60,readmission:-0.46,psych:1.30,home:0.48},
-    optimized:{outpatient:-0.68,emergency:-0.31,readmission:-0.34,psych:1.74,home:0.83}
-  };
-
-  function outcomeV62Rate(a,b){ return b ? a/b*100 : 0; }
-  function outcomeV62Signed(value,digits=2){
-    const sign=value>0?'+':value<0?'−':'';
-    return sign+Math.abs(value).toFixed(digits);
-  }
-  function outcomeV62Marker(value){
-    const min=-3,max=3;
-    return Math.max(4,Math.min(96,(value-min)/(max-min)*100));
-  }
-  function renderOutcomeV62Indicators(){
-    const f=outcomeCurrentFilter || 'all';
-
-    // v67: Monthly medical-use change applies only to optimized-plan cases.
-    // When Emergency Medical is selected, hide the left monthly-use block
-    // and let the aftercare block occupy the full resource panel width.
-    const resourceGrid=document.querySelector('#outcome [data-outcome-panel="resource"] .outcome-resource-grid');
-    if(resourceGrid){
-      resourceGrid.classList.toggle('emergency-only', f==='emergency');
-    }
-
-    const follow=outcomeV62FollowupData[f] || outcomeV62FollowupData.all;
-    [['3',follow.m3],['6',follow.m6]].forEach(([prefix,raw])=>{
-      const scale=v=>Math.max(1,Math.round(v*(outcomeTimeFactor || 1)));
-      const d={expected:scale(raw.expected),returned:scale(raw.returned),trackable:scale(raw.trackable),unable:scale(raw.unable)};
-      const returnRate=outcomeV62Rate(d.returned,d.expected);
-      const trackableRate=outcomeV62Rate(d.trackable,d.returned);
-      const unableRate=outcomeV62Rate(d.unable,d.returned);
-      const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
-      set(`followup${prefix}Expected`,`應回收 ${d.expected} 份`);
-      set(`followup${prefix}ReturnRate`,`${returnRate.toFixed(1)}%`);
-      set(`followup${prefix}ReturnCount`,`${d.returned} / ${d.expected}`);
-      set(`followup${prefix}TrackableRate`,`${trackableRate.toFixed(1)}%`);
-      set(`followup${prefix}TrackableCount`,`${d.trackable} / ${d.returned}`);
-      set(`followup${prefix}UnableRate`,`${unableRate.toFixed(1)}%`);
-      set(`followup${prefix}UnableCount`,`${d.unable} / ${d.returned}`);
-      const bar=document.getElementById(`followup${prefix}ReturnBar`);
-      if(bar) bar.style.width=`${returnRate.toFixed(1)}%`;
-    });
-
-    const r=outcomeV62ResourceData[f] || outcomeV62ResourceData.all;
-    const setHtml=(id,html)=>{const el=document.getElementById(id);if(el)el.innerHTML=html;};
-    setHtml('resourceOutpatientDelta',`${outcomeV62Signed(r.outpatient,1)} <em>次 / 月</em>`);
-    setHtml('resourceEmergencyDelta',`${outcomeV62Signed(r.emergency,1)} <em>次 / 月</em>`);
-    setHtml('resourceReadmission',`${outcomeV62Signed(r.readmission,2)} <em>次 / 人</em>`);
-    setHtml('resourcePsych',`${outcomeV62Signed(r.psych,2)} <em>次 / 人</em>`);
-    setHtml('resourceHomeCare',`${outcomeV62Signed(r.home,2)} <em>次 / 人</em>`);
-    const opMarker=document.getElementById('resourceOutpatientMarker');
-    const erMarker=document.getElementById('resourceEmergencyMarker');
-    if(opMarker) opMarker.style.left=`${outcomeV62Marker(r.outpatient)}%`;
-    if(erMarker) erMarker.style.left=`${outcomeV62Marker(r.emergency)}%`;
-  }
-
-  const outcomeViewTabs=document.getElementById('outcomeViewTabs');
-  if(outcomeViewTabs){
-    outcomeViewTabs.querySelectorAll('.outcome-v62-tab').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        const target=btn.dataset.outcomeTab;
-        outcomeViewTabs.querySelectorAll('.outcome-v62-tab').forEach(b=>{
-          const active=b===btn;
-          b.classList.toggle('active',active);
-          b.setAttribute('aria-selected',active?'true':'false');
-        });
-        document.querySelectorAll('#outcome .outcome-v62-panel').forEach(panel=>{
-          const active=panel.dataset.outcomePanel===target;
-          panel.classList.toggle('active',active);
-          panel.hidden=!active;
-        });
-      });
-    });
-  }
-
-  // Existing category buttons continue to control the improvement cards;
-  // the added indicators follow the same selection.
-  if(outcomeFilterEl){
-    outcomeFilterEl.querySelectorAll('.risk-filter-btn').forEach(btn=>{
-      btn.addEventListener('click',()=>requestAnimationFrame(renderOutcomeV62Indicators));
-    });
-  }
-  renderOutcomeV62Indicators();
-
-  // ===== v63 Outcome shared date filter (same interaction pattern as risk analysis) =====
-  const outcomeStartDate=document.getElementById('outcomeStartDate');
-  const outcomeEndDate=document.getElementById('outcomeEndDate');
-  const outcomeApplyRange=document.getElementById('outcomeApplyRange');
-  const outcomeQuickFilter=document.getElementById('outcomeQuickFilter');
-
-  function outcomeCustomFactor(start,end){
-    if(!start || !end) return 1;
-    const sDate=new Date(start+'T00:00:00');
-    const eDate=new Date(end+'T00:00:00');
-    if(Number.isNaN(sDate.getTime()) || Number.isNaN(eDate.getTime()) || eDate<sDate) return 1;
-    const baseStart=new Date('2026-01-01T00:00:00');
-    const baseEnd=new Date('2026-09-25T00:00:00');
-    const days=Math.floor((eDate-sDate)/86400000)+1;
-    const baseDays=Math.floor((baseEnd-baseStart)/86400000)+1;
-    return Math.max(.08,Math.min(1,days/baseDays));
-  }
-  function refreshOutcomeByTime(){
-    renderOutcomeCards();
-    renderOutcomeV62Indicators();
-    if(outcomeDialog?.open) renderOutcomeDialog();
-  }
-  if(outcomeQuickFilter){
-    outcomeQuickFilter.querySelectorAll('button').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        outcomeQuickFilter.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        outcomeTimeMode=btn.dataset.outcomeRange;
-        const preset=OUTCOME_DATE_PRESETS[outcomeTimeMode] || OUTCOME_DATE_PRESETS.year;
-        outcomeTimeFactor=preset.factor;
-        if(outcomeStartDate) outcomeStartDate.value=preset.start;
-        if(outcomeEndDate) outcomeEndDate.value=preset.end;
-        refreshOutcomeByTime();
-      });
-    });
-  }
-  outcomeApplyRange?.addEventListener('click',()=>{
-    outcomeQuickFilter?.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-    outcomeTimeMode='custom';
-    outcomeTimeFactor=outcomeCustomFactor(outcomeStartDate?.value,outcomeEndDate?.value);
-    refreshOutcomeByTime();
-  });
-
-
   // ===== Reporter analysis page =====
   const reporterNetworkData = [
     {name:'民政', count:128, responseCount:87, score:4.2, color:'#218fee'},
@@ -15460,7 +13708,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if(el) el.textContent=commandPct(value,total);
   }
 
-  function setCommandFlow(overall){
+  function setCommandFlow(range){
+    /* 本檔只保留緊急醫療：總通報案件＝緊急醫療案件 */
+    const breakdown={emergency:scaleCategoryBreakdown(range).emergency};
+    const overall=breakdown.emergency;
     setText('commandTotal',overall.total);
     setText('commandPending',overall.pending);
     setText('commandAssigned',overall.assigned);
@@ -15472,12 +13723,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setPct('commandClosedPct',overall.closed,overall.total);
     setPct('commandNotAcceptedPct',overall.notaccepted,overall.total);
 
-    const breakdown=scaleCategoryBreakdown(overall);
     const prefixMap={
-      emergency:'commandEmergency',
-      class1:'commandClass1',
-      class2:'commandClass2',
-      class3:'commandClass3'
+      emergency:'commandEmergency'
     };
 
     Object.entries(breakdown).forEach(([key,row])=>{
@@ -15576,6 +13823,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
+
+  /* 本檔只保留緊急醫療：載入時就以緊急醫療重算左側總數 */
+  if(commandStart && commandEnd) setCommandFlow(computeCommandRange(commandStart.value,commandEnd.value));
 
 
   // ===== Command Flow V7 — stable geometry + smooth connector animation =====
@@ -15845,296 +14095,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 
-  // ===== Command dashboard same-period comparison =====
-  const commandComparisonData = {
-    month:{
-      rangeTitle:'同月比較｜9 月截至 9/25',
-      totalSubtitle:'比較近三年 9/1－9/25 的通報案件數',
-      riskSubtitle:'近三年 9 月截至相同日期之風險分佈',
-      years:[
-        {year:2024,roc:'民國113年',total:12,low:4,medium:6,high:2},
-        {year:2025,roc:'民國114年',total:18,low:6,medium:10,high:2},
-        {year:2026,roc:'民國115年',total:36,low:12,medium:20,high:4}
-      ]
-    },
-    ytd:{
-      rangeTitle:'同期累計｜1/1－9/25',
-      totalSubtitle:'比較近三年 1/1－9/25 累計通報案件',
-      riskSubtitle:'各年度同期累計通報案件之低／中／高風險占比',
-      years:[
-        {year:2024,roc:'民國113年',total:86,low:31,medium:42,high:13},
-        {year:2025,roc:'民國114年',total:136,low:45,medium:67,high:24},
-        {year:2026,roc:'民國115年',total:420,low:140,medium:233,high:47}
-      ]
-    }
-  };
-
-  // Prototype monthly data. Replace with formal source data later.
-  const commandMonthlyComparisonData = {
-    1:[
-      {year:2024,roc:'民國113年',total:8,low:3,medium:4,high:1},
-      {year:2025,roc:'民國114年',total:12,low:4,medium:6,high:2},
-      {year:2026,roc:'民國115年',total:16,low:5,medium:9,high:2}
-    ],
-    2:[
-      {year:2024,roc:'民國113年',total:7,low:2,medium:4,high:1},
-      {year:2025,roc:'民國114年',total:11,low:4,medium:5,high:2},
-      {year:2026,roc:'民國115年',total:18,low:6,medium:10,high:2}
-    ],
-    3:[
-      {year:2024,roc:'民國113年',total:9,low:3,medium:5,high:1},
-      {year:2025,roc:'民國114年',total:14,low:5,medium:7,high:2},
-      {year:2026,roc:'民國115年',total:22,low:7,medium:12,high:3}
-    ],
-    4:[
-      {year:2024,roc:'民國113年',total:10,low:3,medium:5,high:2},
-      {year:2025,roc:'民國114年',total:15,low:5,medium:8,high:2},
-      {year:2026,roc:'民國115年',total:26,low:8,medium:15,high:3}
-    ],
-    5:[
-      {year:2024,roc:'民國113年',total:12,low:4,medium:6,high:2},
-      {year:2025,roc:'民國114年',total:17,low:6,medium:9,high:2},
-      {year:2026,roc:'民國115年',total:31,low:10,medium:17,high:4}
-    ],
-    6:[
-      {year:2024,roc:'民國113年',total:11,low:4,medium:6,high:1},
-      {year:2025,roc:'民國114年',total:18,low:6,medium:10,high:2},
-      {year:2026,roc:'民國115年',total:36,low:12,medium:20,high:4}
-    ],
-    7:[
-      {year:2024,roc:'民國113年',total:13,low:5,medium:7,high:1},
-      {year:2025,roc:'民國114年',total:20,low:7,medium:11,high:2},
-      {year:2026,roc:'民國115年',total:40,low:13,medium:22,high:5}
-    ],
-    8:[
-      {year:2024,roc:'民國113年',total:12,low:4,medium:7,high:1},
-      {year:2025,roc:'民國114年',total:19,low:6,medium:11,high:2},
-      {year:2026,roc:'民國115年',total:38,low:12,medium:21,high:5}
-    ],
-    9:[
-      {year:2024,roc:'民國113年',total:15,low:5,medium:8,high:2},
-      {year:2025,roc:'民國114年',total:22,low:7,medium:12,high:3},
-      {year:2026,roc:'民國115年',total:44,low:14,medium:25,high:5}
-    ],
-    10:[
-      {year:2024,roc:'民國113年',total:14,low:5,medium:7,high:2},
-      {year:2025,roc:'民國114年',total:21,low:7,medium:11,high:3},
-      {year:2026,roc:'民國115年',total:41,low:13,medium:23,high:5}
-    ],
-    11:[
-      {year:2024,roc:'民國113年',total:16,low:5,medium:9,high:2},
-      {year:2025,roc:'民國114年',total:23,low:8,medium:12,high:3},
-      {year:2026,roc:'民國115年',total:45,low:15,medium:25,high:5}
-    ],
-    12:[
-      {year:2024,roc:'民國113年',total:18,low:6,medium:10,high:2},
-      {year:2025,roc:'民國114年',total:25,low:8,medium:14,high:3},
-      {year:2026,roc:'民國115年',total:48,low:16,medium:27,high:5}
-    ]
-  };
-
-  function comparePercent(value,total){
-    return total>0 ? value/total*100 : 0;
-  }
-
-  function renderCommandComparison(mode='ytd',customMonth=9){
-    let data;
-
-    if(mode==='customMonth'){
-      const monthNumber=Number(customMonth)||9;
-      const currentYear=2026;
-      const currentMonth=9;
-      const currentDay=25;
-
-      let years=(commandMonthlyComparisonData[monthNumber] || commandMonthlyComparisonData[9])
-        .map(row=>({...row}));
-
-      // Time-aware prototype rule:
-      // - past months in 2026 = full-month data
-      // - current month = month-to-date
-      // - future months = no data
-      years=years.map(row=>{
-        if(row.year!==currentYear) return row;
-
-        if(monthNumber>currentMonth){
-          return {
-            ...row,
-            total:null,
-            low:null,
-            medium:null,
-            high:null,
-            noData:true
-          };
-        }
-
-        if(monthNumber===currentMonth){
-          return {
-            ...row,
-            total:36,
-            low:12,
-            medium:20,
-            high:4,
-            partial:true
-          };
-        }
-
-        return row;
-      });
-
-      const isCurrentMonth=monthNumber===currentMonth;
-      const isFutureMonth=monthNumber>currentMonth;
-
-      data={
-        rangeTitle:isCurrentMonth
-          ? `其他月份比較｜${monthNumber} 月截至 ${monthNumber}/${currentDay}`
-          : `其他月份比較｜${monthNumber} 月`,
-        totalSubtitle:isCurrentMonth
-          ? `比較 2024、2025 年 ${monthNumber} 月整月，2026 年截至 ${monthNumber}/${currentDay} 的通報案件數`
-          : isFutureMonth
-            ? `比較近三年 ${monthNumber} 月通報案件數；2026 年尚未發生`
-            : `比較近三年 ${monthNumber} 月整月通報案件數`,
-        riskSubtitle:isCurrentMonth
-          ? `2026 年為 ${monthNumber} 月截至 ${monthNumber}/${currentDay} 的風險分佈`
-          : isFutureMonth
-            ? `2026 年 ${monthNumber} 月尚無資料`
-            : `近三年 ${monthNumber} 月通報案件之低／中／高風險占比`,
-        years
-      };
-    }else{
-      data=commandComparisonData[mode] || commandComparisonData.ytd;
-    }
-
-    const rangeTitle=document.getElementById('commandCompareRangeTitle');
-    const totalSubtitle=document.getElementById('commandCompareTotalSubtitle');
-    const riskSubtitle=document.getElementById('commandCompareRiskSubtitle');
-    const totalPlot=document.getElementById('compareTotalPlot');
-    const riskBody=document.getElementById('compareRiskBody');
-
-    if(rangeTitle) rangeTitle.textContent=data.rangeTitle;
-    if(totalSubtitle) totalSubtitle.textContent=data.totalSubtitle;
-    if(riskSubtitle) riskSubtitle.textContent=data.riskSubtitle;
-
-    const maxTotal=Math.max(...data.years.map(row=>Number.isFinite(row.total)?row.total:0),1);
-    const scaleMax=mode==='ytd'
-      ? Math.ceil(maxTotal/50)*50
-      : Math.max(10,Math.ceil(maxTotal/10)*10);
-
-    const yaxis=document.querySelector('#commandComparisonView .compare-yaxis');
-    if(yaxis){
-      yaxis.innerHTML=[
-        scaleMax,
-        Math.round(scaleMax*2/3),
-        Math.round(scaleMax/3),
-        0
-      ].map(v=>`<span>${v}</span>`).join('');
-    }
-
-    if(totalPlot){
-      totalPlot.innerHTML=data.years.map(row=>{
-        if(row.noData || !Number.isFinite(row.total)){
-          return `
-            <div class="compare-total-col no-data ${row.year===2026?'current':''}" style="--compare-height:0%">
-              <span class="compare-total-value no-data-label">尚無資料</span>
-              <div class="compare-total-bar no-data-bar" style="height:0"></div>
-              <span class="compare-total-year">${row.year}</span>
-              <small class="compare-total-roc">${row.roc}</small>
-            </div>`;
-        }
-
-        const height=Math.max(2,row.total/scaleMax*100);
-        return `
-          <div class="compare-total-col ${row.year===2026?'current':''}" style="--compare-height:${height}%">
-            <span class="compare-total-value">${row.total}${row.partial?'*':''}</span>
-            <div class="compare-total-bar" style="height:${height}%"
-                 title="${row.year}：${row.total} 件${row.partial?'（截至目前日期）':''}"></div>
-            <span class="compare-total-year">${row.year}</span>
-            <small class="compare-total-roc">${row.roc}${row.partial?'｜截至目前':''}</small>
-          </div>`;
-      }).join('');
-    }
-
-    if(riskBody){
-      riskBody.innerHTML=data.years.map(row=>{
-        if(row.noData || !Number.isFinite(row.total)){
-          return `
-            <div class="compare-risk-row no-data">
-              <div class="compare-risk-year">
-                <strong>${row.year}</strong>
-                <span>${row.roc}</span>
-              </div>
-              <div class="compare-risk-stack compare-risk-no-data">
-                <span>尚無資料</span>
-              </div>
-              <div class="compare-risk-total">
-                <strong>—</strong>
-                <span>總件數</span>
-              </div>
-            </div>`;
-        }
-
-        const low=comparePercent(row.low,row.total);
-        const medium=comparePercent(row.medium,row.total);
-        const high=comparePercent(row.high,row.total);
-
-        return `
-          <div class="compare-risk-row">
-            <div class="compare-risk-year">
-              <strong>${row.year}</strong>
-              <span>${row.roc}${row.partial?'｜截至目前':''}</span>
-            </div>
-
-            <div class="compare-risk-stack" aria-label="${row.year} 風險分佈">
-              <div class="compare-risk-seg low"
-                   style="width:${low.toFixed(2)}%"
-                   title="低風險：${row.low} 件（${low.toFixed(1)}%）">${low.toFixed(1)}%</div>
-              <div class="compare-risk-seg medium"
-                   style="width:${medium.toFixed(2)}%"
-                   title="中風險：${row.medium} 件（${medium.toFixed(1)}%）">${medium.toFixed(1)}%</div>
-              <div class="compare-risk-seg high"
-                   style="width:${high.toFixed(2)}%"
-                   title="高風險：${row.high} 件（${high.toFixed(1)}%）">${high.toFixed(1)}%</div>
-            </div>
-
-            <div class="compare-risk-total">
-              <strong>${row.total}</strong>
-              <span>總件數</span>
-            </div>
-          </div>`;
-      }).join('');
-    }
-  }
-
-  const commandCompareMode=document.getElementById('commandCompareMode');
-  const commandCompareMonthSelect=document.getElementById('commandCompareMonthSelect');
-  const commandCompareMonth=document.getElementById('commandCompareMonth');
-
-  if(commandCompareMode){
-    commandCompareMode.querySelectorAll('button').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        commandCompareMode.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-
-        const mode=btn.dataset.mode;
-        if(commandCompareMonthSelect){
-          commandCompareMonthSelect.hidden=mode!=='customMonth';
-        }
-
-        renderCommandComparison(mode,commandCompareMonth?.value || 9);
-      });
-    });
-  }
-
-  if(commandCompareMonth){
-    commandCompareMonth.addEventListener('change',()=>{
-      const activeMode=commandCompareMode?.querySelector('button.active')?.dataset.mode;
-      if(activeMode==='customMonth'){
-        renderCommandComparison('customMonth',commandCompareMonth.value);
-      }
-    });
-  }
-
-  renderCommandComparison('ytd');
-
   const commandViewTabs=document.getElementById('commandViewTabs');
   if(commandViewTabs){
     commandViewTabs.querySelectorAll('.command-view-tab').forEach(btn=>{
@@ -16156,95 +14116,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
-
-
-  document.addEventListener('DOMContentLoaded', () => {
-    // ===== Medical institution outcome page =====
-    const hospitalUnableRows = [
-      {reason:'住院', count:12},
-      {reason:'門診 / 居家治療', count:10},
-      {reason:'拒絕接受服務（已依拒訪SOP處理）', count:9},
-      {reason:'拒訪', count:7},
-      {reason:'未轉介 / 轉介他院', count:6},
-      {reason:'搬遷', count:5},
-      {reason:'失聯（已依失聯SOP處理）', count:4},
-      {reason:'羈押中', count:3},
-      {reason:'死亡', count:2},
-      {reason:'其他原因', count:2}
-    ];
-    let hospitalUnableSortDesc = true;
-
-    function renderHospitalUnable(){
-      const tbody = document.getElementById('hospitalUnableTbody');
-      const icon = document.getElementById('hospitalUnableSortIcon');
-      if(!tbody) return;
-      const total = hospitalUnableRows.reduce((s,r)=>s+r.count,0);
-      const rows = [...hospitalUnableRows].sort((a,b)=>{
-        if(a.count !== b.count){
-          return hospitalUnableSortDesc ? b.count-a.count : a.count-b.count;
-        }
-        return a.reason.localeCompare(b.reason,'zh-Hant-TW');
-      });
-      tbody.innerHTML = rows.map(r=>`
-        <tr>
-          <td>${r.reason}</td>
-          <td>${r.count}</td>
-          <td>${(r.count/total*100).toFixed(1)}%</td>
-        </tr>
-      `).join('');
-      if(icon) icon.textContent = hospitalUnableSortDesc ? '↓' : '↑';
-      const totalEl=document.getElementById('hospitalUnableTotal');
-      if(totalEl) totalEl.textContent=total;
-      /* v5：右側摘要卡片顯示總數與最多的原因（固定取最多者，不受表格排序影響） */
-      const cardTotal=document.getElementById('hospitalUnableCardTotal');
-      if(cardTotal) cardTotal.textContent=total;
-      const top=document.getElementById('hospitalUnableTop');
-      if(top && hospitalUnableRows.length){
-        const first=[...hospitalUnableRows].sort((a,b)=>b.count-a.count)[0];
-        top.textContent=`最多：${first.reason} ${first.count} 件（${(first.count/total*100).toFixed(1)}%）`;
-      }
-    }
-
-    /* v5：點擊摘要卡片開啟完整原因表 */
-    const hospitalUnableCard=document.getElementById('hospitalUnableCard');
-    const hospitalUnableDialog=document.getElementById('hospitalUnableDialog');
-    if(hospitalUnableCard && hospitalUnableDialog){
-      const openUnable=()=>{
-        if(typeof hospitalUnableDialog.showModal==='function') hospitalUnableDialog.showModal();
-        else hospitalUnableDialog.setAttribute('open','');
-      };
-      hospitalUnableCard.addEventListener('click',openUnable);
-      hospitalUnableCard.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openUnable(); } });
-    }
-
-    const hospitalUnableSortBtn=document.getElementById('hospitalUnableSort');
-    if(hospitalUnableSortBtn){
-      hospitalUnableSortBtn.addEventListener('click',()=>{
-        hospitalUnableSortDesc=!hospitalUnableSortDesc;
-        renderHospitalUnable();
-      });
-    }
-    renderHospitalUnable();
-
-    const hospitalHisDialog=document.getElementById('hospitalHisDialog');
-    const openHospitalHisInfo=document.getElementById('openHospitalHisInfo');
-    const closeHospitalHisInfo=document.getElementById('closeHospitalHisInfo');
-
-    if(openHospitalHisInfo && hospitalHisDialog){
-      openHospitalHisInfo.addEventListener('click',()=>{
-        if(typeof hospitalHisDialog.showModal === 'function') hospitalHisDialog.showModal();
-        else hospitalHisDialog.setAttribute('open','');
-      });
-    }
-    if(closeHospitalHisInfo && hospitalHisDialog){
-      closeHospitalHisInfo.addEventListener('click',()=>hospitalHisDialog.close());
-    }
-    if(hospitalHisDialog){
-      hospitalHisDialog.addEventListener('click',e=>{
-        if(e.target===hospitalHisDialog) hospitalHisDialog.close();
-      });
-    }
-  });
 
 
   // ===== Reporter page final behavior override =====
@@ -16514,44 +14385,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </script>
 
-
-<dialog class="hospital-his-dialog" id="hospitalHisDialog">
-  <div class="hospital-his-dialog-shell">
-    <div class="hospital-his-dialog-head">
-      <div>
-        <h3>HIS 指標計算說明</h3>
-        <p></p>
-      </div>
-      <button type="button" id="closeHospitalHisInfo" aria-label="關閉">×</button>
-    </div>
-    <div class="hospital-his-dialog-body">
-      <div class="hospital-his-formula">
-        <b>緊急醫療結案後轉介至本院醫療系統比例</b>
-        <span>（於結案日後在 HIS 系統有門診、居家或住院就醫紀錄之總個案數／總通報個案數）×100%</span>
-      </div>
-      <div class="hospital-his-formula">
-        <b>優化計畫結案後轉介至本院醫療系統比例</b>
-        <span>（於結案日後在 HIS 系統有門診、居家或住院就醫紀錄之總個案數／總通報個案數）×100%</span>
-      </div>
-      <div class="hospital-his-formula">
-        <b>已結案後個案再住院次數</b>
-        <span>結案後住院次數 − 收案／開案時過去一年精神科住院次數</span>
-      </div>
-      <div class="hospital-his-formula">
-        <b>已結案後個案身心科門診治療成效</b>
-        <span>結案後身心科門診使用次數 − 收案／開案時過去一年精神科門診次數</span>
-      </div>
-      <div class="hospital-his-formula">
-        <b>已結案後個案居家照護科門診治療成效</b>
-        <span>結案後居家照護科門診使用次數 − 收案／開案時過去一年精神科門診次數</span>
-      </div>
-      <div class="hospital-his-formula">
-        <b>結案追蹤率</b>
-        <span>（平台個案轉介至三總北投居家、門診或住院數／已結案個案數）×100%</span>
-      </div>
-    </div>
-  </div>
-</dialog>
 
 
 <style>
@@ -16887,7 +14720,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   let rangeMode='year';
   let rangeFactor=1;
-  let reporterType='all';
+  let reporterType='emergency';
 
   const startEl=document.getElementById('reporterStartDate');
   const endEl=document.getElementById('reporterEndDate');
@@ -17244,153 +15077,6 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 
 
-<script id="v73-hospital-snq-filters-script">
-(() => {
-  const TODAY = new Date('2026-09-25T12:00:00');
-  const pad = n => String(n).padStart(2,'0');
-  const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-  const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
-
-  function presetRange(kind){
-    const end=new Date(TODAY);
-    let start=new Date(TODAY);
-    if(kind==='year') start=new Date(TODAY.getFullYear(),0,1);
-    else if(kind==='quarter') start=new Date(TODAY.getFullYear(),Math.floor(TODAY.getMonth()/3)*3,1);
-    else if(kind==='month') start=new Date(TODAY.getFullYear(),TODAY.getMonth(),1);
-    return {start:fmt(start),end:fmt(end)};
-  }
-
-  function rangeFactor(startValue,endValue){
-    const start=new Date(startValue+'T00:00:00');
-    const end=new Date(endValue+'T00:00:00');
-    const days=Math.max(1,Math.round((end-start)/86400000)+1);
-    const yearDays=Math.max(1,Math.round((TODAY-new Date('2026-01-01T00:00:00'))/86400000)+1);
-    return clamp(days/yearDays,.08,1);
-  }
-
-  function wireFilter(prefix, typeAttr, onChange){
-    const start=document.getElementById(prefix+'StartDate');
-    const end=document.getElementById(prefix+'EndDate');
-    const apply=document.getElementById(prefix+'ApplyRange');
-    const quick=document.getElementById(prefix+'QuickFilter');
-    const type=document.getElementById(prefix+'TypeFilter');
-    let currentType='all';
-
-    const fire=()=>onChange({start:start?.value,end:end?.value,type:currentType,factor:rangeFactor(start?.value,end?.value)});
-
-    quick?.querySelectorAll('button').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        quick.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        const kind=btn.getAttribute(`data-${prefix.toLowerCase()}-range`);
-        const r=presetRange(kind);
-        if(start) start.value=r.start;
-        if(end) end.value=r.end;
-        fire();
-      });
-    });
-    apply?.addEventListener('click',()=>{
-      quick?.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-      fire();
-    });
-    type?.querySelectorAll('button').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        type.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        currentType=btn.getAttribute(typeAttr)||'all';
-        fire();
-      });
-    });
-    fire();
-  }
-
-  function updateHospital(state){
-    const split=document.getElementById('hospitalSplitLayout');
-    const unable=document.querySelector('#hospital [data-hospital-kind="optimization"].hospital-unable-full');
-    const emergency=document.querySelector('#hospital .hospital-his-card[data-hospital-kind="emergency"]');
-    const optimization=document.querySelector('#hospital .hospital-his-card[data-hospital-kind="optimization"]');
-
-    if(unable) unable.hidden=state.type==='emergency';
-    if(emergency) emergency.hidden=state.type==='optimization';
-    if(optimization) optimization.hidden=state.type==='emergency';
-    /* v5：無法收案摘要卡片只屬於優化計畫 */
-    const unableCard=document.getElementById('hospitalUnableCard');
-    if(unableCard) unableCard.hidden=state.type==='emergency';
-    split?.classList.toggle('hospital-single-column',state.type==='emergency');
-
-    // Light date-sensitive mock values, preserving the current prototype scale.
-    document.querySelectorAll('#hospital .hospital-his-card:not([hidden])').forEach((card,i)=>{
-      card.style.opacity = state.factor < .2 ? '.94' : '1';
-    });
-  }
-
-  function updateSnq(state){
-    const cards=[...document.querySelectorAll('#snq .snq-card')];
-    cards.forEach(card=>{
-      const kind=card.dataset.snqKind;
-      card.hidden=(kind==='emergency' && state.type==='optimization') || (kind==='optimization' && state.type==='emergency');
-      const base=Number(card.dataset.snqBase||0);
-      const num=Number(card.dataset.snqNumerator||0);
-      const den=Number(card.dataset.snqDenominator||0);
-      const typeAdj=state.type==='all'?1:(state.type==='emergency'?1.025:.975);
-      const timeAdj=.94 + state.factor*.06;
-      const value=clamp(base*typeAdj*timeAdj,0,99.9);
-      const scaledDen=Math.max(1,Math.round(den*state.factor));
-      const scaledNum=Math.min(scaledDen,Math.max(0,Math.round(scaledDen*value/100)));
-      const strong=card.querySelector('.snq-card-value strong');
-      const detail=card.querySelector('.snq-card-value span');
-      const bar=card.querySelector('.snq-progress i');
-      if(strong) strong.textContent=value.toFixed(1)+'%';
-      if(detail) detail.textContent=`${scaledNum} / ${scaledDen} ${card.classList.contains('snq-card-referral')?'件':'人'}`;
-      if(bar) bar.style.width=value+'%';
-      /* v5：展開後的門診／居家／住院比例，跟著主比例以同樣倍率換算 */
-      const subs=[...card.querySelectorAll('.snq-sub')];
-      if(subs.length){
-        const ratio=base ? value/base : 1;
-        let sum=0;
-        subs.forEach(sub=>{
-          const subValue=clamp(Number(sub.dataset.snqSubBase||0)*ratio,0,99.9);
-          const subNum=Math.min(scaledNum,Math.round(scaledDen*subValue/100));
-          sum+=subValue;
-          sub.querySelector('strong').textContent=subValue.toFixed(1)+'%';
-          sub.querySelector('em').textContent=`${subNum} / ${scaledDen} 件`;
-          sub.querySelector('.snq-sub-bar i').style.width=subValue+'%';
-        });
-        const sumEl=card.querySelector('.snq-breakdown-sum em');
-        if(sumEl) sumEl.textContent=sum.toFixed(1)+'%';
-      }
-    });
-    const referral=document.getElementById('snqReferralGrid');
-    const visible=cards.filter(c=>c.classList.contains('snq-card-referral') && !c.hidden).length;
-    referral?.classList.toggle('single',visible===1);
-  }
-
-  document.addEventListener('DOMContentLoaded',()=>{
-    wireFilter('hospital','data-hospital-type',updateHospital);
-    wireFilter('snq','data-snq-type',updateSnq);
-
-    /* v5：點擊「結案後轉介至本院醫療系統比例」卡片，以 dialog 顯示門診／居家／住院各自的比例。
-       卡片內隱藏的 .snq-breakdown 由 updateSnq 隨篩選更新，開啟時複製到 dialog。 */
-    const snqDialog=document.getElementById('snqReferralDialog');
-    const openSnqDialog=card=>{
-      if(!snqDialog) return;
-      snqDialog.querySelector('#snqReferralDialogTitle').textContent=card.querySelector('.snq-card-title').textContent;
-      snqDialog.querySelector('#snqReferralDialogValue').textContent=card.querySelector('.snq-card-value strong').textContent;
-      snqDialog.querySelector('#snqReferralDialogCount').textContent=card.querySelector('.snq-card-value span').textContent;
-      snqDialog.querySelector('#snqReferralDialogBody').innerHTML=card.querySelector('.snq-breakdown').innerHTML;
-      if(typeof snqDialog.showModal==='function') snqDialog.showModal(); else snqDialog.setAttribute('open','');
-    };
-    document.querySelectorAll('#snq .snq-card-referral').forEach(card=>{
-      card.setAttribute('role','button');
-      card.setAttribute('tabindex','0');
-      card.addEventListener('click',()=>{ if(!(window.getSelection && String(window.getSelection()))) openSnqDialog(card); });
-      card.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openSnqDialog(card); } });
-    });
-  });
-})();
-</script>
-
-
 <style id="v77-ai-plain-language">
 /* v77 - AI prediction page: plain-language, larger and shorter copy */
 #ai .ai-card-head h3{font-size:clamp(20px,1.35vw,25px)!important;line-height:1.25!important;}
@@ -17430,27 +15116,9 @@ document.addEventListener('DOMContentLoaded',()=>{
       '緊醫出勤準備時間':'醫療實際出勤時間（「出勤單」中填寫的出勤年、月、日、時間），減掉「系統」上首次完成「受理方式」表單的時間。',
       '緊醫電話受理總反應時間':'受理方式為「電話諮詢」的案件：「系統」首次完成「受理方式」表單的時間，減掉「系統」網絡通報完成時間（＝通報後派案時間＋首次專業評估時間，不含出勤準備）。',
       '緊醫出勤總反應時間':'醫療實際出勤時間（「出勤單」中填寫的出勤年、月、日、時間），減掉「系統」網絡通報完成時間。',
-      '衛生局醫療轉介率':'轉介醫療機構案件數（即衛生局優化計畫回覆單中勾選「轉介」的案件數） / 衛生局完成回覆單案件數。　※ 定義待確認：分母若採「所有轉介案」，依此公式算出來會固定是 100%，需與需求端確認分母應為「衛生局完成回覆單案件數」或「所有轉介案」。目前畫面以前者計算。',
-      '衛生局轉介本院率':'轉介三總北投案件數（即衛生局優化計畫回覆單中勾選「轉介三總北投」的案件數） / 衛生局完成回覆單案件數。',
-      '本院醫療轉介占率':'轉介三總北投案件數（即衛生局優化計畫回覆單中勾選「轉介三總北投」的案件數） / 衛生局轉介醫療機構案件數。',
-      '衛生局暫不轉介率':'暫不轉介案件數（衛生局優化計畫回覆單勾選「暫不轉介」） / 衛生局完成回覆單案件數。',
-      '暫不轉介原因分布':'各暫不轉介原因案件數 / 衛生局暫不轉介案件數。原因包含：社區心衛中心個管服務對象、已住院/門診/居家治療、另行收案、非衛生機關之服務項目、不符合轉介目的、拒訪、資料不足、其他原因。',
-      '衛生局訪視時間':'衛生局填寫在優化計畫「回覆單」中的「訪視日期」，減掉「系統」網絡完成通報時間。',
-      '衛生局分流決策時間':'衛生局填寫在優化計畫「回覆單」中的「派案日期」，減掉「系統」網絡完成通報時間。',
-      '衛生局回覆通報時間':'「系統」衛生局完成優化計畫「回覆單」時間，減掉「系統」網絡完成通報時間。',
-      '衛生局轉介案件開案率':'開案件數 / 衛生局轉介三總北投總案件數。',
-      '暫不轉介覆核同意率':'本院填寫「不轉介覆核單」的「同意」案件數 / 衛生局不轉介案件數。',
-      '暫不轉介覆核駁回率':'本院填寫「不轉介覆核單」的「駁回」案件數 / 衛生局不轉介案件數。',
-      '暫不轉介案件醫療介入率':'衛生局不轉介醫療機構但本院開案件數 / 衛生局不轉介案件數。',
-      '暫不轉介案件覆核時間':'「系統」本院完成不轉介覆核單時間，減掉「系統」衛生局完成優化計畫回覆單時間。',
-      '轉介案件派案時間':'「系統」完成醫師／護理師指派時間，減掉「系統」衛生局完成優化計畫回覆單時間。',
-      '轉介案件首次聯繫時間':'「醫療機構回覆單」中填寫的「進行聯繫時間」，減掉「系統」衛生局完成優化計畫回覆單時間。',
-      '派案後首次聯繫時間':'「醫療機構回覆單」中填寫的「進行聯繫時間」，減掉「系統」完成醫師／護理師指派時間。',
-      '首次專業評估時間':'醫療填寫在評估階段訪視紀錄單中的「訪視日期時間-開始」，減掉「系統」完成醫師／護理師指派時間。',
-      '回覆衛生局時間':'「系統」醫療完成「醫療機構回覆單」的時間，減掉「系統」完成「指派醫師/護理師」的時間。',
-      '高風險個案處理時間(平均)':'緊醫高風險個案完成受理 OR 優化計畫完成首次訪視時間 - 高風險個案通報時間。',
-      '中風險個案處理時間(平均)':'緊醫中風險個案完成受理 OR 優化計畫完成首次訪視時間 - 中風險個案通報時間。',
-      '低風險個案處理時間(平均)':'緊醫低風險個案完成受理 OR 優化計畫完成首次訪視時間 - 低風險個案通報時間。'
+      '高風險個案處理時間(平均)':'緊醫高風險個案完成受理時間 - 高風險個案通報時間。',
+      '中風險個案處理時間(平均)':'緊醫中風險個案完成受理時間 - 中風險個案通報時間。',
+      '低風險個案處理時間(平均)':'緊醫低風險個案完成受理時間 - 低風險個案通報時間。'
     };
 
     const baseValues={
@@ -17460,7 +15128,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       bureauVisit:1.8,bureauDecision:.9,bureauReply:1.1,
       hospitalOpen:82.6,reviewAgree:74.1,reviewReject:25.9,nonReferralIntervention:18.7,
       reviewTime:.6,referralAssign:.3,referralContact:4.2,afterAssignContact:3.1,
-      firstProfessional:1.2,replyBureau:1.5,riskHigh:1.6,riskMedium:3.4,riskLow:5.8
+      firstProfessional:1.2,replyBureau:1.5,riskHigh:.56,riskMedium:1.19,riskLow:2.03
     };
     const rateKeys=new Set(['emergencyClose','phoneRate','dispatchRate','bureauReferral','bureauToHospital','hospitalShare','nonReferralRate','hospitalOpen','reviewAgree','reviewReject','nonReferralIntervention']);
     const presets={
@@ -21344,8 +19012,9 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 <style id="v73-hospital-snq-filters-layout">
 /* ===== v73: hospital + SNQ share the canonical filter system ===== */
-@media(min-width:1200px){
-  .tabs{grid-template-columns:repeat(9,1fr) !important;}
+/* real-data：主選單只剩 5 頁，≥900px 一列排滿（原為 ≥1200px 9 欄） */
+@media(min-width:900px){
+  .tabs{grid-template-columns:repeat(5,1fr) !important;}
 }
 
 #hospital > .page-time-filter,
@@ -23575,166 +21244,6 @@ document.addEventListener('click',event=>{
 </style>
 
 
-<script id="v5-command-compare-efficiency">
-/* =========================================================================
-   v5 — 指揮儀表板「同期比較」改為比較案件處理效率指標
-   -------------------------------------------------------------------------
-   指標與分組對齊「案件處理效率指標」四個頁籤；2026 年數值 = 效率頁本年度數值，
-   2024、2025 為原型推算的同期數值（固定種子，重新整理不會跳動）。
-   上方「同月比較／同期累計／其他月份比較」沿用原本的切換，
-   新增「全部／緊急醫療／優化計畫」篩選：緊急醫療只顯示總覽＋緊急醫療，
-   優化計畫只顯示總覽＋醫院端＋衛生局；總覽的風險處理時間依類別換算。
-   better：'high' 越高越好、'low' 越低越好、'neutral' 占比類不判斷好壞。
-   ========================================================================= */
-(()=>{
-  const GROUPS=[
-    {id:'overview',title:'總覽｜不同風險個案處理時間（平均）',types:['all','emergency','optimization'],rows:[
-      {key:'riskHigh',name:'高風險個案處理時間',unit:'天',base:1.6,better:'low'},
-      {key:'riskMedium',name:'中風險個案處理時間',unit:'天',base:3.4,better:'low'},
-      {key:'riskLow',name:'低風險個案處理時間',unit:'天',base:5.8,better:'low'}
-    ]},
-    {id:'emergency',title:'緊急醫療處置效率',types:['all','emergency'],rows:[
-      {key:'emergencyClose',name:'緊醫案件結案率',unit:'%',base:88.4,better:'high'},
-      {key:'phoneRate',name:'緊醫電話處置率',unit:'%',base:61.7,better:'neutral'},
-      {key:'dispatchRate',name:'緊醫出勤處置率',unit:'%',base:38.3,better:'neutral'},
-      {key:'emergencyAssign',name:'緊醫通報後派案時間',unit:'小時',base:.3,better:'low'},
-      {key:'emergencyAssess',name:'緊醫首次專業評估時間',unit:'小時',base:.7,better:'low'},
-      {key:'emergencyPrepare',name:'緊醫出勤準備時間',unit:'小時',base:1.5,better:'low'},
-      {key:'emergencyPhoneTotal',name:'緊醫電話受理總反應時間',unit:'小時',base:1.0,better:'low'},
-      {key:'emergencyTotal',name:'緊醫出勤總反應時間',unit:'小時',base:2.5,better:'low'}
-    ]},
-    {id:'hospital',title:'優化計畫醫院端處置效率',types:['all','optimization'],rows:[
-      {key:'hospitalOpen',name:'衛生局轉介案件開案率',unit:'%',base:82.6,better:'high'},
-      {key:'reviewAgree',name:'暫不轉介覆核同意率',unit:'%',base:74.1,better:'neutral'},
-      {key:'reviewReject',name:'暫不轉介覆核駁回率',unit:'%',base:25.9,better:'neutral'},
-      {key:'nonReferralIntervention',name:'暫不轉介案件醫療介入率',unit:'%',base:18.7,better:'high'},
-      {key:'reviewTime',name:'暫不轉介案件覆核時間',unit:'天',base:.6,better:'low'},
-      {key:'referralAssign',name:'轉介案件派案時間',unit:'小時',base:.3,better:'low'},
-      {key:'referralContact',name:'轉介案件首次聯繫時間',unit:'小時',base:4.2,better:'low'},
-      {key:'afterAssignContact',name:'派案後首次聯繫時間',unit:'小時',base:3.1,better:'low'},
-      {key:'firstProfessional',name:'首次專業評估時間',unit:'天',base:1.2,better:'low'},
-      {key:'replyBureau',name:'回覆衛生局時間',unit:'天',base:1.5,better:'low'}
-    ]},
-    {id:'bureau',title:'優化計畫衛生局處置效率',types:['all','optimization'],rows:[
-      {key:'bureauReferral',name:'衛生局醫療轉介率',unit:'%',base:58.2,better:'high'},
-      {key:'bureauToHospital',name:'衛生局轉介本院率',unit:'%',base:41.6,better:'high'},
-      {key:'hospitalShare',name:'本院醫療轉介占率',unit:'%',base:71.5,better:'high'},
-      {key:'nonReferralRate',name:'衛生局暫不轉介率',unit:'%',base:41.8,better:'low'},
-      {key:'bureauVisit',name:'衛生局訪視時間',unit:'天',base:1.8,better:'low'},
-      {key:'bureauDecision',name:'衛生局分流決策時間',unit:'天',base:.9,better:'low'},
-      {key:'bureauReply',name:'衛生局回覆通報時間',unit:'天',base:1.1,better:'low'}
-    ]}
-  ];
-  const YEARS=[{year:2024,roc:'民國113年'},{year:2025,roc:'民國114年'},{year:2026,roc:'民國115年'}];
-  const CURRENT_MONTH=9, CURRENT_DAY=25;
-  /* 總覽的風險處理時間依通報類別換算（緊急醫療以小時級完成受理，優化計畫以首次訪視計） */
-  const RISK_TYPE_FACTOR={all:1,emergency:.35,optimization:1.15};
-
-  let compareType='all';
-
-  /* 字串雜湊 → 0~1，讓推算值固定 */
-  function hash(str){
-    let h=2166136261;
-    for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); }
-    return ((h>>>0)%10000)/10000;
-  }
-  const isRate=row=>row.unit==='%';
-  const round1=v=>Math.round(v*10)/10;
-  const clampRate=v=>Math.max(.1,Math.min(99.9,v));
-
-  /* 由 2026 往回推 2025、2024：rate 以百分點、時間以倍率退回 */
-  function yearValues(row,mode,month){
-    const base=row.key.startsWith('risk') ? row.base*RISK_TYPE_FACTOR[compareType] : row.base;
-    const h1=hash(row.key+'a'), h2=hash(row.key+'b');
-    let v2025, v2024;
-    if(isRate(row)){
-      const step1=1.5+3.5*h1, step2=1+3*h2;
-      const dir=row.better==='low' ? 1 : row.better==='high' ? -1 : (h1<.5?-1:1);
-      v2025=clampRate(base+dir*step1);
-      v2024=clampRate(v2025+dir*step2);
-    }else{
-      v2025=base*(1.08+.18*h1);
-      v2024=v2025*(1.05+.15*h2);
-    }
-    const values=[v2024,v2025,base];
-    /* 同月比較／其他月份：各年度依月份小幅波動 */
-    if(mode!=='ytd'){
-      const tag=mode==='customMonth'?`m${month}`:'month';
-      values.forEach((v,i)=>{
-        const j=(hash(row.key+tag+i)-.5)*(isRate(row)?6:.16);
-        values[i]=isRate(row)?clampRate(v+j):v*(1+j);
-      });
-    }
-    return values.map(round1);
-  }
-
-  function fmt(v,row){ return v==null ? '—' : (isRate(row)||v>=10 ? v.toFixed(1) : v.toFixed(1)); }
-
-  function changeCell(row,prev,cur){
-    if(prev==null||cur==null) return `<td class="cmp-change none">—</td>`;
-    const d=round1(cur-prev);
-    if(Math.abs(d)<.05) return `<td class="cmp-change flat">持平</td>`;
-    const up=d>0;
-    let cls='neutral';
-    if(row.better==='high') cls=up?'better':'worse';
-    if(row.better==='low') cls=up?'worse':'better';
-    const unit=isRate(row)?'個百分點':row.unit;
-    return `<td class="cmp-change ${cls}"><b>${up?'▲':'▼'} ${Math.abs(d).toFixed(1)}</b><small>${unit}</small></td>`;
-  }
-
-  function render(){
-    const box=document.getElementById('commandCompareMetrics');
-    if(!box) return;
-    const modeBtn=document.querySelector('#commandCompareMode button.active');
-    const mode=modeBtn?.dataset.mode || 'ytd';
-    const month=Number(document.getElementById('commandCompareMonth')?.value || CURRENT_MONTH);
-    const future=mode==='customMonth' && month>CURRENT_MONTH;
-    const partial=mode==='ytd' || mode==='month' || (mode==='customMonth' && month===CURRENT_MONTH);
-    const currentNote=future?'尚未發生':(partial?`截至 ${CURRENT_MONTH}/${CURRENT_DAY}`:'整月');
-
-    const head=`<thead><tr><th class="cmp-name">指標</th>`
-      +YEARS.map(y=>`<th class="cmp-year${y.year===2026?' current':''}">${y.year}<small>${y.year===2026?currentNote:y.roc}</small></th>`).join('')
-      +`<th class="cmp-change-head">較去年</th></tr></thead>`;
-
-    const groups=GROUPS.filter(g=>g.types.includes(compareType));
-    const html=groups.map(g=>{
-      const rows=g.rows.map(row=>{
-        const vals=yearValues(row,mode,month);
-        if(future) vals[2]=null;
-        const max=Math.max(...vals.filter(v=>v!=null),.0001);
-        const cells=vals.map((v,i)=>`<td class="cmp-val${i===2?' current':''}${v==null?' no-data':''}">`
-          +`<span><b>${fmt(v,row)}</b>${v==null?'':`<em>${row.unit}</em>`}</span>`
-          +`<i class="cmp-bar"><i style="width:${v==null?0:(v/max*100).toFixed(1)}%"></i></i></td>`).join('');
-        return `<tr><th class="cmp-name" scope="row">${row.name}</th>${cells}${changeCell(row,vals[1],vals[2])}</tr>`;
-      }).join('');
-      return `<section class="cmp-group cmp-${g.id}"><h4>${g.title}</h4><div class="cmp-table-wrap"><table class="cmp-table">${head}<tbody>${rows}</tbody></table></div></section>`;
-    });
-    /* 四組長度差很多（3～10 列），依序放進目前較短的一欄，兩欄高度才接近 */
-    const cols=[{h:0,html:''},{h:0,html:''}];
-    groups.forEach((g,i)=>{
-      const col=cols[0].h<=cols[1].h?cols[0]:cols[1];
-      col.h+=g.rows.length+2;
-      col.html+=html[i];
-    });
-    box.innerHTML=cols.map(c=>`<div class="cmp-col">${c.html}</div>`).join('');
-  }
-
-  document.addEventListener('DOMContentLoaded',()=>{
-    const filter=document.getElementById('commandCompareTypeFilter');
-    filter?.addEventListener('click',e=>{
-      const btn=e.target.closest('.risk-filter-btn');
-      if(!btn) return;
-      filter.querySelectorAll('.risk-filter-btn').forEach(b=>b.classList.toggle('active',b===btn));
-      compareType=btn.dataset.compareType;
-      render();
-    });
-    document.getElementById('commandCompareMode')?.addEventListener('click',e=>{ if(e.target.closest('button')) setTimeout(render,0); });
-    document.getElementById('commandCompareMonth')?.addEventListener('change',()=>setTimeout(render,0));
-    render();
-  });
-})();
-</script>
-
 <style id="v5-command-compare-efficiency-style">
 /* ---------- 同期比較：版面（工具列／篩選列／指標區） ---------- */
 .dashboard #command #commandComparisonView.active{
@@ -24745,5 +22254,13 @@ html body #districtMapDialog #geoRiskFilter .geo-risk-filter-label{
 }
 html body #outcomeDetailDialog #outcomeStatusFilter .outcome-status-btn{
   font-size:var(--v7-filter-btn) !important;
+}
+</style>
+
+<style id="real-data-emergency-only">
+/* real-data 20261103：本檔只保留緊急醫療，通報類別篩選只剩一顆鈕。
+   舊層在 ≤680px 把 #reporterTypeFilter 鎖成三等分，單顆鈕只佔 1/3；改成撐滿，與風險頁一致。 */
+@media (max-width:899px){
+  html body .dashboard #reporter.page #reporterTypeFilter{ grid-template-columns:minmax(0,1fr) !important; }
 }
 </style>
