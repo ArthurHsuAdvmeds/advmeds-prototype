@@ -9,7 +9,7 @@
 熱點地圖仍在主腳本的地圖模組裡，透過 `window.RD.basicCases()` 取資料（`geoCases()`）。
 
 > **repo 是公開的。** `data.json` 換成真實資料再 push，就會公開在 GitHub 與 Pages 上。
-> 目前的 `data.json` 是使用者提供的 14 筆資料（原 `real_data.json`，通報日 2026/10/05–11/03，沒有 `sample`／`asOf`／`dataStart`），
+> 目前的 `data.json` 是使用者提供的 14 筆資料（原 `real_data.json`，通報日 2026/10/05–11/03，最外層只有 `updatedAt`，沒有 `sample`／`asOf`／`dataStart`），
 > 由使用者自行 commit 推上（`726145f`，2026-11-04）；之後換資料要不要 push 由使用者決定。
 > 先前的 420 筆虛構範例資料（最外層 `"sample": true`，頁首會標示「範例資料（虛構）」）留在 commit `b300075`。
 
@@ -21,7 +21,8 @@
 
 ```jsonc
 {
-  "asOf": "2026-11-03",       // 選填：資料截止日；本日／本月／本季／本年度以這天為「今天」，省略時取最晚一筆通報的日期
+  "updatedAt": "2026-11-03",  // 選填：資料更新日，顯示在頁首「資料更新日」（可含時間，取臺北日期）；省略時頁首改顯示「資料截止」＋ asOf
+  "asOf": "2026-11-03",       // 選填：本日／本月／本季／本年度以這天為「今天」，省略時取 updatedAt，再沒有就取最晚一筆通報的日期
   "dataStart": "2023-01-01",  // 選填：資料起日；指揮板預設區間、結案率的起始年度，省略時取最早一筆通報的日期
   "emg": [ { ... } ]          // 緊急醫療通報，一筆一個物件；其他鍵（之後的優化計畫）目前不讀
 }
@@ -93,7 +94,7 @@
 - **file:// 直接開檔**：瀏覽器不允許網頁讀 JSON，頁首會出現「選擇 data.json」，選了就會載入（不上傳，只在瀏覽器內讀取）。
 - **本機伺服器**：在 repo 根目錄跑 `python -m http.server`（本機用 `cd .tool && uv run python -I -m http.server 8765 --directory ..`），
   開 `http://127.0.0.1:8765/tsghb-dashboard/real-data/20261103/`。GitHub Pages 上直接可用。
-- 換資料後檢查：頁首的資料截止日、件數，以及「已排除」「status 無法對應」「reporterDepartment 未對應」提示是否符合預期；console 不應有錯誤。
+- 換資料後檢查：頁首的資料更新日、總案件數，以及「已排除」「status 無法對應」「reporterDepartment 未對應」提示是否符合預期；console 不應有錯誤。
 - 若要擴充回優化計畫：載入只讀 `emg`（`build()`），指揮板目前只有緊急醫療一列（`renderCommand()`），
   被移除的頁面與頁籤可以從 `../../v7/` 對照取回。
 

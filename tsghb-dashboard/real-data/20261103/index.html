@@ -11682,7 +11682,7 @@
     </div>
   </header>
 
-  <!-- real-data：資料載入狀態、資料截止日、範例資料提示（由檔尾 real-data 模組填入） -->
+  <!-- real-data：資料載入狀態、資料更新日、總案件數、範例資料提示（由檔尾 real-data 模組填入） -->
   <div class="rd-status" id="rdStatus" role="status" aria-live="polite">資料載入中…</div>
 
   <nav class="tabs">
@@ -21021,7 +21021,8 @@ html body .dashboard #command .closure-v74-donut .closure-v74-donut-center stron
    檔案格式見同資料夾 CLAUDE.md。重點：
    ・data.json 最外層是 {"emg":[...]}，一筆緊急醫療通報一個物件；本檔只保留緊急醫療，其他鍵（之後的優化計畫）不讀
    ・允許行註解（//）、區塊註解與結尾多餘的逗號；最外層有 "sample": true 時頁首標示「範例資料」
-   ・最外層可加 "asOf"（資料截止日）、"dataStart"（資料起日），省略時取最晚／最早一筆通報的日期
+   ・最外層的 "updatedAt"（資料更新日）顯示在頁首；"asOf"（本日／本月…的基準日）省略時取 updatedAt，再沒有就取最晚一筆通報的日期；
+     "dataStart"（資料起日）省略時取最早一筆通報的日期
    ・所有日期篩選都以 timePoint.reportedAt（網絡完成通報時間）為準，以臺北時間切日
    ・以 file:// 開啟時瀏覽器不允許網頁讀取 JSON，頁首改為「選擇 data.json」
    地圖模組（主腳本的 geoCases()）透過 window.RD.basicCases() 取基本資料頁目前區間的案件。
@@ -21051,7 +21052,7 @@ html body .dashboard #command .closure-v74-donut .closure-v74-donut-center stron
 
   const RD = window.RD = {
     loaded:false,
-    cases:[], asOf:null, dataStart:null, sample:false,
+    cases:[], updatedAt:null, asOf:null, dataStart:null, sample:false,
     ranges:{},
     basicCases(){ const r=RD.ranges.basic; return r ? casesIn(r.start,r.end) : []; }
   };
@@ -21194,7 +21195,10 @@ html body .dashboard #command .closure-v74-donut .closure-v74-donut-center stron
     const days=cases.map(c=>c.day).sort();
     RD.cases=cases;
     RD.stats=stats;
-    RD.asOf=raw.asOf || days[days.length-1] || dayKey(Date.now());
+    /* updatedAt 可以只有日期或含時間，取臺北日期；無法解析時當作沒填 */
+    const updated=parseTime(raw.updatedAt);
+    RD.updatedAt=updated==null ? null : dayKey(updated);
+    RD.asOf=raw.asOf || RD.updatedAt || days[days.length-1] || dayKey(Date.now());
     RD.dataStart=raw.dataStart || days[0] || RD.asOf;
     RD.sample=raw.sample===true;
     RD.loaded=true;
@@ -21638,8 +21642,10 @@ html body .dashboard #command .closure-v74-donut .closure-v74-donut-center stron
     el.classList.remove('rd-error');
     const parts=[];
     if(RD.sample) parts.push('<span class="rd-sample">範例資料（虛構）</span>');
-    parts.push(`<span>資料截止 <b>${slashDate(RD.asOf)}</b></span>`);
-    parts.push(`<span>緊急醫療通報 <b>${fmtInt(RD.cases.length)}</b> 件（${slashDate(RD.dataStart)} 起）</span>`);
+    parts.push(RD.updatedAt
+      ? `<span>資料更新日 <b>${slashDate(RD.updatedAt)}</b></span>`
+      : `<span>資料截止 <b>${slashDate(RD.asOf)}</b></span>`);
+    parts.push(`<span>總案件數 <b>${fmtInt(RD.cases.length)}</b> 件（${slashDate(RD.dataStart)} 起）</span>`);
     /* 資料品質提示：排除的筆數、對不到代碼的筆數 */
     const s=RD.stats;
     if(s.badTime) parts.push(`<span class="rd-warn">已排除：通報時間無法解析 ${s.badTime} 件</span>`);
