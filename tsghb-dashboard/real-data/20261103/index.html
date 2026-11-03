@@ -11682,6 +11682,9 @@
     </div>
   </header>
 
+  <!-- real-data：資料載入狀態、資料截止日、範例資料提示（由檔尾 real-data 模組填入） -->
+  <div class="rd-status" id="rdStatus" role="status" aria-live="polite">資料載入中…</div>
+
   <nav class="tabs">
     <button class="tab active" data-page="basic">基本資料</button>
     <button class="tab" data-page="risk">通報案件風險分析</button>
@@ -11938,11 +11941,11 @@
       <div class="eff-v79-section-heading"><div><span>總覽</span><h3>不同風險個案處理時間（平均）</h3></div><small>緊醫完成受理 － 個案通報時間</small></div>
 
       <article class="eff-v79-card eff-v79-risk-compare">
-        <div class="eff-v79-risk-row high"><div class="eff-v79-risk-name"><span>高風險</span><small>N = 84</small></div><div class="eff-v79-risk-bar"><i style="width:28%"></i></div><strong data-eff-value="riskHigh">0.6</strong><em>天</em><button class="eff-v79-info" data-metric="高風險個案處理時間(平均)">i</button></div>
-        <div class="eff-v79-risk-row medium"><div class="eff-v79-risk-name"><span>中風險</span><small>N = 156</small></div><div class="eff-v79-risk-bar"><i style="width:59%"></i></div><strong data-eff-value="riskMedium">1.2</strong><em>天</em><button class="eff-v79-info" data-metric="中風險個案處理時間(平均)">i</button></div>
-        <div class="eff-v79-risk-row low"><div class="eff-v79-risk-name"><span>低風險</span><small>N = 101</small></div><div class="eff-v79-risk-bar"><i style="width:100%"></i></div><strong data-eff-value="riskLow">2.0</strong><em>天</em><button class="eff-v79-info" data-metric="低風險個案處理時間(平均)">i</button></div>
+        <div class="eff-v79-risk-row high"><div class="eff-v79-risk-name"><span>高風險</span><small data-eff-n="riskHigh">N = —</small></div><div class="eff-v79-risk-bar"><i data-eff-bar="riskHigh" style="width:0%"></i></div><strong data-eff-value="riskHigh">—</strong><em>小時</em><button class="eff-v79-info" data-metric="高風險個案處理時間(平均)">i</button></div>
+        <div class="eff-v79-risk-row medium"><div class="eff-v79-risk-name"><span>中風險</span><small data-eff-n="riskMedium">N = —</small></div><div class="eff-v79-risk-bar"><i data-eff-bar="riskMedium" style="width:0%"></i></div><strong data-eff-value="riskMedium">—</strong><em>小時</em><button class="eff-v79-info" data-metric="中風險個案處理時間(平均)">i</button></div>
+        <div class="eff-v79-risk-row low"><div class="eff-v79-risk-name"><span>低風險</span><small data-eff-n="riskLow">N = —</small></div><div class="eff-v79-risk-bar"><i data-eff-bar="riskLow" style="width:0%"></i></div><strong data-eff-value="riskLow">—</strong><em>小時</em><button class="eff-v79-info" data-metric="低風險個案處理時間(平均)">i</button></div>
       </article>
-      <div class="eff-v79-risk-note">條形長度用來比較相對處理時間；實際值以右側平均天數為準。</div>
+      <div class="eff-v79-risk-note">條形長度用來比較相對處理時間；實際值以右側平均小時數為準。</div>
 
       <div class="eff-v86-jump-head">各處置面向重點<small>點擊卡片可切換至該頁籤查看完整指標</small></div>
       <div class="eff-v86-jump-grid">
@@ -12467,105 +12470,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Keep this DOMContentLoaded block focused on global navigation controls.
 });
 
-  // Risk analysis data.
-  // Each row always sums to 100%.
-  const riskDatasets = {
-    all: {
-      scale: {low: 33.33, medium: 55.56, high: 11.11},
-      gaf:   {low: 28.57, medium: 42.86, high: 28.57},
-      bsrs:  {low: 40.00, medium: 40.00, high: 20.00},
-      cgi:   {low:  9.09, medium: 54.55, high: 36.36}
-    },
-    emergency: {
-      scale: {low: 12.50, medium: 37.50, high: 50.00},
-      gaf:   {low: 18.18, medium: 36.36, high: 45.46},
-      bsrs:  {low: 20.00, medium: 35.00, high: 45.00},
-      cgi:   {low:  5.00, medium: 30.00, high: 65.00}
-    },
-    optimized: {
-      scale: {low: 42.00, medium: 46.00, high: 12.00},
-      gaf:   {low: 35.00, medium: 45.00, high: 20.00},
-      bsrs:  {low: 48.00, medium: 37.00, high: 15.00},
-      cgi:   {low: 24.00, medium: 51.00, high: 25.00}
-    }
-  };
-
-  let riskCurrentFilter='emergency';
-  let riskTimeMode='year';
-  const RISK_DATE_PRESETS={
-    today:{start:'2026-09-25',end:'2026-09-25',adjust:4},
-    month:{start:'2026-09-01',end:'2026-09-25',adjust:2},
-    quarter:{start:'2026-07-01',end:'2026-09-25',adjust:1},
-    year:{start:'2026-01-01',end:'2026-09-25',adjust:0}
-  };
-  function riskDisplayDate(str){const [y,m,d]=str.split('-');return `${y}/${m}/${d}`;}
-  function riskAdjustedRow(row){
-    const preset=RISK_DATE_PRESETS[riskTimeMode];
-    const adjust=preset ? preset.adjust : 0;
-    const high=Math.max(1,Math.min(90,row.high+adjust));
-    const low=Math.max(1,Math.min(90,row.low-adjust));
-    const medium=Math.max(0,100-high-low);
-    return {low,medium,high};
-  }
-  function renderRiskChart(filterKey=riskCurrentFilter){
-    riskCurrentFilter=filterKey;
-    const dataset = riskDatasets[filterKey];
-    if(!dataset) return;
-
-    document.querySelectorAll('.risk-stack').forEach(stack=>{
-      const baseRow = dataset[stack.dataset.key];
-      if(!baseRow) return;
-      const row=riskAdjustedRow(baseRow);
-      ['low','medium','high'].forEach(level=>{
-        const seg = stack.querySelector(`[data-seg="${level}"]`);
-        if(!seg) return;
-        const value = row[level];
-        seg.style.width = `${value}%`;
-        seg.innerHTML = value >= 8 ? `<span>${value.toFixed(1)}%</span>` : '';
-        seg.title = `${value.toFixed(1)}%`;
-      });
-    });
-  }
-
-  const riskFilter = document.getElementById('riskFilter');
-  if(riskFilter){
-    riskFilter.querySelectorAll('.risk-filter-btn').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        riskFilter.querySelectorAll('.risk-filter-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        renderRiskChart(btn.dataset.filter);
-      });
-    });
-  }
-
-  const riskStartDate=document.getElementById('riskStartDate');
-  const riskEndDate=document.getElementById('riskEndDate');
-  const riskApplyRange=document.getElementById('riskApplyRange');
-  const riskQuickFilter=document.getElementById('riskQuickFilter');
-  function updateRiskRangeLabel(start,end){const el=document.getElementById('riskRangeLabel');if(el)el.textContent=`${riskDisplayDate(start)}－${riskDisplayDate(end)}`;}
-  if(riskQuickFilter){
-    riskQuickFilter.querySelectorAll('button').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        riskQuickFilter.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        riskTimeMode=btn.dataset.riskRange;
-        const p=RISK_DATE_PRESETS[riskTimeMode];
-        riskStartDate.value=p.start;riskEndDate.value=p.end;
-        updateRiskRangeLabel(p.start,p.end);
-        renderRiskChart();
-      });
-    });
-  }
-  riskApplyRange?.addEventListener('click',()=>{
-    riskQuickFilter?.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-    riskTimeMode='custom';
-    updateRiskRangeLabel(riskStartDate.value,riskEndDate.value);
-    renderRiskChart();
-  });
-  renderRiskChart('emergency');
-
-
-
   // ===== Real Taiwan geographic hotspot map (nation -> county) =====
   const geoDialog = document.getElementById('districtMapDialog');
   const geoOpenBtn = document.getElementById('openDistrictMap');
@@ -12583,113 +12487,38 @@ document.addEventListener('DOMContentLoaded', () => {
   const GEO_COUNTIES_URL = 'https://cdn.jsdelivr.net/npm/taiwan-atlas/counties-10t.json';
   const GEO_TOWNS_URL = 'https://cdn.jsdelivr.net/npm/taiwan-atlas/towns-10t.json';
   const TAIPEI_CODE = '63000';
-  const taipeiDistrictData = {
-    '松山區':55,'信義區':70,'大安區':90,'中山區':65,'中正區':50,'大同區':45,
-    '萬華區':75,'文山區':80,'南港區':60,'內湖區':70,'士林區':65,'北投區':75
-  };
   /* ===== 個案點位圖層：依地址 GPS 座標定位、依初評風險上色 =====
-     原型階段沒有真實個案地址，這裡以各行政區的「實際邊界多邊形」做拒絕取樣
-     產生座標，確保每個點都真的落在該行政區內，之後接上真實資料時，
-     只要把 buildCasePoints() 換成回傳 {id, district, code, level, lng, lat}
-     的真實個案陣列即可，其餘繪製、tooltip、圖例、篩選邏輯都不必改。
-
-     初評風險的分布沿用風險分析頁 riskDatasets.all.scale
-     （低 33.33 / 中 55.56 / 高 11.11），讓兩頁的初評結構一致。
-     以固定亂數種子產生，重新整理不會跳動。 */
-  const GEO_RISK_MIX = { low:33.33, medium:55.56, high:11.11 };
-  const GEO_RISK_LABEL = { low:'低風險（輕度）', medium:'中風險（中度）', high:'高風險（重度）' };
+     real-data：案件來自 data/cases.json，由檔尾的 real-data 模組載入；
+     RD.basicCases() 回傳基本資料頁目前日期區間內的案件。
+     ・各縣市／行政區件數與初評風險組成：算該縣市的全部案件（含沒有座標的）
+     ・點位：只畫有 latitude／longitude 的案件；同址合併依 address_key，沒有時以座標（小數 5 位）判斷同址
+     ・沒有填初評風險的案件以 none（灰色）呈現，只在「全部」時顯示 */
+  const GEO_RISK_LABEL = { low:'低風險（輕度）', medium:'中風險（中度）', high:'高風險（重度）', none:'未填初評風險' };
   /* v5：點位加大，並把「同一地址」的多筆通報合併成一個點位（中間標示件數）。
-     GEO_SITE_R 是單一通報的螢幕半徑（px），多筆通報依件數開根號放大。
-     GEO_SAME_ADDR_RATE：新個案落在同區既有通報地址的機率（重複通報、同住家屬等）。 */
+     GEO_SITE_R 是單一通報的螢幕半徑（px），多筆通報依件數開根號放大。 */
   const GEO_SITE_R = 5.6;
-  const GEO_SAME_ADDR_RATE = 0.2;
-  const GEO_RISK_ORDER = { low:0, medium:1, high:2 };
-  let geoCasePoints = null;
+  const GEO_RISK_ORDER = { none:-1, low:0, medium:1, high:2 };
+  let geoCasePoints = [];
   let geoCaseSites = [];
-  let geoCaseSignature = '';
 
-  /* mulberry32：固定種子的偽亂數，確保點位可重現 */
-  function geoRng(seed){
-    return function(){
-      seed = seed + 0x6D2B79F5 | 0;
-      let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
-      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
-    };
+  /* 基本資料頁目前日期區間內的案件；資料尚未載入時為空陣列。
+     圖資的縣市名稱「台／臺」混用（縣市圖層與鄉鎮圖層不一致），比對前一律換成「臺」，與 RD 正規化後的案件一致 */
+  function geoCases(){ return window.RD && RD.loaded ? RD.basicCases() : []; }
+  function geoCountyCases(countyName=geoCountyName){
+    const name=String(countyName || '').replace(/台/g,'臺');
+    return geoCases().filter(c=>c.county===name);
   }
 
-  function buildCasePoints(features){
-    const rnd = geoRng(20260904);
-    const points = [];
-    let serial = 0;
-
-    features.forEach(feature=>{
-      const name = feature.properties.TOWNNAME;
-      const total = taipeiDistrictData[name] || 0;
-      if(!total) return;
-
-      /* 依比例配額，餘數用最大餘數法補齊，確保各區三級人數合計等於該區案件數 */
-      const exact = {
-        low: total * GEO_RISK_MIX.low / 100,
-        medium: total * GEO_RISK_MIX.medium / 100,
-        high: total * GEO_RISK_MIX.high / 100
-      };
-      const quota = { low:Math.floor(exact.low), medium:Math.floor(exact.medium), high:Math.floor(exact.high) };
-      let remainder = total - (quota.low + quota.medium + quota.high);
-      Object.keys(exact)
-        .sort((a,b)=>(exact[b]-quota[b])-(exact[a]-quota[a]))
-        .forEach(k=>{ if(remainder>0){ quota[k]++; remainder--; } });
-
-      const bag = [];
-      Object.entries(quota).forEach(([level,count])=>{ for(let i=0;i<count;i++) bag.push(level); });
-      /* 洗牌，避免同一風險等級在區內連成一片 */
-      for(let i=bag.length-1;i>0;i--){
-        const j = Math.floor(rnd()*(i+1));
-        const t = bag[i]; bag[i]=bag[j]; bag[j]=t;
-      }
-
-      const [[minLng,minLat],[maxLng,maxLat]] = d3.geoBounds(feature);
-      const code = String(feature.properties.TOWNCODE);
-      const sites = [];
-      bag.forEach(level=>{
-        /* 一部分個案與同區既有通報落在同一個地址（同一組 GPS 座標） */
-        let site = sites.length && rnd() < GEO_SAME_ADDR_RATE
-          ? sites[Math.floor(rnd()*sites.length)]
-          : null;
-        if(!site){
-          let lng, lat, guard = 0;
-          do{
-            lng = minLng + rnd()*(maxLng-minLng);
-            lat = minLat + rnd()*(maxLat-minLat);
-            guard++;
-          } while(!d3.geoContains(feature,[lng,lat]) && guard < 400);
-          site = { key: `${code}-${sites.length+1}`, lng, lat };
-          sites.push(site);
-        }
-        points.push({
-          id: 'TP' + String(++serial).padStart(4,'0'),
-          district: name, code, level,
-          lng: site.lng, lat: site.lat, siteKey: site.key,
-          date: geoRandomDate(rnd)
-        });
-      });
-    });
-
-    return points;
-  }
-
-  /* 通報日期落在基本資料頁目前選取的日期區間內 */
-  function geoCaseRange(){
-    const start = document.getElementById('basicStartDate')?.value || '2026-01-01';
-    const end = document.getElementById('basicEndDate')?.value || '2026-09-25';
-    return start <= end ? [start,end] : [end,start];
-  }
-  function geoRandomDate(rnd){
-    const [start,end] = geoCaseRange();
-    const s = new Date(start+'T00:00:00'), e = new Date(end+'T00:00:00');
-    const days = Math.max(0, Math.round((e-s)/86400000));
-    const d = new Date(s.getTime() + Math.floor(rnd()*(days+1))*86400000);
-    return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+  function getCasePoints(features){
+    const codeByName = new Map(features.map(f=>[f.properties.TOWNNAME, String(f.properties.TOWNCODE)]));
+    geoCasePoints = geoCountyCases()
+      .filter(c=>c.lat!=null && c.lng!=null)
+      .map(c=>({
+        id:c.id, district:c.district || '未填行政區', code:codeByName.get(c.district) || '', level:c.risk || 'none',
+        lng:c.lng, lat:c.lat, siteKey:c.addressKey || `${c.lat.toFixed(5)},${c.lng.toFixed(5)}`,
+        date:c.day.replaceAll('-','/')
+      }));
+    return geoCasePoints;
   }
 
   /* 依地址（siteKey）把個案合併成點位；每個點位保有該址全部通報，最新的排前面 */
@@ -12713,25 +12542,16 @@ document.addEventListener('DOMContentLoaded', () => {
     return geoRiskFilter==='all' ? site.cases : site.cases.filter(c=>c.level===geoRiskFilter);
   }
   function geoSiteTopLevel(cases){
-    return cases.reduce((top,c)=>GEO_RISK_ORDER[c.level]>GEO_RISK_ORDER[top]?c.level:top,'low');
+    return cases.reduce((top,c)=>GEO_RISK_ORDER[c.level]>GEO_RISK_ORDER[top]?c.level:top,'none');
   }
   function geoSiteRadius(count){
     return GEO_SITE_R + 2.3*Math.sqrt(Math.max(0,count-1));
   }
 
-  /* 基本資料頁的日期篩選會改寫 taipeiDistrictData，因此用內容簽章判斷是否需重算 */
-  function getCasePoints(features){
-    const signature = geoCaseRange().join('~') + '|' + features.map(f=>`${f.properties.TOWNNAME}:${taipeiDistrictData[f.properties.TOWNNAME]||0}`).join('|');
-    if(!geoCasePoints || signature !== geoCaseSignature){
-      geoCasePoints = buildCasePoints(features);
-      geoCaseSignature = signature;
-    }
-    return geoCasePoints;
-  }
-
+  /* 目前縣市（districtName 傳 null 代表整個縣市）的初評風險組成，含沒有座標的案件 */
   function geoRiskBreakdown(districtName){
-    const out = { low:0, medium:0, high:0 };
-    (geoCasePoints||[]).forEach(p=>{ if(!districtName || p.district===districtName) out[p.level]++; });
+    const out = { low:0, medium:0, high:0, none:0 };
+    geoCountyCases().forEach(c=>{ if(!districtName || c.district===districtName) out[c.risk || 'none']++; });
     return out;
   }
 
@@ -12742,7 +12562,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* 套用目前篩選後的件數；districtName 傳 null 代表整個範圍 */
   function geoFilteredCount(districtName){
     const b = geoRiskBreakdown(districtName);
-    return geoRiskFilter==='all' ? (b.low + b.medium + b.high) : b[geoRiskFilter];
+    return geoRiskFilter==='all' ? (b.low + b.medium + b.high + b.none) : b[geoRiskFilter];
   }
 
   function applyGeoRiskFilter(){
@@ -12795,183 +12615,17 @@ document.addEventListener('DOMContentLoaded', () => {
   let geoSelectedCode = null;
   let geoZoom = d3.zoomIdentity;
   let geoPointsMode = false;
-  /* 初評風險篩選：'all' | 'high' | 'medium' | 'low'，僅在點位模式（臺北市）下生效 */
+  /* 初評風險篩選：'all' | 'high' | 'medium' | 'low'，僅在點位模式（有案件的縣市）下生效 */
   let geoRiskFilter = 'all';
-  let basicActiveTotal = 420;
 
-  // ===== Basic page: 2026-only quick filters =====
-  const BASIC_DATA_YEAR = 2026;
-  const BASIC_REFERENCE_DATE = new Date('2026-09-25T00:00:00');
-  const BASIC_CURRENT_MONTH = BASIC_REFERENCE_DATE.getMonth() + 1;
-  const BASIC_CURRENT_QUARTER = Math.floor((BASIC_CURRENT_MONTH - 1) / 3) + 1;
-  const BASIC_QUARTER_START = (BASIC_CURRENT_QUARTER - 1) * 3 + 1;
-  const BASIC_QUARTER_END = BASIC_QUARTER_START + 2;
-
-  // 800 件是 2023–2026 的跨年度總量；基本資料頁只使用 2026 年資料。
-  // 2026 年目前總量與指揮儀表板一致：420 件。
-  const BASIC_BASE = {
-    total:420,
-    status:[35,145,100,140],
-    district:[
-      ['大安',90],['文山',80],['北投',75],['萬華',75],['內湖',70],['信義',70],
-      ['士林',65],['中山',65],['南港',60],['松山',55],['中正',50],['大同',45]
-    ],
-    age:[
-      ['0-10',20],['10-20',80],['20-30',100],['30-40',130],['40-50',120],
-      ['50-60',140],['60-70',110],['70-80',70],['80+',30]
-    ],
-    gender:[440,360]
-  };
-
-  const BASIC_FILTERS = {
-    month:{label:`${BASIC_DATA_YEAR} 年 ${BASIC_CURRENT_MONTH} 月｜本月`, total:36},
-    quarter:{label:`${BASIC_DATA_YEAR} 年第 ${BASIC_CURRENT_QUARTER} 季｜${BASIC_QUARTER_START}–${BASIC_QUARTER_END} 月`, total:114},
-    year:{label:`${BASIC_DATA_YEAR} 本年度`, total:420}
-  };
-
-  function scaleArrayToTotal(values,total){
-    const sourceTotal=values.reduce((sum,v)=>sum+v,0);
-    if(!sourceTotal || total<=0) return values.map(()=>0);
-    const raw=values.map(v=>v/sourceTotal*total);
-    const result=raw.map(Math.floor);
-    let remainder=total-result.reduce((sum,v)=>sum+v,0);
-    const order=raw.map((v,i)=>({i,f:v-Math.floor(v)})).sort((a,b)=>b.f-a.f||a.i-b.i);
-    for(let n=0;n<remainder;n++) result[order[n%order.length].i]+=1;
-    return result;
-  }
-
-  function basicNiceMax(value){
-    if(value<=10) return 10;
-    if(value<=50) return Math.ceil(value/10)*10;
-    if(value<=120) return Math.ceil(value/20)*20;
-    return Math.ceil(value/50)*50;
-  }
-
-  function basicTicks(max){
-    return [max,Math.round(max*.75),Math.round(max*.5),Math.round(max*.25),0];
-  }
-
-  function setBasicAxis(axisEl,max){
-    if(!axisEl) return;
-    axisEl.innerHTML=basicTicks(max).map(v=>`<span>${v}</span>`).join('');
-  }
-
-  function renderBasicFilter(filterKey){
-    const isCustom=typeof filterKey==='object' && filterKey;
-    const config=isCustom ? filterKey : (BASIC_FILTERS[filterKey] || BASIC_FILTERS.year);
-    const total=config.total;
-    basicActiveTotal=total;
-
-    const status=scaleArrayToTotal(BASIC_BASE.status,total);
-    const kpiValues=[total,...status];
-    document.querySelectorAll('#basic .basic-kpi-value').forEach((el,index)=>{
-      if(kpiValues[index]!=null) el.textContent=kpiValues[index].toLocaleString('zh-TW');
-    });
-
-    const districtCounts=scaleArrayToTotal(BASIC_BASE.district.map(x=>x[1]),total);
-    const districtRows=BASIC_BASE.district.map((x,i)=>[x[0],districtCounts[i]]);
-    const districtMax=basicNiceMax(Math.max(...districtCounts,1));
-    const districtBars=document.querySelector('#basic .district-bars');
-    if(districtBars){
-      districtBars.innerHTML=districtRows.map(([name,value])=>{
-        const height=Math.max(2,value/districtMax*100);
-        return `<div class="district-bar-col"><div class="district-vbar" style="height:${height.toFixed(1)}%" title="${value} 件"></div><span>${name}</span><b>${value}</b></div>`;
-      }).join('');
-    }
-    setBasicAxis(document.querySelector('#basic .district-y-axis'),districtMax);
-
-    const ageCounts=scaleArrayToTotal(BASIC_BASE.age.map(x=>x[1]),total);
-    const ageMax=basicNiceMax(Math.max(...ageCounts,1));
-    const ageBars=document.querySelectorAll('#basic .age-chart .bar-col');
-    ageBars.forEach((col,index)=>{
-      const value=ageCounts[index] ?? 0;
-      const label=BASIC_BASE.age[index]?.[0] ?? '';
-      const bar=col.querySelector('.vbar');
-      const span=col.querySelector('span');
-      const height=Math.max(2,value/ageMax*100);
-      if(bar){
-        bar.style.height=`${height.toFixed(1)}%`;
-        bar.removeAttribute('title');
-      }
-      if(span) span.textContent=label;
-      col.dataset.tooltip=`${label} 歲｜${value} 人次`;
-      col.style.setProperty('--age-bar-height',`${height.toFixed(1)}%`);
-    });
-    setBasicAxis(document.querySelector('#basic .age-chart .y-axis'),ageMax);
-
-    const [male,female]=scaleArrayToTotal(BASIC_BASE.gender,total);
-    const malePct=total ? male/total*100 : 0;
-    const femalePct=total ? female/total*100 : 0;
-    const pie=document.querySelector('#basic .screenshot-pie');
-    if(pie) pie.style.background=`conic-gradient(#218fee 0 ${malePct.toFixed(2)}%, #2036aa ${malePct.toFixed(2)}% 100%)`;
-    const leftGender=document.querySelector('#basic .gender-left-label span');
-    const rightGender=document.querySelector('#basic .gender-right-label span');
-    if(leftGender) leftGender.textContent=`${female} (${femalePct.toFixed(2)}%)`;
-    if(rightGender) rightGender.textContent=`${male} (${malePct.toFixed(2)}%)`;
-
-    districtRows.forEach(([name,value])=>{
-      const key=name.endsWith('區') ? name : `${name}區`;
-      if(Object.prototype.hasOwnProperty.call(taipeiDistrictData,key)){
-        taipeiDistrictData[key]=value;
-      }
-    });
-
-    const scope=document.getElementById('basicFilterScope');
-    if(scope) scope.textContent=config.label;
-
-    document.querySelectorAll('#basicQuickFilter button').forEach(btn=>{
-      btn.classList.toggle('active',!isCustom && btn.dataset.basicFilter===filterKey);
-    });
-
-    if(geoDialog?.open && geoLevel==='county' && geoCountyCode===TAIPEI_CODE && geoTownFeatures.length){
-      renderCountyMap();
-    }else if(geoDialog?.open && geoLevel==='nation' && geoCountyFeatures.length){
-      renderNationMap();
-    }
-  }
-
-  const basicStartDate=document.getElementById('basicStartDate');
-  const basicEndDate=document.getElementById('basicEndDate');
-  const basicApplyRange=document.getElementById('basicApplyRange');
-  const basicQuickFilter=document.getElementById('basicQuickFilter');
-
-  function basicDate(str){return new Date(str+'T00:00:00');}
-  function basicDisplayDate(str){const [y,m,d]=str.split('-');return `${y}/${m}/${d}`;}
-  function basicClampDate(str,min,max){return str<min?min:str>max?max:str;}
-  function renderBasicCustomRange(startStr,endStr){
-    const min='2026-01-01',max='2026-09-25';
-    let start=basicClampDate(startStr,min,max),end=basicClampDate(endStr,min,max);
-    if(end<start){const t=start;start=end;end=t;}
-    const totalDays=Math.floor((basicDate(max)-basicDate(min))/86400000)+1;
-    const selectedDays=Math.floor((basicDate(end)-basicDate(start))/86400000)+1;
-    const total=Math.max(1,Math.round(BASIC_BASE.total*selectedDays/totalDays));
-    renderBasicFilter({label:`${basicDisplayDate(start)}－${basicDisplayDate(end)}`,total});
-    if(basicStartDate) basicStartDate.value=start;
-    if(basicEndDate) basicEndDate.value=end;
-    basicQuickFilter?.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-  }
-
-  if(basicQuickFilter){
-    basicQuickFilter.querySelectorAll('button').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        const key=btn.dataset.basicFilter;
-        if(key==='month'){basicStartDate.value='2026-09-01';basicEndDate.value='2026-09-25';}
-        if(key==='quarter'){basicStartDate.value='2026-07-01';basicEndDate.value='2026-09-25';}
-        if(key==='year'){basicStartDate.value='2026-01-01';basicEndDate.value='2026-09-25';}
-        renderBasicFilter(key);
-      });
-    });
-  }
-  basicApplyRange?.addEventListener('click',()=>renderBasicCustomRange(basicStartDate.value,basicEndDate.value));
-  renderBasicFilter('year');
-
+  /* 沒有案件的縣市回傳 null（地圖顯示「尚無資料」）；有案件的縣市，其下沒有案件的行政區為 0 */
   function countyValue(feature){
-    const code = String(feature.properties.COUNTYCODE || '');
-    return code === TAIPEI_CODE ? basicActiveTotal : null;
+    return geoCountyCases(feature.properties.COUNTYNAME).length || null;
   }
   function townValue(feature){
-    if(String(feature.properties.COUNTYCODE || '') !== TAIPEI_CODE) return null;
-    return taipeiDistrictData[feature.properties.TOWNNAME] ?? 0;
+    const cases = geoCountyCases(feature.properties.COUNTYNAME);
+    if(!cases.length) return null;
+    return cases.filter(c=>c.district===feature.properties.TOWNNAME).length;
   }
   function geoValue(feature){ return geoLevel === 'nation' ? countyValue(feature) : townValue(feature); }
   function geoName(feature){ return geoLevel === 'nation' ? feature.properties.COUNTYNAME : feature.properties.TOWNNAME; }
@@ -12992,14 +12646,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const b=geoRiskBreakdown(null);
       /* 有篩選時把未選的等級淡出，讓圖例同時當作「現在看到的是什麼」的狀態指示 */
       const off=lv=>geoRiskFilter!=='all' && geoRiskFilter!==lv ? ' class="off"' : '';
-      const title=geoRiskFilter==='all'
+      const unplotted=b.low+b.medium+b.high+b.none-geoCasePoints.length;
+      const title=(geoRiskFilter==='all'
         ? '初評風險 · 每點為一個通報地址'
-        : `初評風險 · 僅顯示${GEO_RISK_LABEL[geoRiskFilter]}`;
+        : `初評風險 · 僅顯示${GEO_RISK_LABEL[geoRiskFilter]}`)
+        +(unplotted>0 ? `（${unplotted} 件沒有座標，未畫點位）` : '');
       return `<div class="geo-legend-title">${title}</div>`
         +`<div class="geo-legend-items">`
         +`<span${off('high')}><i class="geo-legend-dot" style="background:#e4573f"></i>高風險（重度）${b.high}</span>`
         +`<span${off('medium')}><i class="geo-legend-dot" style="background:#f29a3a"></i>中風險（中度）${b.medium}</span>`
         +`<span${off('low')}><i class="geo-legend-dot" style="background:#f2c94c"></i>低風險（輕度）${b.low}</span>`
+        +(b.none ? `<span${off('none')}><i class="geo-legend-dot" style="background:#9aa3ad"></i>未填初評風險 ${b.none}</span>` : '')
         +`<span class="geo-legend-multi"><i class="geo-legend-dot multi">3</i>同址多筆通報（數字為件數，顏色取最高風險）</span>`
         +`</div>`;
     }
@@ -13153,7 +12810,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .on('click',(event,d)=>selectGeoRegion(String(d.properties.TOWNCODE)));
     /* 個案點位圖層：每一筆通報依其地址 GPS 座標落點，顏色代表初評風險。
        畫在行政區之後、標籤之前，讓行政區名稱仍可讀。 */
-    geoPointsMode = geoCountyCode===TAIPEI_CODE;
+    geoPointsMode = geoCountyCases().length>0;
     geoSvg.node().classList.toggle('points-mode', geoPointsMode);
     if(geoPointsMode){
       /* v5：同一地址的通報合併為一個點位（g.geo-site），圓內數字為同址件數 */
@@ -13193,17 +12850,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('geoFocusName').textContent=geoLevel==='nation'?'全臺':geoCountyName;
     document.getElementById('geoFocusLevel').textContent=geoLevel==='nation'?'縣市':'行政區';
     /* 點位模式且有套用風險篩選時，頂部與側欄的件數要跟著換算成篩選後的數字，
-       否則地圖上只剩 46 個高風險點、旁邊卻還寫 420 件，看起來像壞掉。
-       taipeiDistrictData 的總和等於 basicActiveTotal，所以兩者可以直接互換。 */
+       否則地圖上只剩高風險點、旁邊卻還寫全部件數，看起來像壞掉。 */
     const riskFiltered = geoPointsMode && geoRiskFilter!=='all';
     const riskLabelShort = { high:'高風險', medium:'中風險', low:'低風險' };
     const scopeCount = geoLevel==='nation'
-      ? String(basicActiveTotal)
-      : (geoCountyCode===TAIPEI_CODE ? String(riskFiltered ? geoFilteredCount(null) : basicActiveTotal) : '0');
+      ? String(geoCases().length)
+      : String(riskFiltered ? geoFilteredCount(null) : geoCountyCases().length);
+    const countiesWithData = new Set(geoCases().map(c=>c.county).filter(Boolean)).size;
     document.getElementById('geoFocusCount').textContent=scopeCount;
     document.getElementById('geoTotalValue').textContent=scopeCount;
     document.getElementById('geoTotalLabel').textContent=geoLevel==='nation'?'全臺總收案件':`${geoCountyName}案件${riskFiltered?`（${riskLabelShort[geoRiskFilter]}）`:''}`;
-    document.getElementById('geoMapSubtitle').textContent=geoLevel==='nation'?'全臺縣市分布｜目前僅臺北市有通報資料':`${geoCountyName}行政區分布${geoCountyCode===TAIPEI_CODE?(riskFiltered?`｜僅顯示${GEO_RISK_LABEL[geoRiskFilter]}個案`:''):'｜目前尚無通報資料'}`;
+    document.getElementById('geoMapSubtitle').textContent=geoLevel==='nation'?`全臺縣市分布｜${countiesWithData} 個縣市有通報資料`:`${geoCountyName}行政區分布${geoPointsMode?(riskFiltered?`｜僅顯示${GEO_RISK_LABEL[geoRiskFilter]}個案`:''):'｜目前尚無通報資料'}`;
     document.getElementById('geoRankingTitle').textContent=geoLevel==='nation'?'縣市排行':'行政區排行';
     document.getElementById('geoRankingSub').textContent=geoPointsMode?(riskFiltered?`依${riskLabelShort[geoRiskFilter]}案件數排序`:'依通報案件數排序｜長條為初評風險組成'):'依通報案件數排序';
     document.getElementById('geoFootnote').textContent=geoLevel==='nation'?'點擊縣市可下探至該縣市行政區；無案件資料的縣市仍保留下探能力供未來擴充。':(geoPointsMode?'可用上方「初評風險」開關過濾等級；點擊行政區可固定選取，使用「全臺」麵包屑返回上一層。':'點擊行政區可固定選取；使用「全臺」麵包屑返回上一層。');
@@ -13240,12 +12897,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }else if(geoPointsMode){
       geoRanking.innerHTML=items.map((x,i)=>{
         const b=geoRiskBreakdown(x.name);
-        const t=Math.max(1,b.low+b.medium+b.high);
+        const t=Math.max(1,b.low+b.medium+b.high+b.none);
         const seg=(n,cls)=>n?`<i class="${cls}" style="width:${(n/t*100).toFixed(1)}%" title="${GEO_RISK_LABEL[cls]}：${n} 件"></i>`:'';
         return `<button type="button" class="geo-rank-row risk-mode" data-code="${x.code}">`
           +`<b class="geo-rank-no">${i+1}</b>`
           +`<span class="geo-rank-name">${x.name}</span>`
-          +`<span class="geo-rank-bar risk">${seg(b.high,'high')}${seg(b.medium,'medium')}${seg(b.low,'low')}</span>`
+          +`<span class="geo-rank-bar risk">${seg(b.high,'high')}${seg(b.medium,'medium')}${seg(b.low,'low')}${seg(b.none,'none')}</span>`
           +`<strong class="geo-rank-value">${x.value==null?'—':x.value}</strong></button>`;
       }).join('');
     }else{
@@ -13418,414 +13075,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if(geoCloseBtn && geoDialog) geoCloseBtn.addEventListener('click',()=>geoDialog.close());
   if(geoDialog) geoDialog.addEventListener('click',e=>{if(e.target===geoDialog)geoDialog.close();});
 
-
-
-  // ===== Efficiency dashboard: final indicators (referral time merged into first medical intervention time) =====
-  const efficiencyFinalData={
-    all:[87.5,4.8,72.4,81.3,2.6,1.4,3.2,5.7],
-    emergency:[92.0,3.2,75.6,86.4,1.8,0.8,2.4,4.3],
-    optimized:[85.1,5.6,70.8,78.2,3.1,1.9,3.8,6.5]
-  };
-  const efficiencyRiskNData={
-    all:[84,156,101],
-    emergency:[46,32,18],
-    optimized:[38,124,83]
-  };
-  const EFF_DATE_PRESETS={
-    today:{start:'2026-09-25',end:'2026-09-25',factor:.88},
-    month:{start:'2026-09-01',end:'2026-09-25',factor:.94},
-    quarter:{start:'2026-07-01',end:'2026-09-25',factor:.98},
-    year:{start:'2026-01-01',end:'2026-09-25',factor:1}
-  };
-  let efficiencyCurrentType='all';
-  let efficiencyTimeMode='year';
-  function effDisplayDate(str){const [y,m,d]=str.split('-');return `${y}/${m}/${d}`;}
-  function renderEfficiencyFinal(type=efficiencyCurrentType){
-    efficiencyCurrentType=type;
-    const base=efficiencyFinalData[type] || efficiencyFinalData.all;
-    const factor=EFF_DATE_PRESETS[efficiencyTimeMode]?.factor || 1;
-    const displays=base.map((value,index)=>{
-      let display=value;
-      if([0,2,3].includes(index)) display=Math.min(100,value*factor);
-      else display=value*(2-factor);
-      const el=document.getElementById(`effFinal${index+1}`);
-      if(el) el.textContent=display.toFixed(1);
-      return display;
-    });
-
-    const referralRing=document.getElementById('effReferralRing');
-    if(referralRing) referralRing.style.setProperty('--progress',`${displays[0].toFixed(1)}%`);
-    const platformBar=document.getElementById('effPlatformBar');
-    if(platformBar) platformBar.style.width=`${displays[2].toFixed(1)}%`;
-    const interventionRing=document.getElementById('effInterventionRing');
-    if(interventionRing) interventionRing.style.setProperty('--progress',`${displays[3].toFixed(1)}%`);
-
-    const baseRiskN=efficiencyRiskNData[type] || efficiencyRiskNData.all;
-    const nFactor=EFF_DATE_PRESETS[efficiencyTimeMode]?.factor || 1;
-    const riskNIds=['effRiskHighN','effRiskMediumN','effRiskLowN'];
-    baseRiskN.forEach((n,index)=>{
-      const el=document.getElementById(riskNIds[index]);
-      if(el) el.textContent=String(Math.max(1,Math.round(n*nFactor)));
-    });
-  }
-  const efficiencyTabs=document.getElementById('efficiencyTypeTabs');
-  if(efficiencyTabs){
-    efficiencyTabs.querySelectorAll('.risk-filter-btn').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        efficiencyTabs.querySelectorAll('.risk-filter-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        renderEfficiencyFinal(btn.dataset.type);
-      });
-    });
-  }
-  const efficiencyStartDate=document.getElementById('efficiencyStartDate');
-  const efficiencyEndDate=document.getElementById('efficiencyEndDate');
-  const efficiencyApplyRange=document.getElementById('efficiencyApplyRange');
-  const efficiencyQuickFilter=document.getElementById('efficiencyQuickFilter');
-  function updateEfficiencyRangeLabel(start,end){const el=document.getElementById('efficiencyRangeLabel');if(el)el.textContent=`${effDisplayDate(start)}－${effDisplayDate(end)}`;}
-  if(efficiencyQuickFilter){
-    efficiencyQuickFilter.querySelectorAll('button').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        efficiencyQuickFilter.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        efficiencyTimeMode=btn.dataset.effRange;
-        const p=EFF_DATE_PRESETS[efficiencyTimeMode];
-        efficiencyStartDate.value=p.start;efficiencyEndDate.value=p.end;
-        updateEfficiencyRangeLabel(p.start,p.end);
-        renderEfficiencyFinal();
-      });
-    });
-  }
-  efficiencyApplyRange?.addEventListener('click',()=>{
-    efficiencyQuickFilter?.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-    efficiencyTimeMode='custom';
-    updateEfficiencyRangeLabel(efficiencyStartDate.value,efficiencyEndDate.value);
-    renderEfficiencyFinal();
-  });
-  renderEfficiencyFinal('all');
-
-  // ===== v55 efficiency risk drill dialog =====
-  const effRiskDialog=document.getElementById('effRiskDialog');
-  const effRiskDrillTrigger=document.getElementById('effRiskDrillTrigger');
-  const effRiskDrillOpen=document.getElementById('effRiskDrillOpen');
-  const effRiskDialogClose=document.getElementById('effRiskDialogClose');
-  const EFF_TYPE_LABELS={all:'全部',emergency:'緊急醫療',optimized:'優化計畫'};
-  function syncEffRiskDialogFilter(){
-    const label=document.getElementById('effRiskDialogFilter');
-    const range=document.getElementById('efficiencyRangeLabel')?.textContent || '';
-    if(label) label.textContent=`${EFF_TYPE_LABELS[efficiencyCurrentType] || '全部'} · ${range}`;
-  }
-  function openEffRiskDialog(){
-    if(!effRiskDialog) return;
-    syncEffRiskDialogFilter();
-    if(typeof effRiskDialog.showModal==='function'){
-      if(!effRiskDialog.open) effRiskDialog.showModal();
-    }else effRiskDialog.setAttribute('open','');
-  }
-  effRiskDrillOpen?.addEventListener('click',e=>{e.stopPropagation();openEffRiskDialog();});
-  effRiskDrillTrigger?.addEventListener('click',openEffRiskDialog);
-  effRiskDrillTrigger?.addEventListener('keydown',e=>{
-    if(e.key==='Enter' || e.key===' '){e.preventDefault();openEffRiskDialog();}
-  });
-  effRiskDialogClose?.addEventListener('click',()=>effRiskDialog?.close());
-  effRiskDialog?.addEventListener('click',e=>{if(e.target===effRiskDialog)effRiskDialog.close();});
-
-  // ===== Reporter analysis page =====
-  const reporterNetworkData = [
-    {name:'民政', count:128, responseCount:87, score:4.2, color:'#218fee'},
-    {name:'社政', count:176, responseCount:131, score:4.5, color:'#2036aa'},
-    {name:'消防', count:72, responseCount:45, score:4.0, color:'#ed7a34'},
-    {name:'教育', count:96, responseCount:68, score:4.3, color:'#7d0b8f'},
-    {name:'勞政', count:64, responseCount:42, score:4.1, color:'#df4aa8'},
-    {name:'警察', count:144, responseCount:111, score:4.6, color:'#7451c7'},
-    {name:'衛政', count:120, responseCount:87, score:4.4, color:'#d7b400'}
-  ];
-  const reporterTotal = reporterNetworkData.reduce((sum,d)=>sum+d.count,0);
-  const reporterTooltip = document.getElementById('reporterTooltip');
-
-  function reporterPolar(cx,cy,r,angle){
-    const a=(angle-90)*Math.PI/180;
-    return {x:cx+r*Math.cos(a), y:cy+r*Math.sin(a)};
-  }
-  function reporterArcPath(cx,cy,r,start,end){
-    const s=reporterPolar(cx,cy,r,end), e=reporterPolar(cx,cy,r,start);
-    const large=end-start<=180?0:1;
-    return `M ${cx} ${cy} L ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${r} ${r} 0 ${large} 0 ${e.x.toFixed(2)} ${e.y.toFixed(2)} Z`;
-  }
-  function reporterShowTip(evt,title,value){
-    if(!reporterTooltip) return;
-    reporterTooltip.innerHTML=`<b>${title}</b><span>${value}</span>`;
-    reporterTooltip.hidden=false;
-    reporterTooltip.style.left=`${evt.clientX+12}px`;
-    reporterTooltip.style.top=`${evt.clientY+12}px`;
-  }
-  function reporterHideTip(){ if(reporterTooltip) reporterTooltip.hidden=true; }
-
-  function renderReporterPie(){
-    const svg=document.getElementById('reporterPieSvg');
-    const legend=document.getElementById('reporterLegend');
-    if(!svg||!legend) return;
-    const cx=168, cy=148, r=102;
-    let angle=0;
-    let markup='';
-    reporterNetworkData.forEach((d,i)=>{
-      const pct=d.count/reporterTotal*100;
-      const sweep=pct/100*360;
-      const end=angle+sweep;
-      const mid=angle+sweep/2;
-      const p1=reporterPolar(cx,cy,r+2,mid);
-      const p2=reporterPolar(cx,cy,r+17,mid);
-      const right=Math.cos((mid-90)*Math.PI/180)>=0;
-      const p3={x:p2.x+(right?15:-15),y:p2.y};
-      const anchor=right?'start':'end';
-      markup += `<path class="reporter-pie-slice" data-index="${i}" d="${reporterArcPath(cx,cy,r,angle,end)}" fill="${d.color}"></path>`;
-      markup += `<polyline class="reporter-pie-label-line" points="${p1.x.toFixed(1)},${p1.y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)} ${p3.x.toFixed(1)},${p3.y.toFixed(1)}"></polyline>`;
-      markup += `<text class="reporter-pie-label" x="${(p3.x+(right?4:-4)).toFixed(1)}" y="${(p3.y+4).toFixed(1)}" text-anchor="${anchor}">${pct.toFixed(1)}%</text>`;
-      angle=end;
-    });
-    svg.innerHTML=markup;
-    legend.innerHTML=reporterNetworkData.map(d=>`<div class="reporter-legend-item"><i style="background:${d.color}"></i><span>${d.name}</span></div>`).join('');
-  }
-
-  function buildReporterYAxis(el,max,ticks,formatter){
-    if(!el) return;
-    const vals=[];
-    for(let i=ticks;i>=0;i--) vals.push(max*i/ticks);
-    el.innerHTML=vals.map(v=>`<span>${formatter(v)}</span>`).join('');
-  }
-
-  function renderReporterBars(){
-    const area=document.getElementById('reporterSourceBars');
-    const yaxis=document.getElementById('reporterSourceYAxis');
-    if(!area||!yaxis) return;
-    const max=200;
-    buildReporterYAxis(yaxis,max,4,v=>Math.round(v));
-    area.innerHTML=reporterNetworkData.map(d=>{
-      const h=d.count/max*100;
-      return `<div class="reporter-bar-col"><span class="reporter-bar-value" style="--bar-height:${h}%">${d.count}</span><div class="reporter-bar reporter-source-bar" data-name="${d.name}" data-value="${d.count}" style="height:${h}%;background:${d.color}"></div><span class="reporter-bar-label">${d.name}</span></div>`;
-    }).join('');
-    area.querySelectorAll('.reporter-source-bar').forEach(bar=>{
-      bar.addEventListener('mousemove',e=>reporterShowTip(e,bar.dataset.name,`轉介數量：${bar.dataset.value} 件`));
-      bar.addEventListener('mouseleave',reporterHideTip);
-    });
-  }
-
-  let reporterSatisfactionMode='response';
-  function renderReporterSatisfaction(){
-    const area=document.getElementById('reporterSatBars');
-    const yaxis=document.getElementById('reporterSatYAxis');
-    const desc=document.getElementById('reporterSatisfactionDescription');
-    const scale=document.getElementById('reporterSatScaleLabel');
-    if(!area||!yaxis) return;
-    const isResponse=reporterSatisfactionMode==='response';
-    const max=isResponse?100:5;
-    buildReporterYAxis(yaxis,max,5,v=>isResponse?`${Math.round(v)}%`:v.toFixed(0));
-    if(desc) desc.textContent=isResponse?'回收率：各單位通報後有填寫滿意度調查的比例':'滿意度平均分：各單位已回收問卷的平均滿意度，滿分 5 分';
-    if(scale) scale.textContent=isResponse?'比例（%）':'平均分（1–5 分）';
-    area.innerHTML=reporterNetworkData.map(d=>{
-      const responseRate=d.responseCount/d.count*100;
-      const value=isResponse?responseRate:d.score;
-      const h=value/max*100;
-      const text=isResponse?`${value.toFixed(1)}%`:value.toFixed(1);
-      const tip=isResponse?`回收 ${d.responseCount} / ${d.count} 份｜${text}`:`滿意度平均分：${text} / 5`;
-      return `<div class="reporter-bar-col"><span class="reporter-bar-value" style="--bar-height:${h}%">${text}</span><div class="reporter-bar reporter-sat-bar" data-name="${d.name}" data-tip="${tip}" style="height:${h}%;background:${d.color}"></div><span class="reporter-bar-label">${d.name}</span></div>`;
-    }).join('');
-    area.querySelectorAll('.reporter-sat-bar').forEach(bar=>{
-      bar.addEventListener('mousemove',e=>reporterShowTip(e,bar.dataset.name,bar.dataset.tip));
-      bar.addEventListener('mouseleave',reporterHideTip);
-    });
-  }
-
-  const reporterSatTabs=document.getElementById('reporterSatisfactionTabs');
-  if(reporterSatTabs){
-    reporterSatTabs.querySelectorAll('.reporter-sat-tab').forEach(btn=>btn.addEventListener('click',()=>{
-      reporterSatTabs.querySelectorAll('.reporter-sat-tab').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      reporterSatisfactionMode=btn.dataset.mode;
-      renderReporterSatisfaction();
-    }));
-  }
-  renderReporterPie();
-  renderReporterBars();
-  renderReporterSatisfaction();
-
-
-  // ===== Command dashboard V4: static grid flow =====
-  const COMMAND_TODAY = '2026-09-25';
-
-  const COMMAND_ALL_BREAKDOWN = {
-    emergency:{total:220,pending:12,assigned:48,closed:120,notaccepted:40},
-    class1:{total:180,pending:5,assigned:30,closed:115,notaccepted:30},
-    class2:{total:210,pending:8,assigned:38,closed:125,notaccepted:39},
-    class3:{total:190,pending:10,assigned:29,closed:120,notaccepted:31}
-  };
-
-  const commandPresets = {
-    all:{total:800,pending:35,assigned:145,closed:480,notaccepted:140,start:'2023-01-01',end:COMMAND_TODAY},
-    year:{total:420,pending:35,assigned:145,closed:100,notaccepted:140,start:'2026-01-01',end:COMMAND_TODAY},
-    quarter:{total:114,pending:12,assigned:42,closed:26,notaccepted:34,start:'2026-07-01',end:COMMAND_TODAY},
-    month:{total:36,pending:6,assigned:14,closed:4,notaccepted:12,start:'2026-09-01',end:COMMAND_TODAY},
-    today:{total:2,pending:1,assigned:1,closed:0,notaccepted:0,start:COMMAND_TODAY,end:COMMAND_TODAY}
-  };
-
-  function commandPct(value,total){
-    return total > 0 ? `${(value/total*100).toFixed(1)}%` : '0.0%';
-  }
-
-  function scaleCategoryBreakdown(overall){
-    if(overall.total===800){
-      return JSON.parse(JSON.stringify(COMMAND_ALL_BREAKDOWN));
-    }
-
-    const categoryShares={emergency:220/800,class1:180/800,class2:210/800,class3:190/800};
-    const keys=['emergency','class1','class2','class3'];
-    const out={};
-    let allocatedTotal=0;
-
-    keys.forEach((key,index)=>{
-      let total=index===keys.length-1
-        ? Math.max(0,overall.total-allocatedTotal)
-        : Math.round(overall.total*categoryShares[key]);
-      allocatedTotal+=total;
-
-      const base=COMMAND_ALL_BREAKDOWN[key];
-      const pending=Math.round(total*(base.pending/base.total));
-      const assigned=Math.round(total*(base.assigned/base.total));
-      const closed=Math.round(total*(base.closed/base.total));
-      const notaccepted=Math.max(0,total-pending-assigned-closed);
-
-      out[key]={total,pending,assigned,closed,notaccepted};
-    });
-    return out;
-  }
-
-  function setText(id,value){
-    const el=document.getElementById(id);
-    if(el) el.textContent=Number(value).toLocaleString('zh-TW');
-  }
-  function setPct(id,value,total){
-    const el=document.getElementById(id);
-    if(el) el.textContent=commandPct(value,total);
-  }
-
-  function setCommandFlow(range){
-    /* 本檔只保留緊急醫療：總通報案件＝緊急醫療案件 */
-    const breakdown={emergency:scaleCategoryBreakdown(range).emergency};
-    const overall=breakdown.emergency;
-    setText('commandTotal',overall.total);
-    setText('commandPending',overall.pending);
-    setText('commandAssigned',overall.assigned);
-    setText('commandClosed',overall.closed);
-    setText('commandNotAccepted',overall.notaccepted);
-
-    setPct('commandPendingPct',overall.pending,overall.total);
-    setPct('commandAssignedPct',overall.assigned,overall.total);
-    setPct('commandClosedPct',overall.closed,overall.total);
-    setPct('commandNotAcceptedPct',overall.notaccepted,overall.total);
-
-    const prefixMap={
-      emergency:'commandEmergency'
-    };
-
-    Object.entries(breakdown).forEach(([key,row])=>{
-      const p=prefixMap[key];
-      setText(p,row.total);
-      setPct(`${p}Pct`,row.total,overall.total);
-
-      setText(`${p}Pending`,row.pending);
-      setText(`${p}Assigned`,row.assigned);
-      setText(`${p}Closed`,row.closed);
-      setText(`${p}NotAccepted`,row.notaccepted);
-
-      setPct(`${p}PendingPct`,row.pending,row.total);
-      setPct(`${p}AssignedPct`,row.assigned,row.total);
-      setPct(`${p}ClosedPct`,row.closed,row.total);
-      setPct(`${p}NotAcceptedPct`,row.notaccepted,row.total);
-    });
-  }
-
-  function commandDate(str){ return new Date(str+'T00:00:00'); }
-  function commandDaysInclusive(a,b){ return Math.max(0,Math.floor((b-a)/86400000)+1); }
-  function commandDisplayDate(str){
-    const [y,m,d]=str.split('-');
-    return `${y}/${m}/${d}`;
-  }
-  function updateCommandRangeLabel(start,end){
-    const el=document.getElementById('commandRangeLabel');
-    if(el) el.textContent=`${commandDisplayDate(start)}－${commandDisplayDate(end)}`;
-  }
-
-  function computeCommandRange(startStr,endStr){
-    for(const key of ['all','year','quarter','month','today']){
-      const p=commandPresets[key];
-      if(startStr===p.start && endStr===p.end) return {...p};
-    }
-
-    const sysStart=commandDate('2023-01-01');
-    const today=commandDate(COMMAND_TODAY);
-    let start=commandDate(startStr),end=commandDate(endStr);
-    if(start<sysStart) start=sysStart;
-    if(end>today) end=today;
-    if(end<start) return {total:0,pending:0,assigned:0,closed:0,notaccepted:0};
-
-    const years={
-      2023:{pending:0,assigned:0,closed:80,notaccepted:0,end:'2023-12-31'},
-      2024:{pending:0,assigned:0,closed:120,notaccepted:0,end:'2024-12-31'},
-      2025:{pending:0,assigned:0,closed:180,notaccepted:0,end:'2025-12-31'},
-      2026:{pending:35,assigned:145,closed:100,notaccepted:140,end:COMMAND_TODAY}
-    };
-
-    const result={total:0,pending:0,assigned:0,closed:0,notaccepted:0};
-    Object.entries(years).forEach(([year,row])=>{
-      const ys=commandDate(`${year}-01-01`);
-      const ye=commandDate(row.end);
-      const os=start>ys?start:ys;
-      const oe=end<ye?end:ye;
-      if(oe<os) return;
-      const share=commandDaysInclusive(os,oe)/commandDaysInclusive(ys,ye);
-
-      ['pending','assigned','closed','notaccepted'].forEach(k=>{
-        result[k]+=Math.round(row[k]*share);
-      });
-    });
-
-    result.total=result.pending+result.assigned+result.closed+result.notaccepted;
-    return result;
-  }
-
-  const commandStart=document.getElementById('commandStartDate');
-  const commandEnd=document.getElementById('commandEndDate');
-  const commandApply=document.getElementById('commandApplyRange');
-  const commandQuick=document.getElementById('commandQuickFilter');
-
-  if(commandApply && commandStart && commandEnd){
-    commandApply.addEventListener('click',()=>{
-      commandQuick?.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-      const data=computeCommandRange(commandStart.value,commandEnd.value);
-      setCommandFlow(data);
-      updateCommandRangeLabel(commandStart.value,commandEnd.value);
-    });
-  }
-
-  if(commandQuick && commandStart && commandEnd){
-    commandQuick.querySelectorAll('button').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        commandQuick.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-
-        const preset=commandPresets[btn.dataset.range];
-        if(!preset) return;
-
-        commandStart.value=preset.start;
-        commandEnd.value=preset.end;
-        setCommandFlow(preset);
-        updateCommandRangeLabel(preset.start,preset.end);
-      });
-    });
-  }
-
-  /* 本檔只保留緊急醫療：載入時就以緊急醫療重算左側總數 */
-  if(commandStart && commandEnd) setCommandFlow(computeCommandRange(commandStart.value,commandEnd.value));
 
 
   // ===== Command Flow V7 — stable geometry + smooth connector animation =====
@@ -14117,271 +13366,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-
-  // ===== Reporter page final behavior override =====
-  document.addEventListener('DOMContentLoaded', () => {
-    const sourceData = [
-      {name:'社政', value:176},
-      {name:'警察', value:144},
-      {name:'民政', value:128},
-      {name:'衛政', value:120},
-      {name:'教育', value:96},
-      {name:'消防', value:72},
-      {name:'勞政', value:64}
-    ];
-    const totalCases = sourceData.reduce((s,d)=>s+d.value,0);
-
-    // Keep the same network color across pie, source bars and satisfaction bars.
-    const reporterColorMap = {
-      '社政':'#8F1D1D',
-      '警察':'#A92B20',
-      '民政':'#C23B22',
-      '衛政':'#D95224',
-      '教育':'#E96B2C',
-      '消防':'#F1843D',
-      '勞政':'#F6A65A'
-    };
-
-    const satData = [
-      {name:'社政', response:91.5, score:4.7, responded:161},
-      {name:'警察', response:88.2, score:4.6, responded:127},
-      {name:'民政', response:84.4, score:4.5, responded:108},
-      {name:'衛政', response:81.7, score:4.4, responded:98},
-      {name:'教育', response:78.1, score:4.3, responded:75},
-      {name:'消防', response:75.0, score:4.2, responded:54},
-      {name:'勞政', response:70.3, score:4.1, responded:45}
-    ];
-
-    const reporterTooltip = document.getElementById('reporterTooltip');
-
-    function showReporterTooltip(text, evt){
-      if(!reporterTooltip) return;
-      reporterTooltip.innerHTML = text;
-      reporterTooltip.hidden = false;
-      reporterTooltip.style.left = `${evt.clientX + 14}px`;
-      reporterTooltip.style.top = `${evt.clientY + 14}px`;
-    }
-    function hideReporterTooltip(){
-      if(reporterTooltip) reporterTooltip.hidden = true;
-    }
-
-    // ---- Pie chart: same source data, hover shows case count + percentage ----
-    const pieSvg = document.getElementById('reporterPieSvg');
-    const legend = document.getElementById('reporterLegend');
-    if(pieSvg){
-      while(pieSvg.firstChild) pieSvg.removeChild(pieSvg.firstChild);
-
-      const NS='http://www.w3.org/2000/svg';
-      const cx=172, cy=148, r=91;
-      const palette=sourceData.map(d=>reporterColorMap[d.name]);
-      let angle=-Math.PI/2;
-
-      function polar(a){ return [cx+r*Math.cos(a), cy+r*Math.sin(a)]; }
-      function arcPath(a0,a1){
-        const [x0,y0]=polar(a0), [x1,y1]=polar(a1);
-        const large=(a1-a0)>Math.PI?1:0;
-        return `M ${cx} ${cy} L ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} Z`;
-      }
-
-      sourceData.forEach((d,i)=>{
-        const span=d.value/totalCases*Math.PI*2;
-        const a0=angle, a1=angle+span;
-        const path=document.createElementNS(NS,'path');
-        path.setAttribute('d',arcPath(a0,a1));
-        path.setAttribute('fill',palette[i%palette.length]);
-        path.setAttribute('stroke','#fff');
-        path.setAttribute('stroke-width','1.5');
-        path.style.cursor='pointer';
-        path.addEventListener('mouseenter',e=>{
-          path.setAttribute('opacity','.84');
-          showReporterTooltip(
-            `<strong>${d.name}</strong><br>個案數：${d.value} 件<br>占比：${(d.value/totalCases*100).toFixed(1)}%`,
-            e
-          );
-        });
-        path.addEventListener('mousemove',e=>{
-          if(reporterTooltip && !reporterTooltip.hidden){
-            reporterTooltip.style.left=`${e.clientX+14}px`;
-            reporterTooltip.style.top=`${e.clientY+14}px`;
-          }
-        });
-        path.addEventListener('mouseleave',()=>{
-          path.setAttribute('opacity','1');
-          hideReporterTooltip();
-        });
-        pieSvg.appendChild(path);
-
-        // percentage-only outside label
-        const mid=(a0+a1)/2;
-        const labelR=118;
-        const lx=cx+labelR*Math.cos(mid);
-        const ly=cy+labelR*Math.sin(mid);
-        const text=document.createElementNS(NS,'text');
-        text.setAttribute('x',lx);
-        text.setAttribute('y',ly);
-        text.setAttribute('text-anchor',Math.cos(mid)>=0?'start':'end');
-        text.setAttribute('dominant-baseline','middle');
-        text.setAttribute('fill','#666');
-        text.setAttribute('font-size','10');
-        text.textContent=`${(d.value/totalCases*100).toFixed(1)}%`;
-        pieSvg.appendChild(text);
-
-        angle=a1;
-      });
-
-      if(legend){
-        legend.innerHTML=sourceData.map((d,i)=>`
-          <div class="reporter-legend-item">
-            <i style="background:${palette[i%palette.length]}"></i>
-            <span>${d.name}</span>
-          </div>
-        `).join('');
-      }
-    }
-
-    // Common bar renderer. Data is already sorted high -> low.
-    function renderBars(containerId, yAxisId, data, valueKey, maxValue, tooltipFormatter, valueLabelFormatter){
-      const area=document.getElementById(containerId);
-      const yAxis=document.getElementById(yAxisId);
-      if(!area || !yAxis) return;
-
-      area.innerHTML='';
-      yAxis.innerHTML='';
-
-      const ticks=4;
-      for(let i=ticks;i>=0;i--){
-        const val=maxValue*i/ticks;
-        const s=document.createElement('span');
-        s.textContent = valueKey==='score' ? val.toFixed(1) : Math.round(val);
-        yAxis.appendChild(s);
-      }
-
-      data.forEach(d=>{
-        const col=document.createElement('div');
-        col.className='reporter-bar-col';
-
-        const bar=document.createElement('div');
-        bar.className='reporter-bar';
-        const value=Number(d[valueKey]);
-        const barHeight=Math.max(1,value/maxValue*100);
-        bar.style.height=`${barHeight}%`;
-        col.style.setProperty('--bar-height', `${barHeight}%`);
-        bar.style.background=reporterColorMap[d.name] || '#218fee';
-        bar.tabIndex=0;
-
-        bar.addEventListener('mouseenter',e=>showReporterTooltip(tooltipFormatter(d),e));
-        bar.addEventListener('mousemove',e=>{
-          if(reporterTooltip && !reporterTooltip.hidden){
-            reporterTooltip.style.left=`${e.clientX+14}px`;
-            reporterTooltip.style.top=`${e.clientY+14}px`;
-          }
-        });
-        bar.addEventListener('mouseleave',hideReporterTooltip);
-
-        const valueLabel=document.createElement('span');
-        valueLabel.className='reporter-bar-value';
-        valueLabel.textContent = valueLabelFormatter ? valueLabelFormatter(d) : String(value);
-
-        const label=document.createElement('span');
-        label.className='reporter-bar-label';
-        label.textContent=d.name;
-
-        col.appendChild(valueLabel);
-        col.appendChild(bar);
-        col.appendChild(label);
-        area.appendChild(col);
-      });
-    }
-
-    // Right-top source counts: descending, hover includes count + percentage.
-    renderBars(
-      'reporterSourceBars',
-      'reporterSourceYAxis',
-      sourceData,
-      'value',
-      200,
-      d=>`<strong>${d.name}</strong><br>轉介數量：${d.value} 件<br>占比：${(d.value/totalCases*100).toFixed(1)}%`,
-      d=>`${d.value}`
-    );
-
-    // Satisfaction chart: sort descending according to current selected metric.
-      const satDescription=document.getElementById('reporterSatisfactionDescription');
-    const satScaleLabel=document.getElementById('reporterSatScaleLabel');
-
-    function renderSatisfaction(mode){
-      const sorted=[...satData].sort((a,b)=>
-        mode==='score' ? b.score-a.score : b.response-a.response
-      );
-
-      if(mode==='score'){
-        if(satDescription) satDescription.textContent='滿意度平均分：各單位滿意度調查平均分數（1–5 分）';
-        if(satScaleLabel) satScaleLabel.textContent='平均分（1–5）';
-        renderBars(
-          'reporterSatBars',
-          'reporterSatYAxis',
-          sorted,
-          'score',
-          5,
-          d=>`<strong>${d.name}</strong><br>滿意度平均分：${d.score.toFixed(1)} / 5`,
-          d=>d.score.toFixed(1)
-        );
-      }else{
-        if(satDescription) satDescription.textContent='回收率：各單位通報後有填寫滿意度調查的比例';
-        if(satScaleLabel) satScaleLabel.textContent='比例（%）';
-        renderBars(
-          'reporterSatBars',
-          'reporterSatYAxis',
-          sorted,
-          'response',
-          100,
-          d=>`<strong>${d.name}</strong><br>回收率：${d.response.toFixed(1)}%<br>已回收：${d.responded} 份`,
-          d=>`${d.response.toFixed(1)}%`
-        );
-      }
-    }
-
-    /* v4：舊版滿意度切換頁籤的殘留程式。satTabs 從未宣告，載入時會拋 ReferenceError；
-       對應的 #reporterSatTabs／#reporterSatBars 已不在頁面上（現行圖表由 renderSatisfactionCharts 繪製），
-       補上宣告讓這段安全略過（renderBars 遇到不存在的容器會直接 return）。 */
-    const satTabs=document.getElementById('reporterSatTabs');
-    if(satTabs){
-      satTabs.querySelectorAll('.reporter-sat-tab').forEach(btn=>{
-        btn.replaceWith(btn.cloneNode(true));
-      });
-      satTabs.querySelectorAll('.reporter-sat-tab').forEach(btn=>{
-        btn.addEventListener('click',()=>{
-          satTabs.querySelectorAll('.reporter-sat-tab').forEach(b=>b.classList.remove('active'));
-          btn.classList.add('active');
-          renderSatisfaction(btn.dataset.mode);
-        });
-      });
-    }
-    renderSatisfaction('response');
-  });
-
-
-  // ===== Basic age chart hover tooltip =====
-  document.addEventListener('DOMContentLoaded',()=>{
-    document.querySelectorAll('#basic .age-chart .bar-col').forEach(col=>{
-      const bar=col.querySelector('.vbar');
-      const label=col.querySelector('span');
-      if(!bar || !label) return;
-
-      const title=bar.getAttribute('title') || '';
-      const valueMatch=title.match(/[\d,.]+/);
-      const age=label.textContent.trim();
-
-      if(valueMatch){
-        col.dataset.tooltip=`${age} 歲｜${valueMatch[0]} 人次`;
-      }else if(!col.dataset.tooltip){
-        col.dataset.tooltip=`${age} 歲`;
-      }
-      col.style.setProperty('--age-bar-height',bar.style.height || '50%');
-
-      // Native title is no longer needed because the custom tooltip is clearer.
-      bar.removeAttribute('title');
-    });
-  });
 
 </script>
 
@@ -14695,214 +13679,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </style>
 
-<script id="v68-reporter-filters-behavior">
-document.addEventListener('DOMContentLoaded',()=>{
-  const REPORTER_WARM_PALETTE = ['#8F1D1D','#A92B20','#C23B22','#D95224','#E96B2C','#F1843D','#F6A65A'];
-  /* v4：滿意度分數專用的綠色系，深→淺對應分數高→低 */
-  const REPORTER_GREEN_PALETTE = ['#14532D','#166534','#15803D','#16A34A','#22C55E','#4ADE80','#86EFAC'];
-  const baseNetworks = [
-    {name:'社政', value:176, emergencyShare:.28, response:91.5, score:4.7},
-    {name:'警察', value:144, emergencyShare:.38, response:88.2, score:4.6},
-    {name:'民政', value:128, emergencyShare:.24, response:84.4, score:4.5},
-    {name:'衛政', value:120, emergencyShare:.31, response:81.7, score:4.4},
-    {name:'教育', value:96, emergencyShare:.18, response:78.1, score:4.3},
-    {name:'消防', value:72, emergencyShare:.46, response:75.0, score:4.2},
-    {name:'勞政', value:64, emergencyShare:.16, response:70.3, score:4.1}
-  ];
-  const YEAR_SHARE = 420 / 800;
-  const RANGE_FACTORS = {year:1, quarter:114/420, month:36/420, today:2/420};
-  const RANGE_DATES = {
-    year:['2026-01-01','2026-09-25'],
-    quarter:['2026-07-01','2026-09-25'],
-    month:['2026-09-01','2026-09-25'],
-    today:['2026-09-25','2026-09-25']
-  };
-
-  let rangeMode='year';
-  let rangeFactor=1;
-  let reporterType='emergency';
-
-  const startEl=document.getElementById('reporterStartDate');
-  const endEl=document.getElementById('reporterEndDate');
-  const quick=document.getElementById('reporterQuickFilter');
-  const typeFilter=document.getElementById('reporterTypeFilter');
-  const applyBtn=document.getElementById('reporterApplyRange');
-  const rangeLabel=document.getElementById('reporterRangeLabel');
-  const subtitle=document.getElementById('reporterPieSubtitle');
-  const tooltip=document.getElementById('reporterTooltip');
-
-  function fmtDate(v){ return (v||'').replaceAll('-','/'); }
-  function showTip(evt,html){
-    if(!tooltip) return;
-    tooltip.innerHTML=html;
-    tooltip.hidden=false;
-    tooltip.style.left=`${evt.clientX+14}px`;
-    tooltip.style.top=`${evt.clientY+14}px`;
-  }
-  function hideTip(){ if(tooltip) tooltip.hidden=true; }
-
-  function customFactor(){
-    if(!startEl?.value || !endEl?.value) return 1;
-    const s=new Date(startEl.value+'T00:00:00');
-    const e=new Date(endEl.value+'T00:00:00');
-    const min=new Date('2026-01-01T00:00:00');
-    const max=new Date('2026-09-25T00:00:00');
-    if(Number.isNaN(s.getTime()) || Number.isNaN(e.getTime()) || e<s) return 1;
-    const cs=s<min?min:s;
-    const ce=e>max?max:e;
-    if(ce<cs) return .02;
-    const days=Math.floor((ce-cs)/86400000)+1;
-    const baseDays=Math.floor((max-min)/86400000)+1;
-    return Math.max(.01,Math.min(1,days/baseDays));
-  }
-
-  function currentData(){
-    const rows=baseNetworks.map(d=>{
-      const annual=d.value*YEAR_SHARE;
-      let typed=annual;
-      if(reporterType==='emergency') typed=annual*d.emergencyShare;
-      if(reporterType==='optimization') typed=annual*(1-d.emergencyShare);
-      const count=Math.max(0,Math.round(typed*rangeFactor));
-      const rateAdj=reporterType==='emergency'?-2.5:reporterType==='optimization'?1.0:0;
-      const scoreAdj=reporterType==='emergency'?-0.10:reporterType==='optimization'?0.05:0;
-      return {
-        ...d,
-        count,
-        response:Math.max(0,Math.min(100,d.response+rateAdj)),
-        score:Math.max(1,Math.min(5,d.score+scoreAdj))
-      };
-    });
-
-    // Warm red/orange scale follows the current filtered referral-count ranking:
-    // higher count = darker red, lower count = lighter orange.
-    const ranked=[...rows].sort((a,b)=>b.count-a.count || b.value-a.value);
-    const colorByName={};
-    ranked.forEach((d,i)=>{ colorByName[d.name]=REPORTER_WARM_PALETTE[Math.min(i,REPORTER_WARM_PALETTE.length-1)]; });
-    return rows.map(d=>({...d,color:colorByName[d.name]}));
-  }
-
-  function buildYAxis(el,max,ticks,formatter){
-    if(!el) return;
-    el.innerHTML='';
-    for(let i=ticks;i>=0;i--){
-      const sp=document.createElement('span');
-      sp.textContent=formatter(max*i/ticks);
-      el.appendChild(sp);
-    }
-  }
-
-  function renderPie(dataIn,total){
-    const svg=document.getElementById('reporterPieSvg');
-    const legend=document.getElementById('reporterLegend');
-    if(!svg||!legend) return;
-    /* v4：轉介人占比依序排列——扇形由 12 點鐘起順時針由大到小，圖例同序 */
-    const data=[...dataIn].sort((a,b)=>b.count-a.count || a.name.localeCompare(b.name,'zh-Hant'));
-    const NS='http://www.w3.org/2000/svg', cx=172,cy=148,r=91;
-    svg.innerHTML='';
-    if(total<=0){
-      const text=document.createElementNS(NS,'text');
-      text.setAttribute('x',cx);text.setAttribute('y',cy);text.setAttribute('text-anchor','middle');
-      text.setAttribute('fill','#8793a4');text.setAttribute('font-size','13');text.textContent='無資料';svg.appendChild(text);
-    }else{
-      let angle=-Math.PI/2;
-      const polar=a=>[cx+r*Math.cos(a),cy+r*Math.sin(a)];
-      const arc=(a0,a1)=>{const [x0,y0]=polar(a0),[x1,y1]=polar(a1);return `M ${cx} ${cy} L ${x0} ${y0} A ${r} ${r} 0 ${(a1-a0)>Math.PI?1:0} 1 ${x1} ${y1} Z`;};
-      data.forEach(d=>{
-        if(d.count<=0) return;
-        const span=d.count/total*Math.PI*2,a0=angle,a1=angle+span;
-        const path=document.createElementNS(NS,'path');
-        path.setAttribute('d',arc(a0,a1));path.setAttribute('fill',d.color);path.setAttribute('stroke','#fff');path.setAttribute('stroke-width','1.5');path.style.cursor='pointer';
-        path.addEventListener('mousemove',e=>showTip(e,`<strong>${d.name}</strong><br>轉介數量：${d.count} 件<br>占比：${(d.count/total*100).toFixed(1)}%`));
-        path.addEventListener('mouseleave',hideTip);svg.appendChild(path);
-        const mid=(a0+a1)/2,labelR=118,lx=cx+labelR*Math.cos(mid),ly=cy+labelR*Math.sin(mid);
-        const tx=document.createElementNS(NS,'text');tx.setAttribute('x',lx);tx.setAttribute('y',ly);tx.setAttribute('text-anchor',Math.cos(mid)>=0?'start':'end');tx.setAttribute('dominant-baseline','middle');tx.setAttribute('fill','#666');tx.setAttribute('font-size','10');tx.textContent=`${(d.count/total*100).toFixed(1)}%`;svg.appendChild(tx);
-        angle=a1;
-      });
-    }
-    legend.innerHTML=data.map(d=>`<div class="reporter-legend-item"><i style="background:${d.color}"></i><span>${d.name}</span></div>`).join('');
-  }
-
-  function renderSourceBars(data){
-    const area=document.getElementById('reporterSourceBars'), yaxis=document.getElementById('reporterSourceYAxis');
-    if(!area||!yaxis) return;
-    const max=Math.max(10,Math.ceil(Math.max(...data.map(d=>d.count),1)/10)*10);
-    buildYAxis(yaxis,max,4,v=>Math.round(v));
-    area.innerHTML='';
-    [...data].sort((a,b)=>b.count-a.count).forEach(d=>{
-      const h=Math.max(1,d.count/max*100);
-      const col=document.createElement('div');col.className='reporter-bar-col';col.style.setProperty('--bar-height',`${h}%`);
-      col.innerHTML=`<span class="reporter-bar-value">${d.count}</span><div class="reporter-bar reporter-source-bar" style="height:${h}%;background:${d.color}"></div><span class="reporter-bar-label">${d.name}</span>`;
-      const bar=col.querySelector('.reporter-source-bar');bar.addEventListener('mousemove',e=>showTip(e,`<strong>${d.name}</strong><br>轉介數量：${d.count} 件`));bar.addEventListener('mouseleave',hideTip);
-      area.appendChild(col);
-    });
-  }
-
-  function renderSatisfactionCharts(data){
-    const responseArea=document.getElementById('reporterResponseBars');
-    const responseAxis=document.getElementById('reporterResponseYAxis');
-    const scoreArea=document.getElementById('reporterScoreBars');
-    const scoreAxis=document.getElementById('reporterScoreYAxis');
-
-    if(responseArea && responseAxis){
-      buildYAxis(responseAxis,100,5,v=>`${Math.round(v)}%`);
-      responseArea.innerHTML='';
-      [...data].sort((a,b)=>b.response-a.response).forEach(d=>{
-        const val=d.response,h=Math.max(1,val);
-        const col=document.createElement('div');
-        col.className='reporter-bar-col';
-        col.style.setProperty('--bar-height',`${h}%`);
-        col.innerHTML=`<span class="reporter-bar-value">${val.toFixed(1)}%</span><div class="reporter-bar reporter-sat-bar" style="height:${h}%;background:${d.color}"></div><span class="reporter-bar-label">${d.name}</span>`;
-        const bar=col.querySelector('.reporter-sat-bar');
-        bar.addEventListener('mousemove',e=>showTip(e,`<strong>${d.name}</strong><br>滿意度調查回收率：${val.toFixed(1)}%`));
-        bar.addEventListener('mouseleave',hideTip);
-        responseArea.appendChild(col);
-      });
-    }
-
-    if(scoreArea && scoreAxis){
-      buildYAxis(scoreAxis,5,5,v=>v.toFixed(0));
-      scoreArea.innerHTML='';
-      /* v4：滿意度分數改用綠色系（分數高→深綠、分數低→淺綠），
-         與回收率的暖色系區分開來 */
-      [...data].sort((a,b)=>b.score-a.score).forEach((d,i)=>{
-        const val=d.score,h=Math.max(1,val/5*100);
-        const green=REPORTER_GREEN_PALETTE[Math.min(i,REPORTER_GREEN_PALETTE.length-1)];
-        const col=document.createElement('div');
-        col.className='reporter-bar-col';
-        col.style.setProperty('--bar-height',`${h}%`);
-        col.innerHTML=`<span class="reporter-bar-value">${val.toFixed(1)}</span><div class="reporter-bar reporter-sat-bar" style="height:${h}%;background:${green}"></div><span class="reporter-bar-label">${d.name}</span>`;
-        const bar=col.querySelector('.reporter-sat-bar');
-        bar.addEventListener('mousemove',e=>showTip(e,`<strong>${d.name}</strong><br>滿意度調查平均分：${val.toFixed(1)} / 5`));
-        bar.addEventListener('mouseleave',hideTip);
-        scoreArea.appendChild(col);
-      });
-    }
-  }
-
-  function renderAll(){
-    const data=currentData(),total=data.reduce((s,d)=>s+d.count,0);
-    if(subtitle) subtitle.textContent=`七大網絡｜總轉介數 ${total} 件`;
-    if(rangeLabel) rangeLabel.textContent=`${fmtDate(startEl?.value)} - ${fmtDate(endEl?.value)}`;
-    renderPie(data,total);renderSourceBars(data);renderSatisfactionCharts(data);
-  }
-
-  quick?.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{
-    quick.querySelectorAll('button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
-    rangeMode=btn.dataset.reporterRange;rangeFactor=RANGE_FACTORS[rangeMode]??1;
-    const dates=RANGE_DATES[rangeMode]||RANGE_DATES.year;if(startEl)startEl.value=dates[0];if(endEl)endEl.value=dates[1];renderAll();
-  }));
-  applyBtn?.addEventListener('click',()=>{
-    quick?.querySelectorAll('button').forEach(b=>b.classList.remove('active'));rangeMode='custom';rangeFactor=customFactor();renderAll();
-  });
-  typeFilter?.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{
-    typeFilter.querySelectorAll('button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');reporterType=btn.dataset.reporterType||'all';renderAll();
-  }));
-
-  renderAll();
-});
-</script>
-
-
 <style id="v69-reporter-layout-final">
 /* ===== v69: Reporter 2x2 dashboard + overflow-safe filters ===== */
 #reporter.page.active{
@@ -15121,44 +13897,13 @@ document.addEventListener('DOMContentLoaded',()=>{
       '低風險個案處理時間(平均)':'緊醫低風險個案完成受理時間 - 低風險個案通報時間。'
     };
 
-    const baseValues={
-      emergencyClose:88.4,phoneRate:61.7,dispatchRate:38.3,
-      emergencyAssign:.3,emergencyAssess:.7,emergencyPrepare:1.5,emergencyTotal:2.5,emergencyPhoneTotal:1.0,
-      bureauReferral:58.2,bureauToHospital:41.6,hospitalShare:71.5,nonReferralRate:41.8,
-      bureauVisit:1.8,bureauDecision:.9,bureauReply:1.1,
-      hospitalOpen:82.6,reviewAgree:74.1,reviewReject:25.9,nonReferralIntervention:18.7,
-      reviewTime:.6,referralAssign:.3,referralContact:4.2,afterAssignContact:3.1,
-      firstProfessional:1.2,replyBureau:1.5,riskHigh:.56,riskMedium:1.19,riskLow:2.03
-    };
-    const rateKeys=new Set(['emergencyClose','phoneRate','dispatchRate','bureauReferral','bureauToHospital','hospitalShare','nonReferralRate','hospitalOpen','reviewAgree','reviewReject','nonReferralIntervention']);
-    const presets={
-      today:{start:'2026-09-25',end:'2026-09-25',factor:.88},
-      month:{start:'2026-09-01',end:'2026-09-25',factor:.94},
-      quarter:{start:'2026-07-01',end:'2026-09-25',factor:.98},
-      year:{start:'2026-01-01',end:'2026-09-25',factor:1}
-    };
-
     const tabBar=document.getElementById('effV79Tabs');
     const panels=[...root.querySelectorAll('.eff-v79-panel')];
-    const quickBar=document.getElementById('efficiencyQuickFilter');
-    const startInput=document.getElementById('efficiencyStartDate');
-    const endInput=document.getElementById('efficiencyEndDate');
-    const rangeLabel=document.getElementById('efficiencyRangeLabel');
     const dialog=document.getElementById('effV79MetricDialog');
     const dialogTitle=document.getElementById('effV79DialogTitle');
     const dialogDefinition=document.getElementById('effV79DialogDefinition');
 
     let activeView='overview';
-    let category='all';
-    let rangeMode='year';
-    let customFactor=1;
-
-    const displayDate=(v)=>{
-      if(!v) return '—';
-      const [y,m,d]=v.split('-');
-      return `${y}/${m}/${d}`;
-    };
-
     function showView(view){
       const targetBtn=tabBar?.querySelector(`[data-eff-view="${view}"]`);
       if(!targetBtn || targetBtn.hidden) view='overview';
@@ -15173,51 +13918,6 @@ document.addEventListener('DOMContentLoaded',()=>{
         panel.hidden=!on;
         panel.classList.toggle('active',on);
       });
-    }
-
-    function currentFactor(){
-      return presets[rangeMode]?.factor ?? customFactor ?? 1;
-    }
-
-    function renderValues(){
-      const factor=currentFactor();
-      Object.entries(baseValues).forEach(([key,value])=>{
-        const display=rateKeys.has(key)?Math.min(100,value*factor):value*(2-factor);
-        root.querySelectorAll(`[data-eff-value="${key}"]`).forEach(el=>el.textContent=display.toFixed(1));
-        root.querySelectorAll(`[data-eff-bar="${key}"]`).forEach(el=>el.style.width=`${Math.min(100,Math.max(0,display))}%`);
-        root.querySelectorAll(`[data-eff-ring="${key}"]`).forEach(el=>el.style.setProperty('--p',String(Math.min(100,Math.max(0,display)))));
-      });
-      const referralAll=Math.min(100,baseValues.bureauReferral*factor);
-      const referralBeitou=Math.min(100,baseValues.bureauToHospital*factor);
-      const referralOther=Math.max(0,referralAll-referralBeitou);
-      root.querySelectorAll('[data-eff-computed="otherReferral"]').forEach(el=>el.textContent=referralOther.toFixed(1));
-    }
-
-    function applyPreset(mode){
-      const p=presets[mode];
-      if(!p) return;
-      rangeMode=mode;
-      quickBar?.querySelectorAll('button').forEach(btn=>btn.classList.toggle('active',btn.dataset.effRange===mode));
-      if(startInput) startInput.value=p.start;
-      if(endInput) endInput.value=p.end;
-      if(rangeLabel) rangeLabel.textContent=`${displayDate(p.start)}－${displayDate(p.end)}`;
-      renderValues();
-    }
-
-    function applyCustomRange(){
-      rangeMode='custom';
-      quickBar?.querySelectorAll('button').forEach(btn=>btn.classList.remove('active'));
-      const start=startInput?.value || '';
-      const end=endInput?.value || '';
-      if(start && end){
-        const s=new Date(`${start}T00:00:00`), e=new Date(`${end}T00:00:00`);
-        const yearStart=new Date('2026-01-01T00:00:00'), yearEnd=new Date('2026-09-25T00:00:00');
-        const days=Math.max(1,Math.round((e-s)/86400000)+1);
-        const ytd=Math.max(1,Math.round((yearEnd-yearStart)/86400000)+1);
-        customFactor=Math.max(.88,Math.min(1,.88+.12*Math.sqrt(days/ytd)));
-      } else customFactor=1;
-      if(rangeLabel) rangeLabel.textContent=`${displayDate(start)}－${displayDate(end)}`;
-      renderValues();
     }
 
     function openDefinition(metric){
@@ -15237,20 +13937,6 @@ document.addEventListener('DOMContentLoaded',()=>{
       if(subTab && root.contains(subTab)){
         event.preventDefault();event.stopPropagation();
         if(!subTab.hidden) showView(subTab.dataset.effView);
-        return;
-      }
-
-      const quickBtn=event.target.closest('#efficiencyQuickFilter button[data-eff-range]');
-      if(quickBtn){
-        event.preventDefault();event.stopPropagation();
-        applyPreset(quickBtn.dataset.effRange);
-        return;
-      }
-
-      const applyBtn=event.target.closest('#efficiencyApplyRange');
-      if(applyBtn){
-        event.preventDefault();event.stopPropagation();
-        applyCustomRange();
         return;
       }
 
@@ -15284,7 +13970,6 @@ document.addEventListener('DOMContentLoaded',()=>{
     },true);
 
     showView('overview');
-    applyPreset('year');
   };
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true});
@@ -22257,10 +20942,689 @@ html body #outcomeDetailDialog #outcomeStatusFilter .outcome-status-btn{
 }
 </style>
 
-<style id="real-data-emergency-only">
-/* real-data 20261103：本檔只保留緊急醫療，通報類別篩選只剩一顆鈕。
-   舊層在 ≤680px 把 #reporterTypeFilter 鎖成三等分，單顆鈕只佔 1/3；改成撐滿，與風險頁一致。 */
+<style id="real-data">
+/* real-data：資料載入完成前先把各頁藏起來（HTML 裡還留著原型的佔位數字，不能讓人看到） */
+html:not(.rd-ready) .dashboard .page{ visibility:hidden; }
+
+.rd-status{
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:6px 14px;
+  margin:4px 0 2px; font-size:12px; line-height:1.5; color:#667085;
+}
+.rd-status b{ color:#344054; font-weight:600; }
+.rd-status .rd-sample{
+  padding:1px 8px; border-radius:999px; background:#fff4d6; color:#8a5a00; font-weight:700;
+}
+.rd-status .rd-warn{ color:#b54708; }
+.rd-status.rd-error{
+  justify-content:flex-start; padding:10px 14px; border:1px solid #f4c7c0; border-radius:8px;
+  background:#fff4f2; color:#b42318; font-size:13px;
+}
+.rd-pick{
+  display:inline-flex; align-items:center; padding:4px 12px; border-radius:6px; cursor:pointer;
+  background:#218fee; color:#fff; font-weight:600;
+}
+.rd-pick input{ display:none; }
+
+/* 風險頁：某量表在區間內沒有任何初評資料 */
+#risk .risk-stack.rd-empty{ align-items:center; justify-content:center; }
+#risk .risk-stack.rd-empty::after{ content:attr(data-empty); color:#98a2b3; font-size:13px; }
+
+/* 熱點地圖：沒有填初評風險的案件 */
+#districtMapDialog .geo-case.none{ fill:#9aa3ad; }
+#districtMapDialog .geo-rank-bar.risk>i.none{ background:#c3cad4 !important; }
+#districtMapDialog .geo-tip-risk.none{ color:#667085; }
+
+/* 通報者頁：沒有提供 surveys.json 時的說明 */
+#reporter .rd-empty-note{
+  align-self:center; width:100%; text-align:center; color:#98a2b3; font-size:13px;
+}
+
+/* 通報類別篩選只剩一顆鈕；舊層在 ≤680px 把 #reporterTypeFilter 鎖成三等分，單顆鈕只佔 1/3，改成撐滿（與風險頁一致） */
 @media (max-width:899px){
   html body .dashboard #reporter.page #reporterTypeFilter{ grid-template-columns:minmax(0,1fr) !important; }
 }
 </style>
+
+<script id="real-data">
+/* =========================================================================
+   real-data：畫面上的數字全部由 data/ 內的 JSON 計算，取代原型的模擬資料
+   -------------------------------------------------------------------------
+   檔案與欄位定義見同資料夾 CLAUDE.md。重點：
+   ・cases.json 必要；meta.json、assessments.json、surveys.json 缺檔時，用到的圖表顯示「無資料」
+   ・每個檔案可以是陣列，或 {"records":[...]}；最外層有 "sample": true 時頁首標示「範例資料」
+   ・本檔只保留緊急醫療：category_code 不是 emergency 的案件載入時直接排除
+   ・所有日期篩選都以 reported_at（網絡完成通報時間）為準，以臺北時間切日
+   ・以 file:// 開啟時瀏覽器不允許網頁讀取 JSON，頁首改為「選擇 data 資料夾」
+   地圖模組（主腳本的 geoCases()）透過 window.RD.basicCases() 取基本資料頁目前區間的案件。
+   ========================================================================= */
+(()=>{
+  'use strict';
+
+  const DATA_DIR = 'data/';
+  const FILES = { meta:'meta.json', cases:'cases.json', assessments:'assessments.json', surveys:'surveys.json' };
+  const NETWORKS = [
+    ['social','社政'],['police','警察'],['civil','民政'],['health','衛政'],
+    ['education','教育'],['fire','消防'],['labor','勞政']
+  ];
+  const TAIPEI_DISTRICTS = ['松山區','信義區','大安區','中山區','中正區','大同區','萬華區','文山區','南港區','內湖區','士林區','北投區'];
+  const AGE_BINS = [[0,10,'0-10'],[10,20,'10-20'],[20,30,'20-30'],[30,40,'30-40'],[40,50,'40-50'],[50,60,'50-60'],[60,70,'60-70'],[70,80,'70-80'],[80,Infinity,'80+']];
+  const LEVELS = ['low','medium','high'];
+  const LEVEL_LABEL = { low:'輕度／低風險', medium:'中度／中風險', high:'重度／高風險' };
+  /* assessments.json 的 scale_code → 風險頁 .risk-stack[data-key] */
+  const SCALE_ROW = { risk_triage:'scale', gaf:'gaf', bsrs5:'bsrs', cgis:'cgi' };
+  const GENDER = { M:'M', MALE:'M', '男':'M', F:'F', FEMALE:'F', '女':'F' };
+  const HOUR = 3600000;
+  const TAIPEI_OFFSET = 8*HOUR;   /* 臺北時間固定 UTC+8，沒有日光節約 */
+
+  const RD = window.RD = {
+    loaded:false,
+    cases:[], asOf:null, dataStart:null, sample:false,
+    has:{ assessments:false, surveys:false },
+    ranges:{},
+    basicCases(){ const r=RD.ranges.basic; return r ? casesIn(r.start,r.end) : []; }
+  };
+
+  /* ---------- 小工具 ---------- */
+  const $ = (sel,root=document)=>root.querySelector(sel);
+  const $$ = (sel,root=document)=>[...root.querySelectorAll(sel)];
+  const esc = s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
+  const pad = n=>String(n).padStart(2,'0');
+  const fmtInt = n=>Number(n||0).toLocaleString('zh-TW');
+  const fmt1 = v=>v==null || !isFinite(v) ? '—' : v.toFixed(1);
+  const pct = (n,d)=>d>0 ? n/d*100 : null;
+  const pctText = (n,d)=>d>0 ? `${(n/d*100).toFixed(1)}%` : '—';
+  const slashDate = d=>d ? d.replaceAll('-','/') : '—';
+  const normName = s=>s==null || String(s).trim()==='' ? null : String(s).trim().replace(/台/g,'臺');
+  const toNum = v=>v==null || v==='' || !isFinite(Number(v)) ? null : Number(v);
+  const avg = list=>list.length ? list.reduce((s,v)=>s+v,0)/list.length : null;
+  const count = (list,fn)=>list.reduce((n,x)=>n+(fn(x)?1:0),0);
+
+  /* 時間字串 → 毫秒。沒有時區的字串（含只有日期）一律視為臺北時間 */
+  function parseTime(v){
+    if(v==null || v==='') return null;
+    let s=String(v).trim();
+    if(!/[zZ]$|[+-]\d\d:?\d\d$/.test(s)){
+      s=s.replace(' ','T');
+      if(/^\d{4}-\d{2}-\d{2}$/.test(s)) s+='T00:00:00';
+      s+='+08:00';
+    }
+    const t=Date.parse(s);
+    return Number.isNaN(t) ? null : t;
+  }
+  const dayKey = t=>new Date(t+TAIPEI_OFFSET).toISOString().slice(0,10);
+  /* 兩個時間點相差幾小時；任一端缺值或順序顛倒（資料錯誤）時回傳 null，不列入平均 */
+  const hoursBetween = (a,b)=>a==null || b==null || b<a ? null : (b-a)/HOUR;
+  const avgHours = (list,from,to)=>avg(list.map(c=>hoursBetween(c[from],c[to])).filter(v=>v!=null));
+
+  /* ---------- 載入 ---------- */
+  const recordsOf = json=>Array.isArray(json) ? json : (json && Array.isArray(json.records) ? json.records : []);
+
+  async function fetchJson(name){
+    const res=await fetch(DATA_DIR+name,{cache:'no-store'});
+    if(res.status===404) return undefined;   /* 缺檔：選填的檔案可以不放 */
+    if(!res.ok) throw new Error(`${name}：HTTP ${res.status}`);
+    try{ return await res.json(); }
+    catch(err){ throw new Error(`${name} 不是有效的 JSON（${err.message}）`); }
+  }
+  async function loadFromServer(){
+    const raw={};
+    await Promise.all(Object.entries(FILES).map(async([key,name])=>{ raw[key]=await fetchJson(name); }));
+    return raw;
+  }
+  /* file:// 備援：使用者選取 data 資料夾（或直接多選檔案），依檔名對應 */
+  async function loadFromPicker(fileList){
+    const byName=new Map([...fileList].map(f=>[f.name.toLowerCase(),f]));
+    const raw={};
+    for(const [key,name] of Object.entries(FILES)){
+      const f=byName.get(name);
+      if(!f){ raw[key]=undefined; continue; }
+      try{ raw[key]=JSON.parse(await f.text()); }
+      catch(err){ throw new Error(`${name} 不是有效的 JSON（${err.message}）`); }
+    }
+    return raw;
+  }
+
+  function normalizeCase(r){
+    const reported=parseTime(r.reported_at);
+    if(reported==null) return null;
+    let county=normName(r.county_name), district=normName(r.district_name);
+    if(!county && TAIPEI_DISTRICTS.includes(district)) county='臺北市';
+    const lat=toNum(r.latitude), lng=toNum(r.longitude), hasCoord=lat!=null && lng!=null;
+    const day=dayKey(reported);
+    return {
+      id:String(r.case_id ?? ''),
+      reported, day, year:Number(day.slice(0,4)),
+      age:toNum(r.age_at_report),
+      gender:GENDER[String(r.gender ?? '').trim().toUpperCase()] || 'U',
+      status:r.status_code || null,
+      risk:LEVELS.includes(r.initial_risk_level) ? r.initial_risk_level : null,
+      network:r.network_code || null,
+      county, district,
+      lat:hasCoord ? lat : null, lng:hasCoord ? lng : null,
+      addressKey:r.address_key || null,
+      assigned:parseTime(r.assigned_at),
+      intakeMethod:r.em_intake_method || null,
+      intake:parseTime(r.em_intake_at),
+      dispatched:parseTime(r.em_dispatched_at),
+      levels:{},      /* 初評量表分級，由 assessments.json 填入：{scale|gaf|bsrs|cgi: low|medium|high} */
+      surveys:[]      /* 滿意度問卷，由 surveys.json 填入 */
+    };
+  }
+
+  function build(raw){
+    if(raw.cases===undefined) throw new Error('找不到 data/cases.json');
+    const meta=raw.meta && !Array.isArray(raw.meta) ? raw.meta : {};
+    const stats={ otherCategory:0, void:0, badTime:0 };
+    const cases=[];
+    recordsOf(raw.cases).forEach(r=>{
+      if(r.is_void===true){ stats.void++; return; }
+      if(r.category_code && r.category_code!=='emergency'){ stats.otherCategory++; return; }
+      const c=normalizeCase(r);
+      if(c) cases.push(c); else stats.badTime++;
+    });
+    const byId=new Map(cases.map(c=>[c.id,c]));
+    recordsOf(raw.assessments).forEach(a=>{
+      if(a.timepoint && a.timepoint!=='initial') return;
+      const c=byId.get(String(a.case_id)), row=SCALE_ROW[a.scale_code];
+      if(c && row && LEVELS.includes(a.severity_level)) c.levels[row]=a.severity_level;
+    });
+    recordsOf(raw.surveys).forEach(s=>{
+      const c=byId.get(String(s.case_id));
+      if(!c) return;
+      const completed=parseTime(s.completed_at)!=null;
+      c.surveys.push({
+        completed,
+        scores:completed ? [toNum(s.ui_score),toNum(s.care_score)].filter(v=>v!=null && v>=1 && v<=5) : []
+      });
+    });
+
+    const days=cases.map(c=>c.day).sort();
+    RD.cases=cases;
+    RD.stats=stats;
+    RD.asOf=meta.as_of || days[days.length-1] || dayKey(Date.now());
+    RD.dataStart=meta.data_start || days[0] || RD.asOf;
+    RD.has={ assessments:raw.assessments!==undefined, surveys:raw.surveys!==undefined };
+    RD.sample=Object.values(raw).some(j=>j && !Array.isArray(j) && j.sample===true);
+    RD.loaded=true;
+  }
+
+  function casesIn(start,end){ return RD.cases.filter(c=>c.day>=start && c.day<=end); }
+
+  /* ---------- 日期篩選（五個分頁共用） ---------- */
+  function presetRange(kind){
+    const end=RD.asOf, [y,m]=end.split('-').map(Number);
+    if(kind==='today') return [end,end];
+    if(kind==='month') return [`${y}-${pad(m)}-01`,end];
+    if(kind==='quarter') return [`${y}-${pad(Math.floor((m-1)/3)*3+1)}-01`,end];
+    if(kind==='year') return [`${y}-01-01`,end];
+    return [RD.dataStart,end];   /* all：資料起日到截止日 */
+  }
+
+  const PAGES = {
+    basic:{ quick:'#basicQuickFilter', attr:'basicFilter', start:'basicStartDate', end:'basicEndDate', apply:'basicApplyRange', label:null, initial:'year', render:renderBasic },
+    risk:{ quick:'#riskQuickFilter', attr:'riskRange', start:'riskStartDate', end:'riskEndDate', apply:'riskApplyRange', label:'riskRangeLabel', initial:'year', render:renderRisk },
+    efficiency:{ quick:'#efficiencyQuickFilter', attr:'effRange', start:'efficiencyStartDate', end:'efficiencyEndDate', apply:'efficiencyApplyRange', label:'efficiencyRangeLabel', initial:'year', render:renderEfficiency },
+    reporter:{ quick:'#reporterQuickFilter', attr:'reporterRange', start:'reporterStartDate', end:'reporterEndDate', apply:'reporterApplyRange', label:'reporterRangeLabel', initial:'year', render:renderReporter },
+    /* 指揮板預設看全部期間（沒有快速鈕亮起），與原型相同 */
+    command:{ quick:'#commandQuickFilter', attr:'range', start:'commandStartDate', end:'commandEndDate', apply:'commandApplyRange', label:'commandRangeLabel', initial:'all', render:renderCommand }
+  };
+
+  function setRange(page,start,end,kind){
+    const cfg=PAGES[page];
+    if(start>end) [start,end]=[end,start];
+    RD.ranges[page]={start,end};
+    const s=document.getElementById(cfg.start), e=document.getElementById(cfg.end);
+    if(s) s.value=start;
+    if(e) e.value=end;
+    $$(`${cfg.quick} button`).forEach(b=>b.classList.toggle('active',kind!=null && b.dataset[cfg.attr]===kind));
+    const label=cfg.label && document.getElementById(cfg.label);
+    if(label) label.textContent=`${slashDate(start)}－${slashDate(end)}`;
+    cfg.render(casesIn(start,end));
+  }
+
+  function wirePage(page){
+    const cfg=PAGES[page];
+    $$(`${cfg.quick} button`).forEach(btn=>btn.addEventListener('click',()=>{
+      if(!RD.loaded) return;
+      const kind=btn.dataset[cfg.attr];
+      const [s,e]=presetRange(kind);
+      setRange(page,s,e,kind);
+    }));
+    document.getElementById(cfg.apply)?.addEventListener('click',()=>{
+      if(!RD.loaded) return;
+      const s=document.getElementById(cfg.start)?.value, e=document.getElementById(cfg.end)?.value;
+      if(s && e) setRange(page,s,e,null);
+    });
+  }
+
+  function initDateInputs(){
+    const yearStart=`${RD.asOf.slice(0,4)}-01-01`;
+    const min=RD.dataStart<yearStart ? RD.dataStart : yearStart;
+    Object.values(PAGES).forEach(cfg=>[cfg.start,cfg.end].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el){ el.min=min; el.max=RD.asOf; }
+    }));
+  }
+
+  /* ---------- 長條圖共用 ---------- */
+  function niceMax(v){
+    if(v<=10) return 10;
+    if(v<=50) return Math.ceil(v/10)*10;
+    if(v<=120) return Math.ceil(v/20)*20;
+    return Math.ceil(v/50)*50;
+  }
+  const barHeight = (v,max)=>v>0 ? Math.max(2,v/max*100) : 0;
+  function setAxis(el,max){
+    if(el) el.innerHTML=[max,Math.round(max*.75),Math.round(max*.5),Math.round(max*.25),0].map(v=>`<span>${v}</span>`).join('');
+  }
+
+  /* ---------- 基本資料 ---------- */
+  function renderBasic(cases){
+    const status=s=>count(cases,c=>c.status===s);
+    const kpis=[cases.length,status('pending_assign'),status('assigned'),status('closed'),status('not_referred')];
+    $$('#basic .basic-kpi-value').forEach((el,i)=>{ el.textContent=fmtInt(kpis[i]); });
+
+    /* 臺北市 12 區（沒有案件也列出），其後依序是外縣市、未填行政區 */
+    const tp=cases.filter(c=>c.county==='臺北市');
+    const rows=TAIPEI_DISTRICTS.map((name,i)=>({ name:name.replace(/區$/,''), value:count(tp,c=>c.district===name), i }))
+      .sort((a,b)=>b.value-a.value || a.i-b.i);
+    const outside=count(cases,c=>c.county && c.county!=='臺北市');
+    const unknown=count(cases,c=>!c.county) + count(tp,c=>!TAIPEI_DISTRICTS.includes(c.district));
+    if(outside) rows.push({ name:'外縣市', value:outside });
+    if(unknown) rows.push({ name:'未填', value:unknown });
+    const dMax=niceMax(Math.max(1,...rows.map(r=>r.value)));
+    const dBars=$('#basic .district-bars');
+    if(dBars) dBars.innerHTML=rows.map(r=>
+      `<div class="district-bar-col"><div class="district-vbar" style="height:${barHeight(r.value,dMax).toFixed(1)}%" title="${r.value} 件"></div><span>${r.name}</span><b>${r.value}</b></div>`
+    ).join('');
+    setAxis($('#basic .district-y-axis'),dMax);
+
+    const ages=AGE_BINS.map(([lo,hi,label])=>({ label, value:count(cases,c=>c.age!=null && c.age>=lo && c.age<hi) }));
+    const noAge=count(cases,c=>c.age==null || c.age<0);
+    if(noAge) ages.push({ label:'未填', value:noAge });
+    const aMax=niceMax(Math.max(1,...ages.map(a=>a.value)));
+    const aBars=$('#basic .age-chart .bars');
+    if(aBars) aBars.innerHTML=ages.map(a=>{
+      const h=barHeight(a.value,aMax).toFixed(1);
+      const tip=a.label==='未填' ? `未填年齡｜${a.value} 人次` : `${a.label} 歲｜${a.value} 人次`;
+      return `<div class="bar-col" data-tooltip="${tip}" style="--age-bar-height:${h}%"><div class="vbar" style="height:${h}%"></div><span>${a.label}</span></div>`;
+    }).join('');
+    setAxis($('#basic .age-chart .y-axis'),aMax);
+
+    const male=count(cases,c=>c.gender==='M'), female=count(cases,c=>c.gender==='F'), other=cases.length-male-female;
+    const total=cases.length;
+    const mp=total ? male/total*100 : 0, fp=total ? female/total*100 : 0;
+    const pie=$('#basic .screenshot-pie');
+    if(pie) pie.style.background=total
+      ? `conic-gradient(#218fee 0 ${mp.toFixed(2)}%, #2036aa ${mp.toFixed(2)}% ${(mp+fp).toFixed(2)}%, #c3cad4 ${(mp+fp).toFixed(2)}% 100%)`
+      : '#e8ecf1';
+    const left=$('#basic .gender-left-label span'), right=$('#basic .gender-right-label span');
+    if(left) left.textContent=`${female} (${total ? fp.toFixed(2) : '0.00'}%)`;
+    if(right) right.textContent=`${male} (${total ? mp.toFixed(2) : '0.00'}%)`;
+    const legend=$('#basic .gender-legend');
+    if(legend){
+      legend.querySelector('.rd-gender-other')?.remove();
+      if(other) legend.insertAdjacentHTML('beforeend',`<span class="rd-gender-other"><i style="background:#c3cad4"></i>不明 ${other}</span>`);
+    }
+
+    /* 熱點地圖開著時跟著重畫（地圖讀的就是這一頁的區間） */
+    if(typeof geoDialog!=='undefined' && geoDialog && geoDialog.open){
+      if(geoLevel==='county' && geoTownFeatures.length) renderCountyMap();
+      else if(geoLevel==='nation' && geoCountyFeatures.length) renderNationMap();
+    }
+  }
+
+  /* ---------- 通報案件風險分析 ---------- */
+  function renderRisk(cases){
+    $$('#risk .risk-stack').forEach(stack=>{
+      const key=stack.dataset.key;
+      const n={ low:0, medium:0, high:0 };
+      cases.forEach(c=>{ const lv=c.levels[key]; if(lv) n[lv]++; });
+      const total=n.low+n.medium+n.high;
+      stack.classList.toggle('rd-empty',!total);
+      stack.dataset.empty=RD.has.assessments ? '此區間沒有初評資料' : '未提供 assessments.json';
+      LEVELS.forEach(lv=>{
+        const seg=stack.querySelector(`[data-seg="${lv}"]`);
+        if(!seg) return;
+        const p=total ? n[lv]/total*100 : 0;
+        seg.style.width=`${p}%`;
+        seg.innerHTML=p>=8 ? `<span>${p.toFixed(1)}%</span>` : '';
+        seg.title=`${LEVEL_LABEL[lv]}：${n[lv]} 人次（${p.toFixed(1)}%）`;
+      });
+    });
+  }
+
+  /* ---------- 案件處理效率指標（緊急醫療） ---------- */
+  function setEff(scope,key,value){
+    $$(`[data-eff-value="${key}"]`,scope).forEach(el=>{ el.textContent=fmt1(value); });
+    $$(`[data-eff-ring="${key}"]`,scope).forEach(el=>{ el.style.setProperty('--p',String(value==null ? 0 : Math.min(100,Math.max(0,value)))); });
+  }
+  function renderEfficiency(cases){
+    const root=$('#efficiency');
+    if(!root) return;
+    /* 分母：受理方式為電話或電話＋緊急醫療出勤的通報 */
+    const handled=cases.filter(c=>c.intakeMethod==='phone' || c.intakeMethod==='phone_dispatch');
+    const phone=handled.filter(c=>c.intakeMethod==='phone');
+    const dispatch=handled.filter(c=>c.intakeMethod==='phone_dispatch');
+    setEff(root,'emergencyClose',pct(count(handled,c=>c.status==='closed'),handled.length));
+    setEff(root,'phoneRate',pct(phone.length,handled.length));
+    setEff(root,'dispatchRate',pct(dispatch.length,handled.length));
+
+    /* 兩條流程各自用「每一段時間都有」的案件計算，各段平均加起來才會等於總反應時間 */
+    const ordered=(c,keys)=>keys.every((k,i)=>c[k]!=null && (i===0 || c[k]>=c[keys[i-1]]));
+    const phoneDone=phone.filter(c=>ordered(c,['reported','assigned','intake']));
+    const dispatchDone=dispatch.filter(c=>ordered(c,['reported','assigned','intake','dispatched']));
+    const phoneBlock=$('.v4-flow-block[aria-label="電話受理流程"]',root);
+    const dispatchBlock=$('.v4-flow-block[aria-label="電話加出勤受理流程"]',root);
+    if(phoneBlock){
+      setEff(phoneBlock,'emergencyAssign',avgHours(phoneDone,'reported','assigned'));
+      setEff(phoneBlock,'emergencyAssess',avgHours(phoneDone,'assigned','intake'));
+      setEff(phoneBlock,'emergencyPhoneTotal',avgHours(phoneDone,'reported','intake'));
+      phoneBlock.title=`N = ${phoneDone.length} 件（受理方式為電話、且派案與受理時間皆有紀錄）`;
+    }
+    if(dispatchBlock){
+      setEff(dispatchBlock,'emergencyAssign',avgHours(dispatchDone,'reported','assigned'));
+      setEff(dispatchBlock,'emergencyAssess',avgHours(dispatchDone,'assigned','intake'));
+      setEff(dispatchBlock,'emergencyPrepare',avgHours(dispatchDone,'intake','dispatched'));
+    }
+    /* 出勤總反應時間同時出現在出勤流程與總覽摘要卡 */
+    setEff(root,'emergencyTotal',avgHours(dispatchDone,'reported','dispatched'));
+    if(dispatchBlock) dispatchBlock.title=`N = ${dispatchDone.length} 件（受理方式為電話＋出勤、且派案／受理／出勤時間皆有紀錄）`;
+
+    /* 總覽：各初評風險等級從通報到完成受理方式的平均時間 */
+    const risk=[['riskHigh','high'],['riskMedium','medium'],['riskLow','low']].map(([key,lv])=>{
+      const list=cases.filter(c=>c.risk===lv).map(c=>hoursBetween(c.reported,c.intake)).filter(v=>v!=null);
+      return { key, n:list.length, value:avg(list) };
+    });
+    const max=Math.max(...risk.map(r=>r.value||0));
+    risk.forEach(r=>{
+      setEff(root,r.key,r.value);
+      $$(`[data-eff-n="${r.key}"]`,root).forEach(el=>{ el.textContent=`N = ${fmtInt(r.n)}`; });
+      $$(`[data-eff-bar="${r.key}"]`,root).forEach(el=>{ el.style.width=`${max>0 && r.value!=null ? r.value/max*100 : 0}%`; });
+    });
+  }
+
+  /* ---------- 通報者基本資料分析 ---------- */
+  const REPORTER_WARM_PALETTE = ['#8F1D1D','#A92B20','#C23B22','#D95224','#E96B2C','#F1843D','#F6A65A'];
+  /* 滿意度分數專用的綠色系，深→淺對應分數高→低 */
+  const REPORTER_GREEN_PALETTE = ['#14532D','#166534','#15803D','#16A34A','#22C55E','#4ADE80','#86EFAC'];
+  const REPORTER_UNKNOWN_COLOR = '#b8c0cb';
+  /* 排序時「未填」一律放最後，不跟七大網絡比大小 */
+  const unknownLast = cmp=>(a,b)=>(a.unknown-b.unknown) || cmp(a,b);
+
+  function reporterRows(cases){
+    const groups=NETWORKS.map(([code,name])=>({ code, name, list:cases.filter(c=>c.network===code) }));
+    const known=new Set(NETWORKS.map(([code])=>code));
+    const unknown=cases.filter(c=>!known.has(c.network));
+    if(unknown.length) groups.push({ code:'unknown', name:'未填', list:unknown });
+    const rows=groups.map(g=>{
+      const surveys=g.list.flatMap(c=>c.surveys);
+      const done=surveys.filter(s=>s.completed);
+      const scores=done.flatMap(s=>s.scores);
+      return {
+        name:g.name, unknown:g.code==='unknown', count:g.list.length,
+        sent:surveys.length, done:done.length, answers:scores.length,
+        response:surveys.length ? done.length/surveys.length*100 : null,
+        score:avg(scores)
+      };
+    });
+    /* 暖色依轉介數排名：多→深紅、少→淺橘；「未填」固定灰色 */
+    [...rows].filter(r=>!r.unknown).sort((a,b)=>b.count-a.count).forEach((r,i)=>{
+      r.color=REPORTER_WARM_PALETTE[Math.min(i,REPORTER_WARM_PALETTE.length-1)];
+    });
+    rows.forEach(r=>{ if(r.unknown) r.color=REPORTER_UNKNOWN_COLOR; });
+    return rows;
+  }
+
+  const reporterTip=document.getElementById('reporterTooltip');
+  function showTip(evt,html){
+    if(!reporterTip) return;
+    reporterTip.innerHTML=html;
+    reporterTip.hidden=false;
+    reporterTip.style.left=`${evt.clientX+14}px`;
+    reporterTip.style.top=`${evt.clientY+14}px`;
+  }
+  function hideTip(){ if(reporterTip) reporterTip.hidden=true; }
+
+  function buildYAxis(el,max,ticks,formatter){
+    if(!el) return;
+    el.innerHTML='';
+    for(let i=ticks;i>=0;i--){
+      const sp=document.createElement('span');
+      sp.textContent=formatter(max*i/ticks);
+      el.appendChild(sp);
+    }
+  }
+
+  function renderReporterPie(rowsIn,total){
+    const svg=document.getElementById('reporterPieSvg');
+    const legend=document.getElementById('reporterLegend');
+    if(!svg || !legend) return;
+    /* 扇形由 12 點鐘起順時針由大到小，圖例同序 */
+    const rows=[...rowsIn].sort(unknownLast((a,b)=>b.count-a.count || a.name.localeCompare(b.name,'zh-Hant')));
+    const NS='http://www.w3.org/2000/svg', cx=172, cy=148, r=91;
+    svg.innerHTML='';
+    if(total<=0){
+      const text=document.createElementNS(NS,'text');
+      text.setAttribute('x',cx); text.setAttribute('y',cy); text.setAttribute('text-anchor','middle');
+      text.setAttribute('fill','#8793a4'); text.setAttribute('font-size','13'); text.textContent='無資料';
+      svg.appendChild(text);
+    }else{
+      let angle=-Math.PI/2;
+      const polar=a=>[cx+r*Math.cos(a),cy+r*Math.sin(a)];
+      const arc=(a0,a1)=>{
+        /* 只有一個網絡時是整圓，SVG 弧線畫不出 360°，拆成兩個半圓 */
+        if(a1-a0>=Math.PI*2-1e-6) return `M ${cx} ${cy-r} A ${r} ${r} 0 1 1 ${cx} ${cy+r} A ${r} ${r} 0 1 1 ${cx} ${cy-r} Z`;
+        const [x0,y0]=polar(a0), [x1,y1]=polar(a1);
+        return `M ${cx} ${cy} L ${x0} ${y0} A ${r} ${r} 0 ${(a1-a0)>Math.PI?1:0} 1 ${x1} ${y1} Z`;
+      };
+      rows.forEach(d=>{
+        if(d.count<=0) return;
+        const span=d.count/total*Math.PI*2, a0=angle, a1=angle+span;
+        const path=document.createElementNS(NS,'path');
+        path.setAttribute('d',arc(a0,a1)); path.setAttribute('fill',d.color);
+        path.setAttribute('stroke','#fff'); path.setAttribute('stroke-width','1.5'); path.style.cursor='pointer';
+        path.addEventListener('mousemove',e=>showTip(e,`<strong>${d.name}</strong><br>轉介數量：${d.count} 件<br>占比：${(d.count/total*100).toFixed(1)}%`));
+        path.addEventListener('mouseleave',hideTip);
+        svg.appendChild(path);
+        const mid=(a0+a1)/2, labelR=118;
+        const tx=document.createElementNS(NS,'text');
+        tx.setAttribute('x',cx+labelR*Math.cos(mid)); tx.setAttribute('y',cy+labelR*Math.sin(mid));
+        tx.setAttribute('text-anchor',Math.cos(mid)>=0?'start':'end'); tx.setAttribute('dominant-baseline','middle');
+        tx.setAttribute('fill','#666'); tx.setAttribute('font-size','10');
+        tx.textContent=`${(d.count/total*100).toFixed(1)}%`;
+        svg.appendChild(tx);
+        angle=a1;
+      });
+    }
+    legend.innerHTML=rows.map(d=>`<div class="reporter-legend-item"><i style="background:${d.color}"></i><span>${d.name}</span></div>`).join('');
+  }
+
+  function barCol(value,label,height,color,cls,tip){
+    const col=document.createElement('div');
+    col.className='reporter-bar-col';
+    col.style.setProperty('--bar-height',`${height}%`);
+    col.innerHTML=`<span class="reporter-bar-value">${value}</span><div class="reporter-bar ${cls}" style="height:${height}%;background:${color}"></div><span class="reporter-bar-label">${label}</span>`;
+    const bar=col.querySelector('.reporter-bar');
+    bar.addEventListener('mousemove',e=>showTip(e,tip));
+    bar.addEventListener('mouseleave',hideTip);
+    return col;
+  }
+
+  function renderReporterSourceBars(rows){
+    const area=document.getElementById('reporterSourceBars'), yaxis=document.getElementById('reporterSourceYAxis');
+    if(!area || !yaxis) return;
+    /* 上限取 20 的倍數，四段刻度才會是整數 */
+    const max=Math.max(20,Math.ceil(Math.max(...rows.map(d=>d.count),1)/20)*20);
+    buildYAxis(yaxis,max,4,v=>Math.round(v));
+    area.innerHTML='';
+    [...rows].sort(unknownLast((a,b)=>b.count-a.count)).forEach(d=>{
+      const h=d.count>0 ? Math.max(1,d.count/max*100) : 0;
+      area.appendChild(barCol(d.count,d.name,h,d.color,'reporter-source-bar',`<strong>${d.name}</strong><br>轉介數量：${d.count} 件`));
+    });
+  }
+
+  function renderReporterSatisfaction(rows){
+    const responseArea=document.getElementById('reporterResponseBars');
+    const responseAxis=document.getElementById('reporterResponseYAxis');
+    const scoreArea=document.getElementById('reporterScoreBars');
+    const scoreAxis=document.getElementById('reporterScoreYAxis');
+    const noFile='<div class="rd-empty-note">未提供 surveys.json</div>';
+    /* 沒有問卷的網絡排在最後、顯示「—」 */
+    const byDesc=key=>unknownLast((a,b)=>(b[key]??-1)-(a[key]??-1));
+
+    if(responseArea && responseAxis){
+      buildYAxis(responseAxis,100,5,v=>`${Math.round(v)}%`);
+      responseArea.innerHTML=RD.has.surveys ? '' : noFile;
+      if(RD.has.surveys) [...rows].sort(byDesc('response')).forEach(d=>{
+        const v=d.response, h=v==null ? 0 : Math.max(1,v);
+        const tip=v==null
+          ? `<strong>${d.name}</strong><br>尚無發出的問卷`
+          : `<strong>${d.name}</strong><br>滿意度調查回收率：${v.toFixed(1)}%<br>已回收 ${d.done} ／ 發出 ${d.sent} 份`;
+        responseArea.appendChild(barCol(v==null ? '—' : `${v.toFixed(1)}%`,d.name,h,d.color,'reporter-sat-bar',tip));
+      });
+    }
+
+    if(scoreArea && scoreAxis){
+      buildYAxis(scoreAxis,5,5,v=>v.toFixed(0));
+      scoreArea.innerHTML=RD.has.surveys ? '' : noFile;
+      if(RD.has.surveys) [...rows].sort(byDesc('score')).forEach((d,i)=>{
+        const v=d.score, h=v==null ? 0 : Math.max(1,v/5*100);
+        const green=d.unknown ? REPORTER_UNKNOWN_COLOR : REPORTER_GREEN_PALETTE[Math.min(i,REPORTER_GREEN_PALETTE.length-1)];
+        const tip=v==null
+          ? `<strong>${d.name}</strong><br>尚無回收的問卷`
+          : `<strong>${d.name}</strong><br>滿意度調查平均分：${v.toFixed(1)} / 5<br>回收 ${d.done} 份、${d.answers} 題次`;
+        scoreArea.appendChild(barCol(v==null ? '—' : v.toFixed(1),d.name,h,green,'reporter-sat-bar',tip));
+      });
+    }
+  }
+
+  function renderReporter(cases){
+    const rows=reporterRows(cases);
+    const total=rows.reduce((s,d)=>s+d.count,0);
+    const subtitle=document.getElementById('reporterPieSubtitle');
+    if(subtitle) subtitle.textContent=`七大網絡｜總轉介數 ${fmtInt(total)} 件`;
+    renderReporterPie(rows,total);
+    renderReporterSourceBars(rows);
+    renderReporterSatisfaction(rows);
+  }
+
+  /* ---------- 指揮儀表板：指揮板 ---------- */
+  function renderCommand(cases){
+    const status=s=>count(cases,c=>c.status===s);
+    const row={ total:cases.length, Pending:status('pending_assign'), Assigned:status('assigned'), Closed:status('closed'), NotAccepted:status('not_referred') };
+    const setText=(id,text)=>{ const el=document.getElementById(id); if(el) el.textContent=text; };
+    /* 本檔只保留緊急醫療：左側總數＝緊急醫療一列 */
+    ['command','commandEmergency'].forEach(prefix=>{
+      setText(prefix==='command' ? 'commandTotal' : 'commandEmergency',fmtInt(row.total));
+      ['Pending','Assigned','Closed','NotAccepted'].forEach(k=>{
+        setText(`${prefix}${k}`,fmtInt(row[k]));
+        setText(`${prefix}${k}Pct`,pctText(row[k],row.total));
+      });
+    });
+    setText('commandEmergencyPct',pctText(row.total,row.total));
+    const totalPct=$('#commandTotalNode small');
+    if(totalPct) totalPct.textContent=pctText(row.total,row.total);
+    if(typeof redrawFlowAfterSettle==='function') redrawFlowAfterSettle(20);
+  }
+
+  /* ---------- 指揮儀表板：結案率（依通報年度，不受日期篩選影響） ---------- */
+  function renderClosure(){
+    const shell=$('#commandClosureView');
+    if(!shell) return;
+    const lastYear=Number(RD.asOf.slice(0,4));
+    const firstYear=Math.min(lastYear,Number(RD.dataStart.slice(0,4)));
+    const years=[];
+    for(let y=lastYear;y>=firstYear;y--){
+      const list=RD.cases.filter(c=>c.year===y);
+      const closed=count(list,c=>c.status==='closed');
+      years.push({ y, roc:`民國${y-1911}年`, total:list.length, closed, rate:pct(closed,list.length) });
+    }
+    const cur=years[0];
+    const rateText=v=>v==null ? '—' : v.toFixed(1);
+
+    $('.closure-v74-hero',shell)?.setAttribute('aria-label',`${cur.y} 年度結案率`);
+    const heroTitle=$('.closure-v74-hero h4',shell);
+    if(heroTitle) heroTitle.textContent=`${cur.y} 年結案率`;
+    const roc=$('.closure-v74-roc-chip',shell);
+    if(roc) roc.textContent=cur.roc;
+    const donut=$('.closure-v74-donut',shell);
+    if(donut){
+      donut.style.setProperty('--closure-rate',String(cur.rate ?? 0));
+      donut.setAttribute('aria-label',`${cur.y} 年結案率 ${rateText(cur.rate)}%`);
+    }
+    const center=$('.closure-v74-donut-center strong',shell);
+    if(center) center.innerHTML=`${rateText(cur.rate)}<span>%</span>`;
+    const counts=$$('.closure-v74-counts strong',shell);
+    if(counts[0]) counts[0].textContent=fmtInt(cur.closed);
+    if(counts[1]) counts[1].textContent=fmtInt(cur.total);
+
+    $('.closure-v74-trend',shell)?.setAttribute('aria-label',`${firstYear} 至 ${lastYear} 年結案率比較`);
+    const period=$('.closure-v74-period',shell);
+    if(period) period.textContent=firstYear===lastYear ? String(lastYear) : `${firstYear}–${lastYear}`;
+    const list=$('.closure-v74-list',shell);
+    if(list) list.innerHTML=years.map((r,i)=>
+      `<div class="closure-v74-row${i===0?' current':''}" title="${r.y} / ${r.roc}：${r.closed} / ${r.total}，結案率 ${rateText(r.rate)}%">`
+      +`<div class="closure-v74-year"><strong>${r.y}</strong><span>${r.roc}</span>${i===0?'<em>本年度</em>':''}</div>`
+      +`<div class="closure-v74-bar-area"><div class="closure-v74-bar-track"><i style="width:${r.rate ?? 0}%"></i></div>`
+      +`<span class="closure-v74-fraction">${fmtInt(r.closed)} / ${fmtInt(r.total)} 件</span></div>`
+      +`<strong class="closure-v74-rate">${rateText(r.rate)}%</strong></div>`
+    ).join('');
+  }
+
+  /* ---------- 頁首狀態列 ---------- */
+  function renderStatus(){
+    const el=document.getElementById('rdStatus');
+    if(!el) return;
+    el.classList.remove('rd-error');
+    const parts=[];
+    if(RD.sample) parts.push('<span class="rd-sample">範例資料（虛構）</span>');
+    parts.push(`<span>資料截止 <b>${slashDate(RD.asOf)}</b></span>`);
+    parts.push(`<span>緊急醫療通報 <b>${fmtInt(RD.cases.length)}</b> 件（${slashDate(RD.dataStart)} 起）</span>`);
+    const missing=[!RD.has.assessments && 'assessments.json', !RD.has.surveys && 'surveys.json'].filter(Boolean);
+    if(missing.length) parts.push(`<span class="rd-warn">未提供 ${missing.join('、')}</span>`);
+    const s=RD.stats, skipped=[
+      s.otherCategory && `非緊急醫療 ${s.otherCategory} 件`,
+      s.void && `作廢 ${s.void} 件`,
+      s.badTime && `通報時間無法解析 ${s.badTime} 件`
+    ].filter(Boolean);
+    if(skipped.length) parts.push(`<span class="rd-warn">已排除：${skipped.join('、')}</span>`);
+    el.innerHTML=parts.join('');
+  }
+
+  /* err 為 null：以 file:// 開啟，還沒讀過資料，直接請使用者選資料夾 */
+  function showError(err){
+    if(err) console.error('[real-data]',err);
+    const el=document.getElementById('rdStatus');
+    if(!el) return;
+    const local=location.protocol==='file:';
+    const why=err
+      ? `資料載入失敗：${esc(err.message || err)}。`
+      : '以 file:// 直接開檔時，瀏覽器不允許網頁讀取 data/ 內的 JSON。';
+    el.classList.add('rd-error');
+    el.innerHTML=`<span>${why}</span>`
+      +`<label class="rd-pick">選擇 data 資料夾<input type="file" webkitdirectory multiple></label>`
+      +(local ? '<span>或改用本機伺服器開啟（例如 VS Code Live Server）。</span>' : '');
+    el.querySelector('input').addEventListener('change',e=>{
+      if(e.target.files.length) loadFromPicker(e.target.files).then(start).catch(showError);
+    });
+  }
+
+  function start(raw){
+    build(raw);
+    initDateInputs();
+    Object.entries(PAGES).forEach(([page,cfg])=>{
+      const [s,e]=presetRange(cfg.initial);
+      setRange(page,s,e,cfg.initial==='all' ? null : cfg.initial);
+    });
+    renderClosure();
+    renderStatus();
+    document.documentElement.classList.add('rd-ready');
+  }
+
+  Object.keys(PAGES).forEach(wirePage);
+  /* file:// 下 fetch 一定被擋（還會在 console 留一串 CORS 錯誤），直接改用選資料夾 */
+  if(location.protocol==='file:') showError(null);
+  else loadFromServer().then(start).catch(showError);
+})();
+</script>
