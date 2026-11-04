@@ -85,7 +85,7 @@
   .ob:hover { background: var(--teal-hover); }
   .ob-danger { border-color: var(--red-300); color: var(--red-300); }
   .ob-danger:hover { background: var(--red-hover); }
-  .btn:focus-visible, .ob:focus-visible, .hd button:focus-visible, .th-btn:focus-visible, .dlg-x:focus-visible {
+  .btn:focus-visible, .ob:focus-visible, .hd button:focus-visible, .th-btn:focus-visible {
     outline: 2px solid var(--teal-700); outline-offset: 2px;
   }
 
@@ -177,30 +177,68 @@
   /* ---------- 備註 ---------- */
   .note-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .note-count { margin: 0; color: var(--grey-700); }
-  .tbl-note { min-width: 640px; }
-  .tbl-note col:nth-child(2) { width: 130px; }
-  .tbl-note col:nth-child(3) { width: 170px; }
+  .tbl-note { min-width: 800px; }
+  .tbl-note col:nth-child(2) { width: 120px; }
+  .tbl-note col:nth-child(3) { width: 120px; }
+  .tbl-note col:nth-child(4) { width: 170px; }
   .note-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .no-status { color: var(--grey-500); }
   .tbl-empty { margin: 0; padding: 40px 0; text-align: center; color: var(--grey-500); }
 
-  /* ---------- 對話框 ---------- */
-  .dlg {
-    width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 0; border: 0; border-radius: 6px;
-    background: var(--grey-0); color: var(--grey-900); box-shadow: 0 12px 32px rgba(0, 0, 0, .2);
+  /* ---------- 對話框：照正式系統「檢視／編輯／新增個案追蹤紀錄」的樣子 ----------
+     寬 640、貼齊畫面上方 22px、沒有標題列分隔線也沒有 ×；背景遮罩 30% 黑；按鈕 100×34 */
+  .mdl {
+    width: min(640px, calc(100vw - 32px)); max-height: calc(100% - 44px); margin: 22px auto auto; padding: 24px; overflow: auto;
+    border: 0; border-radius: 6px; background: var(--grey-0); color: var(--grey-900); box-shadow: 0 4px 16px rgba(0, 0, 0, .15);
   }
-  .dlg-sm { width: min(400px, calc(100vw - 32px)); }
-  .dlg::backdrop { background: rgba(0, 0, 0, .45); }
-  .dlg-hd { display: flex; align-items: center; gap: 12px; padding: 14px 16px 14px 24px; border-bottom: 1px solid var(--line); }
-  .dlg-hd h2 { flex: 1; margin: 0; font-size: 18px; line-height: 26px; font-weight: 700; }
-  .dlg-x { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--grey-700); }
-  .dlg-x:hover { background: var(--grey-100); color: var(--grey-900); }
-  .dlg-bd { padding: 20px 24px 0; }
-  .dlg-msg { margin: 0; }
-  .dlg-ft { display: flex; justify-content: flex-end; gap: 8px; padding: 20px 24px 24px; }
-  textarea.ctl { height: auto; min-height: 144px; padding: 7px 9px; line-height: 22px; resize: vertical; }
-  .field-foot { display: flex; align-items: flex-start; gap: 12px; margin-top: 4px; font-size: 12px; line-height: 18px; }
-  .err { flex: 1; margin: 0; color: var(--red-500); }
-  .counter { margin-left: auto; color: var(--grey-500); }
+  .mdl-sm { width: min(420px, calc(100vw - 32px)); }
+  .mdl::backdrop { background: rgba(0, 0, 0, .3); }
+  .mdl-title { margin: 0 0 14px; font-size: 20px; line-height: 30px; font-weight: 500; }
+  .mdl-msg { margin: 0; }
+  .mdl-field + .mdl-field { margin-top: 16px; }
+  .mdl-label { display: block; margin: 0 0 4px; font-size: 14px; line-height: 20px; font-weight: 500; }
+  .mdl-label-tools { display: flex; align-items: center; gap: 8px; }
+  .mdl-row { display: flex; gap: 8px; }
+  .mdl-row > .ctl { flex: 1; min-width: 0; }
+  .mdl-ft { display: flex; align-items: center; justify-content: flex-end; gap: 16px; margin-top: 16px; }
+  .mdl-ft-push { margin-right: auto; }   /* 「更新標籤」靠左，其餘靠右 */
+  .mdl-view .mdl-ft { margin-top: 30px; }
+  .mdl-sm .mdl-ft { margin-top: 24px; }
+  .mbtn {
+    flex: none; width: 100px; height: 34px; padding: 0 8px; border: 1px solid var(--brand); border-radius: 4px;
+    background: var(--brand); color: #fff; font-size: 14px; font-weight: 500; white-space: nowrap;
+  }
+  .mbtn:hover { border-color: var(--brand-hover); background: var(--brand-hover); }
+  .mbtn-auto { width: auto; padding: 0 12px; }
+  .mbtn-teal { border-color: var(--teal-300); background: var(--teal-300); }
+  .mbtn-teal:hover { border-color: var(--teal-500); background: var(--teal-500); }
+  .mbtn-cancel { border-color: var(--border-input); background: var(--grey-0); color: var(--grey-900); }
+  .mbtn-cancel:hover { border-color: var(--border-input); background: var(--grey-100); }
+  .mbtn-danger { border-color: var(--red-300); background: var(--red-300); }
+  .mbtn-danger:hover { border-color: var(--red-500); background: var(--red-500); }
+  .mbtn:focus-visible { outline: 2px solid var(--teal-700); outline-offset: 2px; }
+  textarea.ctl { height: 134px; padding: 7px 9px; line-height: 22px; resize: vertical; }
+  .err { margin: 4px 0 0; font-size: 12px; line-height: 18px; color: var(--red-500); }
+
+  /* 檢視：灰色標籤＋內容 */
+  .view-list { margin: 0; }
+  .view-field + .view-field { margin-top: 16px; }
+  .view-label { line-height: 20px; color: var(--grey-500); }
+  .view-value { margin: 4px 0 0; line-height: 20px; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+  /* 狀態：名稱後面一個 16px 色塊。原生下拉選單畫不出色塊，選到的值改用 .status-face 疊在上面顯示 */
+  .status-value { display: inline-flex; align-items: center; gap: 8px; vertical-align: top; }
+  .swatch { flex: none; width: 16px; height: 16px; }
+  .status-select { color: transparent; }
+  .status-select option { color: var(--grey-900); }
+  .status-face {
+    position: absolute; left: 10px; right: 30px; top: 0; display: flex; align-items: center; height: 34px;
+    overflow: hidden; white-space: nowrap; pointer-events: none;
+  }
+  /* 狀態時間：文字框可直接打，日曆鈕叫出瀏覽器內建的日期時間選擇器（藏起來的 datetime-local） */
+  .ctl-ico-btn { padding: 0; border: 0; background: transparent; color: var(--grey-900); pointer-events: auto; cursor: pointer; }
+  .ctl-ico-btn:focus-visible { outline: 2px solid var(--teal-700); outline-offset: -4px; }
+  .picker { position: absolute; right: 0; bottom: 0; width: 1px; height: 1px; padding: 0; border: 0; opacity: 0; pointer-events: none; }
 
   .toast {
     position: fixed; left: 50%; bottom: 32px; z-index: 100; transform: translateX(-50%);
@@ -233,17 +271,22 @@
     .filter { flex-basis: 100%; }
     .filters > .btn { width: 100%; }
 
-    /* 備註改成一則一張：內容、建立者與時間、按鈕由上而下，不必左右滑才按得到編輯／移除 */
+    /* 備註改成一則一張：內容；備註人、狀態、最後更新時間；按鈕，由上而下，不必左右滑才按得到 */
     .tbl-note { min-width: 0; }
     .tbl-note thead { display: none; }
     .tbl-note, .tbl-note tbody, .tbl-note tr, .tbl-note td { display: block; }
     .tbl-note tr { padding: 14px 0; border-bottom: 1px solid var(--line-table); }
     .tbl-note tr:last-child { border-bottom: 0; }
     .tbl.tbl-note td { padding: 0; border: 0; }
-    .tbl-note td:nth-child(2), .tbl-note td:nth-child(3) { display: inline-block; margin-top: 6px; font-size: 12px; color: var(--grey-500); }
-    .tbl-note td:nth-child(2) { margin-right: 10px; }
+    .tbl-note td:nth-child(2), .tbl-note td:nth-child(3), .tbl-note td:nth-child(4) {
+      display: inline-block; margin: 6px 10px 0 0; font-size: 12px; color: var(--grey-500); vertical-align: middle;
+    }
     .tbl-note .col-act { width: auto; margin-top: 10px; }
     .tbl-note .acts { justify-content: flex-start; }
+
+    .mdl { max-height: calc(100% - 32px); margin-top: 16px; padding: 20px 16px; }
+    .mdl-ft { gap: 8px; }
+    .mbtn { width: auto; min-width: 72px; padding: 0 12px; }
   }
 </style>
 </head>
@@ -386,7 +429,7 @@
       </div>
     </div>
 
-    <!-- 備註（新增）：可新增、編輯、移除，存在 sessionStorage -->
+    <!-- 備註（新增）：檢視、新增、編輯、移除，存在 sessionStorage -->
     <div class="panel" role="tabpanel" id="panel-note" aria-labelledby="tab-note" hidden>
       <div class="note-bar">
         <p class="note-count" id="note-count"></p>
@@ -397,11 +440,12 @@
       </div>
       <div class="tbl-box">
         <table class="tbl tbl-note">
-          <colgroup><col><col><col><col></colgroup>
+          <colgroup><col><col><col><col><col></colgroup>
           <thead>
             <tr>
               <th scope="col">備註內容</th>
-              <th scope="col">建立者</th>
+              <th scope="col">備註人</th>
+              <th scope="col">備註狀態</th>
               <th scope="col">最後更新時間</th>
               <th scope="col" class="col-act"><span class="sr-only">操作</span></th>
             </tr>
@@ -414,42 +458,84 @@
   </section>
 </main>
 
-<!-- 新增／編輯備註 -->
-<dialog class="dlg" id="note-dialog" aria-labelledby="note-dialog-title">
+<!-- 檢視備註：照「檢視個案追蹤紀錄」，只顯示備註內容／備註人／備註狀態／最後更新時間 -->
+<dialog class="mdl mdl-view" id="view-dialog" aria-labelledby="view-dialog-title">
+  <h2 class="mdl-title" id="view-dialog-title">檢視備註</h2>
+  <dl class="view-list">
+    <div class="view-field"><dt class="view-label">備註內容</dt><dd class="view-value" id="view-text"></dd></div>
+    <div class="view-field"><dt class="view-label">備註人</dt><dd class="view-value" id="view-author"></dd></div>
+    <div class="view-field"><dt class="view-label">備註狀態</dt><dd class="view-value" id="view-status"></dd></div>
+    <div class="view-field"><dt class="view-label">最後更新時間</dt><dd class="view-value" id="view-updated"></dd></div>
+  </dl>
+  <div class="mdl-ft">
+    <button type="button" class="mbtn" data-close>關閉</button>
+  </div>
+</dialog>
+
+<!-- 新增／編輯備註：照「新增／編輯個案追蹤紀錄」，不放「共照群組」 -->
+<dialog class="mdl" id="note-dialog" aria-labelledby="note-dialog-title">
   <form id="note-form" novalidate>
-    <div class="dlg-hd">
-      <h2 id="note-dialog-title">新增備註</h2>
-      <button type="button" class="dlg-x" data-close aria-label="關閉">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-      </button>
-    </div>
-    <div class="dlg-bd">
-      <label class="label" for="note-text">備註內容<span class="req">*</span></label>
-      <textarea class="ctl" id="note-text" maxlength="500" placeholder="請輸入備註內容" aria-describedby="note-error note-counter"></textarea>
-      <div class="field-foot">
-        <p class="err" id="note-error" hidden>請輸入備註內容</p>
-        <span class="counter" id="note-counter">0/500</span>
+    <h2 class="mdl-title" id="note-dialog-title">新增備註</h2>
+
+    <div class="mdl-field">
+      <label class="mdl-label" for="note-phrase">套用個管片語</label>
+      <div class="mdl-row">
+        <select class="ctl" id="note-phrase">
+          <option value="">請選擇</option>
+        </select>
+        <!-- 既有功能，沒有動作 -->
+        <button type="button" class="mbtn mbtn-auto">個管追蹤樣板</button>
       </div>
     </div>
-    <div class="dlg-ft">
-      <button type="button" class="ob" data-close>取消</button>
-      <button type="submit" class="btn">儲存</button>
+
+    <div class="mdl-field">
+      <label class="mdl-label" for="note-text">內容<span class="req">*</span></label>
+      <textarea class="ctl" id="note-text" aria-describedby="note-text-error"></textarea>
+      <p class="err" id="note-text-error" hidden></p>
+    </div>
+
+    <div class="mdl-field">
+      <div class="mdl-label mdl-label-tools">
+        <label for="note-status">狀態</label>
+        <!-- 既有功能（編輯狀態選項），沒有動作 -->
+        <button type="button" class="th-btn" aria-label="編輯狀態選項">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><path d="M17.5 2.5a2.1 2.1 0 0 1 3 3L12 14l-4 1 1-4z"/></svg>
+        </button>
+      </div>
+      <div class="ctl-wrap">
+        <select class="ctl status-select" id="note-status"></select>
+        <span class="status-face" id="note-status-face" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <div class="mdl-field">
+      <label class="mdl-label" for="note-time">狀態時間<span class="req">*</span></label>
+      <div class="ctl-wrap">
+        <input class="ctl" id="note-time" type="text" inputmode="numeric" placeholder="YYYY/MM/DD HH:mm" autocomplete="off" aria-describedby="note-time-error">
+        <button type="button" class="ctl-ico ctl-ico-btn" id="note-time-pick" aria-label="從日曆選擇狀態時間">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 1.5a1 1 0 0 1 1 1V4h8V2.5a1 1 0 1 1 2 0V4h2a1.5 1.5 0 0 1 1.5 1.5V8h-19V5.5A1.5 1.5 0 0 1 4 4h2V2.5a1 1 0 0 1 1-1z"/><path fill-rule="evenodd" d="M2.5 9.5h19v11a1.5 1.5 0 0 1-1.5 1.5H4a1.5 1.5 0 0 1-1.5-1.5zM5.5 12h3v2.5h-3zm5 0h3v2.5h-3zm5 0h3v2.5h-3zm-10 4.5h3V19h-3zm5 0h3V19h-3zm5 0h3V19h-3z"/></svg>
+        </button>
+        <input class="picker" id="note-time-native" type="datetime-local" tabindex="-1" aria-hidden="true">
+      </div>
+      <p class="err" id="note-time-error" hidden></p>
+    </div>
+
+    <div class="mdl-ft">
+      <!-- 既有功能（更新個案標籤），沒有動作 -->
+      <button type="button" class="mbtn mbtn-teal mdl-ft-push">更新標籤</button>
+      <button type="button" class="mbtn mbtn-cancel" data-close>取消</button>
+      <button type="submit" class="mbtn" id="note-submit">送出</button>
     </div>
   </form>
 </dialog>
 
-<!-- 移除備註前確認 -->
-<dialog class="dlg dlg-sm" id="remove-dialog" aria-labelledby="remove-dialog-title">
-  <div class="dlg-hd">
-    <h2 id="remove-dialog-title">移除備註</h2>
-    <button type="button" class="dlg-x" data-close aria-label="關閉">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-    </button>
-  </div>
-  <div class="dlg-bd"><p class="dlg-msg">確定要移除這則備註嗎？移除後無法復原。</p></div>
-  <div class="dlg-ft">
-    <button type="button" class="ob" data-close>取消</button>
-    <button type="button" class="btn btn-danger" id="remove-confirm">移除</button>
+<!-- 移除備註前確認（正式系統的樣子沒有提供，比照上面的對話框） -->
+<dialog class="mdl mdl-sm" id="remove-dialog" aria-labelledby="remove-dialog-title">
+  <h2 class="mdl-title" id="remove-dialog-title">移除備註</h2>
+  <p class="mdl-msg">確定要移除這則備註嗎？移除後無法復原。</p>
+  <div class="mdl-ft">
+    <button type="button" class="mbtn mbtn-cancel" data-close>取消</button>
+    <button type="button" class="mbtn mbtn-danger" id="remove-confirm">移除</button>
   </div>
 </dialog>
 
@@ -465,9 +551,10 @@
 
   /* ---------- 通報史及處遇歷程（照截圖的格式） ---------- */
   var REPORT_TYPE = "緊急醫療(三總北投)";
+  // 通報歷程種類；備註的「狀態」也用這份清單（正式的備註狀態選項待確認）
   var KINDS = {
-    done: { name: "完成指派", cls: "kind-done" },
-    form: { name: "更新表單", cls: "kind-form" }
+    done: { name: "完成指派", cls: "kind-done", color: "var(--kind-done)" },
+    form: { name: "更新表單", cls: "kind-form", color: "var(--teal-300)" }
   };
   var HISTORY = [
     { info: "已完成個案：" + CASE_NAME + " 的指派", kind: "done", time: "2026/11/04 14:31" },
@@ -483,12 +570,15 @@
   ];
 
   /* ---------- 備註：存在 sessionStorage，重新整理還在、關掉分頁就清空 ---------- */
-  var NOTE_KEY = "tsghb-commend:notes";
-  var NOTE_MAX = 500;
+  // 欄位：text 內容、author 備註人、status 狀態（KINDS 的鍵，"" 是沒有狀態）、statusTime 狀態時間、updated 最後更新時間。
+  // 欄位改過一次（加了狀態），鍵名跟著換，免得讀到舊格式
+  var NOTE_KEY = "tsghb-commend:notes-v2";
   var DEFAULT_NOTES = [
-    { id: "n2", text: "個案表示白天上班不便接聽電話，聯繫請於 18:00 後撥打。", author: CURRENT_USER, time: "2026/11/04 09:12" },
-    { id: "n1", text: "母親同意陪同回診，已提醒下次門診時間。", author: "林志豪", time: "2026/11/03 16:45" }
+    { id: "n2", text: "個案表示白天上班不便接聽電話，聯繫請於 18:00 後撥打。", author: CURRENT_USER, status: "", statusTime: "2026/11/04 09:12", updated: "2026/11/04 09:12" },
+    { id: "n1", text: "母親同意陪同回診，已提醒下次門診時間。", author: "林志豪", status: "done", statusTime: "2026/11/03 16:40", updated: "2026/11/03 16:45" }
   ];
+  // 套用個管片語（虛構）：選了就接在內容後面
+  var PHRASES = ["電話關懷，個案情緒穩定，持續追蹤。", "電話未接通，將再次聯繫。", "已與家屬聯繫，說明後續就醫安排。"];
 
   function el(tag, cls, text) {
     var node = document.createElement(tag);
@@ -576,17 +666,25 @@
       var saved = JSON.parse(sessionStorage.getItem(NOTE_KEY) || "null");
       if (Array.isArray(saved)) return saved;
     } catch (err) {}
-    return DEFAULT_NOTES.slice();
+    return JSON.parse(JSON.stringify(DEFAULT_NOTES));
   }
 
   function saveNotes() {
     try { sessionStorage.setItem(NOTE_KEY, JSON.stringify(notes)); } catch (err) {}
   }
 
+  // 時間一律是「YYYY/MM/DD HH:mm」
   function pad(n) { return (n < 10 ? "0" : "") + n; }
-  function now() {
-    var d = new Date();
+  function fmt(d) {
     return d.getFullYear() + "/" + pad(d.getMonth() + 1) + "/" + pad(d.getDate()) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+  function now() { return fmt(new Date()); }
+  // 格式不對，或日期時間不存在（2/30、25:00 這種會被 Date 進位成別的時間）就回傳 null
+  function parseTime(s) {
+    var m = /^(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})$/.exec(s);
+    if (!m) return null;
+    var d = new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5]);
+    return fmt(d) === s ? d : null;
   }
 
   var notes = loadNotes();
@@ -595,19 +693,42 @@
   var noteCount = document.getElementById("note-count");
   var noteAdd = document.getElementById("note-add");
 
-  // 新的在上面；編輯不改順序，只更新內容與時間
+  // 表格用：彩色標籤（同通報歷程種類）；沒有狀態顯示「-」
+  function statusBadge(status) {
+    var k = KINDS[status];
+    return k ? el("span", "kind " + k.cls, k.name) : el("span", "no-status", "-");
+  }
+
+  // 檢視與下拉選單用：名稱＋16px 色塊（照「檢視個案追蹤紀錄」）
+  function statusValue(status) {
+    var k = KINDS[status];
+    var wrap = el("span", "status-value");
+    wrap.appendChild(el("span", null, k ? k.name : "-"));
+    if (k) {
+      var swatch = el("span", "swatch");
+      swatch.style.background = k.color;
+      wrap.appendChild(swatch);
+    }
+    return wrap;
+  }
+
+  // 新的在上面；編輯不改順序
   function renderNotes() {
     noteRows.textContent = "";
     notes.forEach(function (n) {
       var tr = document.createElement("tr");
       tr.appendChild(el("td", "note-text", n.text));
       tr.appendChild(el("td", "nowrap", n.author));
-      tr.appendChild(el("td", "nowrap", n.time));
-      var edit = button("編輯", "ob");
-      edit.setAttribute("data-edit", n.id);
-      var remove = button("移除", "ob ob-danger");
-      remove.setAttribute("data-remove", n.id);
-      tr.appendChild(actionCell([edit, remove]));
+      var status = el("td");
+      status.appendChild(statusBadge(n.status));
+      tr.appendChild(status);
+      tr.appendChild(el("td", "nowrap", n.updated));
+      var acts = [["檢視", "ob", "data-view"], ["編輯", "ob", "data-edit"], ["移除", "ob ob-danger", "data-remove"]].map(function (a) {
+        var b = button(a[0], a[1]);
+        b.setAttribute(a[2], n.id);
+        return b;
+      });
+      tr.appendChild(actionCell(acts));
       noteRows.appendChild(tr);
     });
     noteEmpty.hidden = notes.length > 0;
@@ -627,7 +748,7 @@
     toastTimer = setTimeout(function () { toastEl.classList.remove("is-on"); }, 2000);
   }
 
-  // 兩個對話框共用：點 data-close 或對話框外面（::backdrop）就關閉，Esc 由瀏覽器處理。
+  // 所有對話框共用：點 data-close 或對話框外面（::backdrop）就關閉，Esc 由瀏覽器處理。
   // 外面要「按下」也在外面才算，免得在文字框裡拖曳選字、放開時滑到外面就被關掉
   document.querySelectorAll("dialog").forEach(function (dlg) {
     var downOutside = false;
@@ -637,72 +758,136 @@
     });
   });
 
+  /* 檢視 */
+  var viewDialog = document.getElementById("view-dialog");
+
+  function openView(note) {
+    document.getElementById("view-text").textContent = note.text;
+    document.getElementById("view-author").textContent = note.author;
+    var status = document.getElementById("view-status");
+    status.textContent = "";
+    status.appendChild(statusValue(note.status));
+    document.getElementById("view-updated").textContent = note.updated;
+    viewDialog.showModal();
+  }
+
   /* 新增／編輯 */
   var noteDialog = document.getElementById("note-dialog");
   var noteForm = document.getElementById("note-form");
   var noteTitle = document.getElementById("note-dialog-title");
+  var noteSubmit = document.getElementById("note-submit");
+  var notePhrase = document.getElementById("note-phrase");
   var noteText = document.getElementById("note-text");
-  var noteError = document.getElementById("note-error");
-  var noteCounter = document.getElementById("note-counter");
+  var noteTextError = document.getElementById("note-text-error");
+  var noteStatus = document.getElementById("note-status");
+  var noteStatusFace = document.getElementById("note-status-face");
+  var noteTime = document.getElementById("note-time");
+  var noteTimeError = document.getElementById("note-time-error");
+  var noteTimeNative = document.getElementById("note-time-native");
   var editingId = null;
 
-  function setInvalid(on) {
-    noteText.classList.toggle("is-invalid", on);
-    if (on) noteText.setAttribute("aria-invalid", "true"); else noteText.removeAttribute("aria-invalid");
-    noteError.hidden = !on;
+  function addOption(select, value, text) {
+    var opt = el("option", null, text);
+    opt.value = value;
+    select.appendChild(opt);
+  }
+  PHRASES.forEach(function (p) { addOption(notePhrase, p, p); });
+  addOption(noteStatus, "", "-");
+  Object.keys(KINDS).forEach(function (k) { addOption(noteStatus, k, KINDS[k].name); });
+
+  function setError(input, errorEl, message) {
+    input.classList.toggle("is-invalid", !!message);
+    if (message) input.setAttribute("aria-invalid", "true"); else input.removeAttribute("aria-invalid");
+    errorEl.textContent = message;
+    errorEl.hidden = !message;
   }
 
-  function updateCounter() { noteCounter.textContent = noteText.value.length + "/" + NOTE_MAX; }
+  function showStatus() {
+    noteStatusFace.textContent = "";
+    noteStatusFace.appendChild(statusValue(noteStatus.value));
+  }
 
   function openEditor(note) {
     editingId = note ? note.id : null;
     noteTitle.textContent = note ? "編輯備註" : "新增備註";
+    noteSubmit.textContent = note ? "儲存" : "送出";   // 正式系統的編輯是「儲存」、新增是「送出」
+    notePhrase.value = "";
     noteText.value = note ? note.text : "";
-    setInvalid(false);
-    updateCounter();
+    noteStatus.value = note ? note.status : "";
+    noteTime.value = note ? note.statusTime : now();
+    showStatus();
+    setError(noteText, noteTextError, "");
+    setError(noteTime, noteTimeError, "");
     noteDialog.showModal();
     noteText.focus();
   }
 
+  // 套用個管片語：接在內容後面（原本有字就換一行再接），選單回到「請選擇」，同一句可以再套一次
+  notePhrase.addEventListener("change", function () {
+    var phrase = notePhrase.value;
+    if (!phrase) return;
+    var text = noteText.value.replace(/\s+$/, "");
+    noteText.value = text ? text + "\n" + phrase : phrase;
+    notePhrase.value = "";
+    setError(noteText, noteTextError, "");
+    noteText.focus();
+  });
+
+  noteStatus.addEventListener("change", showStatus);
+
   noteText.addEventListener("input", function () {
-    updateCounter();
-    if (noteText.value.trim()) setInvalid(false);
+    if (noteText.value.trim()) setError(noteText, noteTextError, "");
+  });
+  noteTime.addEventListener("input", function () { setError(noteTime, noteTimeError, ""); });
+
+  // 日曆鈕：把文字框的時間帶進藏起來的 datetime-local 再叫出選擇器，選完寫回文字框
+  document.getElementById("note-time-pick").addEventListener("click", function () {
+    var d = parseTime(noteTime.value.trim());
+    noteTimeNative.value = d ? fmt(d).replace(/\//g, "-").replace(" ", "T") : "";
+    try { noteTimeNative.showPicker(); } catch (err) { noteTime.focus(); }
+  });
+  noteTimeNative.addEventListener("change", function () {
+    if (!noteTimeNative.value) return;
+    noteTime.value = noteTimeNative.value.slice(0, 16).replace(/-/g, "/").replace("T", " ");
+    setError(noteTime, noteTimeError, "");
   });
 
   noteForm.addEventListener("submit", function (e) {
     e.preventDefault();
     var text = noteText.value.trim();
-    if (!text) {
-      setInvalid(true);
-      noteText.focus();
-      return;
-    }
+    var time = noteTime.value.trim();
+    var timeError = !time ? "請輸入狀態時間" : parseTime(time) ? "" : "狀態時間的格式是 YYYY/MM/DD HH:mm";
+    setError(noteText, noteTextError, text ? "" : "請輸入內容");
+    setError(noteTime, noteTimeError, timeError);
+    if (!text) { noteText.focus(); return; }
+    if (timeError) { noteTime.focus(); return; }
+
     var id = editingId;
-    if (id) {
-      var note = findNote(id);
-      note.text = text;
-      note.time = now();
-    } else {
-      id = "n" + Date.now();
-      notes.unshift({ id: id, text: text, author: CURRENT_USER, time: now() });
-    }
+    var note = id ? findNote(id) : { id: "n" + Date.now(), author: CURRENT_USER };
+    note.text = text;
+    note.status = noteStatus.value;
+    note.statusTime = time;
+    note.updated = now();
+    if (!id) notes.unshift(note);
     saveNotes();
     noteDialog.close();
     renderNotes();
     // 原本按的按鈕已經重畫掉了，焦點放回這則備註的「編輯」（新增時放回「新增」）
-    (editingId ? noteRows.querySelector('[data-edit="' + id + '"]') : noteAdd).focus();
-    toast(editingId ? "已更新備註" : "已新增備註");
+    (id ? noteRows.querySelector('[data-edit="' + id + '"]') : noteAdd).focus();
+    toast(id ? "已更新備註" : "已新增備註");
   });
 
   noteAdd.addEventListener("click", function () { openEditor(null); });
 
-  /* 移除 */
+  /* 每一列的檢視／編輯／移除 */
   var removeDialog = document.getElementById("remove-dialog");
   var removingId = null;
 
   noteRows.addEventListener("click", function (e) {
+    var view = e.target.closest("[data-view]");
     var edit = e.target.closest("[data-edit]");
     var remove = e.target.closest("[data-remove]");
+    if (view) openView(findNote(view.getAttribute("data-view")));
     if (edit) openEditor(findNote(edit.getAttribute("data-edit")));
     if (remove) {
       removingId = remove.getAttribute("data-remove");
