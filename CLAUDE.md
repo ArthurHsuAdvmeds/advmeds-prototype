@@ -25,7 +25,7 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
 | `tsghb-middleware/` | 三總北投 | HIS 整合示範（HIS 門診畫面開啟個案紀錄） | 單檔 HTML | — |
 | `tsghb-ppt/` | 三總北投 | 平台網頁版簡報，圖片在 `assets/` | 單檔 HTML | — |
 | `spec/tsghb_doctor_sub/` | 三總北投 | 醫師次專科欄位：帳號資料新增「次專科」多選下拉與市話分機，通報前臺的編輯帳號（`front/`）與後臺的基本資料（`back/`）各一頁、共用 `assets/form.css`／`form.js`；入口 `index.html` 是切換瀏覽頁（iframe 切前後臺與電腦／手機寬度）；設計稿在 `design/` | HTML + 共用 CSS／JS | [CLAUDE.md](spec/tsghb_doctor_sub/CLAUDE.md) |
-| `spec/tsghb_commend/` | 三總北投 | 個案備註：`back/` 照正式系統截圖仿製後臺個案頁（個案資料卡＋通報史及處遇歷程），下方分頁最右側新增「備註」（檢視／新增／編輯／移除，存 sessionStorage；列表只顯示備註內容／備註人／最後更新時間，內容的換行在列表顯示成空白（照正式系統），點整列等於檢視；檢視另有備註狀態與備註時間，換行照原樣顯示；新增／編輯的對話框照正式系統的「個案追蹤紀錄」，只留內容、備註時間），`back/#note` 直接開備註；`front/` 是照截圖仿製的通報前臺「緊急醫療通報」頁（基底，備註怎麼加待使用者指示）；入口 `index.html` 是切換瀏覽頁（iframe 切前後臺與電腦／手機寬度，舊網址 `#note` 轉到後臺備註），前後臺有改要換它的 `?v=`。參考截圖含個資，不進 repo，畫面資料一律虛構 | 單檔 HTML（前後臺各一份，共用院徽） | [CLAUDE.md](spec/tsghb_commend/CLAUDE.md) |
+| `spec/tsghb_commend/` | 三總北投 | 個案備註：`back/` 照正式系統截圖仿製後臺個案頁（個案資料卡＋通報史及處遇歷程），下方分頁最右側新增「備註」（檢視／新增／編輯／移除，存 sessionStorage；列表只顯示備註內容／備註人／最後更新時間，內容的換行在列表顯示成空白（照正式系統），點整列等於檢視；檢視另有備註狀態與備註時間，換行照原樣顯示；新增／編輯的對話框照正式系統的「個案追蹤紀錄」，只留內容、備註時間），`back/#note` 直接開備註；`front/` 是照截圖仿製的通報前臺「緊急醫療通報」頁，個案資料卡多了「查看個案備註」（對話框：新增、檢視、編輯、移除，跟後臺同一份 sessionStorage 資料；備註程式前後臺各一份，改規則要兩邊一起改）；入口 `index.html` 是切換瀏覽頁（iframe 切前後臺與電腦／手機寬度，舊網址 `#note` 轉到後臺備註），前後臺有改要換它的 `?v=`。參考截圖含個資，不進 repo，畫面資料一律虛構 | 單檔 HTML（前後臺各一份，共用院徽） | [CLAUDE.md](spec/tsghb_commend/CLAUDE.md) |
 | `spec/nhri_ms/` | 國衛院 | 肌少症評估量表（AWGS 2025），`write/` 填寫頁、`result/` 結果頁 | dc-runtime + React | [CLAUDE.md](spec/nhri_ms/CLAUDE.md) |
 | `spec/nhri_elearing_room/` | 國衛院 | ICOPE 學習小教室 | 單檔 HTML | — |
 | `spec/nhri_elearing/` | 國衛院 | ICOPE 衛教推播邏輯一覽（給 PM 對照） | 單檔 HTML | — |

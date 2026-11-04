@@ -9,11 +9,13 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
   /* 通報前臺「緊急醫療通報」頁的仿製畫面（基底），尺寸照使用者提供的截圖量：1936 寬的瀏覽器、125% 縮放。
-     緊急醫療通報的主色是紅色：頁首下的標題列、卡片標題、按鈕都是紅的。基礎樣式是電腦版，≤760px 改手機排法 */
+     緊急醫療通報的主色是紅色：頁首下的標題列、卡片標題、按鈕都是紅的。基礎樣式是電腦版，≤760px 改手機排法。
+     個案資料卡多了「查看個案備註」（新增），點開是個案備註的對話框，樣子與規則比照後臺的備註 */
   :root {
     --teal-300: #19AAD1; --teal-500: #1285B3; --teal-700: #0C6496;
     --red-300: #E54B4B; --red-500: #C43643;
-    --grey-0: #FFFFFF; --grey-50: #FAFAFA; --grey-400: #C4C4C4; --grey-500: #9E9E9E; --grey-900: #333333;
+    --grey-0: #FFFFFF; --grey-50: #FAFAFA; --grey-100: #F0F0F0; --grey-400: #C4C4C4; --grey-500: #9E9E9E;
+    --grey-700: #666666; --grey-900: #333333;
 
     /* 以下是截圖取色，設計 token 裡沒有 */
     --avatar-bg: #FDE4DA;        /* 個案頭像底色 */
@@ -22,6 +24,15 @@
     --step-line: #F9E1E1;        /* 步驟框線 */
     --step-no-from: #F59E9E;     /* 步驟編號圓圈（左上到右下漸層） */
     --step-no-to: #FCD7D7;
+    --kind-done: #7BC235;        /* 備註狀態「完成指派」（後臺截圖取色） */
+    --line-table: #DADADA;       /* 備註列表外框與分隔線（同後臺） */
+    --border-input: #CBCBCB;     /* 輸入框（同後臺） */
+
+    /* 截圖裡看不到的狀態，原型自訂（同後臺） */
+    --teal-hover: #EAF7FB;
+    --red-hover: #FDEDED;
+    --row-hover: #F5F5F5;
+    --focus-ring: 0 0 0 2px rgba(25, 170, 209, .25);
 
     --font-body: "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft JhengHei", sans-serif;
   }
@@ -29,8 +40,10 @@
   *, *::before, *::after { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
   body { margin: 0; min-height: 100vh; background: var(--grey-50); font-family: var(--font-body); font-size: 14px; line-height: 1.5; color: var(--grey-900); }
-  button { font: inherit; color: inherit; cursor: pointer; }
+  button, input, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
   button:focus-visible { outline: 2px solid var(--teal-700); outline-offset: 2px; }
+  [hidden] { display: none !important; }
   .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
   /* ---------- 頁首：院徽＋平台名稱，右邊是登入的人 ---------- */
@@ -62,6 +75,7 @@
   .case-meta svg { flex: none; color: var(--teal-300); }
   .case-meta .ico-phone { color: var(--icon-phone); }
   .case-more { display: block; margin: 28px auto 0; }
+  .case-notes { display: block; margin: 8px auto 0; }   /* 新增：查看個案備註 */
 
   /* ---------- 緊急醫療通報卡 ---------- */
   .report { overflow: hidden; }   /* 紅色標題的上緣跟著卡片圓角 */
@@ -94,6 +108,94 @@
   .step-btn:disabled:hover { background: var(--red-300); }
   .report-ft { margin-top: 24px; text-align: center; }
 
+  /* ---------- 個案備註（新增）：對話框比照後臺的備註（寬 640、離畫面頂端 22、內距 24、遮罩 30% 黑、按鈕 100×34） ----------
+     備註是跟著個案、不是跟著緊急醫療通報，所以用個案資料卡的藍色，不用通報的紅色 */
+  .mdl {
+    width: min(640px, calc(100vw - 32px)); max-height: calc(100% - 44px); margin: 22px auto auto; padding: 24px; overflow: auto;
+    border: 0; border-radius: 6px; background: var(--grey-0); color: var(--grey-900); box-shadow: 0 4px 16px rgba(0, 0, 0, .15);
+  }
+  .mdl-sm { width: min(420px, calc(100vw - 32px)); }
+  .mdl::backdrop { background: rgba(0, 0, 0, .3); }
+  .mdl-title { margin: 0 0 14px; font-size: 20px; line-height: 30px; font-weight: 500; }
+  .mdl-msg { margin: 0; }
+  .mdl-field + .mdl-field { margin-top: 16px; }
+  .mdl-label { display: block; margin: 0 0 4px; font-size: 14px; line-height: 20px; font-weight: 500; }
+  .mdl-ft { display: flex; align-items: center; justify-content: flex-end; gap: 16px; margin-top: 16px; }
+  .mdl-view .mdl-ft { margin-top: 30px; }
+  .mdl-sm .mdl-ft { margin-top: 24px; }
+  .mbtn {
+    flex: none; width: 100px; height: 34px; padding: 0 8px; border: 1px solid var(--teal-300); border-radius: 4px;
+    background: var(--teal-300); color: #fff; font-size: 14px; font-weight: 500; white-space: nowrap;
+  }
+  .mbtn:hover { border-color: var(--teal-500); background: var(--teal-500); }
+  .mbtn-auto { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: auto; padding: 0 14px; }
+  .mbtn-cancel { border-color: var(--border-input); background: var(--grey-0); color: var(--grey-900); }
+  .mbtn-cancel:hover { border-color: var(--border-input); background: var(--grey-100); }
+  .mbtn-danger { border-color: var(--red-300); background: var(--red-300); }
+  .mbtn-danger:hover { border-color: var(--red-500); background: var(--red-500); }
+  .ob {
+    height: 34px; padding: 0 12px; border: 1px solid var(--teal-300); border-radius: 4px;
+    background: var(--grey-0); color: var(--teal-300); font-size: 14px; white-space: nowrap;
+  }
+  .ob:hover { background: var(--teal-hover); }
+  .ob-danger { border-color: var(--red-300); color: var(--red-300); }
+  .ob-danger:hover { background: var(--red-hover); }
+
+  /* 備註列表：對話框裡標題、數量列、關閉鈕固定，只有列表捲動 */
+  .mdl-notes { width: min(720px, calc(100vw - 32px)); overflow: hidden; }
+  .mdl-notes[open] { display: flex; flex-direction: column; }
+  .mdl-notes > * { flex: none; }
+  .notes-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .note-count { margin: 0; color: var(--grey-700); }
+  .mdl-notes > .note-box { flex: 0 1 auto; min-height: 0; overflow: auto; margin-top: 12px; border: 1px solid var(--line-table); border-radius: 4px; }
+  .note-list { margin: 0; padding: 0; list-style: none; }
+  .note-item {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 16px;
+    padding: 14px 16px; border-bottom: 1px solid var(--line-table); cursor: pointer;   /* 點整則等於按「檢視」 */
+  }
+  .note-item:last-child { border-bottom: 0; }
+  @media (hover: hover) { .note-item:hover { background: var(--row-hover); } }
+  .note-text { margin: 0; line-height: 20px; overflow-wrap: anywhere; }   /* 換行在列表顯示成空白，只有檢視照原樣換行 */
+  .note-meta { display: flex; flex-wrap: wrap; gap: 0 16px; margin: 0; font-size: 12px; line-height: 18px; color: var(--grey-500); }
+  .note-item .acts { grid-column: 2; grid-row: 1 / span 2; display: flex; gap: 8px; }
+  .note-empty { margin: 0; padding: 32px 16px; text-align: center; color: var(--grey-500); }
+
+  /* 新增／編輯的欄位（同後臺） */
+  .req { color: var(--red-300); }
+  .ctl {
+    display: block; width: 100%; height: 34px; padding: 0 9px; border: 1px solid var(--border-input); border-radius: 4px; outline: 0;
+    background: var(--grey-0); font-size: 14px; color: var(--grey-900);
+  }
+  .ctl::placeholder { color: var(--grey-500); }
+  .ctl:focus-visible { border-color: var(--teal-300); box-shadow: var(--focus-ring); }
+  .ctl.is-invalid { border-color: var(--red-300); }
+  textarea.ctl { height: 134px; padding: 7px 9px; line-height: 22px; resize: vertical; }
+  .ctl-wrap { position: relative; }
+  .ctl-wrap .ctl { padding-right: 40px; }
+  .ctl-ico { position: absolute; top: 0; right: 0; display: grid; place-items: center; width: 28px; height: 34px; }
+  /* 備註時間：文字框可直接打，日曆鈕叫出瀏覽器內建的日期時間選擇器（藏起來的 datetime-local） */
+  .ctl-ico-btn { padding: 0; border: 0; background: transparent; color: var(--grey-900); }
+  .ctl-ico-btn:focus-visible { outline: 2px solid var(--teal-700); outline-offset: -4px; }
+  .picker { position: absolute; right: 0; bottom: 0; width: 1px; height: 1px; padding: 0; border: 0; opacity: 0; pointer-events: none; }
+  .err { margin: 4px 0 0; font-size: 12px; line-height: 18px; color: var(--red-500); }
+
+  /* 檢視：灰色標籤＋內容；備註狀態是名稱後面一個 16px 色塊 */
+  .view-list { margin: 0; }
+  .view-field + .view-field { margin-top: 16px; }
+  .view-label { line-height: 20px; color: var(--grey-500); }
+  .view-value { margin: 4px 0 0; line-height: 20px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .status-value { display: inline-flex; align-items: center; gap: 8px; vertical-align: top; }
+  .swatch { flex: none; width: 16px; height: 16px; }
+
+  /* 提示放在備註對話框裡（對話框開著時，外面的東西會被遮罩蓋住、也不會被報讀） */
+  .toast {
+    position: fixed; left: 50%; bottom: 32px; z-index: 100; transform: translateX(-50%);
+    max-width: calc(100vw - 32px); padding: 10px 20px; border-radius: 4px;
+    background: rgba(51, 51, 51, .92); color: #fff; font-size: 14px;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .toast.is-on { opacity: 1; }
+
   /* ---------- 手機（截圖沒有，原型自訂） ---------- */
   @media (max-width: 760px) {
     .hd { height: 64px; padding: 0 16px; }
@@ -112,6 +214,13 @@
     .report-art { display: none; }   /* 裝飾插圖，手機上沒有位置 */
     .steps { margin: 24px 0 0 4px; }
     .step + .step { margin-top: 12px; }
+
+    /* 備註：對話框內距縮小、按鈕寬度跟著字；每一則改成內容、備註人與時間、按鈕由上而下 */
+    .mdl { max-height: calc(100% - 32px); margin-top: 16px; padding: 20px 16px; }
+    .mdl-ft { gap: 8px; }
+    .mbtn { width: auto; min-width: 72px; padding: 0 12px; }
+    .note-item { grid-template-columns: minmax(0, 1fr); padding: 14px 12px; }
+    .note-item .acts { grid-column: 1; grid-row: auto; margin-top: 6px; }
   }
   @media (max-width: 380px) {
     .hd-brand { font-size: 15px; }
@@ -167,6 +276,8 @@
       </ul>
     </div>
     <button type="button" class="link case-more">查看基本資料</button>
+    <!-- 新增：點開是個案備註的對話框 -->
+    <button type="button" class="link case-notes" id="notes-open" aria-haspopup="dialog">查看個案備註</button>
   </section>
 
   <section class="card report" aria-labelledby="report-hd">
@@ -259,5 +370,332 @@
   </section>
 </main>
 
+<!-- 個案備註（新增）：列表＋新增備註；每一則可檢視、編輯、移除，點這一則按鈕以外的地方也是檢視。
+     下面幾個對話框會疊在這個對話框上面，關掉後回到列表 -->
+<dialog class="mdl mdl-notes" id="notes-dialog" aria-labelledby="notes-title">
+  <h2 class="mdl-title" id="notes-title">個案備註</h2>
+  <div class="notes-bar">
+    <p class="note-count" id="note-count"></p>
+    <button type="button" class="mbtn mbtn-auto" id="note-add">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg>
+      新增備註
+    </button>
+  </div>
+  <div class="note-box">
+    <ul class="note-list" id="note-list"></ul>
+    <p class="note-empty" id="note-empty" hidden>還沒有備註，按「新增備註」寫下第一則。</p>
+  </div>
+  <div class="mdl-ft">
+    <button type="button" class="mbtn mbtn-cancel" data-close>關閉</button>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</dialog>
+
+<!-- 檢視備註：同後臺，顯示備註內容／備註人／備註狀態／備註時間／最後更新時間 -->
+<dialog class="mdl mdl-view" id="view-dialog" aria-labelledby="view-dialog-title">
+  <h2 class="mdl-title" id="view-dialog-title">檢視備註</h2>
+  <dl class="view-list">
+    <div class="view-field"><dt class="view-label">備註內容</dt><dd class="view-value" id="view-text"></dd></div>
+    <div class="view-field"><dt class="view-label">備註人</dt><dd class="view-value" id="view-author"></dd></div>
+    <div class="view-field"><dt class="view-label">備註狀態</dt><dd class="view-value" id="view-status"></dd></div>
+    <div class="view-field"><dt class="view-label">備註時間</dt><dd class="view-value" id="view-time"></dd></div>
+    <div class="view-field"><dt class="view-label">最後更新時間</dt><dd class="view-value" id="view-updated"></dd></div>
+  </dl>
+  <div class="mdl-ft">
+    <button type="button" class="mbtn" data-close>關閉</button>
+  </div>
+</dialog>
+
+<!-- 新增／編輯備註：同後臺，只有內容與備註時間 -->
+<dialog class="mdl" id="note-dialog" aria-labelledby="note-dialog-title">
+  <form id="note-form" novalidate>
+    <h2 class="mdl-title" id="note-dialog-title">新增備註</h2>
+
+    <div class="mdl-field">
+      <label class="mdl-label" for="note-text">內容<span class="req">*</span></label>
+      <textarea class="ctl" id="note-text" aria-describedby="note-text-error"></textarea>
+      <p class="err" id="note-text-error" hidden></p>
+    </div>
+
+    <div class="mdl-field">
+      <label class="mdl-label" for="note-time">備註時間<span class="req">*</span></label>
+      <div class="ctl-wrap">
+        <input class="ctl" id="note-time" type="text" inputmode="numeric" placeholder="YYYY/MM/DD HH:mm" autocomplete="off" aria-describedby="note-time-error">
+        <button type="button" class="ctl-ico ctl-ico-btn" id="note-time-pick" aria-label="從日曆選擇備註時間">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 1.5a1 1 0 0 1 1 1V4h8V2.5a1 1 0 1 1 2 0V4h2a1.5 1.5 0 0 1 1.5 1.5V8h-19V5.5A1.5 1.5 0 0 1 4 4h2V2.5a1 1 0 0 1 1-1z"/><path fill-rule="evenodd" d="M2.5 9.5h19v11a1.5 1.5 0 0 1-1.5 1.5H4a1.5 1.5 0 0 1-1.5-1.5zM5.5 12h3v2.5h-3zm5 0h3v2.5h-3zm5 0h3v2.5h-3zm-10 4.5h3V19h-3zm5 0h3V19h-3zm5 0h3V19h-3z"/></svg>
+        </button>
+        <input class="picker" id="note-time-native" type="datetime-local" tabindex="-1" aria-hidden="true">
+      </div>
+      <p class="err" id="note-time-error" hidden></p>
+    </div>
+
+    <div class="mdl-ft">
+      <button type="button" class="mbtn mbtn-cancel" data-close>取消</button>
+      <button type="submit" class="mbtn" id="note-submit">送出</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- 移除備註前確認 -->
+<dialog class="mdl mdl-sm" id="remove-dialog" aria-labelledby="remove-dialog-title">
+  <h2 class="mdl-title" id="remove-dialog-title">移除備註</h2>
+  <p class="mdl-msg">確定要移除這則備註嗎？移除後無法復原。</p>
+  <div class="mdl-ft">
+    <button type="button" class="mbtn mbtn-cancel" data-close>取消</button>
+    <button type="button" class="mbtn mbtn-danger" id="remove-confirm">移除</button>
+  </div>
+</dialog>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- 個案備註（新增） ----------
+     跟後臺是同一份資料：同一個 sessionStorage 鍵、同一組預設備註，在切換瀏覽頁裡前後臺切換時看得到對方改過的備註。
+     欄位、檢查與顯示規則都照後臺（back/index.html），改規則時兩邊要一起改 */
+  var CURRENT_USER = "陳怡君";   // 頁首登入的人
+  // 欄位：text 內容、author 備註人、status 狀態（KINDS 的鍵，"" 是沒有狀態；只在檢視顯示，新增／編輯不能改）、time 備註時間、updated 最後更新時間
+  var NOTE_KEY = "tsghb-commend:notes-v3";
+  var DEFAULT_NOTES = [
+    { id: "n2", text: "個案表示白天上班不便接聽電話，聯繫請於 18:00 後撥打。", author: "陳怡君", status: "", time: "2026/11/04 09:12", updated: "2026/11/04 09:12" },
+    { id: "n1", text: "母親同意陪同回診，已提醒下次門診時間。", author: "林志豪", status: "done", time: "2026/11/03 16:40", updated: "2026/11/03 16:45" }
+  ];
+  // 檢視裡「備註狀態」的名稱與色塊（同後臺：沿用通報歷程種類）
+  var KINDS = {
+    done: { name: "完成指派", color: "var(--kind-done)" },
+    form: { name: "更新表單", color: "var(--teal-300)" }
+  };
+
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+
+  function button(text, cls) {
+    var b = el("button", cls, text);
+    b.type = "button";
+    return b;
+  }
+
+  function loadNotes() {
+    try {
+      var saved = JSON.parse(sessionStorage.getItem(NOTE_KEY) || "null");
+      if (Array.isArray(saved)) return saved;
+    } catch (err) {}
+    return JSON.parse(JSON.stringify(DEFAULT_NOTES));
+  }
+
+  function saveNotes() {
+    try { sessionStorage.setItem(NOTE_KEY, JSON.stringify(notes)); } catch (err) {}
+  }
+
+  // 時間一律是「YYYY/MM/DD HH:mm」
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function fmt(d) {
+    return d.getFullYear() + "/" + pad(d.getMonth() + 1) + "/" + pad(d.getDate()) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+  function now() { return fmt(new Date()); }
+  // 格式不對，或日期時間不存在（2/30、25:00 這種會被 Date 進位成別的時間）就回傳 null
+  function parseTime(s) {
+    var m = /^(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})$/.exec(s);
+    if (!m) return null;
+    var d = new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5]);
+    return fmt(d) === s ? d : null;
+  }
+
+  var notes = loadNotes();
+  var notesDialog = document.getElementById("notes-dialog");
+  var noteList = document.getElementById("note-list");
+  var noteEmpty = document.getElementById("note-empty");
+  var noteCount = document.getElementById("note-count");
+  var noteAdd = document.getElementById("note-add");
+
+  // 檢視用：名稱＋16px 色塊
+  function statusValue(status) {
+    var k = KINDS[status];
+    var wrap = el("span", "status-value");
+    wrap.appendChild(el("span", null, k ? k.name : "-"));
+    if (k) {
+      var swatch = el("span", "swatch");
+      swatch.style.background = k.color;
+      wrap.appendChild(swatch);
+    }
+    return wrap;
+  }
+
+  // 新的在上面；編輯不改順序。列表放內容、備註人、最後更新時間（同後臺），內容裡的換行換成空白排成一段，檢視才照原樣換行
+  function renderNotes() {
+    noteList.textContent = "";
+    notes.forEach(function (n) {
+      var li = el("li", "note-item");
+      li.setAttribute("data-id", n.id);
+      li.appendChild(el("p", "note-text", n.text.replace(/\n/g, " ")));
+      var meta = el("p", "note-meta");
+      meta.appendChild(el("span", null, "備註人：" + n.author));
+      meta.appendChild(el("span", null, "最後更新時間：" + n.updated));
+      li.appendChild(meta);
+      var acts = el("div", "acts");
+      [["檢視", "ob", "data-view"], ["編輯", "ob", "data-edit"], ["移除", "ob ob-danger", "data-remove"]].forEach(function (a) {
+        var b = button(a[0], a[1]);
+        b.setAttribute(a[2], n.id);
+        acts.appendChild(b);
+      });
+      li.appendChild(acts);
+      noteList.appendChild(li);
+    });
+    noteEmpty.hidden = notes.length > 0;
+    noteCount.textContent = "共 " + notes.length + " 則備註";
+  }
+
+  function findNote(id) {
+    return notes.filter(function (n) { return n.id === id; })[0];
+  }
+
+  var toastEl = document.getElementById("toast");
+  var toastTimer;
+  function toast(message) {
+    toastEl.textContent = message;
+    toastEl.classList.add("is-on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove("is-on"); }, 2000);
+  }
+
+  // 所有對話框共用：點 data-close 或對話框外面（::backdrop）就關閉，Esc 由瀏覽器處理（只關最上面那個）。
+  // 外面要「按下」也在外面才算，免得在文字框裡拖曳選字、放開時滑到外面就被關掉
+  document.querySelectorAll("dialog").forEach(function (dlg) {
+    var downOutside = false;
+    dlg.addEventListener("pointerdown", function (e) { downOutside = e.target === dlg; });
+    dlg.addEventListener("click", function (e) {
+      if ((e.target === dlg && downOutside) || e.target.closest("[data-close]")) dlg.close();
+    });
+  });
+
+  // 查看個案備註：每次打開都重讀一次資料，在後臺改過的也看得到
+  document.getElementById("notes-open").addEventListener("click", function () {
+    notes = loadNotes();
+    renderNotes();
+    notesDialog.showModal();
+  });
+
+  /* 檢視 */
+  var viewDialog = document.getElementById("view-dialog");
+
+  function openView(note) {
+    document.getElementById("view-text").textContent = note.text;
+    document.getElementById("view-author").textContent = note.author;
+    var status = document.getElementById("view-status");
+    status.textContent = "";
+    status.appendChild(statusValue(note.status));
+    document.getElementById("view-time").textContent = note.time;
+    document.getElementById("view-updated").textContent = note.updated;
+    viewDialog.showModal();
+  }
+
+  /* 新增／編輯 */
+  var noteDialog = document.getElementById("note-dialog");
+  var noteForm = document.getElementById("note-form");
+  var noteTitle = document.getElementById("note-dialog-title");
+  var noteSubmit = document.getElementById("note-submit");
+  var noteText = document.getElementById("note-text");
+  var noteTextError = document.getElementById("note-text-error");
+  var noteTime = document.getElementById("note-time");
+  var noteTimeError = document.getElementById("note-time-error");
+  var noteTimeNative = document.getElementById("note-time-native");
+  var editingId = null;
+
+  function setError(input, errorEl, message) {
+    input.classList.toggle("is-invalid", !!message);
+    if (message) input.setAttribute("aria-invalid", "true"); else input.removeAttribute("aria-invalid");
+    errorEl.textContent = message;
+    errorEl.hidden = !message;
+  }
+
+  function openEditor(note) {
+    editingId = note ? note.id : null;
+    noteTitle.textContent = note ? "編輯備註" : "新增備註";
+    noteSubmit.textContent = note ? "儲存" : "送出";
+    noteText.value = note ? note.text : "";
+    noteTime.value = note ? note.time : now();
+    setError(noteText, noteTextError, "");
+    setError(noteTime, noteTimeError, "");
+    noteDialog.showModal();
+    noteText.focus();
+  }
+
+  noteText.addEventListener("input", function () {
+    if (noteText.value.trim()) setError(noteText, noteTextError, "");
+  });
+  noteTime.addEventListener("input", function () { setError(noteTime, noteTimeError, ""); });
+
+  // 日曆鈕：把文字框的時間帶進藏起來的 datetime-local 再叫出選擇器，選完寫回文字框
+  document.getElementById("note-time-pick").addEventListener("click", function () {
+    var d = parseTime(noteTime.value.trim());
+    noteTimeNative.value = d ? fmt(d).replace(/\//g, "-").replace(" ", "T") : "";
+    try { noteTimeNative.showPicker(); } catch (err) { noteTime.focus(); }
+  });
+  noteTimeNative.addEventListener("change", function () {
+    if (!noteTimeNative.value) return;
+    noteTime.value = noteTimeNative.value.slice(0, 16).replace(/-/g, "/").replace("T", " ");
+    setError(noteTime, noteTimeError, "");
+  });
+
+  noteForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var text = noteText.value.trim();
+    var time = noteTime.value.trim();
+    var timeError = !time ? "請輸入備註時間" : parseTime(time) ? "" : "備註時間的格式是 YYYY/MM/DD HH:mm";
+    setError(noteText, noteTextError, text ? "" : "請輸入內容");
+    setError(noteTime, noteTimeError, timeError);
+    if (!text) { noteText.focus(); return; }
+    if (timeError) { noteTime.focus(); return; }
+
+    // 沒有狀態欄位：新增的一律沒有狀態，編輯保留原本的狀態
+    var id = editingId;
+    var note = id ? findNote(id) : { id: "n" + Date.now(), author: CURRENT_USER, status: "" };
+    note.text = text;
+    note.time = time;
+    note.updated = now();
+    if (!id) notes.unshift(note);
+    saveNotes();
+    noteDialog.close();
+    renderNotes();
+    // 原本按的按鈕已經重畫掉了，焦點放回這則備註的「編輯」（新增時放回「新增備註」）
+    (id ? noteList.querySelector('[data-edit="' + id + '"]') : noteAdd).focus();
+    toast(id ? "已更新備註" : "已新增備註");
+  });
+
+  noteAdd.addEventListener("click", function () { openEditor(null); });
+
+  /* 每一則的檢視／編輯／移除；點這一則按鈕以外的地方也是檢視 */
+  var removeDialog = document.getElementById("remove-dialog");
+  var removingId = null;
+
+  noteList.addEventListener("click", function (e) {
+    var view = e.target.closest("[data-view]");
+    var edit = e.target.closest("[data-edit]");
+    var remove = e.target.closest("[data-remove]");
+    var item = e.target.closest(".note-item");
+    if (view) openView(findNote(view.getAttribute("data-view")));
+    else if (edit) openEditor(findNote(edit.getAttribute("data-edit")));
+    else if (remove) {
+      removingId = remove.getAttribute("data-remove");
+      removeDialog.showModal();
+    }
+    // 在這一則上拖曳選字、放開時有選到字，是要複製而不是要檢視
+    else if (item && !String(window.getSelection())) openView(findNote(item.getAttribute("data-id")));
+  });
+
+  document.getElementById("remove-confirm").addEventListener("click", function () {
+    notes = notes.filter(function (n) { return n.id !== removingId; });
+    saveNotes();
+    removeDialog.close();
+    renderNotes();
+    noteAdd.focus();
+    toast("已移除備註");
+  });
+})();
+</script>
 </body>
 </html>
