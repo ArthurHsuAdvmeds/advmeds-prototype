@@ -25,7 +25,7 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
 | `tsghb-middleware/` | 三總北投 | HIS 整合示範（HIS 門診畫面開啟個案紀錄） | 單檔 HTML | — |
 | `tsghb-ppt/` | 三總北投 | 平台網頁版簡報，圖片在 `assets/` | 單檔 HTML | — |
 | `spec/tsghb_doctor_sub/` | 三總北投 | 醫師次專科欄位：帳號資料新增「次專科」多選下拉與市話分機，通報前臺的編輯帳號（`front/`）與後臺的基本資料（`back/`）各一頁、共用 `assets/form.css`／`form.js`；入口 `index.html` 是切換瀏覽頁（iframe 切前後臺與電腦／手機寬度）；設計稿在 `design/` | HTML + 共用 CSS／JS | [CLAUDE.md](spec/tsghb_doctor_sub/CLAUDE.md) |
-| `spec/tsghb_commend/` | 三總北投 | 個案頁「備註」分頁：照正式系統截圖仿製後臺個案頁（個案資料卡＋通報史及處遇歷程），下方分頁最右側新增「備註」（檢視／新增／編輯／移除，存 sessionStorage；列表只顯示備註內容／備註人／備註狀態／最後更新時間，對話框照正式系統的「個案追蹤紀錄」但不含共照群組）；網址 `#note` 直接開備註。參考截圖含個資，不進 repo，畫面資料一律虛構 | 單檔 HTML | [CLAUDE.md](spec/tsghb_commend/CLAUDE.md) |
+| `spec/tsghb_commend/` | 三總北投 | 個案頁「備註」分頁：照正式系統截圖仿製後臺個案頁（個案資料卡＋通報史及處遇歷程），下方分頁最右側新增「備註」（檢視／新增／編輯／移除，存 sessionStorage；列表只顯示備註內容／備註人／最後更新時間，點整列等於檢視；檢視另有備註狀態與備註時間；新增／編輯的對話框照正式系統的「個案追蹤紀錄」，只留內容、狀態、備註時間）；網址 `#note` 直接開備註。參考截圖含個資，不進 repo，畫面資料一律虛構 | 單檔 HTML | [CLAUDE.md](spec/tsghb_commend/CLAUDE.md) |
 | `spec/nhri_ms/` | 國衛院 | 肌少症評估量表（AWGS 2025），`write/` 填寫頁、`result/` 結果頁 | dc-runtime + React | [CLAUDE.md](spec/nhri_ms/CLAUDE.md) |
 | `spec/nhri_elearing_room/` | 國衛院 | ICOPE 學習小教室 | 單檔 HTML | — |
 | `spec/nhri_elearing/` | 國衛院 | ICOPE 衛教推播邏輯一覽（給 PM 對照） | 單檔 HTML | — |
