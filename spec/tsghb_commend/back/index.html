@@ -181,6 +181,7 @@
   .tbl-note { min-width: 680px; }
   .tbl-note col:nth-child(2) { width: 120px; }
   .tbl-note col:nth-child(3) { width: 170px; }
+  .tbl-note .acts { justify-content: flex-start; }   /* 別人的備註只有「檢視」，靠左才會跟其他列的「檢視」對齊 */
   .tbl-note tbody tr { cursor: pointer; }   /* 點整列等於按「檢視」 */
   @media (hover: hover) { .tbl-note tbody tr:hover { background: var(--row-hover); } }
   .note-text { overflow-wrap: anywhere; }   /* 換行在列表顯示成空白（照正式系統），只有檢視照原樣換行 */
@@ -220,9 +221,6 @@
   .view-label { line-height: 20px; color: var(--grey-500); }
   .view-value { margin: 4px 0 0; line-height: 20px; white-space: pre-wrap; overflow-wrap: anywhere; }
 
-  /* 檢視的備註狀態：名稱後面一個 16px 色塊 */
-  .status-value { display: inline-flex; align-items: center; gap: 8px; vertical-align: top; }
-  .swatch { flex: none; width: 16px; height: 16px; }
   /* 備註時間：文字框可直接打，日曆鈕叫出瀏覽器內建的日期時間選擇器（藏起來的 datetime-local） */
   .ctl-ico-btn { padding: 0; border: 0; background: transparent; color: var(--grey-900); pointer-events: auto; cursor: pointer; }
   .ctl-ico-btn:focus-visible { outline: 2px solid var(--teal-700); outline-offset: -4px; }
@@ -270,7 +268,6 @@
       display: inline-block; margin: 6px 10px 0 0; font-size: 12px; color: var(--grey-500); vertical-align: middle;
     }
     .tbl-note .col-act { width: auto; margin-top: 10px; }
-    .tbl-note .acts { justify-content: flex-start; }
 
     .mdl { max-height: calc(100% - 32px); margin-top: 16px; padding: 20px 16px; }
     .mdl-ft { gap: 8px; }
@@ -445,13 +442,12 @@
   </section>
 </main>
 
-<!-- 檢視備註：照「檢視個案追蹤紀錄」（正式系統的「狀態時間」在這裡叫「備註時間」），顯示備註內容／備註人／備註狀態／備註時間／最後更新時間 -->
+<!-- 檢視備註：照「檢視個案追蹤紀錄」（正式系統的「狀態時間」在這裡叫「備註時間」），顯示備註內容／備註人／備註時間／最後更新時間 -->
 <dialog class="mdl mdl-view" id="view-dialog" aria-labelledby="view-dialog-title">
   <h2 class="mdl-title" id="view-dialog-title">檢視備註</h2>
   <dl class="view-list">
     <div class="view-field"><dt class="view-label">備註內容</dt><dd class="view-value" id="view-text"></dd></div>
     <div class="view-field"><dt class="view-label">備註人</dt><dd class="view-value" id="view-author"></dd></div>
-    <div class="view-field"><dt class="view-label">備註狀態</dt><dd class="view-value" id="view-status"></dd></div>
     <div class="view-field"><dt class="view-label">備註時間</dt><dd class="view-value" id="view-time"></dd></div>
     <div class="view-field"><dt class="view-label">最後更新時間</dt><dd class="view-value" id="view-updated"></dd></div>
   </dl>
@@ -512,10 +508,10 @@
 
   /* ---------- 通報史及處遇歷程（照截圖的格式） ---------- */
   var REPORT_TYPE = "緊急醫療(三總北投)";
-  // 通報歷程種類；備註檢視裡的「備註狀態」也用這份清單顯示（新增／編輯已經沒有狀態欄位）
+  // 通報歷程種類
   var KINDS = {
-    done: { name: "完成指派", cls: "kind-done", color: "var(--kind-done)" },
-    form: { name: "更新表單", cls: "kind-form", color: "var(--teal-300)" }
+    done: { name: "完成指派", cls: "kind-done" },
+    form: { name: "更新表單", cls: "kind-form" }
   };
   var HISTORY = [
     { info: "已完成個案：" + CASE_NAME + " 的指派", kind: "done", time: "2026/11/04 14:31" },
@@ -531,12 +527,12 @@
   ];
 
   /* ---------- 備註：存在 sessionStorage，重新整理還在、關掉分頁就清空 ---------- */
-  // 欄位：text 內容、author 備註人、status 狀態（KINDS 的鍵，"" 是沒有狀態；只在檢視顯示，新增／編輯不能改）、time 備註時間、updated 最後更新時間。
-  // 欄位改過就換鍵名（v2 加了狀態、v3 狀態時間改成備註時間），免得讀到舊格式
-  var NOTE_KEY = "tsghb-commend:notes-v3";
+  // 欄位：text 內容、author 備註人、time 備註時間、updated 最後更新時間。通報前臺（front/index.html）用同一個鍵、同一組預設備註。
+  // 欄位改過就換鍵名（v2 加了狀態、v3 狀態時間改成備註時間、v4 拿掉狀態），免得讀到舊格式
+  var NOTE_KEY = "tsghb-commend:notes-v4";
   var DEFAULT_NOTES = [
-    { id: "n2", text: "個案表示白天上班不便接聽電話，聯繫請於 18:00 後撥打。", author: CURRENT_USER, status: "", time: "2026/11/04 09:12", updated: "2026/11/04 09:12" },
-    { id: "n1", text: "母親同意陪同回診，已提醒下次門診時間。", author: "林志豪", status: "done", time: "2026/11/03 16:40", updated: "2026/11/03 16:45" }
+    { id: "n2", text: "個案表示白天上班不便接聽電話，聯繫請於 18:00 後撥打。", author: CURRENT_USER, time: "2026/11/04 09:12", updated: "2026/11/04 09:12" },
+    { id: "n1", text: "母親同意陪同回診，已提醒下次門診時間。", author: "林志豪", time: "2026/11/03 16:40", updated: "2026/11/03 16:45" }
   ];
 
   function el(tag, cls, text) {
@@ -652,21 +648,10 @@
   var noteCount = document.getElementById("note-count");
   var noteAdd = document.getElementById("note-add");
 
-  // 檢視用：名稱＋16px 色塊（照「檢視個案追蹤紀錄」）
-  function statusValue(status) {
-    var k = KINDS[status];
-    var wrap = el("span", "status-value");
-    wrap.appendChild(el("span", null, k ? k.name : "-"));
-    if (k) {
-      var swatch = el("span", "swatch");
-      swatch.style.background = k.color;
-      wrap.appendChild(swatch);
-    }
-    return wrap;
-  }
+  // 前後臺都一樣：只能編輯、移除自己建立的備註，別人的只能檢視
+  function isMine(note) { return note.author === CURRENT_USER; }
 
-  // 新的在上面；編輯不改順序。狀態只在檢視裡看得到，列表不放。
-  // 內容裡的換行在列表換成空白排成一段（照正式系統），檢視才照原樣換行
+  // 新的在上面；編輯不改順序。內容裡的換行在列表換成空白排成一段（照正式系統），檢視才照原樣換行
   function renderNotes() {
     noteRows.textContent = "";
     notes.forEach(function (n) {
@@ -675,12 +660,13 @@
       tr.appendChild(el("td", "note-text", n.text.replace(/\n/g, " ")));
       tr.appendChild(el("td", "nowrap", n.author));
       tr.appendChild(el("td", "nowrap", n.updated));
-      var acts = [["檢視", "ob", "data-view"], ["編輯", "ob", "data-edit"], ["移除", "ob ob-danger", "data-remove"]].map(function (a) {
+      var acts = [["檢視", "ob", "data-view"]];
+      if (isMine(n)) acts.push(["編輯", "ob", "data-edit"], ["移除", "ob ob-danger", "data-remove"]);
+      tr.appendChild(actionCell(acts.map(function (a) {
         var b = button(a[0], a[1]);
         b.setAttribute(a[2], n.id);
         return b;
-      });
-      tr.appendChild(actionCell(acts));
+      })));
       noteRows.appendChild(tr);
     });
     noteEmpty.hidden = notes.length > 0;
@@ -716,9 +702,6 @@
   function openView(note) {
     document.getElementById("view-text").textContent = note.text;
     document.getElementById("view-author").textContent = note.author;
-    var status = document.getElementById("view-status");
-    status.textContent = "";
-    status.appendChild(statusValue(note.status));
     document.getElementById("view-time").textContent = note.time;
     document.getElementById("view-updated").textContent = note.updated;
     viewDialog.showModal();
@@ -782,9 +765,8 @@
     if (!text) { noteText.focus(); return; }
     if (timeError) { noteTime.focus(); return; }
 
-    // 沒有狀態欄位：新增的一律沒有狀態，編輯保留原本的狀態
     var id = editingId;
-    var note = id ? findNote(id) : { id: "n" + Date.now(), author: CURRENT_USER, status: "" };
+    var note = id ? findNote(id) : { id: "n" + Date.now(), author: CURRENT_USER };
     note.text = text;
     note.time = time;
     note.updated = now();

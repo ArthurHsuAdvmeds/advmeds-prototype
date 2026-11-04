@@ -24,7 +24,6 @@
     --step-line: #F9E1E1;        /* 步驟框線 */
     --step-no-from: #F59E9E;     /* 步驟編號圓圈（左上到右下漸層） */
     --step-no-to: #FCD7D7;
-    --kind-done: #7BC235;        /* 備註狀態「完成指派」（後臺截圖取色） */
     --line-table: #DADADA;       /* 備註列表外框與分隔線（同後臺） */
     --border-input: #CBCBCB;     /* 輸入框（同後臺） */
 
@@ -148,9 +147,10 @@
   .notes-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .note-count { margin: 0; color: var(--grey-700); }
   .mdl-notes > .note-box { flex: 0 1 auto; min-height: 0; overflow: auto; margin-top: 12px; border: 1px solid var(--line-table); border-radius: 4px; }
-  .note-list { margin: 0; padding: 0; list-style: none; }
+  /* 按鈕欄用 subgrid 讓每一則共用同一欄：別人的備註只有「檢視」，也會跟其他則的「檢視」對齊 */
+  .note-list { display: grid; grid-template-columns: minmax(0, 1fr) auto; margin: 0; padding: 0; list-style: none; }
   .note-item {
-    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 16px;
+    grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; gap: 4px 16px;
     padding: 14px 16px; border-bottom: 1px solid var(--line-table); cursor: pointer;   /* 點整則等於按「檢視」 */
   }
   .note-item:last-child { border-bottom: 0; }
@@ -179,13 +179,11 @@
   .picker { position: absolute; right: 0; bottom: 0; width: 1px; height: 1px; padding: 0; border: 0; opacity: 0; pointer-events: none; }
   .err { margin: 4px 0 0; font-size: 12px; line-height: 18px; color: var(--red-500); }
 
-  /* 檢視：灰色標籤＋內容；備註狀態是名稱後面一個 16px 色塊 */
+  /* 檢視：灰色標籤＋內容 */
   .view-list { margin: 0; }
   .view-field + .view-field { margin-top: 16px; }
   .view-label { line-height: 20px; color: var(--grey-500); }
   .view-value { margin: 4px 0 0; line-height: 20px; white-space: pre-wrap; overflow-wrap: anywhere; }
-  .status-value { display: inline-flex; align-items: center; gap: 8px; vertical-align: top; }
-  .swatch { flex: none; width: 16px; height: 16px; }
 
   /* 提示放在備註對話框裡（對話框開著時，外面的東西會被遮罩蓋住、也不會被報讀） */
   .toast {
@@ -219,7 +217,8 @@
     .mdl { max-height: calc(100% - 32px); margin-top: 16px; padding: 20px 16px; }
     .mdl-ft { gap: 8px; }
     .mbtn { width: auto; min-width: 72px; padding: 0 12px; }
-    .note-item { grid-template-columns: minmax(0, 1fr); padding: 14px 12px; }
+    .note-list { grid-template-columns: minmax(0, 1fr); }
+    .note-item { padding: 14px 12px; }
     .note-item .acts { grid-column: 1; grid-row: auto; margin-top: 6px; }
   }
   @media (max-width: 380px) {
@@ -391,13 +390,12 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </dialog>
 
-<!-- 檢視備註：同後臺，顯示備註內容／備註人／備註狀態／備註時間／最後更新時間 -->
+<!-- 檢視備註：同後臺，顯示備註內容／備註人／備註時間／最後更新時間 -->
 <dialog class="mdl mdl-view" id="view-dialog" aria-labelledby="view-dialog-title">
   <h2 class="mdl-title" id="view-dialog-title">檢視備註</h2>
   <dl class="view-list">
     <div class="view-field"><dt class="view-label">備註內容</dt><dd class="view-value" id="view-text"></dd></div>
     <div class="view-field"><dt class="view-label">備註人</dt><dd class="view-value" id="view-author"></dd></div>
-    <div class="view-field"><dt class="view-label">備註狀態</dt><dd class="view-value" id="view-status"></dd></div>
     <div class="view-field"><dt class="view-label">備註時間</dt><dd class="view-value" id="view-time"></dd></div>
     <div class="view-field"><dt class="view-label">最後更新時間</dt><dd class="view-value" id="view-updated"></dd></div>
   </dl>
@@ -454,17 +452,12 @@
      跟後臺是同一份資料：同一個 sessionStorage 鍵、同一組預設備註，在切換瀏覽頁裡前後臺切換時看得到對方改過的備註。
      欄位、檢查與顯示規則都照後臺（back/index.html），改規則時兩邊要一起改 */
   var CURRENT_USER = "陳怡君";   // 頁首登入的人
-  // 欄位：text 內容、author 備註人、status 狀態（KINDS 的鍵，"" 是沒有狀態；只在檢視顯示，新增／編輯不能改）、time 備註時間、updated 最後更新時間
-  var NOTE_KEY = "tsghb-commend:notes-v3";
+  // 欄位：text 內容、author 備註人、time 備註時間、updated 最後更新時間
+  var NOTE_KEY = "tsghb-commend:notes-v4";
   var DEFAULT_NOTES = [
-    { id: "n2", text: "個案表示白天上班不便接聽電話，聯繫請於 18:00 後撥打。", author: "陳怡君", status: "", time: "2026/11/04 09:12", updated: "2026/11/04 09:12" },
-    { id: "n1", text: "母親同意陪同回診，已提醒下次門診時間。", author: "林志豪", status: "done", time: "2026/11/03 16:40", updated: "2026/11/03 16:45" }
+    { id: "n2", text: "個案表示白天上班不便接聽電話，聯繫請於 18:00 後撥打。", author: "陳怡君", time: "2026/11/04 09:12", updated: "2026/11/04 09:12" },
+    { id: "n1", text: "母親同意陪同回診，已提醒下次門診時間。", author: "林志豪", time: "2026/11/03 16:40", updated: "2026/11/03 16:45" }
   ];
-  // 檢視裡「備註狀態」的名稱與色塊（同後臺：沿用通報歷程種類）
-  var KINDS = {
-    done: { name: "完成指派", color: "var(--kind-done)" },
-    form: { name: "更新表單", color: "var(--teal-300)" }
-  };
 
   function el(tag, cls, text) {
     var node = document.createElement(tag);
@@ -512,18 +505,8 @@
   var noteCount = document.getElementById("note-count");
   var noteAdd = document.getElementById("note-add");
 
-  // 檢視用：名稱＋16px 色塊
-  function statusValue(status) {
-    var k = KINDS[status];
-    var wrap = el("span", "status-value");
-    wrap.appendChild(el("span", null, k ? k.name : "-"));
-    if (k) {
-      var swatch = el("span", "swatch");
-      swatch.style.background = k.color;
-      wrap.appendChild(swatch);
-    }
-    return wrap;
-  }
+  // 前後臺都一樣：只能編輯、移除自己建立的備註，別人的只能檢視
+  function isMine(note) { return note.author === CURRENT_USER; }
 
   // 新的在上面；編輯不改順序。列表放內容、備註人、最後更新時間（同後臺），內容裡的換行換成空白排成一段，檢視才照原樣換行
   function renderNotes() {
@@ -537,7 +520,9 @@
       meta.appendChild(el("span", null, "最後更新時間：" + n.updated));
       li.appendChild(meta);
       var acts = el("div", "acts");
-      [["檢視", "ob", "data-view"], ["編輯", "ob", "data-edit"], ["移除", "ob ob-danger", "data-remove"]].forEach(function (a) {
+      var buttons = [["檢視", "ob", "data-view"]];
+      if (isMine(n)) buttons.push(["編輯", "ob", "data-edit"], ["移除", "ob ob-danger", "data-remove"]);
+      buttons.forEach(function (a) {
         var b = button(a[0], a[1]);
         b.setAttribute(a[2], n.id);
         acts.appendChild(b);
@@ -585,9 +570,6 @@
   function openView(note) {
     document.getElementById("view-text").textContent = note.text;
     document.getElementById("view-author").textContent = note.author;
-    var status = document.getElementById("view-status");
-    status.textContent = "";
-    status.appendChild(statusValue(note.status));
     document.getElementById("view-time").textContent = note.time;
     document.getElementById("view-updated").textContent = note.updated;
     viewDialog.showModal();
@@ -651,9 +633,8 @@
     if (!text) { noteText.focus(); return; }
     if (timeError) { noteTime.focus(); return; }
 
-    // 沒有狀態欄位：新增的一律沒有狀態，編輯保留原本的狀態
     var id = editingId;
-    var note = id ? findNote(id) : { id: "n" + Date.now(), author: CURRENT_USER, status: "" };
+    var note = id ? findNote(id) : { id: "n" + Date.now(), author: CURRENT_USER };
     note.text = text;
     note.time = time;
     note.updated = now();
