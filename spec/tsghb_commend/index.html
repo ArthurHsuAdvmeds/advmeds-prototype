@@ -3,863 +3,141 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>個案資料（備註分頁）— 精神醫療快速應變平台（後臺）</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<title>個案備註 — 通報前臺／後臺原型</title>
 <style>
-  /* 後臺個案頁的仿製畫面，尺寸照使用者提供的截圖（1536 寬的瀏覽器）量；下方分頁最右側新增「備註」。
-     基礎樣式是電腦版，≤1023px 篩選列改兩欄、≤600px 改單欄 */
-  :root {
-    --teal-50: #D0FCF9; --teal-300: #19AAD1; --teal-500: #1285B3; --teal-700: #0C6496;
-    --red-300: #E54B4B; --red-500: #C43643;
-    --grey-0: #FFFFFF; --grey-50: #FAFAFA; --grey-100: #F0F0F0; --grey-200: #E0E0E0; --grey-400: #C4C4C4;
-    --grey-500: #9E9E9E; --grey-700: #666666; --grey-900: #333333;
-
-    /* 以下是截圖取色，設計 token 裡沒有 */
-    --brand: #0CB9E4;            /* Header、實心按鈕、圖示、目前的分頁 */
-    --tag-reporting: #B45C15;    /* 通報中 */
-    --tag-risk-mid: #FB9B2A;     /* 中風險 */
-    --kind-done: #7BC235;        /* 完成指派 */
-    --line: #E4E4E4;             /* 個案卡分隔線、分頁列底線 */
-    --line-table: #DADADA;       /* 表格外框與列分隔線 */
-    --border-input: #CBCBCB;     /* 輸入框 */
-
-    /* 截圖裡看不到的狀態，原型自訂 */
-    --brand-hover: #0AA6CD;
-    --teal-hover: #EAF7FB;
-    --red-hover: #FDEDED;
-    --row-hover: #F5F5F5;
-    --focus-ring: 0 0 0 2px rgba(12, 185, 228, .25);
-
-    --font-body: "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft JhengHei", sans-serif;
+  :root{
+    /* 與原型頁共用的設計 token */
+    --teal-50:#D0FCF9;--teal-300:#19AAD1;--teal-500:#1285B3;--teal-700:#0C6496;
+    --grey-0:#FFFFFF;--grey-100:#F0F0F0;--grey-200:#E0E0E0;
+    --grey-700:#666666;--grey-900:#333333;
+    --radius-md:4px;
+    --shadow-card:0px 4px 6px -4px rgba(0,0,0,.1),0px 10px 15px -3px rgba(0,0,0,.1);
+    --font-body:"Noto Sans TC",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Microsoft JhengHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;display:flex;flex-direction:column;
+    background:var(--grey-100);color:var(--grey-900);font-family:var(--font-body);
   }
 
-  *, *::before, *::after { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
-  body { margin: 0; min-height: 100vh; background: var(--grey-50); font-family: var(--font-body); font-size: 14px; line-height: 1.5; color: var(--grey-900); }
-  button, input, select, textarea { font: inherit; color: inherit; }
-  button { cursor: pointer; }
-  [hidden] { display: none !important; }
-  .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  /* ---------- 上方切換列 ---------- */
+  .bar{
+    flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:10px 16px;
+    background:var(--grey-0);box-shadow:inset 0 -1px 0 var(--grey-200);
+  }
+  .bar-title{flex:1;min-width:220px}
+  h1{margin:0;font-size:16px;line-height:1.4;font-weight:700}
+  .sub{margin:2px 0 0;font-size:12px;line-height:1.5;color:var(--grey-700)}
 
-  /* 捲軸：截圖裡頁面與表格都是 7px 寬的淺灰細捲軸 */
-  ::-webkit-scrollbar { width: 7px; height: 7px; }
-  ::-webkit-scrollbar-thumb { border-radius: 4px; background: var(--grey-200); }
-  ::-webkit-scrollbar-track { background: transparent; }
-  @supports not selector(::-webkit-scrollbar) {
-    * { scrollbar-width: thin; scrollbar-color: var(--grey-200) transparent; }
+  .seg{display:inline-flex;padding:3px;border-radius:6px;background:var(--grey-100)}
+  .seg button{
+    height:30px;padding:0 14px;border:0;border-radius:var(--radius-md);background:transparent;
+    font:inherit;font-size:14px;color:var(--grey-700);cursor:pointer;
+  }
+  .seg button:hover{color:var(--grey-900)}
+  .seg button[aria-pressed="true"]{background:var(--teal-300);color:var(--grey-0);font-weight:700}
+  .seg button:focus-visible,.open:focus-visible{outline:2px solid var(--teal-700);outline-offset:2px}
+  .open{
+    display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:var(--radius-md);
+    box-shadow:inset 0 0 0 1px var(--teal-300);color:var(--teal-500);font-size:14px;text-decoration:none;
+  }
+  .open:hover{background:var(--teal-50)}
+
+  /* ---------- 預覽區 ---------- */
+  .stage{flex:1;min-height:0;display:flex;justify-content:center}
+  .stage iframe{display:block;width:100%;height:100%;border:0;background:var(--grey-0)}
+  /* 手機：固定 375 寬 */
+  .stage[data-device="mobile"]{padding:20px 16px}
+  .stage[data-device="mobile"] iframe{
+    width:375px;max-width:100%;max-height:812px;border-radius:12px;
+    box-shadow:inset 0 0 0 1px var(--grey-200),var(--shadow-card);
   }
 
-  /* ---------- Header ---------- */
-  .hd {
-    position: sticky; top: 0; z-index: 40; display: flex; align-items: center; height: 58px; padding: 0 25px 0 16px;
-    background: var(--brand); box-shadow: 0 2px 8px rgba(0, 0, 0, .15); color: #fff;
-  }
-  .hd-logo {
-    flex: none; display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 20px 0 6px; overflow: hidden;
-    border-radius: 100px; background: #fff; color: var(--teal-300); font-size: 12px; line-height: 14px; font-weight: 700; text-align: center;
-  }
-  .hd-logo img { width: auto; height: 32px; }
-  .hd-tools { display: flex; align-items: center; gap: 17px; margin-left: auto; }
-  .hd-bell { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: #fff; color: var(--brand); }
-  .hd-menu { display: grid; place-items: center; width: 22px; height: 40px; padding: 0; border: 0; background: transparent; color: #fff; }
-
-  /* ---------- 版面 ---------- */
-  .pg { padding: 24px; }
-  .card { border-radius: 6px; background: var(--grey-0); box-shadow: 0 1px 4px rgba(0, 0, 0, .1); }
-  .card + .card { margin-top: 20px; }
-
-  /* ---------- 按鈕 ---------- */
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 34px; padding: 0 12px;
-    border: 1px solid var(--brand); border-radius: 4px; background: var(--brand); color: #fff; font-size: 14px; white-space: nowrap;
-  }
-  .btn:hover { border-color: var(--brand-hover); background: var(--brand-hover); }
-  .btn-lg { height: 38px; font-size: 16px; }
-  .btn-danger { border-color: var(--red-300); background: var(--red-300); }
-  .btn-danger:hover { border-color: var(--red-500); background: var(--red-500); }
-  .ob {
-    height: 34px; padding: 0 12px; border: 1px solid var(--teal-300); border-radius: 4px;
-    background: var(--grey-0); color: var(--teal-300); font-size: 14px; white-space: nowrap;
-  }
-  .ob:hover { background: var(--teal-hover); }
-  .ob-danger { border-color: var(--red-300); color: var(--red-300); }
-  .ob-danger:hover { background: var(--red-hover); }
-  .btn:focus-visible, .ob:focus-visible, .hd button:focus-visible, .th-btn:focus-visible {
-    outline: 2px solid var(--teal-700); outline-offset: 2px;
-  }
-
-  /* ---------- 個案資料卡 ---------- */
-  .case { padding: 16px 24px 15px; }
-  .case-head { display: flex; align-items: flex-start; gap: 17px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
-  .case-avatar { flex: none; width: 48px; height: 48px; margin-top: 19px; }
-  .case-info { flex: 1; min-width: 0; padding-top: 6px; }
-  .case-name { margin: 0 0 6px; font-size: 20px; line-height: 28px; font-weight: 700; }
-  .case-meta { display: grid; grid-template-columns: 242px auto; justify-content: start; margin: 0; padding: 0; list-style: none; }
-  .case-meta li { display: flex; align-items: center; gap: 10px; min-width: 0; line-height: 25px; }
-  .case-meta svg { flex: none; }
-  .ico-id { color: var(--red-300); }
-  .ico-info { color: var(--brand); }
-  .case-edit { flex: none; }
-  .case-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 11px 0 0; padding: 0; list-style: none; }
-  .case-tag {
-    display: inline-flex; align-items: center; gap: 8px; height: 24px; padding: 0 8px;
-    border-radius: 4px; color: #fff; font-size: 12px; white-space: nowrap;
-  }
-  .tag-reporting { background: var(--tag-reporting); }
-  .tag-risk-mid { background: var(--tag-risk-mid); }
-  .tag-pending { background: var(--grey-500); }
-
-  /* ---------- 分頁 ---------- */
-  .tabs {
-    display: flex; gap: 20px; padding: 0 24px; overflow-x: auto; scrollbar-width: none;
-    box-shadow: inset 0 -1px 0 var(--line);   /* 底線用 inset 陰影，目前分頁的 2px 底線才蓋得過去 */
-  }
-  .tabs::-webkit-scrollbar { display: none; }
-  .tab {
-    flex: none; height: 37px; padding: 6px 0 0; border: 0; border-bottom: 2px solid transparent;
-    background: transparent; font-size: 14px; color: var(--grey-900); white-space: nowrap;
-  }
-  .tab:hover { color: var(--brand); }
-  .tab:focus-visible { outline: 2px solid var(--teal-700); outline-offset: -2px; }
-  .tab[aria-selected="true"] { border-bottom-color: var(--brand); color: var(--brand); }
-
-  .panel { padding: 16px 24px 24px; }
-  .placeholder { margin: 0; padding: 48px 16px; border: 1px dashed var(--grey-400); border-radius: 4px; text-align: center; color: var(--grey-500); }
-
-  /* ---------- 篩選列 ---------- */
-  .filters { display: flex; align-items: flex-end; gap: 8px; }
-  .filter { flex: 0 0 20%; min-width: 0; }
-  .filters > .btn { margin-left: auto; }
-  .label { display: block; margin: 0 0 4px; font-size: 14px; line-height: 20px; font-weight: 700; }
-  .req { color: var(--red-300); }
-  .ctl {
-    display: block; width: 100%; height: 34px; padding: 0 9px; border: 1px solid var(--border-input); border-radius: 4px; outline: 0;
-    background: var(--grey-0); font-size: 14px; color: var(--grey-900);
-  }
-  .ctl::placeholder { color: var(--grey-500); }
-  .ctl:focus-visible { border-color: var(--brand); box-shadow: var(--focus-ring); }
-  .ctl.is-invalid { border-color: var(--red-300); }
-  select.ctl {
-    -webkit-appearance: none; appearance: none; padding-right: 30px; cursor: pointer;
-    background: var(--grey-0) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpath d='M1.5 4l4.5 4.5L10.5 4' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 10px center;
-  }
-  .ctl-wrap { position: relative; }
-  .ctl-wrap .ctl { padding-right: 40px; }
-  .ctl-ico { position: absolute; top: 0; right: 0; display: grid; place-items: center; width: 28px; height: 34px; pointer-events: none; }
-  .ctl-ico-search { width: 31px; color: var(--brand); }
-  .ctl-ico-search::before { content: ""; position: absolute; left: 0; top: 7px; bottom: 7px; border-left: 1px solid var(--border-input); }
-
-  /* ---------- 表格 ---------- */
-  /* position: relative 不能拿掉：表頭裡的 .sr-only 是絕對定位，沒有它會跑出捲動框、在手機上把整頁撐寬 */
-  .tbl-box { position: relative; margin-top: 16px; max-height: 690px; overflow: auto; padding: 0 16px 0 15px; border: 1px solid var(--line-table); border-radius: 4px; }
-  .tbl { width: 100%; border-collapse: collapse; }
-  .tbl th, .tbl td { padding: 16px 8px; border-bottom: 1px solid var(--line-table); line-height: 20px; text-align: left; vertical-align: middle; }
-  .tbl th { padding-bottom: 15px; font-weight: 400; color: var(--grey-500); white-space: nowrap; }
-  .tbl tbody tr:last-child td { border-bottom: 0; }   /* 外框已經有底線 */
-  .tbl .col-act { width: 1%; white-space: nowrap; }
-  .tbl .nowrap { white-space: nowrap; }
-  .acts { display: flex; justify-content: flex-end; gap: 8px; }
-  .th-with-btn { display: inline-flex; align-items: center; gap: 8px; }
-  .th-btn { display: grid; place-items: center; width: 18px; height: 18px; padding: 0; border: 0; border-radius: 3px; background: transparent; color: var(--brand); }
-
-  .tbl-history { min-width: 860px; }
-  .tbl-history col:nth-child(1) { width: 27%; }
-  .tbl-history col:nth-child(2) { width: 18.6%; }
-  .tbl-history col:nth-child(3) { width: 21%; }
-  .tbl-history col:nth-child(4) { width: 19.6%; }
-  /* 截圖裡這一欄的文字大約 11 個字就換行（欄位本身很寬），照做 */
-  .h-info { max-width: 158px; }
-  .kind { display: inline-block; height: 19px; padding: 0 8px; border-radius: 3px; color: #fff; font-size: 12px; line-height: 19px; white-space: nowrap; }
-  .kind-done { background: var(--kind-done); }
-  .kind-form { background: var(--teal-300); }
-
-  /* ---------- 備註 ---------- */
-  .note-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .note-count { margin: 0; color: var(--grey-700); }
-  .tbl-note { min-width: 680px; }
-  .tbl-note col:nth-child(2) { width: 120px; }
-  .tbl-note col:nth-child(3) { width: 170px; }
-  .tbl-note tbody tr { cursor: pointer; }   /* 點整列等於按「檢視」 */
-  @media (hover: hover) { .tbl-note tbody tr:hover { background: var(--row-hover); } }
-  .note-text { white-space: pre-wrap; overflow-wrap: anywhere; }
-  .tbl-empty { margin: 0; padding: 40px 0; text-align: center; color: var(--grey-500); }
-
-  /* ---------- 對話框：照正式系統「檢視／編輯／新增個案追蹤紀錄」的樣子 ----------
-     寬 640、貼齊畫面上方 22px、沒有標題列分隔線也沒有 ×；背景遮罩 30% 黑；按鈕 100×34 */
-  .mdl {
-    width: min(640px, calc(100vw - 32px)); max-height: calc(100% - 44px); margin: 22px auto auto; padding: 24px; overflow: auto;
-    border: 0; border-radius: 6px; background: var(--grey-0); color: var(--grey-900); box-shadow: 0 4px 16px rgba(0, 0, 0, .15);
-  }
-  .mdl-sm { width: min(420px, calc(100vw - 32px)); }
-  .mdl::backdrop { background: rgba(0, 0, 0, .3); }
-  .mdl-title { margin: 0 0 14px; font-size: 20px; line-height: 30px; font-weight: 500; }
-  .mdl-msg { margin: 0; }
-  .mdl-field + .mdl-field { margin-top: 16px; }
-  .mdl-label { display: block; margin: 0 0 4px; font-size: 14px; line-height: 20px; font-weight: 500; }
-  .mdl-ft { display: flex; align-items: center; justify-content: flex-end; gap: 16px; margin-top: 16px; }
-  .mdl-view .mdl-ft { margin-top: 30px; }
-  .mdl-sm .mdl-ft { margin-top: 24px; }
-  .mbtn {
-    flex: none; width: 100px; height: 34px; padding: 0 8px; border: 1px solid var(--brand); border-radius: 4px;
-    background: var(--brand); color: #fff; font-size: 14px; font-weight: 500; white-space: nowrap;
-  }
-  .mbtn:hover { border-color: var(--brand-hover); background: var(--brand-hover); }
-  .mbtn-cancel { border-color: var(--border-input); background: var(--grey-0); color: var(--grey-900); }
-  .mbtn-cancel:hover { border-color: var(--border-input); background: var(--grey-100); }
-  .mbtn-danger { border-color: var(--red-300); background: var(--red-300); }
-  .mbtn-danger:hover { border-color: var(--red-500); background: var(--red-500); }
-  .mbtn:focus-visible { outline: 2px solid var(--teal-700); outline-offset: 2px; }
-  textarea.ctl { height: 134px; padding: 7px 9px; line-height: 22px; resize: vertical; }
-  .err { margin: 4px 0 0; font-size: 12px; line-height: 18px; color: var(--red-500); }
-
-  /* 檢視：灰色標籤＋內容 */
-  .view-list { margin: 0; }
-  .view-field + .view-field { margin-top: 16px; }
-  .view-label { line-height: 20px; color: var(--grey-500); }
-  .view-value { margin: 4px 0 0; line-height: 20px; white-space: pre-wrap; overflow-wrap: anywhere; }
-
-  /* 狀態：名稱後面一個 16px 色塊。原生下拉選單畫不出色塊，選到的值改用 .status-face 疊在上面顯示 */
-  .status-value { display: inline-flex; align-items: center; gap: 8px; vertical-align: top; }
-  .swatch { flex: none; width: 16px; height: 16px; }
-  .status-select { color: transparent; }
-  .status-select option { color: var(--grey-900); }
-  .status-face {
-    position: absolute; left: 10px; right: 30px; top: 0; display: flex; align-items: center; height: 34px;
-    overflow: hidden; white-space: nowrap; pointer-events: none;
-  }
-  /* 備註時間：文字框可直接打，日曆鈕叫出瀏覽器內建的日期時間選擇器（藏起來的 datetime-local） */
-  .ctl-ico-btn { padding: 0; border: 0; background: transparent; color: var(--grey-900); pointer-events: auto; cursor: pointer; }
-  .ctl-ico-btn:focus-visible { outline: 2px solid var(--teal-700); outline-offset: -4px; }
-  .picker { position: absolute; right: 0; bottom: 0; width: 1px; height: 1px; padding: 0; border: 0; opacity: 0; pointer-events: none; }
-
-  .toast {
-    position: fixed; left: 50%; bottom: 32px; z-index: 100; transform: translateX(-50%);
-    max-width: calc(100vw - 32px); padding: 10px 20px; border-radius: 4px;
-    background: rgba(51, 51, 51, .92); color: #fff; font-size: 14px;
-    opacity: 0; pointer-events: none; transition: opacity .2s;
-  }
-  .toast.is-on { opacity: 1; }
-
-  /* ---------- 平板／手機（截圖沒有，原型自訂） ---------- */
-  @media (max-width: 1023px) {
-    .pg { padding: 16px; }
-    .card + .card { margin-top: 16px; }
-    .filters { flex-wrap: wrap; }
-    .filter { flex: 1 1 calc(50% - 4px); }
-  }
-  @media (max-width: 600px) {
-    .hd { padding: 0 16px 0 12px; }
-    .hd-tools { gap: 14px; }
-    .pg { padding: 12px; }
-    .case { padding: 16px 16px 15px; }
-    .case-head { flex-wrap: wrap; gap: 12px 14px; }
-    .case-avatar { margin-top: 6px; }
-    .case-meta { grid-template-columns: minmax(0, 1fr); }
-    .case-edit { width: 100%; }
-    /* 375 寬要放得下四個分頁（含新增的「備註」）；更窄時分頁列可左右滑 */
-    .tabs { gap: 12px; padding: 0 16px; }
-    .tab { font-size: 13px; }
-    .panel { padding: 16px 16px 20px; }
-    .filter { flex-basis: 100%; }
-    .filters > .btn { width: 100%; }
-
-    /* 備註改成一則一張：內容；備註人、最後更新時間；按鈕，由上而下，不必左右滑才按得到 */
-    .tbl-note { min-width: 0; }
-    .tbl-note thead { display: none; }
-    .tbl-note, .tbl-note tbody, .tbl-note tr, .tbl-note td { display: block; }
-    .tbl-note tr { padding: 14px 0; border-bottom: 1px solid var(--line-table); }
-    .tbl-note tr:last-child { border-bottom: 0; }
-    .tbl.tbl-note td { padding: 0; border: 0; }
-    .tbl-note td:nth-child(2), .tbl-note td:nth-child(3) {
-      display: inline-block; margin: 6px 10px 0 0; font-size: 12px; color: var(--grey-500); vertical-align: middle;
-    }
-    .tbl-note .col-act { width: auto; margin-top: 10px; }
-    .tbl-note .acts { justify-content: flex-start; }
-
-    .mdl { max-height: calc(100% - 32px); margin-top: 16px; padding: 20px 16px; }
-    .mdl-ft { gap: 8px; }
-    .mbtn { width: auto; min-width: 72px; padding: 0 12px; }
+  /* 視窗本身就是手機寬的時候，不需要再選裝置寬度 */
+  @media (max-width:700px){
+    .seg--device{display:none}
+    .stage[data-device="mobile"]{padding:0}
+    .stage[data-device="mobile"] iframe{width:100%;max-height:none;border-radius:0;box-shadow:none}
   }
 </style>
 </head>
 <body>
 
-<!-- Header 的通知、選單是既有功能，原型只放外觀，沒有動作 -->
-<header class="hd">
-  <div class="hd-logo">
-    <img src="./assets/img/logo-tsghb.png" alt="三軍總醫院北投分院">
-    <span>精神醫療<br>快速應變平台</span>
+<header class="bar">
+  <div class="bar-title">
+    <h1>個案備註 — 通報前臺／後臺</h1>
+    <p class="sub">三軍總醫院北投分院 精神醫療快速應變平台｜通報前臺「緊急醫療通報」頁（基底）與後臺個案頁的「備註」分頁。</p>
   </div>
-  <div class="hd-tools">
-    <button type="button" class="hd-bell" aria-label="通知">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a1.5 1.5 0 0 0-1.5 1.5v.7A6.5 6.5 0 0 0 5.5 10.5V15l-1.7 2.5a1 1 0 0 0 .8 1.5h14.8a1 1 0 0 0 .8-1.5L18.5 15v-4.5a6.5 6.5 0 0 0-5-6.3v-.7A1.5 1.5 0 0 0 12 2zM9.5 20.5a2.5 2.5 0 0 0 5 0h-5z"/></svg>
-    </button>
-    <button type="button" class="hd-menu" aria-label="選單">
-      <svg width="22" height="19" viewBox="0 0 22 19" fill="currentColor" aria-hidden="true"><rect width="22" height="3" rx="1.5"/><rect y="8" width="22" height="3" rx="1.5"/><rect y="16" width="22" height="3" rx="1.5"/></svg>
-    </button>
+  <div class="seg" role="group" aria-label="頁面">
+    <button type="button" data-page="front">通報前臺</button>
+    <button type="button" data-page="back">後臺</button>
   </div>
+  <div class="seg seg--device" role="group" aria-label="裝置寬度">
+    <button type="button" data-device="desktop">電腦</button>
+    <button type="button" data-device="mobile">手機</button>
+  </div>
+  <a class="open" id="open" href="./front/index.html?v=20261104" target="_blank" rel="noopener">
+    開新分頁
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+  </a>
 </header>
 
-<main class="pg">
-  <!-- 個案資料。截圖裡是真實格式的姓名、身分證字號、生日、電話，這裡全部換成虛構資料（repo 是公開的） -->
-  <section class="card case" aria-label="個案資料">
-    <div class="case-head">
-      <svg class="case-avatar" viewBox="0 0 48 48" fill="none" stroke-width="3.5" aria-hidden="true">
-        <circle cx="24" cy="24" r="22.25" stroke="var(--grey-400)"/>
-        <circle cx="24" cy="18" r="6.5" stroke="var(--brand)"/>
-        <path d="M10.5 39a15 13 0 0 1 27 0" stroke="var(--grey-400)"/>
-      </svg>
-      <div class="case-info">
-        <h1 class="case-name">王小美</h1>
-        <ul class="case-meta">
-          <li>
-            <svg class="ico-id" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="身分證字號"><circle cx="12" cy="6.2" r="5.2"/><path d="M3 22.5v-1.8a6.2 6.2 0 0 1 6.2-6.2h5.6a6.2 6.2 0 0 1 6.2 6.2v1.8z"/></svg>
-            <span>A12345****</span>
-          </li>
-          <li>
-            <svg class="ico-info" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="電話"><path d="M4 3h4.2a1 1 0 0 1 1 .8l.9 4.1a1 1 0 0 1-.3 1l-2.2 2a15 15 0 0 0 5.5 5.5l2-2.2a1 1 0 0 1 1-.3l4.1.9a1 1 0 0 1 .8 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1z"/></svg>
-            <span>(+886) 0912345678</span>
-          </li>
-          <li>
-            <svg class="ico-info" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="生日"><path d="M7 1.5a1 1 0 0 1 1 1V4h8V2.5a1 1 0 1 1 2 0V4h2a1.5 1.5 0 0 1 1.5 1.5V8h-19V5.5A1.5 1.5 0 0 1 4 4h2V2.5a1 1 0 0 1 1-1z"/><path fill-rule="evenodd" d="M2.5 9.5h19v11a1.5 1.5 0 0 1-1.5 1.5H4a1.5 1.5 0 0 1-1.5-1.5zM5.5 12h3v2.5h-3zm5 0h3v2.5h-3zm5 0h3v2.5h-3zm-10 4.5h3V19h-3zm5 0h3V19h-3zm5 0h3V19h-3z"/></svg>
-            <span>1990/05/12 (36)</span>
-          </li>
-          <li>
-            <svg class="ico-info" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="地址"><path d="M12 2.5 1.5 12h3v9.5H10V15h4v6.5h5.5V12h3z"/></svg>
-            <span>-</span>
-          </li>
-        </ul>
-      </div>
-      <!-- 既有功能，沒有動作 -->
-      <button type="button" class="btn btn-lg case-edit">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><path d="M17.5 2.5a2.1 2.1 0 0 1 3 3L12 14l-4 1 1-4z"/></svg>
-        編輯基本資料
-      </button>
-    </div>
-    <ul class="case-tags" aria-label="個案標籤">
-      <li class="case-tag tag-reporting"><svg width="15" height="12" viewBox="0 0 28 22" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M1 3a2 2 0 0 1 2-2h7.2a2 2 0 0 1 1.4.6l8.8 8.8a2 2 0 0 1 0 2.8l-7.2 7.2a2 2 0 0 1-2.8 0L1.6 11.6A2 2 0 0 1 1 10.2zm5 1.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/><path d="M14.4 1h1.8a2 2 0 0 1 1.4.6l8.8 8.8a2 2 0 0 1 0 2.8l-7.2 7.2a2 2 0 0 1-2.8 0l-.3-.3 7.3-7.3a2 2 0 0 0 0-2.8z"/></svg>通報中 (緊醫)</li>
-      <li class="case-tag tag-risk-mid"><svg width="15" height="12" viewBox="0 0 28 22" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M1 3a2 2 0 0 1 2-2h7.2a2 2 0 0 1 1.4.6l8.8 8.8a2 2 0 0 1 0 2.8l-7.2 7.2a2 2 0 0 1-2.8 0L1.6 11.6A2 2 0 0 1 1 10.2zm5 1.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/><path d="M14.4 1h1.8a2 2 0 0 1 1.4.6l8.8 8.8a2 2 0 0 1 0 2.8l-7.2 7.2a2 2 0 0 1-2.8 0l-.3-.3 7.3-7.3a2 2 0 0 0 0-2.8z"/></svg>中風險 (緊醫-通報)</li>
-      <li class="case-tag tag-pending"><svg width="15" height="12" viewBox="0 0 28 22" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M1 3a2 2 0 0 1 2-2h7.2a2 2 0 0 1 1.4.6l8.8 8.8a2 2 0 0 1 0 2.8l-7.2 7.2a2 2 0 0 1-2.8 0L1.6 11.6A2 2 0 0 1 1 10.2zm5 1.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/><path d="M14.4 1h1.8a2 2 0 0 1 1.4.6l8.8 8.8a2 2 0 0 1 0 2.8l-7.2 7.2a2 2 0 0 1-2.8 0l-.3-.3 7.3-7.3a2 2 0 0 0 0-2.8z"/></svg>待填受理方式 (緊醫)</li>
-    </ul>
-  </section>
-
-  <section class="card" aria-label="個案紀錄">
-    <!-- 分頁：網址 # 記住目前在哪一頁（#reports、#chat、#history、#note），沒有 # 時停在「通報史及處遇歷程」 -->
-    <div class="tabs" role="tablist" aria-label="個案紀錄">
-      <button type="button" class="tab" role="tab" id="tab-reports" data-tab="reports" aria-controls="panel-reports" aria-selected="false" tabindex="-1">歷次通報紀錄</button>
-      <button type="button" class="tab" role="tab" id="tab-chat" data-tab="chat" aria-controls="panel-chat" aria-selected="false" tabindex="-1">對話留言區</button>
-      <button type="button" class="tab" role="tab" id="tab-history" data-tab="history" aria-controls="panel-history" aria-selected="true">通報史及處遇歷程</button>
-      <!-- 新增的分頁 -->
-      <button type="button" class="tab" role="tab" id="tab-note" data-tab="note" aria-controls="panel-note" aria-selected="false" tabindex="-1">備註</button>
-    </div>
-
-    <div class="panel" role="tabpanel" id="panel-reports" aria-labelledby="tab-reports" hidden>
-      <p class="placeholder">「歷次通報紀錄」不在這份原型的範圍。</p>
-    </div>
-
-    <div class="panel" role="tabpanel" id="panel-chat" aria-labelledby="tab-chat" hidden>
-      <p class="placeholder">「對話留言區」不在這份原型的範圍。</p>
-    </div>
-
-    <!-- 通報史及處遇歷程：照截圖仿製，篩選與按鈕都沒有動作；表格內容由下方腳本的 HISTORY 產生 -->
-    <div class="panel" role="tabpanel" id="panel-history" aria-labelledby="tab-history">
-      <div class="filters">
-        <div class="filter">
-          <label class="label" for="h-type">通報類型</label>
-          <select class="ctl" id="h-type">
-            <option>全部</option>
-            <option>緊急醫療(三總北投)</option>
-          </select>
-        </div>
-        <div class="filter">
-          <label class="label" for="h-kind">通報歷程種類</label>
-          <select class="ctl" id="h-kind">
-            <option>全部</option>
-            <option>完成指派</option>
-            <option>更新表單</option>
-          </select>
-        </div>
-        <div class="filter">
-          <label class="label" for="h-date">日期</label>
-          <div class="ctl-wrap">
-            <input class="ctl" id="h-date" type="text" placeholder="請輸入時間區間" autocomplete="off">
-            <span class="ctl-ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 1.5a1 1 0 0 1 1 1V4h8V2.5a1 1 0 1 1 2 0V4h2a1.5 1.5 0 0 1 1.5 1.5V8h-19V5.5A1.5 1.5 0 0 1 4 4h2V2.5a1 1 0 0 1 1-1z"/><path fill-rule="evenodd" d="M2.5 9.5h19v11a1.5 1.5 0 0 1-1.5 1.5H4a1.5 1.5 0 0 1-1.5-1.5zM5.5 12h3v2.5h-3zm5 0h3v2.5h-3zm5 0h3v2.5h-3zm-10 4.5h3V19h-3zm5 0h3V19h-3zm5 0h3V19h-3z"/></svg></span>
-          </div>
-        </div>
-        <div class="filter">
-          <label class="label" for="h-search">搜尋</label>
-          <div class="ctl-wrap">
-            <input class="ctl" id="h-search" type="text" placeholder="通報歷程資訊" autocomplete="off">
-            <span class="ctl-ico ctl-ico-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20.5 20.5"/></svg></span>
-          </div>
-        </div>
-        <button type="button" class="btn">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg>
-          新增
-        </button>
-      </div>
-      <div class="tbl-box">
-        <table class="tbl tbl-history">
-          <colgroup><col><col><col><col><col></colgroup>
-          <thead>
-            <tr>
-              <th scope="col">通報歷程資訊</th>
-              <th scope="col">
-                <span class="th-with-btn">通報歷程種類
-                  <button type="button" class="th-btn" aria-label="編輯通報歷程種類">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><path d="M17.5 2.5a2.1 2.1 0 0 1 3 3L12 14l-4 1 1-4z"/></svg>
-                  </button>
-                </span>
-              </th>
-              <th scope="col">通報類型</th>
-              <th scope="col">歷程變更時間紀錄</th>
-              <th scope="col" class="col-act"><span class="sr-only">操作</span></th>
-            </tr>
-          </thead>
-          <tbody id="history-rows"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- 備註（新增）：檢視、新增、編輯、移除，存在 sessionStorage -->
-    <div class="panel" role="tabpanel" id="panel-note" aria-labelledby="tab-note" hidden>
-      <div class="note-bar">
-        <p class="note-count" id="note-count"></p>
-        <button type="button" class="btn" id="note-add">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg>
-          新增
-        </button>
-      </div>
-      <div class="tbl-box">
-        <table class="tbl tbl-note">
-          <colgroup><col><col><col><col></colgroup>
-          <thead>
-            <tr>
-              <th scope="col">備註內容</th>
-              <th scope="col">備註人</th>
-              <th scope="col">最後更新時間</th>
-              <th scope="col" class="col-act"><span class="sr-only">操作</span></th>
-            </tr>
-          </thead>
-          <tbody id="note-rows"></tbody>
-        </table>
-        <p class="tbl-empty" id="note-empty" hidden>還沒有備註，按「新增」寫下第一則。</p>
-      </div>
-    </div>
-  </section>
+<main class="stage" id="stage" data-device="desktop">
+  <iframe id="view" title="通報前臺 緊急醫療通報" src="./front/index.html?v=20261104"></iframe>
 </main>
-
-<!-- 檢視備註：照「檢視個案追蹤紀錄」（正式系統的「狀態時間」在這裡叫「備註時間」），顯示備註內容／備註人／備註狀態／備註時間／最後更新時間 -->
-<dialog class="mdl mdl-view" id="view-dialog" aria-labelledby="view-dialog-title">
-  <h2 class="mdl-title" id="view-dialog-title">檢視備註</h2>
-  <dl class="view-list">
-    <div class="view-field"><dt class="view-label">備註內容</dt><dd class="view-value" id="view-text"></dd></div>
-    <div class="view-field"><dt class="view-label">備註人</dt><dd class="view-value" id="view-author"></dd></div>
-    <div class="view-field"><dt class="view-label">備註狀態</dt><dd class="view-value" id="view-status"></dd></div>
-    <div class="view-field"><dt class="view-label">備註時間</dt><dd class="view-value" id="view-time"></dd></div>
-    <div class="view-field"><dt class="view-label">最後更新時間</dt><dd class="view-value" id="view-updated"></dd></div>
-  </dl>
-  <div class="mdl-ft">
-    <button type="button" class="mbtn" data-close>關閉</button>
-  </div>
-</dialog>
-
-<!-- 新增／編輯備註：照「新增／編輯個案追蹤紀錄」，不放「套用個管片語」「共照群組」「更新標籤」 -->
-<dialog class="mdl" id="note-dialog" aria-labelledby="note-dialog-title">
-  <form id="note-form" novalidate>
-    <h2 class="mdl-title" id="note-dialog-title">新增備註</h2>
-
-    <div class="mdl-field">
-      <label class="mdl-label" for="note-text">內容<span class="req">*</span></label>
-      <textarea class="ctl" id="note-text" aria-describedby="note-text-error"></textarea>
-      <p class="err" id="note-text-error" hidden></p>
-    </div>
-
-    <div class="mdl-field">
-      <label class="mdl-label" for="note-status">狀態</label>
-      <div class="ctl-wrap">
-        <select class="ctl status-select" id="note-status"></select>
-        <span class="status-face" id="note-status-face" aria-hidden="true"></span>
-      </div>
-    </div>
-
-    <div class="mdl-field">
-      <label class="mdl-label" for="note-time">備註時間<span class="req">*</span></label>
-      <div class="ctl-wrap">
-        <input class="ctl" id="note-time" type="text" inputmode="numeric" placeholder="YYYY/MM/DD HH:mm" autocomplete="off" aria-describedby="note-time-error">
-        <button type="button" class="ctl-ico ctl-ico-btn" id="note-time-pick" aria-label="從日曆選擇備註時間">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 1.5a1 1 0 0 1 1 1V4h8V2.5a1 1 0 1 1 2 0V4h2a1.5 1.5 0 0 1 1.5 1.5V8h-19V5.5A1.5 1.5 0 0 1 4 4h2V2.5a1 1 0 0 1 1-1z"/><path fill-rule="evenodd" d="M2.5 9.5h19v11a1.5 1.5 0 0 1-1.5 1.5H4a1.5 1.5 0 0 1-1.5-1.5zM5.5 12h3v2.5h-3zm5 0h3v2.5h-3zm5 0h3v2.5h-3zm-10 4.5h3V19h-3zm5 0h3V19h-3zm5 0h3V19h-3z"/></svg>
-        </button>
-        <input class="picker" id="note-time-native" type="datetime-local" tabindex="-1" aria-hidden="true">
-      </div>
-      <p class="err" id="note-time-error" hidden></p>
-    </div>
-
-    <div class="mdl-ft">
-      <button type="button" class="mbtn mbtn-cancel" data-close>取消</button>
-      <button type="submit" class="mbtn" id="note-submit">送出</button>
-    </div>
-  </form>
-</dialog>
-
-<!-- 移除備註前確認（正式系統的樣子沒有提供，比照上面的對話框） -->
-<dialog class="mdl mdl-sm" id="remove-dialog" aria-labelledby="remove-dialog-title">
-  <h2 class="mdl-title" id="remove-dialog-title">移除備註</h2>
-  <p class="mdl-msg">確定要移除這則備註嗎？移除後無法復原。</p>
-  <div class="mdl-ft">
-    <button type="button" class="mbtn mbtn-cancel" data-close>取消</button>
-    <button type="button" class="mbtn mbtn-danger" id="remove-confirm">移除</button>
-  </div>
-</dialog>
-
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (function () {
   "use strict";
 
-  // 人名都是虛構的：個案、編輯者（也當作目前登入的人）
-  var CASE_NAME = "王小美";
-  var CURRENT_USER = "陳怡君";
-
-  /* ---------- 通報史及處遇歷程（照截圖的格式） ---------- */
-  var REPORT_TYPE = "緊急醫療(三總北投)";
-  // 通報歷程種類；備註的「狀態」也用這份清單（正式的備註狀態選項待確認）
-  var KINDS = {
-    done: { name: "完成指派", cls: "kind-done", color: "var(--kind-done)" },
-    form: { name: "更新表單", cls: "kind-form", color: "var(--teal-300)" }
+  // 路徑寫到 index.html，本機用 file:// 開也能載入；後臺直接開在「備註」分頁。
+  // ?v= 是版本號：front／back 有改就換掉（這裡三處：PAGES 兩個、iframe 的 src、開新分頁的 href），切換頁才不會拿快取的舊頁
+  var PAGES = {
+    front: { src: "./front/index.html?v=20261104", title: "通報前臺 緊急醫療通報" },
+    back: { src: "./back/index.html?v=20261104#note", title: "後臺 個案頁（備註）" }
   };
-  var HISTORY = [
-    { info: "已完成個案：" + CASE_NAME + " 的指派", kind: "done", time: "2026/11/04 14:31" },
-    { info: "已完成個案：" + CASE_NAME + " 的指派", kind: "done", time: "2026/11/03 17:00" },
-    { info: "緊急醫療_通報單 / 編輯者：" + CURRENT_USER, kind: "form", time: "2026/11/03 11:40" },
-    { info: "已完成個案：" + CASE_NAME + " 的指派", kind: "done", time: "2026/11/03 10:49" },
-    { info: "緊急醫療_初評表 / 編輯者：" + CURRENT_USER, kind: "form", time: "2026/11/03 08:54" },
-    { info: "緊急醫療_通報單 / 編輯者：" + CURRENT_USER, kind: "form", time: "2026/11/02 17:26" },
-    { info: "已完成個案：" + CASE_NAME + " 的指派", kind: "done", time: "2026/11/02 15:08" },
-    { info: "緊急醫療_初評表 / 編輯者：" + CURRENT_USER, kind: "form", time: "2026/11/02 14:35" },
-    { info: "緊急醫療_通報單 / 編輯者：" + CURRENT_USER, kind: "form", time: "2026/11/02 10:12" },
-    { info: "已完成個案：" + CASE_NAME + " 的指派", kind: "done", time: "2026/11/02 09:47" }
-  ];
 
-  /* ---------- 備註：存在 sessionStorage，重新整理還在、關掉分頁就清空 ---------- */
-  // 欄位：text 內容、author 備註人、status 狀態（KINDS 的鍵，"" 是沒有狀態）、time 備註時間、updated 最後更新時間。
-  // 欄位改過就換鍵名（v2 加了狀態、v3 狀態時間改成備註時間），免得讀到舊格式
-  var NOTE_KEY = "tsghb-commend:notes-v3";
-  var DEFAULT_NOTES = [
-    { id: "n2", text: "個案表示白天上班不便接聽電話，聯繫請於 18:00 後撥打。", author: CURRENT_USER, status: "", time: "2026/11/04 09:12", updated: "2026/11/04 09:12" },
-    { id: "n1", text: "母親同意陪同回診，已提醒下次門診時間。", author: "林志豪", status: "done", time: "2026/11/03 16:40", updated: "2026/11/03 16:45" }
-  ];
+  var stage = document.getElementById("stage");
+  var view = document.getElementById("view");
+  var open = document.getElementById("open");
+  var state = { page: "front", device: "desktop" };
 
-  function el(tag, cls, text) {
-    var node = document.createElement(tag);
-    if (cls) node.className = cls;
-    if (text != null) node.textContent = text;
-    return node;
+  // 網址 # 記住目前看的頁面與寬度，例如 #back/mobile；格式不對就維持原狀。
+  // 拆成前臺／後臺之前，這個網址就是後臺頁，發出去的「…/tsghb_commend/#note」照樣開到後臺的備註
+  function readHash() {
+    if (location.hash === "#note") { state.page = "back"; return; }
+    var m = /^#(front|back)(?:\/(desktop|mobile))?$/.exec(location.hash);
+    if (!m) return;
+    state.page = m[1];
+    state.device = m[2] || "desktop";
   }
 
-  function button(text, cls) {
-    var b = el("button", cls, text);
-    b.type = "button";
-    return b;
-  }
-
-  function actionCell(buttons) {
-    var td = el("td", "col-act");
-    var wrap = el("div", "acts");
-    buttons.forEach(function (b) { wrap.appendChild(b); });
-    td.appendChild(wrap);
-    return td;
-  }
-
-  var historyRows = document.getElementById("history-rows");
-  HISTORY.forEach(function (h) {
-    var tr = document.createElement("tr");
-    var info = el("td");
-    info.appendChild(el("div", "h-info", h.info));
-    tr.appendChild(info);
-    var kind = el("td");
-    kind.appendChild(el("span", "kind " + KINDS[h.kind].cls, KINDS[h.kind].name));
-    tr.appendChild(kind);
-    tr.appendChild(el("td", null, REPORT_TYPE));
-    tr.appendChild(el("td", "nowrap", h.time));
-    // 既有功能，沒有動作
-    tr.appendChild(actionCell([button("檢視", "ob"), button("編輯", "ob"), button("移除", "ob ob-danger")]));
-    historyRows.appendChild(tr);
-  });
-
-  /* ---------- 分頁 ---------- */
-  var DEFAULT_TAB = "history";
-  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
-
-  // 分頁列放不下（很窄的手機）時可以左右滑；選到的分頁在畫面外就把分頁列捲過去，只捲橫向、不動整頁
-  function revealTab(tab) {
-    var bar = tab.parentNode;
-    var b = bar.getBoundingClientRect();
-    var t = tab.getBoundingClientRect();
-    if (t.left < b.left) bar.scrollLeft -= b.left - t.left + 16;
-    else if (t.right > b.right) bar.scrollLeft += t.right - b.right + 16;
-  }
-
-  function selectTab(id) {
-    if (!tabs.some(function (t) { return t.getAttribute("data-tab") === id; })) id = DEFAULT_TAB;
-    tabs.forEach(function (t) {
-      var on = t.getAttribute("data-tab") === id;
-      t.setAttribute("aria-selected", String(on));
-      t.tabIndex = on ? 0 : -1;
-      document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
-      if (on) revealTab(t);
+  function render() {
+    var page = PAGES[state.page];
+    // 只切寬度時不要重設 src，頁面上做到一半的操作才不會被重新載入清掉
+    if (view.getAttribute("src") !== page.src) view.setAttribute("src", page.src);
+    view.title = page.title;
+    open.href = page.src;
+    stage.setAttribute("data-device", state.device);
+    document.querySelectorAll(".seg button").forEach(function (btn) {
+      var on = btn.getAttribute("data-page") === state.page || btn.getAttribute("data-device") === state.device;
+      btn.setAttribute("aria-pressed", String(on));
     });
-    return id;
   }
 
-  tabs.forEach(function (t, i) {
-    t.addEventListener("click", function () {
-      history.replaceState(null, "", "#" + selectTab(t.getAttribute("data-tab")));
-    });
-    // 左右鍵在分頁間移動（到底會繞回），Home／End 跳到第一個／最後一個
-    t.addEventListener("keydown", function (e) {
-      var to = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
-      if (to === undefined) return;
-      e.preventDefault();
-      var next = tabs[(to + tabs.length) % tabs.length];
-      next.click();
-      next.focus();
+  document.querySelectorAll(".seg button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      state.page = btn.getAttribute("data-page") || state.page;
+      state.device = btn.getAttribute("data-device") || state.device;
+      history.replaceState(null, "", "#" + state.page + (state.device === "mobile" ? "/mobile" : ""));
+      render();
     });
   });
 
-  window.addEventListener("hashchange", function () { selectTab(location.hash.slice(1)); });
-  selectTab(location.hash.slice(1));
-
-  /* ---------- 備註 ---------- */
-  function loadNotes() {
-    try {
-      var saved = JSON.parse(sessionStorage.getItem(NOTE_KEY) || "null");
-      if (Array.isArray(saved)) return saved;
-    } catch (err) {}
-    return JSON.parse(JSON.stringify(DEFAULT_NOTES));
-  }
-
-  function saveNotes() {
-    try { sessionStorage.setItem(NOTE_KEY, JSON.stringify(notes)); } catch (err) {}
-  }
-
-  // 時間一律是「YYYY/MM/DD HH:mm」
-  function pad(n) { return (n < 10 ? "0" : "") + n; }
-  function fmt(d) {
-    return d.getFullYear() + "/" + pad(d.getMonth() + 1) + "/" + pad(d.getDate()) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
-  }
-  function now() { return fmt(new Date()); }
-  // 格式不對，或日期時間不存在（2/30、25:00 這種會被 Date 進位成別的時間）就回傳 null
-  function parseTime(s) {
-    var m = /^(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})$/.exec(s);
-    if (!m) return null;
-    var d = new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5]);
-    return fmt(d) === s ? d : null;
-  }
-
-  var notes = loadNotes();
-  var noteRows = document.getElementById("note-rows");
-  var noteEmpty = document.getElementById("note-empty");
-  var noteCount = document.getElementById("note-count");
-  var noteAdd = document.getElementById("note-add");
-
-  // 檢視與下拉選單用：名稱＋16px 色塊（照「檢視個案追蹤紀錄」）
-  function statusValue(status) {
-    var k = KINDS[status];
-    var wrap = el("span", "status-value");
-    wrap.appendChild(el("span", null, k ? k.name : "-"));
-    if (k) {
-      var swatch = el("span", "swatch");
-      swatch.style.background = k.color;
-      wrap.appendChild(swatch);
-    }
-    return wrap;
-  }
-
-  // 新的在上面；編輯不改順序。狀態只在檢視裡看得到，列表不放
-  function renderNotes() {
-    noteRows.textContent = "";
-    notes.forEach(function (n) {
-      var tr = document.createElement("tr");
-      tr.setAttribute("data-id", n.id);
-      tr.appendChild(el("td", "note-text", n.text));
-      tr.appendChild(el("td", "nowrap", n.author));
-      tr.appendChild(el("td", "nowrap", n.updated));
-      var acts = [["檢視", "ob", "data-view"], ["編輯", "ob", "data-edit"], ["移除", "ob ob-danger", "data-remove"]].map(function (a) {
-        var b = button(a[0], a[1]);
-        b.setAttribute(a[2], n.id);
-        return b;
-      });
-      tr.appendChild(actionCell(acts));
-      noteRows.appendChild(tr);
-    });
-    noteEmpty.hidden = notes.length > 0;
-    noteCount.textContent = "共 " + notes.length + " 則備註";
-  }
-
-  function findNote(id) {
-    return notes.filter(function (n) { return n.id === id; })[0];
-  }
-
-  var toastEl = document.getElementById("toast");
-  var toastTimer;
-  function toast(message) {
-    toastEl.textContent = message;
-    toastEl.classList.add("is-on");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toastEl.classList.remove("is-on"); }, 2000);
-  }
-
-  // 所有對話框共用：點 data-close 或對話框外面（::backdrop）就關閉，Esc 由瀏覽器處理。
-  // 外面要「按下」也在外面才算，免得在文字框裡拖曳選字、放開時滑到外面就被關掉
-  document.querySelectorAll("dialog").forEach(function (dlg) {
-    var downOutside = false;
-    dlg.addEventListener("pointerdown", function (e) { downOutside = e.target === dlg; });
-    dlg.addEventListener("click", function (e) {
-      if ((e.target === dlg && downOutside) || e.target.closest("[data-close]")) dlg.close();
-    });
-  });
-
-  /* 檢視 */
-  var viewDialog = document.getElementById("view-dialog");
-
-  function openView(note) {
-    document.getElementById("view-text").textContent = note.text;
-    document.getElementById("view-author").textContent = note.author;
-    var status = document.getElementById("view-status");
-    status.textContent = "";
-    status.appendChild(statusValue(note.status));
-    document.getElementById("view-time").textContent = note.time;
-    document.getElementById("view-updated").textContent = note.updated;
-    viewDialog.showModal();
-  }
-
-  /* 新增／編輯 */
-  var noteDialog = document.getElementById("note-dialog");
-  var noteForm = document.getElementById("note-form");
-  var noteTitle = document.getElementById("note-dialog-title");
-  var noteSubmit = document.getElementById("note-submit");
-  var noteText = document.getElementById("note-text");
-  var noteTextError = document.getElementById("note-text-error");
-  var noteStatus = document.getElementById("note-status");
-  var noteStatusFace = document.getElementById("note-status-face");
-  var noteTime = document.getElementById("note-time");
-  var noteTimeError = document.getElementById("note-time-error");
-  var noteTimeNative = document.getElementById("note-time-native");
-  var editingId = null;
-
-  function addOption(select, value, text) {
-    var opt = el("option", null, text);
-    opt.value = value;
-    select.appendChild(opt);
-  }
-  addOption(noteStatus, "", "-");
-  Object.keys(KINDS).forEach(function (k) { addOption(noteStatus, k, KINDS[k].name); });
-
-  function setError(input, errorEl, message) {
-    input.classList.toggle("is-invalid", !!message);
-    if (message) input.setAttribute("aria-invalid", "true"); else input.removeAttribute("aria-invalid");
-    errorEl.textContent = message;
-    errorEl.hidden = !message;
-  }
-
-  function showStatus() {
-    noteStatusFace.textContent = "";
-    noteStatusFace.appendChild(statusValue(noteStatus.value));
-  }
-
-  function openEditor(note) {
-    editingId = note ? note.id : null;
-    noteTitle.textContent = note ? "編輯備註" : "新增備註";
-    noteSubmit.textContent = note ? "儲存" : "送出";   // 正式系統的編輯是「儲存」、新增是「送出」
-    noteText.value = note ? note.text : "";
-    noteStatus.value = note ? note.status : "";
-    noteTime.value = note ? note.time : now();
-    showStatus();
-    setError(noteText, noteTextError, "");
-    setError(noteTime, noteTimeError, "");
-    noteDialog.showModal();
-    noteText.focus();
-  }
-
-  noteStatus.addEventListener("change", showStatus);
-
-  noteText.addEventListener("input", function () {
-    if (noteText.value.trim()) setError(noteText, noteTextError, "");
-  });
-  noteTime.addEventListener("input", function () { setError(noteTime, noteTimeError, ""); });
-
-  // 日曆鈕：把文字框的時間帶進藏起來的 datetime-local 再叫出選擇器，選完寫回文字框
-  document.getElementById("note-time-pick").addEventListener("click", function () {
-    var d = parseTime(noteTime.value.trim());
-    noteTimeNative.value = d ? fmt(d).replace(/\//g, "-").replace(" ", "T") : "";
-    try { noteTimeNative.showPicker(); } catch (err) { noteTime.focus(); }
-  });
-  noteTimeNative.addEventListener("change", function () {
-    if (!noteTimeNative.value) return;
-    noteTime.value = noteTimeNative.value.slice(0, 16).replace(/-/g, "/").replace("T", " ");
-    setError(noteTime, noteTimeError, "");
-  });
-
-  noteForm.addEventListener("submit", function (e) {
-    e.preventDefault();
-    var text = noteText.value.trim();
-    var time = noteTime.value.trim();
-    var timeError = !time ? "請輸入備註時間" : parseTime(time) ? "" : "備註時間的格式是 YYYY/MM/DD HH:mm";
-    setError(noteText, noteTextError, text ? "" : "請輸入內容");
-    setError(noteTime, noteTimeError, timeError);
-    if (!text) { noteText.focus(); return; }
-    if (timeError) { noteTime.focus(); return; }
-
-    var id = editingId;
-    var note = id ? findNote(id) : { id: "n" + Date.now(), author: CURRENT_USER };
-    note.text = text;
-    note.status = noteStatus.value;
-    note.time = time;
-    note.updated = now();
-    if (!id) notes.unshift(note);
-    saveNotes();
-    noteDialog.close();
-    renderNotes();
-    // 原本按的按鈕已經重畫掉了，焦點放回這則備註的「編輯」（新增時放回「新增」）
-    (id ? noteRows.querySelector('[data-edit="' + id + '"]') : noteAdd).focus();
-    toast(id ? "已更新備註" : "已新增備註");
-  });
-
-  noteAdd.addEventListener("click", function () { openEditor(null); });
-
-  /* 每一列的檢視／編輯／移除；點這一列按鈕以外的地方也是檢視 */
-  var removeDialog = document.getElementById("remove-dialog");
-  var removingId = null;
-
-  noteRows.addEventListener("click", function (e) {
-    var view = e.target.closest("[data-view]");
-    var edit = e.target.closest("[data-edit]");
-    var remove = e.target.closest("[data-remove]");
-    var row = e.target.closest("tr");
-    if (view) openView(findNote(view.getAttribute("data-view")));
-    else if (edit) openEditor(findNote(edit.getAttribute("data-edit")));
-    else if (remove) {
-      removingId = remove.getAttribute("data-remove");
-      removeDialog.showModal();
-    }
-    // 在列上拖曳選字、放開時有選到字，是要複製而不是要檢視
-    else if (row && !String(window.getSelection())) openView(findNote(row.getAttribute("data-id")));
-  });
-
-  document.getElementById("remove-confirm").addEventListener("click", function () {
-    notes = notes.filter(function (n) { return n.id !== removingId; });
-    saveNotes();
-    removeDialog.close();
-    renderNotes();
-    noteAdd.focus();
-    toast("已移除備註");
-  });
-
-  renderNotes();
+  window.addEventListener("hashchange", function () { readHash(); render(); });
+  readHash();
+  render();
 })();
 </script>
 </body>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>緊急醫療通報 — 精神醫療快速應變平台（通報前臺）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+  /* 通報前臺「緊急醫療通報」頁的仿製畫面（基底），尺寸照使用者提供的截圖量：1936 寬的瀏覽器、125% 縮放。
+     緊急醫療通報的主色是紅色：頁首下的標題列、卡片標題、按鈕都是紅的。基礎樣式是電腦版，≤760px 改手機排法 */
+  :root {
+    --teal-300: #19AAD1; --teal-500: #1285B3; --teal-700: #0C6496;
+    --red-300: #E54B4B; --red-500: #C43643;
+    --grey-0: #FFFFFF; --grey-50: #FAFAFA; --grey-400: #C4C4C4; --grey-500: #9E9E9E; --grey-900: #333333;
+
+    /* 以下是截圖取色，設計 token 裡沒有 */
+    --avatar-bg: #FDE4DA;        /* 個案頭像底色 */
+    --avatar-fg: #F2A18B;        /* 個案頭像人形 */
+    --icon-phone: #F5A623;       /* 電話圖示 */
+    --step-line: #F9E1E1;        /* 步驟框線 */
+    --step-no-from: #F59E9E;     /* 步驟編號圓圈（左上到右下漸層） */
+    --step-no-to: #FCD7D7;
+
+    --font-body: "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft JhengHei", sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; min-height: 100vh; background: var(--grey-50); font-family: var(--font-body); font-size: 14px; line-height: 1.5; color: var(--grey-900); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible { outline: 2px solid var(--teal-700); outline-offset: 2px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+  /* ---------- 頁首：院徽＋平台名稱，右邊是登入的人 ---------- */
+  .hd { display: flex; align-items: center; height: 93px; padding: 0 27px 0 25px; background: var(--grey-0); }
+  .hd-brand { display: flex; align-items: center; gap: 7px; margin: 0; font-size: 20px; line-height: 30px; }
+  .hd-brand img { width: auto; height: 54px; }
+  .hd-user { display: inline-flex; align-items: center; gap: 10px; margin-left: auto; padding: 0; border: 0; background: transparent; font-size: 14px; }
+
+  /* ---------- 標題列：返回＋頁面標題。標題置中在「返回」右邊剩下的寬度裡（截圖如此，所以比整頁中線偏右） ---------- */
+  .bar { display: flex; align-items: center; height: 72px; padding: 0 25px; background: var(--red-300); color: #fff; }
+  .bar-back { flex: none; display: inline-flex; align-items: center; gap: 10px; padding: 0; border: 0; background: transparent; font-size: 14px; }
+  .bar-back:focus-visible { outline-color: #fff; }
+  .bar-title { flex: 1; min-width: 0; margin: 0; font-size: 24px; line-height: 36px; font-weight: 700; text-align: center; }
+
+  /* ---------- 版面：內容欄最寬 1080、置中 ---------- */
+  .pg { max-width: 1112px; margin: 0 auto; padding: 17px 16px 40px; }
+  .card { border-radius: 6px; background: var(--grey-0); box-shadow: 0 1px 4px rgba(0, 0, 0, .1); }
+  .card + .card { margin-top: 18px; }
+  .link { padding: 0; border: 0; background: transparent; color: var(--teal-300); font-size: 14px; line-height: 21px; }
+  .link:hover { color: var(--teal-500); text-decoration: underline; }
+
+  /* ---------- 個案資料卡 ---------- */
+  .case { padding: 16px 16px 14px; }
+  .case-name { margin: 0 0 11px; font-size: 20px; line-height: 30px; font-weight: 400; }
+  .case-body { display: flex; align-items: center; gap: 16px; }
+  .case-avatar { flex: none; width: 80px; height: 80px; }
+  .case-meta { margin: 0; padding: 0; list-style: none; font-size: 16px; }
+  .case-meta li { display: flex; align-items: center; gap: 8px; height: 32px; }
+  .case-meta svg { flex: none; color: var(--teal-300); }
+  .case-meta .ico-phone { color: var(--icon-phone); }
+  .case-more { display: block; margin: 28px auto 0; }
+
+  /* ---------- 緊急醫療通報卡 ---------- */
+  .report { overflow: hidden; }   /* 紅色標題的上緣跟著卡片圓角 */
+  .report-hd { display: flex; align-items: center; height: 52px; margin: 0; padding: 0 12px; background: var(--red-500); color: #fff; font-size: 20px; font-weight: 400; }
+  .report-bd { padding: 8px 16px 22px; }
+  .report-sum { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+  .report-no { margin: 0 0 10px; line-height: 21px; color: var(--grey-500); }
+  .report-title { display: flex; align-items: center; gap: 3px; margin: 0 0 12px; font-size: 18px; line-height: 27px; font-weight: 700; }
+  .pill { display: flex; align-items: center; width: max-content; height: 23px; margin: 0; padding: 0 16px; border-radius: 12px; background: var(--red-300); color: #fff; font-size: 12px; }
+  .report-meta { display: flex; align-items: center; gap: 4px; height: 24px; margin: 12px 0 0; }
+  .report-meta svg, .report-title svg { flex: none; }
+  .report-art { flex: none; width: 160px; height: 136px; margin-right: 19px; }
+
+  /* 步驟：左邊一條灰色時間軸（頂端一個圓點），右邊一格一格的框 */
+  .steps { position: relative; margin: 30px 24px 0 16px; padding: 0 0 0 10px; list-style: none; }
+  .steps::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--grey-400); }
+  .steps::after { content: ""; position: absolute; left: -3px; top: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--grey-500); }
+  .step { padding: 16px 8px; border: 1px solid var(--step-line); border-radius: 6px; background: var(--grey-0); }
+  .step + .step { margin-top: 18px; }
+  .step-hd { display: flex; align-items: center; gap: 8px; }
+  .step-no {
+    flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--step-no-from), var(--step-no-to)); color: #fff; font-size: 16px;
+  }
+  .step-name { margin: 0; font-size: 16px; line-height: 24px; font-weight: 400; }
+  .step-req { margin-left: 8px; color: var(--red-300); }
+  .step-btn { display: block; width: 108px; height: 33px; margin-top: 16px; padding: 0; border: 0; border-radius: 3px; background: var(--red-300); color: #fff; font-size: 14px; }
+  .step-btn:hover { background: var(--red-500); }
+  .step-btn:disabled { opacity: .6; cursor: not-allowed; }
+  .step-btn:disabled:hover { background: var(--red-300); }
+  .report-ft { margin-top: 24px; text-align: center; }
+
+  /* ---------- 手機（截圖沒有，原型自訂） ---------- */
+  @media (max-width: 760px) {
+    .hd { height: 64px; padding: 0 16px; }
+    .hd-brand { gap: 6px; font-size: 16px; line-height: 24px; }
+    .hd-brand img { height: 40px; }
+    .bar { height: 56px; padding: 0 16px; }
+    .bar-title { font-size: 20px; line-height: 30px; }
+    .pg { padding: 12px 12px 32px; }
+    .card + .card { margin-top: 12px; }
+    .case-avatar { width: 64px; height: 64px; }
+    .case-meta { font-size: 14px; }
+    .case-meta li { height: 28px; }
+    .case-more { margin-top: 16px; }
+    .report-hd { height: 48px; font-size: 18px; }
+    .report-bd { padding: 8px 12px 18px; }
+    .report-art { display: none; }   /* 裝飾插圖，手機上沒有位置 */
+    .steps { margin: 24px 0 0 4px; }
+    .step + .step { margin-top: 12px; }
+  }
+  @media (max-width: 380px) {
+    .hd-brand { font-size: 15px; }
+    .hd-brand img { height: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 頁首的使用者選單、返回、查看基本資料、各步驟按鈕、關閉都是既有功能，原型只放外觀，沒有動作 -->
+<header class="hd">
+  <p class="hd-brand">
+    <img src="../assets/img/logo-tsghb.png" alt="三軍總醫院北投分院">
+    <span>精神醫療快速應變平台</span>
+  </p>
+  <button type="button" class="hd-user" aria-label="使用者選單：陳怡君">
+    陳怡君
+    <svg width="12" height="8" viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 1.5 6 6l4.5-4.5"/></svg>
+  </button>
+</header>
+
+<div class="bar">
+  <button type="button" class="bar-back">
+    <svg width="22" height="18" viewBox="0 0 22 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 9H2M9 1.5 1.5 9 9 16.5"/></svg>
+    返回
+  </button>
+  <h1 class="bar-title">緊急醫療通報</h1>
+</div>
+
+<main class="pg">
+  <!-- 個案資料：與後臺原型是同一位虛構個案（repo 是公開的，截圖上的測試資料也換掉） -->
+  <section class="card case" aria-labelledby="case-name">
+    <h2 class="case-name" id="case-name">王小美 (女)</h2>
+    <div class="case-body">
+      <svg class="case-avatar" viewBox="0 0 80 80" aria-hidden="true">
+        <circle cx="40" cy="40" r="40" fill="var(--avatar-bg)"/>
+        <circle cx="40" cy="27.5" r="12" fill="var(--avatar-fg)"/>
+        <path d="M18.5 64v-6a21.5 15 0 0 1 43 0v6z" fill="var(--avatar-fg)"/>
+      </svg>
+      <ul class="case-meta">
+        <li>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="身分證字號"><path fill-rule="evenodd" d="M2 5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm6 3.3a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 0 0 0-4.6zm-3.6 8.5a3.6 3.6 0 0 1 7.2 0zM13.5 9h6v1.7h-6zm0 3.6h6v1.7h-6z"/></svg>
+          <span>A123456789</span>
+        </li>
+        <li>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="生日"><path d="M7 1.5a1 1 0 0 1 1 1V4h8V2.5a1 1 0 1 1 2 0V4h2a1.5 1.5 0 0 1 1.5 1.5V8h-19V5.5A1.5 1.5 0 0 1 4 4h2V2.5a1 1 0 0 1 1-1z"/><path fill-rule="evenodd" d="M2.5 9.5h19v11a1.5 1.5 0 0 1-1.5 1.5H4a1.5 1.5 0 0 1-1.5-1.5zM5.5 12h3v2.5h-3zm5 0h3v2.5h-3zm5 0h3v2.5h-3zm-10 4.5h3V19h-3zm5 0h3V19h-3zm5 0h3V19h-3z"/></svg>
+          <span>1990/05/12(36y)</span>
+        </li>
+        <li>
+          <svg class="ico-phone" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="電話"><path d="M4 3h4.2a1 1 0 0 1 1 .8l.9 4.1a1 1 0 0 1-.3 1l-2.2 2a15 15 0 0 0 5.5 5.5l2-2.2a1 1 0 0 1 1-.3l4.1.9a1 1 0 0 1 .8 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1z"/></svg>
+          <span>0912345678</span>
+        </li>
+      </ul>
+    </div>
+    <button type="button" class="link case-more">查看基本資料</button>
+  </section>
+
+  <section class="card report" aria-labelledby="report-hd">
+    <h2 class="report-hd" id="report-hd">緊急醫療通報</h2>
+    <div class="report-bd">
+      <div class="report-sum">
+        <div>
+          <p class="report-no">通報編號: -</p>
+          <h3 class="report-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 8.5h4.5L17 3.5v17l-9.5-5H3a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1z"/><path d="M5 16.5h3.2l1.3 4.6a.7.7 0 0 1-.7.9H6.9a.7.7 0 0 1-.7-.5zM19 9a3 3 0 0 1 0 6z"/></svg>
+            通報者通報內容及初評
+          </h3>
+          <p class="pill">未完成</p>
+          <p class="report-meta">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 1.5a1 1 0 0 1 1 1V4h8V2.5a1 1 0 1 1 2 0V4h2a1.5 1.5 0 0 1 1.5 1.5V8h-19V5.5A1.5 1.5 0 0 1 4 4h2V2.5a1 1 0 0 1 1-1z"/><path fill-rule="evenodd" d="M2.5 9.5h19v11a1.5 1.5 0 0 1-1.5 1.5H4a1.5 1.5 0 0 1-1.5-1.5zM5.5 12h3v2.5h-3zm5 0h3v2.5h-3zm5 0h3v2.5h-3zm-10 4.5h3V19h-3zm5 0h3V19h-3zm5 0h3V19h-3z"/></svg>
+            通報日: 2026/11/04
+          </p>
+          <p class="report-meta">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="6.2" r="5.2"/><path d="M3 22.5v-1.8a6.2 6.2 0 0 1 6.2-6.2h5.6a6.2 6.2 0 0 1 6.2 6.2v1.8z"/></svg>
+            通報者: 陳怡君
+          </p>
+        </div>
+        <!-- 裝飾插圖：正式系統是一張圖片（書本＋螢幕），這裡用簡化的 SVG 代替 -->
+        <svg class="report-art" viewBox="0 0 160 136" aria-hidden="true">
+          <g fill="#F7F8FA" stroke="#E3E6EB">
+            <rect x="56" y="4" width="30" height="38" rx="2" transform="rotate(-8 71 23)"/>
+            <rect x="116" y="14" width="30" height="36" rx="2" transform="rotate(6 131 32)"/>
+            <rect x="4" y="58" width="26" height="34" rx="2" transform="rotate(-4 17 75)"/>
+          </g>
+          <g stroke="#E3E6EB" stroke-width="2" stroke-linecap="round">
+            <path d="M62 14h18M62 20h14M62 26h18" transform="rotate(-8 71 23)"/>
+            <path d="M122 24h16M122 30h12" transform="rotate(6 131 32)"/>
+          </g>
+          <ellipse cx="88" cy="130" rx="70" ry="5" fill="#EEF0F4"/>
+          <path d="M126 72l14-6 14 6-14 6z" fill="#D5D9E0"/>
+          <path d="M132 75v6a8 3 0 0 0 16 0v-6l-8 3.4z" fill="#C4C9D2"/>
+          <rect x="46" y="112" width="90" height="17" rx="4" fill="#2E54C6"/>
+          <rect x="54" y="115" width="80" height="11" rx="2" fill="#E3EAFC"/>
+          <rect x="52" y="96" width="86" height="17" rx="4" fill="#3C68DE"/>
+          <rect x="60" y="99" width="76" height="11" rx="2" fill="#EEF2FD"/>
+          <rect x="48" y="80" width="84" height="17" rx="4" fill="#2E54C6"/>
+          <rect x="56" y="83" width="74" height="11" rx="2" fill="#E3EAFC"/>
+          <path d="M62 120.5h64M68 104.5h60M64 88.5h58" stroke="#A9BEF2" stroke-width="1.5" stroke-linecap="round"/>
+          <rect x="92" y="70" width="12" height="10" fill="#1E2945"/>
+          <rect x="84" y="77" width="28" height="4" rx="1" fill="#1E2945"/>
+          <rect x="72" y="36" width="52" height="36" rx="3" fill="#1E2945"/>
+          <rect x="75" y="39" width="46" height="30" rx="1.5" fill="#3B79F1"/>
+          <rect x="82" y="43" width="20" height="22" fill="#FFFFFF"/>
+          <path d="M85 48h14M85 52h14M85 56h14M85 60h9" stroke="#9DB6F2" stroke-width="1.5"/>
+          <g transform="rotate(-10 40 55)">
+            <rect x="22" y="24" width="34" height="56" rx="3" fill="#8DB0F4"/>
+            <rect x="25" y="26" width="29" height="51" rx="2" fill="#D6E2FB"/>
+            <rect x="30" y="32" width="19" height="3" fill="#1E2945"/>
+            <path d="M30 39h19M30 43h13" stroke="#8DB0F4" stroke-width="1.5"/>
+            <circle cx="39.5" cy="57" r="6" fill="#1E2945"/>
+            <circle cx="39.5" cy="57" r="2.5" fill="#3B79F1"/>
+          </g>
+        </svg>
+      </div>
+
+      <ol class="steps">
+        <li class="step">
+          <div class="step-hd">
+            <span class="step-no" aria-hidden="true">1</span>
+            <h4 class="step-name">通報表<span class="step-req" aria-hidden="true">*</span><span class="sr-only">（必填）</span></h4>
+          </div>
+          <button type="button" class="step-btn">未填寫</button>
+        </li>
+        <li class="step">
+          <div class="step-hd">
+            <span class="step-no" aria-hidden="true">2</span>
+            <h4 class="step-name">受理方式 (電話/出勤)<span class="step-req" aria-hidden="true">*</span><span class="sr-only">（必填）</span></h4>
+          </div>
+          <!-- 截圖裡這一步的按鈕是淡色、按不了 -->
+          <button type="button" class="step-btn" disabled>未填寫</button>
+        </li>
+        <li class="step">
+          <div class="step-hd">
+            <span class="step-no" aria-hidden="true">3</span>
+            <h4 class="step-name">初評表</h4>
+          </div>
+          <button type="button" class="step-btn">未填寫</button>
+        </li>
+      </ol>
+
+      <div class="report-ft">
+        <button type="button" class="link">關閉</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+</body>
+</html>
