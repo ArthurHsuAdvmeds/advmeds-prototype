@@ -301,7 +301,8 @@ footer{
     </p>
 
     <nav class="entries" aria-label="版本入口">
-      <a class="entry current" href="../v7/index.html"><b>V7</b><span>2026-10-16｜目前版本</span></a>
+      <a class="entry current" href="../v8/index.html"><b>V8</b><span>2026-11-05｜目前版本</span></a>
+      <a class="entry" href="../v7/index.html"><b>V7</b><span>2026-10-16</span></a>
       <a class="entry" href="../v6/index.html"><b>V6</b><span>2026-09-29</span></a>
       <a class="entry" href="../v5/index.html"><b>V5</b><span>2026-09-25</span></a>
       <a class="entry" href="../v4/index.html"><b>V4</b><span>2026-09-25</span></a>
@@ -319,6 +320,66 @@ footer{
     深色標籤是頁首下方主選單的頁面名稱，橘色標籤是頁面內的子頁籤或按鈕，灰色標籤是卡片或區塊名稱。
     依序點下去就會看到該項變更。
   </div>
+
+  <!-- ===================== V8 ===================== -->
+  <section class="release" id="v8">
+    <div class="release-head">
+      <h2 class="release-ver">V8</h2>
+      <span class="release-date">2026-11-05</span>
+      <span class="release-vs">相較 V7</span>
+    </div>
+    <p class="release-summary">
+      以 V7 為基礎，在指揮儀表板新增「平台使用率」子頁籤：帳號建立後曾登入過的帳號數 ÷ 平台總帳號數，
+      呈現全平台使用率與各單位使用率。另外修正結案率圓環中間的數字在桌機上超出圓環的問題。其餘各頁內容與資料均未更動。
+    </p>
+
+    <div class="group">
+      <h3 class="group-title">指揮儀表板</h3>
+      <ul class="items">
+        <li class="item">
+          <div class="item-head">
+            <span class="item-no">1</span>
+            <h3>新增「平台使用率」<span class="tag new">新增</span></h3>
+          </div>
+          <p>
+            子頁籤列最右側新增「平台使用率」，版面與「結案率」相同：左側圓環是全平台使用率，下方列出曾登入與總帳號數；
+            右側列出各單位的使用率，由高到低排序。
+          </p>
+          <div class="detail">
+            <ul>
+              <li><b>計算方式</b>：平台使用率＝帳號建立後曾登入過的帳號數 ÷ 平台總帳號數；從未登入過的帳號計入分母</li>
+              <li><b>各單位</b>：七大網絡（民政、社政、消防、教育、勞政、警察、衛政）與醫療機構，每列顯示使用率、曾登入／總帳號數、未曾登入的帳號數</li>
+              <li><b>統計時間</b>：統計至資料日（原型為 2026/09/25），不受日期區間篩選影響</li>
+              <li>畫面數字為原型模擬資料；單位分類與帳號資料來源待確認</li>
+            </ul>
+          </div>
+          <div class="path">
+            <span class="path-label">點選路徑</span>
+            <span class="crumb nav">指揮儀表板</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">平台使用率</span>
+          </div>
+        </li>
+
+        <li class="item">
+          <div class="item-head">
+            <span class="item-no">2</span>
+            <h3>結案率圓環數字修正<span class="tag fix">修正</span></h3>
+          </div>
+          <p>
+            桌機上「年度結案率」圓環中間的數字會比圓環內圈還寬、壓到外圈。改為數字大小依圓環本身的大小縮放，
+            各種螢幕尺寸都會落在內圈裡；新增的平台使用率圓環也套用同樣做法。
+          </p>
+          <div class="path">
+            <span class="path-label">點選路徑</span>
+            <span class="crumb nav">指揮儀表板</span>
+            <span class="sep">›</span>
+            <span class="crumb tab">結案率</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
 
   <!-- ===================== V7 ===================== -->
   <section class="release" id="v7">

@@ -17,7 +17,7 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
 
 | 資料夾 | 客戶 | 內容 | 技術 | 詳細文件 |
 | --- | --- | --- | --- | --- |
-| `tsghb-dashboard/` | 三總北投 | 精神健康個案通報管理儀表板，`v1/`–`v7/` 各版並存；入口 `index.html` 自動轉址到最新版；`release-note/` 為 V2 以後的版本說明；`db_desc/` 為資料庫規劃（DBML＋規格頁） | 單檔 HTML + D3 / topojson（CDN） | — |
+| `tsghb-dashboard/` | 三總北投 | 精神健康個案通報管理儀表板，`v1/`–`v8/` 各版並存；入口 `index.html` 自動轉址到最新版；`release-note/` 為 V2 以後的版本說明；`db_desc/` 為資料庫規劃（DBML＋規格頁） | 單檔 HTML + D3 / topojson（CDN） | — |
 | `tsghb-landing-page/` | 三總北投 | 各角色登入後的入口頁，一個角色一個子資料夾（`doctor/`、`orgMag/`），共用 `assets/`，另附規格下載 zip | dc-runtime + React | [CLAUDE.md](tsghb-landing-page/CLAUDE.md)、各角色資料夾內 CLAUDE.md |
 | `tsghb-quick-report/` | 三總北投 | 快速通報頁面（無追蹤需求的網絡通報前臺）：選通報類型 → 登入 → 比對身分證字號 → 新增個案 → 填寫表單，五個畫面都在同一份 `index.html`、用網址 `#` 切換；設計稿與流程在 `design/` | dc-runtime + React | [CLAUDE.md](tsghb-quick-report/CLAUDE.md) |
 | `tsghb-doctor-landing-page/` | 三總北投 | **舊版**醫師入口頁，僅保留對照，**不要再改**（改 `tsghb-landing-page/doctor/`） | dc-runtime + React | [CLAUDE.md](tsghb-doctor-landing-page/CLAUDE.md) |
@@ -79,10 +79,18 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
 
 ---
 
-## 3. 目前狀況（2026-10-16）
+## 3. 目前狀況（2026-11-05）
 
-- **`tsghb-dashboard` 最新版是 `v7/`**（以 v6 為基礎，只放大各頁過濾器按鈕的文字）。
-  入口轉址頁 `LATEST = 7`，canonical、`<noscript>`、手動連結都指向 `v7/`。
+- **`tsghb-dashboard` 最新版是 `v8/`**（以 v7 為基礎，指揮儀表板新增「平台使用率」子頁籤）。
+  入口轉址頁 `LATEST = 8`，canonical、`<noscript>`、手動連結都指向 `v8/`。
+- v8 的修改：`#command` 子頁籤列多一顆 `data-command-view="usage"`、`#commandClosureView` 之後新增 `#commandUsageView`，
+  以及檔尾的 `<style id="v8-platform-usage">`／`<script id="v8-platform-usage-behavior">`；v7 以下的說明對 v8 仍然適用。
+  - 平台使用率＝帳號建立後曾登入過的帳號數 ÷ 平台總帳號數（從未登入的帳號算在分母），統計至 2026/09/25、不受日期篩選影響。
+    左側圓環是全平台、右側是七大網絡＋醫療機構共 8 個單位（使用率高到低）；數字由腳本裡的 `USAGE_UNITS`（模擬資料）算出，單位分類待確認。
+  - 版面直接套用「結案率」的 `closure-v74-*` class，各層字級與各尺寸排版自動生效；只補了舊層以 `#commandClosureView` 指名的容器規則，
+    並把清單列數改由 `--usage-rows` 決定（結案率各層都寫死 4 列）。≤899px 每列改為兩行（單位＋使用率／長條），結案率維持 v7。
+  - 一併修正：結案率圓環中間的數字字級改依圓環寬度（`container-type:inline-size` ＋ `19cqi`），v7 在 ≥1200px 時數字比內圈寬。
+    除了指揮儀表板的結案率與新頁籤，其餘各頁與 v7 逐一比對過版面相同（手機版同期比較因子頁籤換成兩行，整頁下移 42px）。
 - v7 的修改只有檔尾的 `<style id="v7-filter-text">`（與 `<title>`、版本註記），v6 以下的說明對 v7 仍然適用。
   - 範圍：時間篩選（日期欄位、套用、本日／本月／本季／本年度）、通報類別（含「通報類別分析」標籤）、指揮儀表板同期比較的比較方式與選擇月份、
     熱點地圖彈窗的初評風險、成效個案明細彈窗的狀態鈕。主選單與各頁子頁籤不算過濾器，沒有動。
@@ -120,7 +128,7 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
   目前 `data.json` 是使用者提供的 14 筆資料，由使用者自行 commit 推上（`726145f`）；之後換資料要不要 push 由使用者決定（repo 公開）。
   先前的 420 筆虛構範例資料留在 commit `b300075`。
 - **`tsghb-dashboard/kpi/` 整個資料夾不進版控、不部署**（已列入根目錄 `.gitignore`），內容只存在使用者本機；不要 `git add -f` 加回來。
-- `tsghb-dashboard/kpi/kpi.csv` 是依 v6 實際畫面整理的各分頁指標清單（UTF-8 含 BOM，供 Excel 直接開啟），
+- `tsghb-dashboard/kpi/kpi.csv` 是依 v6 實際畫面整理的各分頁指標清單（150–153 是 v8 新增的平台使用率；UTF-8 含 BOM、CRLF，供 Excel 直接開啟），
   欄位為項次、主分頁、次分頁、指標名稱、圖表種類、重複項次、計算公式、是否依賴HIS資料。儀表板增刪指標時要同步更新。
   - 「重複項次」填同一指標在前面出現過的項次（多個以 `;` 分隔），目前只留要跟客戶討論的幾項，由使用者維護。
   - 「計算公式」以客戶的原始指標清單（`kpi/original_list.xlsx`，使用者自行放入）為準，清單沒有的才依儀表板上的定義補；
@@ -130,7 +138,7 @@ push 到 `main` 後由 GitHub Actions 原樣部署到 GitHub Pages，**沒有任
   - 資料來源是通報平台 API 與醫院 HIS API；表名前綴 `pf_` 平台、`his_` HIS、`ref_` 代碼與設定、`mart_` 衍生表、`sync_` 同步紀錄。
   - **字串欄位一律 `text`**（使用者指定），不用 `varchar(n)` 也不用 enum；代碼型欄位的允許值寫在欄位 note。
   - `index.html` 第 4 節的資料表明細是依 DBML 產生後貼入的靜態 HTML：改 DBML 時該節、頁首的表數／欄位數、第 5 節的指標對應要一起改。
-    第 5 節的「項次」對應 `kpi/kpi.csv`，1–149 要全部涵蓋。
+    第 5 節的「項次」對應 `kpi/kpi.csv`，1–149 要全部涵蓋（150–153 平台使用率是 v8 才有，規格頁尚未納入，也還沒有帳號／登入紀錄的資料表）。
   - 規格頁只依 v6 畫面寫，不引用客戶原始清單的內容（`kpi/` 不進版控）；兩邊 API 的實際欄位尚未核對，待確認事項列在第 9 節。
 - **`tsghb-quick-report/account.csv` 不進版控、不部署**（已列入根目錄 `.gitignore`）：它是快速通報原型的登入方式與 seed 個案清單，
   內容與該頁 `index.html` 的 `SEED_CASES` 對應，改 seed 時兩邊要一起改；不要 `git add -f` 加回來。
